@@ -13,6 +13,7 @@ Lekcija mora da se ponaša kao da gledaš programera preko share screen-a:
 - kada lekcija to traži, JavaScript se dodaje akciju po akciju
 - preview prikazuje tačno isti kumulativni HTML/CSS/JS koji je trenutno napisan
 - svaka promena mora da bude vizuelno jasna i verbalno objašnjiva
+- kod Web Components lekcija, prvo JavaScript mora da napravi stvarni renderovani DOM, pa tek onda CSS treba da ga stilizuje
 
 Ako sadržaj ne može da se razbije na takve male, čitljive korake, još nije spreman za ovu vrstu animacije.
 

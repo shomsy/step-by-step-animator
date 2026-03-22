@@ -62,7 +62,7 @@ const cssSteps = [
   ['shell_place_items', '.app-shell', 'place-items', 'center', 'Centar čuva fokus na komponenti koju gradimo.'],
   ['shell_min_height', '.app-shell', 'min-height', '100vh', 'Puna visina stabilizuje preview scenu.'],
   ['shell_background', '.app-shell', 'background', 'linear-gradient(180deg, #e2e8f0, #cbd5e1)', 'Svetla pozadina daje kontrast tamnom callout card-u.'],
-  ['host_outline', 'callout-card', 'outline', '1px solid #f97316', 'Dodajemo helper outline za host element i držimo ga do završnog host rezimea.', 'Pre rendera, host je jedino što browser zaista vidi i zato mora da ostane jasan.'],
+  ['host_outline', 'callout-card', 'outline', '1px solid #f97316', 'Dodajemo helper outline za host element i držimo ga do završnog host rezimea.', 'I kada light DOM markup već postoji, host ostaje spoljašnji okvir komponente i zato mora da ostane jasan.'],
   ['host_display', 'callout-card', 'display', 'block', 'Host pretvaramo u block da dobije pravi footprint.'],
   ['host_width', 'callout-card', 'width', 'min(100%, 420px)', 'Širinu zaključavamo rano da card kasnije uleti u stabilan okvir.'],
   ['card_outline', 'callout-card .card', 'outline', '1px dashed #38bdf8', 'Kada komponenta renderuje light DOM markup, glavni `.card` dobija helper outline do završnog card rezimea.', 'Glavni card outline ostaje dok ceo light DOM blok ne postane jasan.'],
@@ -112,7 +112,6 @@ export const lessonSteps = [
     'Naziv custom elementa mora da sadrži crticu. To je prvi uslov da ga kasnije registruješ.',
     ['<callout-card']
   ),
-  ...cssSteps.map(config => describeCssPropertyStep(...config)),
   describeJsFlowStep(
     'class_declaration',
     'JS: Class Extends HTMLElement',
@@ -149,6 +148,7 @@ export const lessonSteps = [
     'Pozivamo `customElements.define(\'callout-card\', CalloutCard)`. Od tog trenutka browser zna kako da upgrade-uje svaki `<callout-card>` u stvarnu komponentu.',
     'Registracija je trenutak kada nepoznati tag postaje živi custom element.'
   ),
+  ...cssSteps.map(config => describeCssPropertyStep(...config)),
   describeSummaryStep(
     'card_summary',
     'Rezime: .card',
@@ -183,7 +183,7 @@ export const lessonSteps = [
   describeFinishedStep(
     'done',
     'Done: Light DOM Custom Element',
-    'Prva Web Components lekcija je gotova. Sad razumeš host tag, registraciju, atribute i render kroz light DOM. Sledeći prirodan korak je shadow DOM lekcija.',
+    'Prva Web Components lekcija je gotova. Sad razumeš host tag, registraciju, atribute, render kroz light DOM i tek onda stilizaciju nad stvarnim renderovanim DOM-om. Sledeći prirodan korak je shadow DOM lekcija.',
     'Najbolji nastavak je lekcija 2/2, gde isti problem rešavamo kroz template, shadow DOM i slotove.'
   )
 ];

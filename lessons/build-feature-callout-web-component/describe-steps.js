@@ -76,7 +76,7 @@ const shellCssSteps = [
   ['shell_place_items', '.app-shell', 'place-items', 'center', 'Centar zadržava fokus korisnika na jednoj komponenti.'],
   ['shell_min_height', '.app-shell', 'min-height', '100vh', 'Puna visina drži scenu stabilnom kroz celu lekciju.'],
   ['shell_background', '.app-shell', 'background', 'linear-gradient(180deg, #e2e8f0, #cbd5e1)', 'Svetla pozadina daje kontrast tamnoj komponenti koju gradimo.'],
-  ['host_outline', 'feature-callout', 'outline', '1px solid #f97316', 'Dodajemo tanak helper outline za host element i držimo ga do završnog host rezimea.', 'Pre registracije custom elementa host je glavni teaching target i zato ostaje jasno obeležen.'],
+  ['host_outline', 'feature-callout', 'outline', '1px solid #f97316', 'Dodajemo tanak helper outline za host element i držimo ga do završnog host rezimea.', 'I kada komponenta već renderuje shadow DOM, host ostaje spoljašnji API i zato mora da ostane jasno obeležen.'],
   ['host_display', 'feature-callout', 'display', 'block', 'Host pretvaramo u block da zauzme svoj red i dobije realan footprint.'],
   ['host_width', 'feature-callout', 'width', 'min(100%, 420px)', 'Širinu zaključavamo rano da card skeleton ne šeta po sceni.'],
   ['host_surface_token', 'feature-callout', '--callout-surface', '#0f172a', 'Spolja uvodimo surface token koji shadow DOM kasnije povlači kroz `var(...)`.'],
@@ -153,7 +153,6 @@ export const lessonSteps = [
     'Ovo je važan momenat: light DOM i shadow DOM nisu ista stvar, ali mogu da sarađuju kroz slot projekciju.',
     ['<feature-callout', 'slot="eyebrow"']
   ),
-  ...shellCssSteps.map(config => describeCssPropertyStep(...config)),
   describeJsFlowStep(
     'template_declaration',
     'JS: Kreiramo Template',
@@ -164,14 +163,13 @@ export const lessonSteps = [
     'template_markup_open',
     'JS: Otvaramo Template String',
     'Dodajemo `template.innerHTML = \\`` i od tog trenutka gradimo ceo shadow DOM sadržaj iz jednog kontrolisanog izvora.',
-    'Engine i ovde mora da ostane pošten: template string raste postepeno, ne uleće gotov.'
+    'Prvo otvaramo template kao mesto gde će nastati shadow DOM skeleton, a stilove dodajemo tek kada taj skeleton već postoji.'
   ),
-  ...templateStyleSteps.map(config => describeJsTemplateStyleStep(...config)),
   describeJsFlowStep(
     'card_markup',
     'JS: Dodajemo Shadow DOM Markup',
     'Sada ubacujemo unutrašnji markup: card wrapper, named slot za eyebrow, naslov, paragraf sa default slotom i CTA dugme.',
-    'Tek kada template ima i stil i markup, ima smisla da ga kloniramo u shadow root.'
+    'Prvo pravimo stvarni shadow DOM markup koji preview može da pokaže; stilovi dolaze odmah posle toga.'
   ),
   describeJsFlowStep(
     'class_declaration',
@@ -202,12 +200,6 @@ export const lessonSteps = [
     'JS: Keširamo CTA Element',
     'Na isti način čuvamo referencu na `.cta`, jer će tekst dugmeta stizati iz atributa host elementa.',
     'Render treba da govori šta menja, ne da svaki put iznova objašnjava kako traži iste čvorove.'
-  ),
-  describeJsFlowStep(
-    'define_element',
-    'JS: Registrujemo Custom Element',
-    'Pozivamo `customElements.define(\'feature-callout\', FeatureCallout)`. Od ovog trenutka browser zna kako da upgrade-uje `<feature-callout>` u pravu komponentu.',
-    'Registracija je trenutak kada custom tag prestaje da bude samo nepoznati HTML i postaje aktivna komponenta.'
   ),
   describeJsFlowStep(
     'render_declaration',
@@ -245,6 +237,14 @@ export const lessonSteps = [
     'Dodajemo `attributeChangedCallback()` i ponovo pozivamo `this.render()`. Tako komponenta ostaje sinhronizovana i kada se atributi promene posle prvog mount-a.',
     'Ovo je važna razlika između statičnog HTML snimka i stvarne, žive komponente.'
   ),
+  describeJsFlowStep(
+    'define_element',
+    'JS: Registrujemo Custom Element',
+    'Pozivamo `customElements.define(\'feature-callout\', FeatureCallout)`. Od ovog trenutka browser zna kako da upgrade-uje `<feature-callout>` u pravu komponentu i preview dobija prvi stvarni, još uvek sirovi render.',
+    'Tek kada browser dobije živu komponentu, ima smisla da preko nje gradiš spoljašnji i unutrašnji CSS sloj.'
+  ),
+  ...shellCssSteps.map(config => describeCssPropertyStep(...config)),
+  ...templateStyleSteps.map(config => describeJsTemplateStyleStep(...config)),
   describeSummaryStep(
     'card_summary',
     'Rezime: .card unutar template-a',
@@ -279,7 +279,7 @@ export const lessonSteps = [
   describeFinishedStep(
     'done',
     'Done: Feature Callout Web Component',
-    'Lekcija je završena: od praznog shell-a stigli smo do pravog custom elementa sa host atributima, slotovima, shadow DOM-om i render lifecycle-om.',
+    'Lekcija je završena: od praznog shell-a stigli smo do pravog custom elementa sa host atributima, slotovima, shadow DOM-om, render lifecycle-om i stilovima koji dolaze tek nad stvarnim renderom.',
     'Sledeći logičan korak je da napraviš drugu komponentu sa više slotova ili da uvedeš `part` i `exportparts` kao napredniji nivo.'
   )
 ];

@@ -1,9 +1,82 @@
+=== .aider.chat.history.md ===
+
+# aider chat started at 2026-03-22 23:12:25
+
+> You can skip this check with --no-gitignore  
+> Add .aider* to .gitignore (recommended)? (Y)es/(N)o [Yes]: y  
+> Added .aider* to .gitignore  
+> /home/shomsy/.local/bin/aider --model ollama/phi3  
+> Warning: ollama/phi3 expects these environment variables  
+> - OLLAMA_API_BASE: Not set  
+> You can skip this check with --no-show-model-warnings  
+> https://aider.chat/docs/llms/warnings.html  
+> Open documentation url for more info? (Y)es/(N)o/(D)on't ask again [Yes]: n  
+> Aider v0.86.2  
+> Model: ollama/phi3 with whole edit format  
+> Git repo: .git with 87 files  
+> Repo-map: using 4096 tokens, auto refresh  
+> https://aider.chat/HISTORY.html#release-notes  
+> Would you like to see what's new in this version? (Y)es/(N)o [Yes]: n  
+
+#### /ask Explain this project structure and architecture. Focus on folder responsibilities, naming quality, and separation of concerns.  
+
+#### Explain this project structure and architecture. Focus on folder responsibilities, naming quality, and separation of concerns.  
+> litellm.APIConnectionError: OllamaException - {"error":"model requires more system memory (9.0 GiB) than is available (6.3 GiB)"}  
+> Retrying in 0.2 seconds...  
+> litellm.APIConnectionError: OllamaException - {"error":"model requires more system memory (9.0 GiB) than is available (6.3 GiB)"}  
+> Retrying in 0.5 seconds...  
+> litellm.APIConnectionError: OllamaException - {"error":"model requires more system memory (9.0 GiB) than is available (6.3 GiB)"}  
+> Retrying in 1.0 seconds...  
+> litellm.APIConnectionError: OllamaException - {"error":"model requires more system memory (9.0 GiB) than is available (6.3 GiB)"}  
+> Retrying in 2.0 seconds...  
+> litellm.APIConnectionError: OllamaException - {"error":"model requires more system memory (9.0 GiB) than is available (6.3 GiB)"}  
+> Retrying in 4.0 seconds...  
+> litellm.APIConnectionError: OllamaException - {"error":"model requires more system memory (9.0 GiB) than is available (6.3 GiB)"}  
+> Retrying in 8.0 seconds...  
+> litellm.APIConnectionError: OllamaException - {"error":"model requires more system memory (9.0 GiB) than is available (6.8 GiB)"}  
+> Retrying in 16.0 seconds...  
+> litellm.APIConnectionError: OllamaException - {"error":"model requires more system memory (9.0 GiB) than is available (6.5 GiB)"}  
+> Retrying in 32.0 seconds...  
+> litellm.APIConnectionError: OllamaException - {"error":"model requires more system memory (9.0 GiB) than is available (8.3 GiB)"}  
+
+#### /ask Explain this project structure and architecture. Focus on folder responsibilities, naming quality, and separation of concerns.  
+
+#### Explain this project structure and architecture. Focus on folder responsibilities, naming quality, and separation of concerns.  
+> litellm.APIConnectionError: OllamaException - {"error":"model requires more system memory (9.0 GiB) than is available (8.6 GiB)"}  
+> Retrying in 0.2 seconds...  
+> litellm.APIConnectionError: OllamaException - {"error":"model requires more system memory (9.0 GiB) than is available (8.6 GiB)"}  
+> Retrying in 0.5 seconds...  
+> litellm.APIConnectionError: OllamaException - {"error":"model requires more system memory (9.0 GiB) than is available (8.6 GiB)"}  
+> Retrying in 1.0 seconds...  
+> litellm.APIConnectionError: OllamaException - {"error":"model requires more system memory (9.0 GiB) than is available (8.6 GiB)"}  
+> Retrying in 2.0 seconds...  
+> litellm.APIConnectionError: OllamaException - {"error":"model requires more system memory (9.0 GiB) than is available (8.6 GiB)"}  
+> Retrying in 4.0 seconds...  
+> litellm.APIConnectionError: OllamaException - {"error":"model requires more system memory (9.0 GiB) than is available (8.6 GiB)"}  
+> Retrying in 8.0 seconds...  
+> litellm.APIConnectionError: OllamaException - {"error":"model requires more system memory (9.0 GiB) than is available (8.6 GiB)"}  
+> Retrying in 16.0 seconds...  
+> litellm.APIConnectionError: OllamaException - {"error":"model requires more system memory (9.0 GiB) than is available (8.3 GiB)"}  
+> Retrying in 32.0 seconds...  
+
+=== .aider.input.history ===
+
+# 2026-03-22 23:12:37.889982
++Y
+
+# 2026-03-22 23:17:00.783582
++N
+
+# 2026-03-22 23:17:45.650032
++/ask Explain this project structure and architecture. Focus on folder responsibilities, naming quality, and separation of concerns.
+
 === .gitignore ===
 node_modules/
 dist/
 .cache/
 .DS_Store
 .idea/
+.aider*
 
 === AGENTS.md ===
 # AGENTS
@@ -32,6 +105,7 @@ Svaka nova lekcija mora da koristi isti shell i isti teaching model:
 - kada lekcija to traži, JS ide akciju po akciju
 - preview prikazuje tačno isti kumulativni HTML/CSS/JS koji je trenutno napisan
 - promene moraju da budu jasne, predvidive i lake za verbalno objašnjavanje
+- kod Web Components lekcija, prvo JS mora da napravi stvarni renderovani DOM, pa tek onda CSS sme da stilizuje te delove
 
 Ovo nije showcase.
 Ovo nije fake storyboard.
@@ -762,6 +836,7 @@ Lekcija mora da se ponaša kao da gledaš programera preko share screen-a:
 - kada lekcija to traži, JavaScript se dodaje akciju po akciju
 - preview prikazuje tačno isti kumulativni HTML/CSS/JS koji je trenutno napisan
 - svaka promena mora da bude vizuelno jasna i verbalno objašnjiva
+- kod Web Components lekcija, prvo JavaScript mora da napravi stvarni renderovani DOM, pa tek onda CSS treba da ga stilizuje
 
 Ako sadržaj ne može da se razbije na takve male, čitljive korake, još nije spreman za ovu vrstu animacije.
 
@@ -4592,7 +4667,7 @@ const cssSteps = [
   ['shell_place_items', '.app-shell', 'place-items', 'center', 'Centar čuva fokus na komponenti koju gradimo.'],
   ['shell_min_height', '.app-shell', 'min-height', '100vh', 'Puna visina stabilizuje preview scenu.'],
   ['shell_background', '.app-shell', 'background', 'linear-gradient(180deg, #e2e8f0, #cbd5e1)', 'Svetla pozadina daje kontrast tamnom callout card-u.'],
-  ['host_outline', 'callout-card', 'outline', '1px solid #f97316', 'Dodajemo helper outline za host element i držimo ga do završnog host rezimea.', 'Pre rendera, host je jedino što browser zaista vidi i zato mora da ostane jasan.'],
+  ['host_outline', 'callout-card', 'outline', '1px solid #f97316', 'Dodajemo helper outline za host element i držimo ga do završnog host rezimea.', 'I kada light DOM markup već postoji, host ostaje spoljašnji okvir komponente i zato mora da ostane jasan.'],
   ['host_display', 'callout-card', 'display', 'block', 'Host pretvaramo u block da dobije pravi footprint.'],
   ['host_width', 'callout-card', 'width', 'min(100%, 420px)', 'Širinu zaključavamo rano da card kasnije uleti u stabilan okvir.'],
   ['card_outline', 'callout-card .card', 'outline', '1px dashed #38bdf8', 'Kada komponenta renderuje light DOM markup, glavni `.card` dobija helper outline do završnog card rezimea.', 'Glavni card outline ostaje dok ceo light DOM blok ne postane jasan.'],
@@ -4642,7 +4717,6 @@ export const lessonSteps = [
     'Naziv custom elementa mora da sadrži crticu. To je prvi uslov da ga kasnije registruješ.',
     ['<callout-card']
   ),
-  ...cssSteps.map(config => describeCssPropertyStep(...config)),
   describeJsFlowStep(
     'class_declaration',
     'JS: Class Extends HTMLElement',
@@ -4679,6 +4753,7 @@ export const lessonSteps = [
     'Pozivamo `customElements.define(\'callout-card\', CalloutCard)`. Od tog trenutka browser zna kako da upgrade-uje svaki `<callout-card>` u stvarnu komponentu.',
     'Registracija je trenutak kada nepoznati tag postaje živi custom element.'
   ),
+  ...cssSteps.map(config => describeCssPropertyStep(...config)),
   describeSummaryStep(
     'card_summary',
     'Rezime: .card',
@@ -4713,7 +4788,7 @@ export const lessonSteps = [
   describeFinishedStep(
     'done',
     'Done: Light DOM Custom Element',
-    'Prva Web Components lekcija je gotova. Sad razumeš host tag, registraciju, atribute i render kroz light DOM. Sledeći prirodan korak je shadow DOM lekcija.',
+    'Prva Web Components lekcija je gotova. Sad razumeš host tag, registraciju, atribute, render kroz light DOM i tek onda stilizaciju nad stvarnim renderovanim DOM-om. Sledeći prirodan korak je shadow DOM lekcija.',
     'Najbolji nastavak je lekcija 2/2, gde isti problem rešavamo kroz template, shadow DOM i slotove.'
   )
 ];
@@ -5441,7 +5516,7 @@ const shellCssSteps = [
   ['shell_place_items', '.app-shell', 'place-items', 'center', 'Centar zadržava fokus korisnika na jednoj komponenti.'],
   ['shell_min_height', '.app-shell', 'min-height', '100vh', 'Puna visina drži scenu stabilnom kroz celu lekciju.'],
   ['shell_background', '.app-shell', 'background', 'linear-gradient(180deg, #e2e8f0, #cbd5e1)', 'Svetla pozadina daje kontrast tamnoj komponenti koju gradimo.'],
-  ['host_outline', 'feature-callout', 'outline', '1px solid #f97316', 'Dodajemo tanak helper outline za host element i držimo ga do završnog host rezimea.', 'Pre registracije custom elementa host je glavni teaching target i zato ostaje jasno obeležen.'],
+  ['host_outline', 'feature-callout', 'outline', '1px solid #f97316', 'Dodajemo tanak helper outline za host element i držimo ga do završnog host rezimea.', 'I kada komponenta već renderuje shadow DOM, host ostaje spoljašnji API i zato mora da ostane jasno obeležen.'],
   ['host_display', 'feature-callout', 'display', 'block', 'Host pretvaramo u block da zauzme svoj red i dobije realan footprint.'],
   ['host_width', 'feature-callout', 'width', 'min(100%, 420px)', 'Širinu zaključavamo rano da card skeleton ne šeta po sceni.'],
   ['host_surface_token', 'feature-callout', '--callout-surface', '#0f172a', 'Spolja uvodimo surface token koji shadow DOM kasnije povlači kroz `var(...)`.'],
@@ -5518,7 +5593,6 @@ export const lessonSteps = [
     'Ovo je važan momenat: light DOM i shadow DOM nisu ista stvar, ali mogu da sarađuju kroz slot projekciju.',
     ['<feature-callout', 'slot="eyebrow"']
   ),
-  ...shellCssSteps.map(config => describeCssPropertyStep(...config)),
   describeJsFlowStep(
     'template_declaration',
     'JS: Kreiramo Template',
@@ -5529,14 +5603,13 @@ export const lessonSteps = [
     'template_markup_open',
     'JS: Otvaramo Template String',
     'Dodajemo `template.innerHTML = \\`` i od tog trenutka gradimo ceo shadow DOM sadržaj iz jednog kontrolisanog izvora.',
-    'Engine i ovde mora da ostane pošten: template string raste postepeno, ne uleće gotov.'
+    'Prvo otvaramo template kao mesto gde će nastati shadow DOM skeleton, a stilove dodajemo tek kada taj skeleton već postoji.'
   ),
-  ...templateStyleSteps.map(config => describeJsTemplateStyleStep(...config)),
   describeJsFlowStep(
     'card_markup',
     'JS: Dodajemo Shadow DOM Markup',
     'Sada ubacujemo unutrašnji markup: card wrapper, named slot za eyebrow, naslov, paragraf sa default slotom i CTA dugme.',
-    'Tek kada template ima i stil i markup, ima smisla da ga kloniramo u shadow root.'
+    'Prvo pravimo stvarni shadow DOM markup koji preview može da pokaže; stilovi dolaze odmah posle toga.'
   ),
   describeJsFlowStep(
     'class_declaration',
@@ -5567,12 +5640,6 @@ export const lessonSteps = [
     'JS: Keširamo CTA Element',
     'Na isti način čuvamo referencu na `.cta`, jer će tekst dugmeta stizati iz atributa host elementa.',
     'Render treba da govori šta menja, ne da svaki put iznova objašnjava kako traži iste čvorove.'
-  ),
-  describeJsFlowStep(
-    'define_element',
-    'JS: Registrujemo Custom Element',
-    'Pozivamo `customElements.define(\'feature-callout\', FeatureCallout)`. Od ovog trenutka browser zna kako da upgrade-uje `<feature-callout>` u pravu komponentu.',
-    'Registracija je trenutak kada custom tag prestaje da bude samo nepoznati HTML i postaje aktivna komponenta.'
   ),
   describeJsFlowStep(
     'render_declaration',
@@ -5610,6 +5677,14 @@ export const lessonSteps = [
     'Dodajemo `attributeChangedCallback()` i ponovo pozivamo `this.render()`. Tako komponenta ostaje sinhronizovana i kada se atributi promene posle prvog mount-a.',
     'Ovo je važna razlika između statičnog HTML snimka i stvarne, žive komponente.'
   ),
+  describeJsFlowStep(
+    'define_element',
+    'JS: Registrujemo Custom Element',
+    'Pozivamo `customElements.define(\'feature-callout\', FeatureCallout)`. Od ovog trenutka browser zna kako da upgrade-uje `<feature-callout>` u pravu komponentu i preview dobija prvi stvarni, još uvek sirovi render.',
+    'Tek kada browser dobije živu komponentu, ima smisla da preko nje gradiš spoljašnji i unutrašnji CSS sloj.'
+  ),
+  ...shellCssSteps.map(config => describeCssPropertyStep(...config)),
+  ...templateStyleSteps.map(config => describeJsTemplateStyleStep(...config)),
   describeSummaryStep(
     'card_summary',
     'Rezime: .card unutar template-a',
@@ -5644,7 +5719,7 @@ export const lessonSteps = [
   describeFinishedStep(
     'done',
     'Done: Feature Callout Web Component',
-    'Lekcija je završena: od praznog shell-a stigli smo do pravog custom elementa sa host atributima, slotovima, shadow DOM-om i render lifecycle-om.',
+    'Lekcija je završena: od praznog shell-a stigli smo do pravog custom elementa sa host atributima, slotovima, shadow DOM-om, render lifecycle-om i stilovima koji dolaze tek nad stvarnim renderom.',
     'Sledeći logičan korak je da napraviš drugu komponentu sa više slotova ili da uvedeš `part` i `exportparts` kao napredniji nivo.'
   )
 ];

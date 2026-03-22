@@ -24,6 +24,7 @@ Svaka nova lekcija mora da koristi isti shell i isti teaching model:
 - kada lekcija to traži, JS ide akciju po akciju
 - preview prikazuje tačno isti kumulativni HTML/CSS/JS koji je trenutno napisan
 - promene moraju da budu jasne, predvidive i lake za verbalno objašnjavanje
+- kod Web Components lekcija, prvo JS mora da napravi stvarni renderovani DOM, pa tek onda CSS sme da stilizuje te delove
 
 Ovo nije showcase.
 Ovo nije fake storyboard.
