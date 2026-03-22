@@ -42,6 +42,11 @@ function appendVisibleCssRuleBlock(lines, header, entries, stepNumber, showFrom 
 export function buildCssAtStep(stepNumber) {
   const lines = [];
 
+  appendVisibleCssRuleBlock(lines, '.app-shell {', [
+    { from: 'shell_outline', untilBefore: 'shell_summary', line: 'outline: 1px dashed #94a3b8;' },
+    { from: 'shell_summary', line: '/* helper outline removed in final .app-shell summary */' }
+  ], stepNumber, 'empty_shell');
+
   appendVisibleCssRuleBlock(lines, '.sidebar {', [
     { from: 'sidebar_outline', untilBefore: 'sidebar_summary', line: 'outline: 1px solid #ff4757;' },
     { from: 'sidebar_width', line: 'width: 280px;' },

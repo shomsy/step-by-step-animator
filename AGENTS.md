@@ -274,6 +274,7 @@ To znači:
 
 Ova pravila važe za sve lekcije, bez izuzetka:
 
+- `.app-shell` mora da dobije svoj tanak helper outline i da ga zadrži kroz celu lekciju, sve do završnog shell rezimea
 - svaki važan HTML element ili teaching celina mora da dobije svoj tanak helper outline što ranije
 - taj outline ne skidaš odmah kada dodaš prvi završni stil
 - outline ostaje aktivan do završnog rezime koraka za taj element ili celinu

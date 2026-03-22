@@ -43,9 +43,11 @@ export function buildCssAtStep(stepNumber) {
   const lines = [];
 
   appendVisibleCssRuleBlock(lines, '.app-shell {', [
+    { from: 'shell_outline', untilBefore: 'shell_summary', line: 'outline: 1px dashed #94a3b8;' },
     { from: 'shell_padding', line: 'padding: 40px;' },
     { from: 'shell_background', line: 'background: #d6e1eb;' },
-    { from: 'shell_min_height', line: 'min-height: 100vh;' }
+    { from: 'shell_min_height', line: 'min-height: 100vh;' },
+    { from: 'shell_summary', line: '/* helper outline removed in final .app-shell summary */' }
   ], stepNumber, 'empty_shell');
 
   appendVisibleCssRuleBlock(lines, '.topbar {', [

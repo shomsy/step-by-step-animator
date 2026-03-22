@@ -140,6 +140,7 @@ Kad je neka celina tek u izgradnji, helper linije su obavezne ako pomažu orijen
 Pravila:
 
 - helper outline ili border uvodi se rano
+- `.app-shell` takođe mora da dobije svoj tanak helper outline i da ga zadrži kroz celu lekciju, sve do završnog shell rezimea
 - svaki pod-element iste celine treba da ima svoj tanak helper outline
 - svaki pod-element iste celine može imati svoju helper boju
 - helper stilovi ostaju aktivni do završnog rezime koraka za taj element ili celinu

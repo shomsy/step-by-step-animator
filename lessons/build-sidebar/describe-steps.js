@@ -72,6 +72,7 @@ export const lessonSteps = [
     ['class="sidebar"']
   ),
   ...[
+    ['shell_outline', '.app-shell', 'outline', '1px dashed #94a3b8', 'Dodajemo tanak helper outline za `.app-shell` i zadržavamo ga kroz celu lekciju, sve do završnog shell rezimea.', 'App shell ostaje stalni okvir cele demonstracije dok ne završimo ceo tutorijal.'],
     ['sidebar_outline', '.sidebar', 'outline', '1px solid #ff4757', 'Dodajemo tanak helper outline da footprint sidebara ostane jasan kroz ceo lesson tok. Skidamo ga tek u završnom rezime koraku za `.sidebar`.', 'Outline ostaje aktivan dok ne završimo rezime za ovaj element.'],
     ['sidebar_width', '.sidebar', 'width', '280px', 'Kad granica postoji, zaključavamo širinu sidebara da dobije jasan footprint.'],
     ['sidebar_min_height', '.sidebar', 'min-height', '100vh', 'Dajemo sidebaru punu visinu da box postane čitljiv i bez sadržaja.'],
@@ -226,6 +227,13 @@ export const lessonSteps = [
     'Rezimiramo footer blok i uklanjamo njegov helper outline tek sada, kada je ceo footer vizuelno završen.',
     'Outline za footer služi učenju i zato ostaje sve do poslednjeg footer rezimea.',
     ['class="sidebar-footer"', '<p>Sidebar nije samo lista linkova.']
+  ),
+  describeCssSummaryStep(
+    'shell_summary',
+    'Rezime: .app-shell',
+    'Završni shell rezime: tek sada uklanjamo helper outline sa `.app-shell`, jer je cela sidebar lekcija kompletna i okvir više nije potreban.',
+    'App shell outline ostaje sve vreme kao teaching okvir, pa nestaje tek na samom kraju lekcije.',
+    ['<div class="app-shell">']
   ),
   describeFinishedStep(
     'done',

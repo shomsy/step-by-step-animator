@@ -62,6 +62,7 @@ export const lessonSteps = [
     ['class="topbar"']
   ),
   ...[
+    ['shell_outline', '.app-shell', 'outline', '1px dashed #94a3b8', 'Dodajemo tanak helper outline za `.app-shell` i zadržavamo ga kroz celu lekciju, sve do završnog shell rezimea.', 'App shell ostaje stalni okvir cele demonstracije dok ne završimo ceo tutorijal.'],
     ['shell_padding', '.app-shell', 'padding', '40px', 'Dodajemo padding oko cele scene da navbar dobije vazduh i ne stoji zalepljen za ivice preview-a.'],
     ['shell_background', '.app-shell', 'background', '#d6e1eb', 'Svetla pozadina približava preview referentnoj slici i daje kontrast tamnom navbaru.'],
     ['shell_min_height', '.app-shell', 'min-height', '100vh', 'Puna visina drži celu scenu stabilnom tokom lekcije.'],
@@ -153,6 +154,12 @@ export const lessonSteps = [
     '.topbar-cta',
     'Rezime za CTA dugme: helper outline više nije potreban, jer završni stil već jasno govori šta je element i kako izgleda.',
     'Outline služi učenju; kad je učenje za taj element završeno, može da nestane.'
+  ),
+  describeCssSummaryStep(
+    'shell_summary',
+    '.app-shell',
+    'Završni shell rezime: tek sada uklanjamo helper outline sa `.app-shell`, jer je cela navigaciona lekcija kompletna i okvir više nije potreban.',
+    'App shell outline ostaje sve vreme kao teaching okvir, pa nestaje tek na samom kraju lekcije.'
   ),
   describeFinishedStep(
     'done',
