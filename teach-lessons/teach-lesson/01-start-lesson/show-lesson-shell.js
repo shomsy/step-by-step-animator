@@ -1,6 +1,12 @@
 export function showLessonShell({ ownerDocument, lessonParts, lesson }) {
   lessonParts.lessonHeading.textContent = lesson.lessonTitle;
-  lessonParts.lessonIntro.textContent = lesson.lessonIntro;
+
+  if (lesson.lessonIntroHtml) {
+    lessonParts.lessonIntro.innerHTML = lesson.lessonIntroHtml;
+  } else {
+    lessonParts.lessonIntro.textContent = lesson.lessonIntro;
+  }
+
   lessonParts.previewAddress.textContent = lesson.previewAddress;
   lessonParts.htmlFileLabel.textContent = lesson.htmlFileName;
   lessonParts.cssFileLabel.textContent = lesson.cssFileName;

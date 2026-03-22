@@ -45,7 +45,12 @@ teach-lessons/
     describe-steps.js
     build-html-at-step.js
     build-css-at-step.js
-    list-knowledge-check-questions.js
+    content/
+      documents/
+        build_sidebar.md
+        files/
+          lesson.sr.md
+          quiz.sr.md
 ```
 
 ## Naming Rules
@@ -106,6 +111,16 @@ If the feature is a concrete lesson contract, use:
 ```txt
 feature-name.lesson.js
 ```
+
+Markdown lesson documents may live next to the lesson contract:
+
+```txt
+content/documents/files/lesson.sr.md
+content/documents/files/quiz.sr.md
+```
+
+Use markdown for lesson metadata and question content.
+Keep step-by-step HTML/CSS builder logic explicit until a dedicated step DSL exists.
 
 ### 4. Every other file owns one clear responsibility
 

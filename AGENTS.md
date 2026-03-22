@@ -86,7 +86,12 @@ teach-lessons/
     describe-steps.js
     build-html-at-step.js
     build-css-at-step.js
-    list-knowledge-check-questions.js
+    content/
+      documents/
+        build_sidebar.md
+        files/
+          lesson.sr.md
+          quiz.sr.md
 ```
 
 ### 2.2 Lesson Contract
@@ -113,7 +118,28 @@ Taj file mora da vrati kompletan lesson contract:
 
 Ne uvoditi paralelne lesson shape-ove.
 
-### 2.3 Runtime and Entry Rules
+### 2.3 Lesson Documents
+
+Lekcija može da ima markdown source dokumente unutar:
+
+```txt
+feature-name/
+  content/
+    documents/
+      files/
+        lesson.sr.md
+        quiz.sr.md
+```
+
+Pravila:
+
+- `lesson.sr.md` je kanonski source za title, intro i lesson metadata
+- `quiz.sr.md` je kanonski source za knowledge check pitanja
+- generated book output ide u `content/documents/<lesson_name>.md`
+- generated output se ne uređuje ručno
+- interaktivni HTML/CSS step builderi i dalje ostaju strogo definisani u JS-u dok ne uvedemo poseban step markdown DSL
+
+### 2.4 Runtime and Entry Rules
 
 - nema `src/` foldera
 - `main.js` je root entry
@@ -122,7 +148,7 @@ Ne uvoditi paralelne lesson shape-ove.
 - build ide kroz Vite
 - kanonski engine entry ostaje `teach-lessons/teach-lesson/teach-lesson.pipeline.js`
 
-### 2.4 Naming Rules
+### 2.5 Naming Rules
 
 Koristi ovaj filter pre svakog novog imena:
 
@@ -147,7 +173,7 @@ Zabranjeni glagoli:
 - `manage`
 - `doStuff`
 
-### 2.5 Vocabulary Rules
+### 2.6 Vocabulary Rules
 
 U ovom repo-u glagoli imaju zaključano značenje:
 
@@ -162,7 +188,7 @@ U ovom repo-u glagoli imaju zaključano značenje:
 
 Ne uvoditi novu sinonimsku generaciju ako postojeći glagol već pokriva odgovornost.
 
-### 2.6 Numbering Rules
+### 2.7 Numbering Rules
 
 Brojevi se koriste samo na flow folderima kada redosled zaista nosi značenje u product story-ju.
 
@@ -183,7 +209,7 @@ Pomoćni tokovi ostaju bez brojeva:
 
 Ne numerisati responsibility fajlove.
 
-### 2.7 Preview Integrity Rules
+### 2.8 Preview Integrity Rules
 
 Desni preview mora da bude stvarni render istog kumulativnog HTML/CSS koda koji middle panel prikazuje.
 
@@ -195,19 +221,20 @@ To znači:
 - HTML preview mora da pokaže sirov browser rezultat kada CSS još nije dodat
 - CSS preview mora da utiče samo onoliko koliko je trenutno napisano
 
-### 2.8 Verification Rules
+### 2.9 Verification Rules
 
 Posle svake veće izmene obavezno pokreni:
 
 ```bash
 find teach-lessons -name '*.js' -print0 | xargs -0 -n1 node --check && node --check main.js
+npm run sync:lesson-documents
 npm run build
 ./merge-files.sh .
 ```
 
 Ako menjaš dokumentaciju ili flow tree, osveži i merge dump.
 
-### 2.9 Delivery Discipline
+### 2.10 Delivery Discipline
 
 Na kraju svakog većeg završenog rada obavezna je završna disciplina iz root-a repoa.
 
@@ -272,8 +299,9 @@ Za novu lekciju:
 3. dodaj `describe-steps.js`
 4. dodaj `build-html-at-step.js`
 5. dodaj `build-css-at-step.js`
-6. dodaj `list-knowledge-check-questions.js`
-7. registruj lekciju u `teach-lessons/list-lessons.js`
+6. dodaj `content/documents/files/lesson.sr.md`
+7. dodaj `content/documents/files/quiz.sr.md`
+8. registruj lekciju u `teach-lessons/list-lessons.js`
 
 Ne kopirati shell iz `teach-lesson/`.
 Nova lekcija treba da doda samo svoj contract i svoj content.

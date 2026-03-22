@@ -34,6 +34,12 @@ Ovaj fajl je kanonska lista za arhitekturu i sledeće veće korake ovog repoa.
 - `Šta fali`: ništa
 - `Napomena`: Svaka nova lekcija treba da doda root `feature-name.lesson.js` i da se registruje u `teach-lessons/list-lessons.js`.
 
+### 4a. Uvedi markdown source za lesson metadata i quiz
+
+- `Status`: `DONE`
+- `Šta fali`: ništa
+- `Napomena`: `build-sidebar` sada koristi `content/documents/files/lesson.sr.md` i `quiz.sr.md`, uz generisani `content/documents/build_sidebar.md`.
+
 ## Follow-Up Work
 
 ### 5. Dodaj drugu lekciju da potvrdi engine shape
