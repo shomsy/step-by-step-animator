@@ -270,6 +270,16 @@ To znači:
 - HTML preview mora da pokaže sirov browser rezultat kada CSS još nije dodat
 - CSS preview mora da utiče samo onoliko koliko je trenutno napisano
 
+### 2.8a Teaching Visibility Rules
+
+Ova pravila važe za sve lekcije, bez izuzetka:
+
+- svaki važan HTML element ili teaching celina mora da dobije svoj tanak helper outline što ranije
+- taj outline ne skidaš odmah kada dodaš prvi završni stil
+- outline ostaje aktivan do završnog rezime koraka za taj element ili celinu
+- završni rezime korak za dati element treba da pokaže njegov kompletan CSS i tek tada ugasi helper outline
+- dok je aktivan CSS korak za određeni element, odgovarajući HTML target u editor panelu mora da bude jasno žuto označen
+
 ### 2.9 Verification Rules
 
 Posle svake veće izmene obavezno pokreni:
@@ -323,6 +333,7 @@ Srednji panel:
 - oba prikaza su kumulativna
 - postojeće linije su muted
 - novo dodate linije su naglašene
+- kada je aktivan CSS korak, HTML deo za isti element mora da bude žuto istaknut
 
 Desni panel:
 
@@ -345,6 +356,7 @@ Za nju i dalje važe posebna teaching pravila:
 - sidebar se dodaje kao prva stvar
 - nema filler sadržaja van onoga što lekcija zaista objašnjava
 - helper linije i pomoćni borderi ostaju dok se ne završi cela vizuelna celina
+- outline helperi ostaju do završnog rezime koraka za dati element ili celinu, pa se tek tada uklanjaju
 
 ### 3.3 How To Add A New Lesson
 

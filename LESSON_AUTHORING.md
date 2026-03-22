@@ -125,7 +125,8 @@ Dobro:
 2. dodaj veličinu ili spacing
 3. dodaj raspored
 4. dodaj boje i polish
-5. ukloni helper border kada se završi cela vizuelna celina
+5. zadrži helper outline kroz ceo teaching tok za taj element
+6. ukloni helper outline tek u završnom rezime koraku za taj element ili celinu
 
 Loše:
 
@@ -139,14 +140,25 @@ Kad je neka celina tek u izgradnji, helper linije su obavezne ako pomažu orijen
 Pravila:
 
 - helper outline ili border uvodi se rano
+- svaki pod-element iste celine treba da ima svoj tanak helper outline
 - svaki pod-element iste celine može imati svoju helper boju
-- helper stilovi ostaju aktivni dok se ne završi cela vizuelna celina
-- kada celina bude gotova, eksplicitno ukloni helper stilove
+- helper stilovi ostaju aktivni do završnog rezime koraka za taj element ili celinu
+- završni rezime korak tek tada uklanja helper stilove
 
 Step opis mora to i da kaže:
 
 - kada uvodiš helper stil: `Dodajemo privremeni pomoćni border radi lakšeg snalaženja, kasnije ćemo ga ukloniti.`
 - kada ga uklanjaš: `Uklanjamo privremeni pomoćni border, više nam ne treba.`
+
+### 4.4a HTML focus pravilo tokom CSS koraka
+
+Dok pišeš CSS za neki element, odgovarajući HTML target u editor panelu mora da bude jasno žuto istaknut.
+
+To znači:
+
+- CSS step ne naglašava samo novu CSS liniju
+- isti trenutak mora jasno da pokaže i koji HTML element je pod obradom
+- highlight mora da bude dovoljno upadljiv da se bez razmišljanja vidi o kom elementu govorimo
 
 ### 4.5 Preview integritet
 
@@ -260,6 +272,9 @@ Animaciona pravila:
 - kreni od neutralnog početka, najčešće `<div class="app-shell">`
 - ne ubacuj filler sadržaj koji lekcija ne objašnjava
 - uvodi helper bordere ili outlin-e rano ako element bez njih nije dovoljno vidljiv
+- svaki važan element treba da zadrži svoj tanak outline do završnog rezime koraka za taj element
+- rezime korak za element tek tada gasi outline
+- kada AI piše CSS korak, mora da označi i koji HTML target u editoru treba žuto da bude fokusiran
 - ako postoji referentna slika, lesson contract treba da je prikaže kroz goal card u shell-u
 - ako referentna slika sadrži dodatne varijante, one mogu da budu navedene kao homework umesto da se odmah implementiraju
 - helper stilovi ostaju dok se ne završi cela vizuelna celina
