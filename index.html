@@ -56,6 +56,24 @@
         Koraci po korak pratiš kako se kod i preview grade u realnom vremenu. Aktivna lekcija popunjava ovaj viewer svojim sadržajem.
       </p>
 
+      <div class="lesson-picker">
+        <label class="lesson-picker-label" for="lessonPicker">Aktivna lekcija</label>
+        <select class="lesson-picker-select" id="lessonPicker"></select>
+      </div>
+
+      <div class="goal-card" id="lessonGoal" hidden>
+        <div class="goal-head">
+          <span class="step-number">Cilj lekcije</span>
+          <h2 id="goalHeading">Šta pravimo</h2>
+          <p id="goalCaption"></p>
+        </div>
+        <img class="goal-image" id="goalImage" alt="">
+        <div class="goal-homework" id="goalHomework" hidden>
+          <strong id="goalHomeworkTitle">Domaći zadatak</strong>
+          <ul id="goalHomeworkList"></ul>
+        </div>
+      </div>
+
       <div class="tabs">
         <button class="tab-btn active" data-tab="steps">
           <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg>

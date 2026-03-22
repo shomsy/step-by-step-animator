@@ -1,3 +1,4 @@
+import { presentLessonPicker } from '../choose-lesson/present-lesson-picker.js';
 import { createLessonProgress } from './01-start-lesson/create-lesson-progress.js';
 import { findLessonParts } from './01-start-lesson/find-lesson-parts.js';
 import { showLessonShell } from './01-start-lesson/show-lesson-shell.js';
@@ -13,11 +14,18 @@ import { chooseTheme } from './choose-theme/choose-theme.js';
 import { presentStepFinder } from './find-step/present-step-finder.js';
 import { rememberSavedSteps } from './save-step/remember-saved-steps.js';
 
-export function playLesson({ ownerDocument, lesson }) {
+export function playLesson({ ownerDocument, ownerLocation, ownerWindow, lesson, lessons }) {
   const lessonParts = findLessonParts(ownerDocument);
   const lessonProgress = createLessonProgress();
 
   showLessonShell({ ownerDocument, lessonParts, lesson });
+  presentLessonPicker({
+    lessonPicker: lessonParts.lessonPicker,
+    lessons,
+    currentLessonId: lesson.lessonId,
+    ownerLocation,
+    ownerWindow
+  });
 
   const savedSteps = rememberSavedSteps({
     lessonId: lesson.lessonId,

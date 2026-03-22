@@ -1,6 +1,7 @@
 import { buildSidebarLesson } from './build-sidebar/build-sidebar.lesson.js';
+import { buildTopNavigationLesson } from './build-top-navigation/build-top-navigation.lesson.js';
 
-export const registeredLessons = [buildSidebarLesson];
+export const registeredLessons = [buildSidebarLesson, buildTopNavigationLesson];
 
 const lessonsById = new Map(registeredLessons.map(lesson => [lesson.lessonId, lesson]));
 

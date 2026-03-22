@@ -20,6 +20,7 @@ Current example:
 animator/
   choose-lesson/
     select-lesson-from-location.js
+    present-lesson-picker.js
   play-lesson/
     play-lesson.pipeline.js
     lesson-player.css
@@ -57,6 +58,19 @@ lessons/
     content/
       documents/
         build_sidebar.md
+        files/
+          lesson.sr.md
+          quiz.sr.md
+  build-top-navigation/
+    build-top-navigation.lesson.js
+    describe-steps.js
+    build-html-at-step.js
+    build-css-at-step.js
+    content/
+      assets/
+        top-navigation-goal.svg
+      documents/
+        build_top_navigation.md
         files/
           lesson.sr.md
           quiz.sr.md

@@ -34,6 +34,8 @@ lessons/
     build-html-at-step.js
     build-css-at-step.js
     content/
+      assets/
+        feature-goal.svg
       documents/
         files/
           lesson.sr.md
@@ -49,6 +51,7 @@ lessons/
 - povezuje step script
 - povezuje HTML/CSS builder funkcije
 - povezuje knowledge check pitanja
+- opciono povezuje referentnu sliku cilja i homework napomene za shell
 
 `describe-steps.js`
 
@@ -75,6 +78,11 @@ lessons/
 `content/documents/files/quiz.sr.md`
 
 - drži knowledge check pitanja
+
+`content/assets/feature-goal.svg`
+
+- opciona referentna slika koja pokazuje šta gradimo
+- može da sadrži i homework varijante koje za sada ne implementiramo
 
 ## 4. Pravila za animirani lesson flow
 
@@ -202,6 +210,24 @@ Kratak uvod u lekciju.
 ! Kratko objašnjenje zašto je to tačno.
 ```
 
+## 6a. Goal image contract
+
+Ako lesson ima referentni vizuelni cilj, taj deo ostaje u lesson JS contract-u jer je asset tehnički import.
+
+Tipični optional fields u `feature-name.lesson.js`:
+
+```js
+goalTitle: 'Šta gradimo u ovoj lekciji',
+goalImageSrc: goalImage,
+goalImageAlt: 'Opis referentne slike',
+goalImageCaption: 'Šta tačno gradimo iz te reference',
+homeworkTitle: 'Domaći zadatak',
+homeworkItems: [
+  'Varijanta 2 ostaje za samostalnu vežbu.',
+  'Varijanta 3 ostaje za samostalnu vežbu.'
+]
+```
+
 ## 7. Šta da kažeš AI-u
 
 Ako želiš da AI pretvori sadržaj u lekciju, daj mu i cilj UI-ja i stroga pravila animacije.
@@ -223,6 +249,7 @@ Repo contract:
   - `describe-steps.js`
   - `build-html-at-step.js`
   - `build-css-at-step.js`
+  - `content/assets/[feature-name]-goal.svg` kada postoji referentna slika
   - `content/documents/files/lesson.sr.md`
   - `content/documents/files/quiz.sr.md`
 
@@ -233,6 +260,8 @@ Animaciona pravila:
 - kreni od neutralnog početka, najčešće `<div class="app-shell">`
 - ne ubacuj filler sadržaj koji lekcija ne objašnjava
 - uvodi helper bordere ili outlin-e rano ako element bez njih nije dovoljno vidljiv
+- ako postoji referentna slika, lesson contract treba da je prikaže kroz goal card u shell-u
+- ako referentna slika sadrži dodatne varijante, one mogu da budu navedene kao homework umesto da se odmah implementiraju
 - helper stilovi ostaju dok se ne završi cela vizuelna celina
 - kada uvodiš helper stil, step opis mora da kaže da je privremen
 - kada uklanjaš helper stil, step opis mora da kaže da ga uklanjaš jer više nije potreban

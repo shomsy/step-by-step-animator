@@ -17,9 +17,10 @@ To je lesson engine za interaktivne HTML/CSS lekcije koje treba da izgledaju kao
 
 Engine je generičan.
 
-Trenutno isporučena lekcija je:
+Trenutno isporučene lekcije su:
 
 - `build-sidebar`
+- `build-top-navigation`
 
 Svaka nova lekcija mora da koristi isti shell i isti teaching model:
 
@@ -56,6 +57,7 @@ Aktuelni kanonski shape:
 animator/
   choose-lesson/
     select-lesson-from-location.js
+    present-lesson-picker.js
   play-lesson/
     play-lesson.pipeline.js
     lesson-player.css
@@ -112,6 +114,19 @@ lessons/
         files/
           lesson.sr.md
           quiz.sr.md
+  build-top-navigation/
+    build-top-navigation.lesson.js
+    describe-steps.js
+    build-html-at-step.js
+    build-css-at-step.js
+    content/
+      assets/
+        top-navigation-goal.svg
+      documents/
+        build_top_navigation.md
+        files/
+          lesson.sr.md
+          quiz.sr.md
 ```
 
 ### 2.2 Lesson Contract
@@ -136,6 +151,15 @@ Taj file mora da vrati kompletan lesson contract:
 - `buildCssAtStep`
 - `knowledgeCheckQuestions`
 
+Opciona lesson shell polja kada želiš da pokažeš vizuelni cilj i homework:
+
+- `goalTitle`
+- `goalImageSrc`
+- `goalImageAlt`
+- `goalImageCaption`
+- `homeworkTitle`
+- `homeworkItems`
+
 Ne uvoditi paralelne lesson shape-ove.
 
 ### 2.3 Lesson Documents
@@ -149,6 +173,15 @@ feature-name/
       files/
         lesson.sr.md
         quiz.sr.md
+```
+
+Ako lesson ima referentnu sliku cilja, asset ide ovde:
+
+```txt
+feature-name/
+  content/
+    assets/
+      feature-goal.svg
 ```
 
 Pravila:
@@ -308,6 +341,11 @@ Desni panel:
 
 `build-sidebar` je referentna lekcija za engine.
 
+`build-top-navigation` pokazuje dodatni shell capability:
+
+- goal sliku koja pokazuje šta gradimo
+- homework napomene za varijante koje još ne implementiramo
+
 Za nju i dalje važe posebna teaching pravila:
 
 - počinje praznim `.app-shell` prostorom
@@ -324,9 +362,10 @@ Za novu lekciju:
 3. dodaj `describe-steps.js`
 4. dodaj `build-html-at-step.js`
 5. dodaj `build-css-at-step.js`
-6. dodaj `content/documents/files/lesson.sr.md`
-7. dodaj `content/documents/files/quiz.sr.md`
-8. registruj lekciju u `lessons/register-lessons.js`
+6. po potrebi dodaj `content/assets/feature-goal.svg`
+7. dodaj `content/documents/files/lesson.sr.md`
+8. dodaj `content/documents/files/quiz.sr.md`
+9. registruj lekciju u `lessons/register-lessons.js`
 
 Ne kopirati player runtime iz `animator/play-lesson/`.
 Nova lekcija treba da doda samo svoj contract i svoj content.
@@ -354,6 +393,7 @@ Current example:
 animator/
   choose-lesson/
     select-lesson-from-location.js
+    present-lesson-picker.js
   play-lesson/
     play-lesson.pipeline.js
     lesson-player.css
@@ -391,6 +431,19 @@ lessons/
     content/
       documents/
         build_sidebar.md
+        files/
+          lesson.sr.md
+          quiz.sr.md
+  build-top-navigation/
+    build-top-navigation.lesson.js
+    describe-steps.js
+    build-html-at-step.js
+    build-css-at-step.js
+    content/
+      assets/
+        top-navigation-goal.svg
+      documents/
+        build_top_navigation.md
         files/
           lesson.sr.md
           quiz.sr.md
@@ -621,6 +674,8 @@ lessons/
     build-html-at-step.js
     build-css-at-step.js
     content/
+      assets/
+        feature-goal.svg
       documents/
         files/
           lesson.sr.md
@@ -636,6 +691,7 @@ lessons/
 - povezuje step script
 - povezuje HTML/CSS builder funkcije
 - povezuje knowledge check pitanja
+- opciono povezuje referentnu sliku cilja i homework napomene za shell
 
 `describe-steps.js`
 
@@ -662,6 +718,11 @@ lessons/
 `content/documents/files/quiz.sr.md`
 
 - drži knowledge check pitanja
+
+`content/assets/feature-goal.svg`
+
+- opciona referentna slika koja pokazuje šta gradimo
+- može da sadrži i homework varijante koje za sada ne implementiramo
 
 ## 4. Pravila za animirani lesson flow
 
@@ -789,6 +850,24 @@ Kratak uvod u lekciju.
 ! Kratko objašnjenje zašto je to tačno.
 ```
 
+## 6a. Goal image contract
+
+Ako lesson ima referentni vizuelni cilj, taj deo ostaje u lesson JS contract-u jer je asset tehnički import.
+
+Tipični optional fields u `feature-name.lesson.js`:
+
+```js
+goalTitle: 'Šta gradimo u ovoj lekciji',
+goalImageSrc: goalImage,
+goalImageAlt: 'Opis referentne slike',
+goalImageCaption: 'Šta tačno gradimo iz te reference',
+homeworkTitle: 'Domaći zadatak',
+homeworkItems: [
+  'Varijanta 2 ostaje za samostalnu vežbu.',
+  'Varijanta 3 ostaje za samostalnu vežbu.'
+]
+```
+
 ## 7. Šta da kažeš AI-u
 
 Ako želiš da AI pretvori sadržaj u lekciju, daj mu i cilj UI-ja i stroga pravila animacije.
@@ -810,6 +889,7 @@ Repo contract:
   - `describe-steps.js`
   - `build-html-at-step.js`
   - `build-css-at-step.js`
+  - `content/assets/[feature-name]-goal.svg` kada postoji referentna slika
   - `content/documents/files/lesson.sr.md`
   - `content/documents/files/quiz.sr.md`
 
@@ -820,6 +900,8 @@ Animaciona pravila:
 - kreni od neutralnog početka, najčešće `<div class="app-shell">`
 - ne ubacuj filler sadržaj koji lekcija ne objašnjava
 - uvodi helper bordere ili outlin-e rano ako element bez njih nije dovoljno vidljiv
+- ako postoji referentna slika, lesson contract treba da je prikaže kroz goal card u shell-u
+- ako referentna slika sadrži dodatne varijante, one mogu da budu navedene kao homework umesto da se odmah implementiraju
 - helper stilovi ostaju dok se ne završi cela vizuelna celina
 - kada uvodiš helper stil, step opis mora da kaže da je privremen
 - kada uklanjaš helper stil, step opis mora da kaže da ga uklanjaš jer više nije potreban
@@ -894,15 +976,15 @@ Ovaj fajl je kanonska lista za arhitekturu i sledeće veće korake ovog repoa.
 
 ### 5. Dodaj drugu lekciju da potvrdi engine shape
 
-- `Status`: `OPEN`
-- `Šta fali`: nova lesson slice sa svojim `describe-steps.js`, HTML/CSS builderima i pitanjima
-- `Napomena`: Najlogičniji sledeći kandidat je `build-top-navigation`.
+- `Status`: `DONE`
+- `Šta fali`: ništa
+- `Napomena`: Dodata je `build-top-navigation` lekcija sa sopstvenim step script-om, builderima, markdown dokumentima i goal slikom.
 
 ### 6. Dodaj lesson picker u shell
 
-- `Status`: `OPEN`
-- `Šta fali`: UI za izbor lekcije i mali flow za promenu query parametra
-- `Napomena`: Trenutno izbor lekcije radi preko `?lesson=...`, što je dovoljno za engine start.
+- `Status`: `DONE`
+- `Šta fali`: ništa
+- `Napomena`: Shell sada ima lesson picker koji menja aktivnu lekciju bez ručnog kucanja query parametra.
 
 ## Verification
 
@@ -917,6 +999,33 @@ Ovaj fajl je kanonska lista za arhitekturu i sledeće veće korake ovog repoa.
 - `Status`: `DONE`
 - `Šta fali`: ništa
 - `Napomena`: `./merge-files.sh .` ostaje obavezni završni korak posle većih rename, split ili doc pass-ova.
+
+=== animator/choose-lesson/present-lesson-picker.js ===
+export function presentLessonPicker({
+  lessonPicker,
+  lessons,
+  currentLessonId,
+  ownerLocation,
+  ownerWindow
+}) {
+  lessonPicker.innerHTML = '';
+
+  lessons.forEach(lesson => {
+    const option = ownerWindow.document.createElement('option');
+    option.value = lesson.lessonId;
+    option.textContent = lesson.lessonTitle;
+    lessonPicker.append(option);
+  });
+
+  lessonPicker.value = currentLessonId;
+  lessonPicker.disabled = lessons.length < 2;
+
+  lessonPicker.addEventListener('change', () => {
+    const nextLocation = new URL(ownerLocation.href);
+    nextLocation.searchParams.set('lesson', lessonPicker.value);
+    ownerWindow.location.assign(nextLocation.toString());
+  });
+}
 
 === animator/choose-lesson/select-lesson-from-location.js ===
 import { findLesson, getDefaultLessonId } from '../../lessons/register-lessons.js';
@@ -1384,6 +1493,14 @@ export function findLessonParts(ownerDocument) {
     ownerDocument,
     lessonHeading: readRequiredElement(ownerDocument, 'lessonHeading'),
     lessonIntro: readRequiredElement(ownerDocument, 'lessonIntro'),
+    lessonPicker: readRequiredElement(ownerDocument, 'lessonPicker'),
+    lessonGoal: readRequiredElement(ownerDocument, 'lessonGoal'),
+    goalHeading: readRequiredElement(ownerDocument, 'goalHeading'),
+    goalCaption: readRequiredElement(ownerDocument, 'goalCaption'),
+    goalImage: readRequiredElement(ownerDocument, 'goalImage'),
+    goalHomework: readRequiredElement(ownerDocument, 'goalHomework'),
+    goalHomeworkTitle: readRequiredElement(ownerDocument, 'goalHomeworkTitle'),
+    goalHomeworkList: readRequiredElement(ownerDocument, 'goalHomeworkList'),
     livePreviewFrame: readRequiredElement(ownerDocument, 'livePreviewFrame'),
     previewAddress: readRequiredElement(ownerDocument, 'previewAddress'),
     stepTitle: readRequiredElement(ownerDocument, 'stepTitle'),
@@ -1426,6 +1543,41 @@ export function findLessonParts(ownerDocument) {
 }
 
 === animator/play-lesson/01-start-lesson/show-lesson-shell.js ===
+import { escapeInlineText } from '../escape-inline-text.js';
+
+function hideLessonGoal(lessonParts) {
+  lessonParts.lessonGoal.hidden = true;
+  lessonParts.goalHomework.hidden = true;
+  lessonParts.goalHomeworkList.innerHTML = '';
+}
+
+function showLessonGoal({ lessonParts, lesson }) {
+  if (!lesson.goalImageSrc) {
+    hideLessonGoal(lessonParts);
+    return;
+  }
+
+  lessonParts.lessonGoal.hidden = false;
+  lessonParts.goalHeading.textContent = lesson.goalTitle || 'Šta pravimo';
+  lessonParts.goalCaption.textContent = lesson.goalImageCaption || '';
+  lessonParts.goalImage.src = lesson.goalImageSrc;
+  lessonParts.goalImage.alt = lesson.goalImageAlt || lesson.goalTitle || lesson.lessonTitle;
+
+  const homeworkItems = Array.isArray(lesson.homeworkItems) ? lesson.homeworkItems : [];
+
+  if (!homeworkItems.length) {
+    lessonParts.goalHomework.hidden = true;
+    lessonParts.goalHomeworkList.innerHTML = '';
+    return;
+  }
+
+  lessonParts.goalHomework.hidden = false;
+  lessonParts.goalHomeworkTitle.textContent = lesson.homeworkTitle || 'Domaći zadatak';
+  lessonParts.goalHomeworkList.innerHTML = homeworkItems
+    .map(item => `<li>${escapeInlineText(item)}</li>`)
+    .join('');
+}
+
 export function showLessonShell({ ownerDocument, lessonParts, lesson }) {
   lessonParts.lessonHeading.textContent = lesson.lessonTitle;
 
@@ -1439,6 +1591,7 @@ export function showLessonShell({ ownerDocument, lessonParts, lesson }) {
   lessonParts.htmlFileLabel.textContent = lesson.htmlFileName;
   lessonParts.cssFileLabel.textContent = lesson.cssFileName;
   lessonParts.livePreviewFrame.title = lesson.previewTitle;
+  showLessonGoal({ lessonParts, lesson });
   ownerDocument.title = `Step By Step Animator · ${lesson.lessonTitle}`;
 }
 
@@ -2578,6 +2731,105 @@ h1 {
   font-size: 15px;
 }
 
+.lesson-picker {
+  margin-bottom: 20px;
+}
+
+.lesson-picker-label {
+  display: block;
+  margin-bottom: 8px;
+  color: var(--text-secondary);
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.lesson-picker-select {
+  width: 100%;
+  appearance: none;
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  background: var(--bg);
+  color: var(--text);
+  font: inherit;
+  font-size: 14px;
+  font-weight: 600;
+  padding: 14px 16px;
+  transition: var(--ease-fast);
+}
+
+.lesson-picker-select:hover,
+.lesson-picker-select:focus {
+  border-color: var(--accent);
+  outline: none;
+  box-shadow: 0 0 0 4px rgba(109,115,255,0.12);
+}
+
+.lesson-picker-select:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.goal-card {
+  margin-bottom: 24px;
+  padding: 18px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border);
+  background: linear-gradient(180deg, var(--bg), rgba(109,115,255,0.06));
+}
+
+.goal-head h2 {
+  font-size: 20px;
+  line-height: 1.2;
+  margin-top: 8px;
+}
+
+.goal-head p {
+  margin-top: 10px;
+  color: var(--text-secondary);
+  font-size: 14px;
+  line-height: 1.6;
+}
+
+.goal-image {
+  display: block;
+  width: 100%;
+  margin-top: 16px;
+  border-radius: 16px;
+  border: 1px solid var(--border);
+  background: rgba(255,255,255,0.04);
+  box-shadow: var(--shadow);
+}
+
+.goal-homework {
+  margin-top: 16px;
+  padding: 14px 16px;
+  border-radius: 14px;
+  border: 1px dashed rgba(109,115,255,0.28);
+  background: rgba(109,115,255,0.08);
+}
+
+.goal-homework strong {
+  display: block;
+  margin-bottom: 10px;
+  color: var(--text);
+  font-size: 14px;
+}
+
+.goal-homework ul {
+  margin: 0;
+  padding-left: 18px;
+  display: grid;
+  gap: 8px;
+}
+
+.goal-homework li {
+  color: var(--text-secondary);
+  font-size: 13px;
+  line-height: 1.55;
+}
+
 /* Tabs */
 .tabs {
   display: flex;
@@ -3217,6 +3469,7 @@ button:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
 }
 
 === animator/play-lesson/play-lesson.pipeline.js ===
+import { presentLessonPicker } from '../choose-lesson/present-lesson-picker.js';
 import { createLessonProgress } from './01-start-lesson/create-lesson-progress.js';
 import { findLessonParts } from './01-start-lesson/find-lesson-parts.js';
 import { showLessonShell } from './01-start-lesson/show-lesson-shell.js';
@@ -3232,11 +3485,18 @@ import { chooseTheme } from './choose-theme/choose-theme.js';
 import { presentStepFinder } from './find-step/present-step-finder.js';
 import { rememberSavedSteps } from './save-step/remember-saved-steps.js';
 
-export function playLesson({ ownerDocument, lesson }) {
+export function playLesson({ ownerDocument, ownerLocation, ownerWindow, lesson, lessons }) {
   const lessonParts = findLessonParts(ownerDocument);
   const lessonProgress = createLessonProgress();
 
   showLessonShell({ ownerDocument, lessonParts, lesson });
+  presentLessonPicker({
+    lessonPicker: lessonParts.lessonPicker,
+    lessons,
+    currentLessonId: lesson.lessonId,
+    ownerLocation,
+    ownerWindow
+  });
 
   const savedSteps = rememberSavedSteps({
     lessonId: lesson.lessonId,
@@ -3627,6 +3887,24 @@ export function writeSavedStepNumbers({ lessonId, savedStepNumbers }) {
       <p class="intro" id="lessonIntro">
         Koraci po korak pratiš kako se kod i preview grade u realnom vremenu. Aktivna lekcija popunjava ovaj viewer svojim sadržajem.
       </p>
+
+      <div class="lesson-picker">
+        <label class="lesson-picker-label" for="lessonPicker">Aktivna lekcija</label>
+        <select class="lesson-picker-select" id="lessonPicker"></select>
+      </div>
+
+      <div class="goal-card" id="lessonGoal" hidden>
+        <div class="goal-head">
+          <span class="step-number">Cilj lekcije</span>
+          <h2 id="goalHeading">Šta pravimo</h2>
+          <p id="goalCaption"></p>
+        </div>
+        <img class="goal-image" id="goalImage" alt="">
+        <div class="goal-homework" id="goalHomework" hidden>
+          <strong id="goalHomeworkTitle">Domaći zadatak</strong>
+          <ul id="goalHomeworkList"></ul>
+        </div>
+      </div>
 
       <div class="tabs">
         <button class="tab-btn active" data-tab="steps">
@@ -4266,10 +4544,484 @@ export const stepNumberById = Object.fromEntries(
   lessonSteps.map((step, index) => [step.id, index])
 );
 
+=== lessons/build-top-navigation/build-css-at-step.js ===
+import { stepNumberById } from './describe-steps.js';
+
+function readStepBoundary(stepReference) {
+  if (typeof stepReference === 'number') {
+    return stepReference;
+  }
+
+  if (!stepReference) {
+    return Number.POSITIVE_INFINITY;
+  }
+
+  return stepNumberById[stepReference] ?? Number.POSITIVE_INFINITY;
+}
+
+function appendVisibleCssRuleBlock(lines, header, entries, stepNumber, showFrom = Number.POSITIVE_INFINITY) {
+  const activeEntries = entries.filter(entry =>
+    stepNumber >= readStepBoundary(entry.from) &&
+    (entry.untilBefore === undefined || stepNumber < readStepBoundary(entry.untilBefore))
+  );
+
+  if (!activeEntries.length && stepNumber < readStepBoundary(showFrom)) {
+    return;
+  }
+
+  if (lines.length) {
+    lines.push('');
+  }
+
+  if (Array.isArray(header)) {
+    header.forEach(line => lines.push(line));
+  } else {
+    lines.push(header);
+  }
+
+  activeEntries.forEach(entry => {
+    lines.push(`  ${entry.line}`);
+  });
+
+  lines.push('}');
+}
+
+export function buildCssAtStep(stepNumber) {
+  const lines = [];
+
+  appendVisibleCssRuleBlock(lines, '.app-shell {', [
+    { from: 'shell_padding', line: 'padding: 40px;' },
+    { from: 'shell_background', line: 'background: #d6e1eb;' },
+    { from: 'shell_min_height', line: 'min-height: 100vh;' }
+  ], stepNumber, 'empty_shell');
+
+  appendVisibleCssRuleBlock(lines, '.topbar {', [
+    { from: 'topbar_outline', untilBefore: 'topbar_background', line: '/* privremeni pomoćni border radi lakšeg snalaženja; uklanjamo ga kasnije */' },
+    { from: 'topbar_outline', untilBefore: 'topbar_background', line: 'outline: 2px solid #ff5d8f;' },
+    { from: 'topbar_padding', line: 'padding: 18px 28px;' },
+    { from: 'topbar_background', line: 'background: #25262c;' },
+    { from: 'topbar_border', line: 'border: 1px solid rgba(0,0,0,0.22);' },
+    { from: 'topbar_shadow', line: 'box-shadow: 0 12px 24px rgba(0,0,0,0.18);' },
+    { from: 'topbar_display', line: 'display: flex;' },
+    { from: 'topbar_align_items', line: 'align-items: center;' },
+    { from: 'topbar_justify_content', line: 'justify-content: space-between;' }
+  ], stepNumber, 'topbar_html');
+
+  appendVisibleCssRuleBlock(lines, '.topbar-logo {', [
+    { from: 'logo_color', line: 'color: #ffffff;' },
+    { from: 'logo_font_size', line: 'font-size: 18px;' },
+    { from: 'logo_font_weight', line: 'font-weight: 800;' },
+    { from: 'logo_letter_spacing', line: 'letter-spacing: 0.04em;' },
+    { from: 'logo_text_decoration', line: 'text-decoration: none;' }
+  ], stepNumber, 'logo_html');
+
+  appendVisibleCssRuleBlock(lines, '.topbar-links {', [
+    { from: 'nav_outline', untilBefore: 'cta_html', line: '/* helper linija za centralnu link zonu; držimo je dok ne završimo celu nav celinu */' },
+    { from: 'nav_outline', untilBefore: 'cta_html', line: 'outline: 1px dashed #38bdf8;' },
+    { from: 'nav_display', line: 'display: flex;' },
+    { from: 'nav_gap', line: 'gap: 36px;' },
+    { from: 'nav_margin_left', line: 'margin-left: auto;' },
+    { from: 'nav_margin_right', line: 'margin-right: auto;' }
+  ], stepNumber, 'nav_html');
+
+  appendVisibleCssRuleBlock(lines, '.topbar-links a {', [
+    { from: 'nav_link_color', line: 'color: #ffffff;' },
+    { from: 'nav_link_font_size', line: 'font-size: 15px;' },
+    { from: 'nav_link_text_decoration', line: 'text-decoration: none;' },
+    { from: 'nav_link_transition', line: 'transition: color 0.3s ease;' }
+  ], stepNumber);
+
+  appendVisibleCssRuleBlock(lines, '.topbar-links a:hover {', [
+    { from: 'nav_link_hover_color', line: 'color: #cbd5e1;' }
+  ], stepNumber);
+
+  appendVisibleCssRuleBlock(lines, '.topbar-cta {', [
+    { from: 'cta_outline', untilBefore: 'cta_background', line: '/* privremeni pomoćni border radi lakšeg snalaženja; uklanjamo ga kada se pojavi završna boja */' },
+    { from: 'cta_outline', untilBefore: 'cta_background', line: 'outline: 1px dashed #11a4d3;' },
+    { from: 'cta_display', line: 'display: inline-flex;' },
+    { from: 'cta_align_items', line: 'align-items: center;' },
+    { from: 'cta_padding', line: 'padding: 12px 28px;' },
+    { from: 'cta_radius', line: 'border-radius: 999px;' },
+    { from: 'cta_background', line: 'background: #11a4d3;' },
+    { from: 'cta_color', line: 'color: #ffffff;' },
+    { from: 'cta_text_decoration', line: 'text-decoration: none;' },
+    { from: 'cta_shadow', line: 'box-shadow: 0 10px 20px rgba(17,164,211,0.28);' }
+  ], stepNumber, 'cta_html');
+
+  return lines;
+}
+
+=== lessons/build-top-navigation/build-html-at-step.js ===
+import { stepNumberById } from './describe-steps.js';
+
+export function buildHtmlAtStep(stepNumber) {
+  const lines = ['<div class="app-shell">'];
+
+  if (stepNumber >= stepNumberById.topbar_html) {
+    lines.push('  <header class="topbar">');
+
+    if (stepNumber >= stepNumberById.logo_html) {
+      lines.push('    <a href="#" class="topbar-logo">LOGOBAKERY</a>');
+    }
+
+    if (stepNumber >= stepNumberById.nav_html) {
+      lines.push(
+        '',
+        '    <nav class="topbar-links">',
+        '      <a href="#">Services</a>',
+        '      <a href="#">Projects</a>',
+        '      <a href="#">About</a>',
+        '    </nav>'
+      );
+    }
+
+    if (stepNumber >= stepNumberById.cta_html) {
+      lines.push('', '    <a href="#" class="topbar-cta">Contact</a>');
+    }
+
+    lines.push('  </header>');
+  }
+
+  lines.push('</div>');
+  return lines;
+}
+
+=== lessons/build-top-navigation/build-top-navigation.lesson.js ===
+import { buildCssAtStep } from './build-css-at-step.js';
+import { buildHtmlAtStep } from './build-html-at-step.js';
+import { lessonSteps } from './describe-steps.js';
+import lessonDocument from './content/documents/files/lesson.sr.md?raw';
+import knowledgeCheckDocument from './content/documents/files/quiz.sr.md?raw';
+import goalImage from './content/assets/top-navigation-goal.svg';
+import { readKnowledgeCheckQuestions } from '../../animator/lesson-documents/read-knowledge-check-questions.js';
+import { readLessonMetadata } from '../../animator/lesson-documents/read-lesson-metadata.js';
+
+const lessonMetadata = readLessonMetadata(lessonDocument, {
+  lessonTitle: 'Kako se pravi top navigation bar',
+  lessonIntro: 'Koraci po korak gradiš prvi navbar iz reference: logo levo, linkovi u sredini i CTA dugme desno. Druga dva rasporeda iz iste slike ostaju kao domaći zadatak.',
+  previewAddress: 'browser://build-top-navigation-preview',
+  previewTitle: 'Live top navigation preview',
+  htmlFileName: 'index.html',
+  cssFileName: 'style.css'
+});
+
+const knowledgeCheckQuestions = readKnowledgeCheckQuestions(knowledgeCheckDocument);
+
+export const buildTopNavigationLesson = {
+  lessonId: 'build-top-navigation',
+  lessonTitle: lessonMetadata.lessonTitle,
+  lessonIntro: lessonMetadata.lessonIntro,
+  lessonIntroHtml: lessonMetadata.lessonIntroHtml,
+  previewAddress: lessonMetadata.previewAddress,
+  previewTitle: lessonMetadata.previewTitle,
+  htmlFileName: lessonMetadata.htmlFileName,
+  cssFileName: lessonMetadata.cssFileName,
+  goalTitle: 'Šta gradimo u ovoj lekciji',
+  goalImageSrc: goalImage,
+  goalImageAlt: 'Referentna slika sa tri tamna navigation bara na svetloj pozadini. U lekciji se gradi prvi: logo levo, linkovi u sredini i contact dugme desno.',
+  goalImageCaption: 'U ovoj lekciji gradimo samo prvi raspored iz reference: logo levo, linkovi u sredini i plavo Contact dugme desno.',
+  homeworkTitle: 'Domaći zadatak',
+  homeworkItems: [
+    'Drugu varijantu iz reference napravi kao samostalnu lekciju ili kao vlastitu vežbu: linkovi levo, CTA u sredini, logo desno.',
+    'Treću varijantu iz reference napravi kao drugu vežbu: logo levo, a kompletna navigaciona grupa i CTA dugme desno.'
+  ],
+  steps: lessonSteps,
+  buildHtmlAtStep,
+  buildCssAtStep,
+  knowledgeCheckQuestions
+};
+
+=== lessons/build-top-navigation/content/assets/top-navigation-goal.svg ===
+<svg width="1280" height="720" viewBox="0 0 1280 720" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <rect width="1280" height="720" fill="#D6E1EB"/>
+
+  <g opacity="0.95">
+    <rect x="54" y="112" width="182" height="34" rx="17" fill="#0F172A"/>
+    <text x="145" y="134" text-anchor="middle" fill="#F8FAFC" font-size="14" font-family="Inter, Arial, sans-serif" font-weight="700">LESSON TARGET</text>
+  </g>
+
+  <g opacity="0.82">
+    <rect x="54" y="291" width="158" height="34" rx="17" fill="#64748B"/>
+    <text x="133" y="313" text-anchor="middle" fill="#F8FAFC" font-size="14" font-family="Inter, Arial, sans-serif" font-weight="700">HOMEWORK 1</text>
+  </g>
+
+  <g opacity="0.82">
+    <rect x="54" y="471" width="158" height="34" rx="17" fill="#64748B"/>
+    <text x="133" y="493" text-anchor="middle" fill="#F8FAFC" font-size="14" font-family="Inter, Arial, sans-serif" font-weight="700">HOMEWORK 2</text>
+  </g>
+
+  <g filter="url(#shadow)">
+    <rect x="40" y="150" width="1200" height="64" fill="#23242A"/>
+    <text x="132" y="190" fill="#FFFFFF" font-size="18" font-family="Inter, Arial, sans-serif" font-weight="800" letter-spacing="1.2">LOGOBAKERY</text>
+    <text x="544" y="189" fill="#FFFFFF" font-size="16" font-family="Inter, Arial, sans-serif">Services</text>
+    <text x="632" y="189" fill="#FFFFFF" font-size="16" font-family="Inter, Arial, sans-serif">Projects</text>
+    <text x="721" y="189" fill="#FFFFFF" font-size="16" font-family="Inter, Arial, sans-serif">About</text>
+    <rect x="1052" y="167" width="96" height="30" rx="15" fill="#11A4D3"/>
+    <text x="1100" y="187" text-anchor="middle" fill="#FFFFFF" font-size="15" font-family="Inter, Arial, sans-serif" font-weight="500">Contact</text>
+  </g>
+
+  <g filter="url(#shadowSoft)" opacity="0.92">
+    <rect x="40" y="329" width="1200" height="64" fill="#23242A"/>
+    <text x="132" y="369" fill="#FFFFFF" font-size="16" font-family="Inter, Arial, sans-serif">Services</text>
+    <text x="220" y="369" fill="#FFFFFF" font-size="16" font-family="Inter, Arial, sans-serif">Projects</text>
+    <text x="309" y="369" fill="#FFFFFF" font-size="16" font-family="Inter, Arial, sans-serif">About</text>
+    <rect x="385" y="346" width="98" height="30" rx="15" fill="#11A4D3"/>
+    <text x="434" y="366" text-anchor="middle" fill="#FFFFFF" font-size="15" font-family="Inter, Arial, sans-serif" font-weight="500">Contact</text>
+    <text x="1022" y="370" fill="#FFFFFF" font-size="18" font-family="Inter, Arial, sans-serif" font-weight="800" letter-spacing="1.2">LOGOBAKERY</text>
+  </g>
+
+  <g filter="url(#shadowSoft)" opacity="0.92">
+    <rect x="40" y="509" width="1200" height="64" fill="#23242A"/>
+    <text x="132" y="549" fill="#FFFFFF" font-size="18" font-family="Inter, Arial, sans-serif" font-weight="800" letter-spacing="1.2">LOGOBAKERY</text>
+    <text x="799" y="549" fill="#FFFFFF" font-size="16" font-family="Inter, Arial, sans-serif">Services</text>
+    <text x="887" y="549" fill="#FFFFFF" font-size="16" font-family="Inter, Arial, sans-serif">Projects</text>
+    <text x="976" y="549" fill="#FFFFFF" font-size="16" font-family="Inter, Arial, sans-serif">About</text>
+    <rect x="1052" y="526" width="96" height="30" rx="15" fill="#11A4D3"/>
+    <text x="1100" y="546" text-anchor="middle" fill="#FFFFFF" font-size="15" font-family="Inter, Arial, sans-serif" font-weight="500">Contact</text>
+  </g>
+
+  <defs>
+    <filter id="shadow" x="26" y="142" width="1228" height="92" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB">
+      <feFlood flood-opacity="0" result="BackgroundImageFix"/>
+      <feColorMatrix in="SourceAlpha" type="matrix" values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 127 0" result="hardAlpha"/>
+      <feOffset dy="8"/>
+      <feGaussianBlur stdDeviation="7"/>
+      <feComposite in2="hardAlpha" operator="out"/>
+      <feColorMatrix type="matrix" values="0 0 0 0 0.0941 0 0 0 0 0.1569 0 0 0 0 0.2275 0 0 0 0.22 0"/>
+      <feBlend mode="normal" in2="BackgroundImageFix" result="effect1_dropShadow_1_1"/>
+      <feBlend mode="normal" in="SourceGraphic" in2="effect1_dropShadow_1_1" result="shape"/>
+    </filter>
+    <filter id="shadowSoft" x="28" y="321" width="1224" height="280" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB">
+      <feFlood flood-opacity="0" result="BackgroundImageFix"/>
+      <feColorMatrix in="SourceAlpha" type="matrix" values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 127 0" result="hardAlpha"/>
+      <feOffset dy="8"/>
+      <feGaussianBlur stdDeviation="6"/>
+      <feComposite in2="hardAlpha" operator="out"/>
+      <feColorMatrix type="matrix" values="0 0 0 0 0.0941 0 0 0 0 0.1569 0 0 0 0 0.2275 0 0 0 0.18 0"/>
+      <feBlend mode="normal" in2="BackgroundImageFix" result="effect1_dropShadow_1_2"/>
+      <feBlend mode="normal" in="SourceGraphic" in2="effect1_dropShadow_1_2" result="shape"/>
+    </filter>
+  </defs>
+</svg>
+
+=== lessons/build-top-navigation/content/documents/build_top_navigation.md ===
+<!-- Generated from the same markdown sources used by the web lesson. -->
+
+# build-top-navigation
+
+Koraci po korak gradiš prvi navbar iz reference: logo levo, linkovi u sredini i CTA dugme desno. Druga dva rasporeda iz iste slike ostaju kao domaći zadatak.
+
+## Quiz
+
+## Question 1
+? Koji HTML element je prirodan izbor za grupu glavnih navigacionih linkova?
+- [ ] `<section>`
+- [x] `<nav>`
+- [ ] `<article>`
+- [ ] `<aside>`
+! `nav` je semantički pravi izbor za glavnu navigacionu zonu.
+
+## Question 2
+? Zašto uvodimo helper outline pre završne pozadine?
+- [ ] Da bi element bio teži za klik
+- [x] Da bi footprint elementa bio jasan i pre finalnog dizajna
+- [ ] Da bi CSS bio kraći
+- [ ] Da bismo izbegli HTML
+! Helper outline služi orijentaciji dok komponenta još nema svoj završni vizuelni identitet.
+
+## Question 3
+? Koji property koristimo da rasporedimo delove navbara u jedan red?
+- [ ] `display: block`
+- [ ] `display: inline`
+- [x] `display: flex`
+- [ ] `display: grid`
+! `display: flex` je najpraktičniji izbor za horizontalni navbar raspored.
+
+## Question 4
+? Šta radi `margin-left: auto` na centralnoj grupi linkova u ovom primeru?
+- [ ] Smanjuje font-size linkova
+- [x] Gura grupu dalje od loga i pomaže centriranju
+- [ ] Dodaje hover efekat
+- [ ] Zaobljava CTA dugme
+! Auto margine su jednostavan način da gurneš jedan flex item od susednog elementa.
+
+## Question 5
+? Koji property daje CTA dugmetu pil oblik?
+- [ ] `box-shadow`
+- [ ] `padding`
+- [x] `border-radius`
+- [ ] `font-weight`
+! Veliki `border-radius`, kao `999px`, zatvara CTA u pil oblik.
+
+=== lessons/build-top-navigation/content/documents/files/lesson.sr.md ===
+---
+title: Kako se pravi top navigation bar
+previewAddress: browser://build-top-navigation-preview
+previewTitle: Live top navigation preview
+htmlFileName: index.html
+cssFileName: style.css
+---
+
+Koraci po korak gradiš prvi navbar iz reference: logo levo, linkovi u sredini i CTA dugme desno. Druga dva rasporeda iz iste slike ostaju kao domaći zadatak.
+
+=== lessons/build-top-navigation/content/documents/files/quiz.sr.md ===
+## Question 1
+? Koji HTML element je prirodan izbor za grupu glavnih navigacionih linkova?
+- [ ] `<section>`
+- [x] `<nav>`
+- [ ] `<article>`
+- [ ] `<aside>`
+! `nav` je semantički pravi izbor za glavnu navigacionu zonu.
+
+## Question 2
+? Zašto uvodimo helper outline pre završne pozadine?
+- [ ] Da bi element bio teži za klik
+- [x] Da bi footprint elementa bio jasan i pre finalnog dizajna
+- [ ] Da bi CSS bio kraći
+- [ ] Da bismo izbegli HTML
+! Helper outline služi orijentaciji dok komponenta još nema svoj završni vizuelni identitet.
+
+## Question 3
+? Koji property koristimo da rasporedimo delove navbara u jedan red?
+- [ ] `display: block`
+- [ ] `display: inline`
+- [x] `display: flex`
+- [ ] `display: grid`
+! `display: flex` je najpraktičniji izbor za horizontalni navbar raspored.
+
+## Question 4
+? Šta radi `margin-left: auto` na centralnoj grupi linkova u ovom primeru?
+- [ ] Smanjuje font-size linkova
+- [x] Gura grupu dalje od loga i pomaže centriranju
+- [ ] Dodaje hover efekat
+- [ ] Zaobljava CTA dugme
+! Auto margine su jednostavan način da gurneš jedan flex item od susednog elementa.
+
+## Question 5
+? Koji property daje CTA dugmetu pil oblik?
+- [ ] `box-shadow`
+- [ ] `padding`
+- [x] `border-radius`
+- [ ] `font-weight`
+! Veliki `border-radius`, kao `999px`, zatvara CTA u pil oblik.
+
+=== lessons/build-top-navigation/describe-steps.js ===
+function describeHtmlElementStep(id, title, desc, tag, proTip) {
+  return { id, title, desc, tag, proTip };
+}
+
+function describeCssPropertyStep(id, selector, property, value, desc = '', proTip = '') {
+  const cssLine = `${property}: ${value};`;
+
+  return {
+    id,
+    title: `CSS: ${selector} / ${property}`,
+    desc: desc || `Dodajemo \`${cssLine}\` u \`${selector}\` i širimo stylesheet jedan property po korak.`,
+    tag: `css:${id.replace(/_/g, '-')}`,
+    proTip: proTip || 'Jedan property po korak drži promenu malom, preglednom i lakom za objašnjavanje.'
+  };
+}
+
+function describeFinishedStep(id, title, desc, proTip) {
+  return { id, title, desc, tag: 'success', proTip };
+}
+
+export const lessonSteps = [
+  describeHtmlElementStep(
+    'empty_shell',
+    'Start: Empty App Shell',
+    'Počinjemo od praznog `.app-shell` prostora. Goal slika iznad pokazuje tri varijante, ali u ovoj lekciji gradimo samo prvu.',
+    'html:app-shell',
+    'Neutralan početak jasno odvaja ono što je postojalo od onoga što tek pravimo.'
+  ),
+  describeHtmlElementStep(
+    'topbar_html',
+    'HTML: Topbar Shell',
+    'Dodajemo `<header class="topbar">` kao glavni wrapper buduće navigacije.',
+    'html:topbar',
+    'Kreni od glavnog semantic wrapper-a pa tek onda popunjavaj njegove zone.'
+  ),
+  ...[
+    ['shell_padding', '.app-shell', 'padding', '40px', 'Dodajemo padding oko cele scene da navbar dobije vazduh i ne stoji zalepljen za ivice preview-a.'],
+    ['shell_background', '.app-shell', 'background', '#d6e1eb', 'Svetla pozadina približava preview referentnoj slici i daje kontrast tamnom navbaru.'],
+    ['shell_min_height', '.app-shell', 'min-height', '100vh', 'Puna visina drži celu scenu stabilnom tokom lekcije.'],
+    ['topbar_outline', '.topbar', 'outline', '2px solid #ff5d8f', 'Dodajemo privremeni pomoćni border radi lakšeg snalaženja, da odmah vidimo footprint celog navbara. Kasnije ćemo ga ukloniti kada prava pozadina preuzme ulogu.', 'Outline je odličan debug signal jer ne menja layout.'],
+    ['topbar_padding', '.topbar', 'padding', '18px 28px', 'Navbar dobija unutrašnji spacing, pa odmah izgleda kao realna UI traka.'],
+    ['topbar_background', '.topbar', 'background', '#25262c', 'Dodajemo tamnu pozadinu i uklanjamo privremeni pomoćni border, više nam ne treba.'],
+    ['topbar_border', '.topbar', 'border', '1px solid rgba(0,0,0,0.22)', 'Tanka ivica pomaže da navbar bude čitljiv i na svetloj pozadini.'],
+    ['topbar_shadow', '.topbar', 'box-shadow', '0 12px 24px rgba(0,0,0,0.18)', 'Shadow odvaja navbar od pozadine i približava ga referentnoj slici.'],
+    ['topbar_display', '.topbar', 'display', 'flex', 'Flex uvodi horizontalni raspored elemenata.'],
+    ['topbar_align_items', '.topbar', 'align-items', 'center', 'Vertikalno centriramo sve delove navigacije.'],
+    ['topbar_justify_content', '.topbar', 'justify-content', 'space-between', 'Glavne zone dobijaju početno razdvajanje levo i desno.']
+  ].map(config => describeCssPropertyStep(...config)),
+  describeHtmlElementStep(
+    'logo_html',
+    'HTML: Logo Link',
+    'Dodajemo logo kao klikabilni `.topbar-logo` element na levom kraju navigacije.',
+    'html:logo',
+    'Logo je navigacioni landmark i zato ga uvodimo pre linkova.'
+  ),
+  ...[
+    ['logo_color', '.topbar-logo', 'color', '#ffffff', 'Boju loga postavljamo rano da odmah ima jasan kontrast na tamnoj traci.'],
+    ['logo_font_size', '.topbar-logo', 'font-size', '18px', 'Malo povećavamo logo da se odvoji od običnih linkova.'],
+    ['logo_font_weight', '.topbar-logo', 'font-weight', '800', 'Težina fonta daje logo signalu identitet.'],
+    ['logo_letter_spacing', '.topbar-logo', 'letter-spacing', '0.04em', 'Blagi spacing pojačava moderni, branded osećaj.'],
+    ['logo_text_decoration', '.topbar-logo', 'text-decoration', 'none', 'Uklanjamo underline da logo izgleda kao deo UI-ja, ne kao sirov link.']
+  ].map(config => describeCssPropertyStep(...config)),
+  describeHtmlElementStep(
+    'nav_html',
+    'HTML: Navigation Links',
+    'Dodajemo `<nav class="topbar-links">` sa linkovima Services, Projects i About. Od ovog trenutka helper linije za nav držimo dok ne završimo celu middle zonu.',
+    'html:nav-links',
+    'Najbolje je da sve centralne linkove uvedeš kao jednu celinu, pa tek onda doteruješ spacing i tipografiju.'
+  ),
+  ...[
+    ['nav_outline', '.topbar-links', 'outline', '1px dashed #38bdf8', 'Dodajemo privremeni pomoćni border radi lakšeg snalaženja, da centralna navigaciona zona odmah postane vidljiva. Držimo ga dok ne završimo celu link sekciju.', 'Helper outline čini centralnu grupu vidljivom i pre nego što dodamo CTA.'],
+    ['nav_display', '.topbar-links', 'display', 'flex', 'Linkove slažemo u jedan red.'],
+    ['nav_gap', '.topbar-links', 'gap', '36px', 'Gap daje istu vrstu razmaka kao na referentnoj slici.'],
+    ['nav_margin_left', '.topbar-links', 'margin-left', 'auto', 'Navigacija se odvaja od loga i kreće ka sredini.'],
+    ['nav_margin_right', '.topbar-links', 'margin-right', 'auto', 'Desni auto margin pomaže da grupa linkova ostane vizuelno centrirana.'],
+    ['nav_link_color', '.topbar-links a', 'color', '#ffffff', 'Boja linkova prati logo i pravi konzistentan kontrast.'],
+    ['nav_link_font_size', '.topbar-links a', 'font-size', '15px', 'Linkovi dobijaju čitljivu, ali nenametljivu veličinu.'],
+    ['nav_link_text_decoration', '.topbar-links a', 'text-decoration', 'none', 'Čistimo default underline da linkovi izgledaju kao deo dizajna.'],
+    ['nav_link_transition', '.topbar-links a', 'transition', 'color 0.3s ease', 'Mala tranzicija omekšava hover promenu.'],
+    ['nav_link_hover_color', '.topbar-links a:hover', 'color', '#cbd5e1', 'Hover ton blago menja boju, bez agresivnog skakanja.']
+  ].map(config => describeCssPropertyStep(...config)),
+  describeHtmlElementStep(
+    'cta_html',
+    'HTML: Contact CTA',
+    'Dodajemo završni `.topbar-cta` link sa tekstom Contact. Link sekcija je sada gotova i uklanjamo privremeni helper outline sa nje.',
+    'html:cta',
+    'CTA se uvodi na kraju, tek kada su logo i navigacija već stabilni.'
+  ),
+  ...[
+    ['cta_outline', '.topbar-cta', 'outline', '1px dashed #11a4d3', 'Dodajemo privremeni pomoćni border radi lakšeg snalaženja, da footprint CTA dugmeta bude jasan i pre boje. Kasnije ćemo ga ukloniti.', 'Kod dugmeta je helper outline koristan dok još nema svoju pozadinu.'],
+    ['cta_display', '.topbar-cta', 'display', 'inline-flex', 'CTA prebacujemo u inline-flex da padding i centriranje rade kao na pravom dugmetu.'],
+    ['cta_align_items', '.topbar-cta', 'align-items', 'center', 'Tekst dugmeta centriramo po visini.'],
+    ['cta_padding', '.topbar-cta', 'padding', '12px 28px', 'Padding daje CTA dugmetu njegov pravi footprint.'],
+    ['cta_radius', '.topbar-cta', 'border-radius', '999px', 'Pil oblik odmah približava dugme referentnom primeru.'],
+    ['cta_background', '.topbar-cta', 'background', '#11a4d3', 'Dodajemo završnu boju CTA dugmeta i uklanjamo privremeni pomoćni border, više nam ne treba.'],
+    ['cta_color', '.topbar-cta', 'color', '#ffffff', 'Beli tekst pravi čist kontrast preko plave pozadine.'],
+    ['cta_text_decoration', '.topbar-cta', 'text-decoration', 'none', 'Uklanjamo underline da CTA izgleda kao pravo dugme.'],
+    ['cta_shadow', '.topbar-cta', 'box-shadow', '0 10px 20px rgba(17,164,211,0.28)', 'Shadow pojačava prisustvo CTA dugmeta i zatvara vizuelni match sa ciljem.']
+  ].map(config => describeCssPropertyStep(...config)),
+  describeFinishedStep(
+    'done',
+    'Done: Top Navigation',
+    'Prvi navbar iz reference je gotov. Druga dva rasporeda iz goal slike ostaju kao domaći zadatak.',
+    'Kada završiš ovu varijantu, najbolji sledeći korak je da samostalno rekreiraš druga dva rasporeda iz iste reference.'
+  )
+];
+
+export const stepNumberById = Object.fromEntries(
+  lessonSteps.map((step, index) => [step.id, index])
+);
+
 === lessons/register-lessons.js ===
 import { buildSidebarLesson } from './build-sidebar/build-sidebar.lesson.js';
+import { buildTopNavigationLesson } from './build-top-navigation/build-top-navigation.lesson.js';
 
-export const registeredLessons = [buildSidebarLesson];
+export const registeredLessons = [buildSidebarLesson, buildTopNavigationLesson];
 
 const lessonsById = new Map(registeredLessons.map(lesson => [lesson.lessonId, lesson]));
 
@@ -4285,6 +5037,7 @@ export function getDefaultLessonId() {
 import './animator/play-lesson/lesson-player.css';
 import { selectLessonFromLocation } from './animator/choose-lesson/select-lesson-from-location.js';
 import { playLesson } from './animator/play-lesson/play-lesson.pipeline.js';
+import { registeredLessons } from './lessons/register-lessons.js';
 
 const selectedLesson = selectLessonFromLocation({
   ownerLocation: window.location
@@ -4292,6 +5045,9 @@ const selectedLesson = selectLessonFromLocation({
 
 playLesson({
   ownerDocument: document,
+  ownerLocation: window.location,
+  ownerWindow: window,
+  lessons: registeredLessons,
   lesson: selectedLesson
 });
 

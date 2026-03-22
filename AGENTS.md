@@ -10,9 +10,10 @@ To je lesson engine za interaktivne HTML/CSS lekcije koje treba da izgledaju kao
 
 Engine je generičan.
 
-Trenutno isporučena lekcija je:
+Trenutno isporučene lekcije su:
 
 - `build-sidebar`
+- `build-top-navigation`
 
 Svaka nova lekcija mora da koristi isti shell i isti teaching model:
 
@@ -49,6 +50,7 @@ Aktuelni kanonski shape:
 animator/
   choose-lesson/
     select-lesson-from-location.js
+    present-lesson-picker.js
   play-lesson/
     play-lesson.pipeline.js
     lesson-player.css
@@ -105,6 +107,19 @@ lessons/
         files/
           lesson.sr.md
           quiz.sr.md
+  build-top-navigation/
+    build-top-navigation.lesson.js
+    describe-steps.js
+    build-html-at-step.js
+    build-css-at-step.js
+    content/
+      assets/
+        top-navigation-goal.svg
+      documents/
+        build_top_navigation.md
+        files/
+          lesson.sr.md
+          quiz.sr.md
 ```
 
 ### 2.2 Lesson Contract
@@ -129,6 +144,15 @@ Taj file mora da vrati kompletan lesson contract:
 - `buildCssAtStep`
 - `knowledgeCheckQuestions`
 
+Opciona lesson shell polja kada želiš da pokažeš vizuelni cilj i homework:
+
+- `goalTitle`
+- `goalImageSrc`
+- `goalImageAlt`
+- `goalImageCaption`
+- `homeworkTitle`
+- `homeworkItems`
+
 Ne uvoditi paralelne lesson shape-ove.
 
 ### 2.3 Lesson Documents
@@ -142,6 +166,15 @@ feature-name/
       files/
         lesson.sr.md
         quiz.sr.md
+```
+
+Ako lesson ima referentnu sliku cilja, asset ide ovde:
+
+```txt
+feature-name/
+  content/
+    assets/
+      feature-goal.svg
 ```
 
 Pravila:
@@ -301,6 +334,11 @@ Desni panel:
 
 `build-sidebar` je referentna lekcija za engine.
 
+`build-top-navigation` pokazuje dodatni shell capability:
+
+- goal sliku koja pokazuje šta gradimo
+- homework napomene za varijante koje još ne implementiramo
+
 Za nju i dalje važe posebna teaching pravila:
 
 - počinje praznim `.app-shell` prostorom
@@ -317,9 +355,10 @@ Za novu lekciju:
 3. dodaj `describe-steps.js`
 4. dodaj `build-html-at-step.js`
 5. dodaj `build-css-at-step.js`
-6. dodaj `content/documents/files/lesson.sr.md`
-7. dodaj `content/documents/files/quiz.sr.md`
-8. registruj lekciju u `lessons/register-lessons.js`
+6. po potrebi dodaj `content/assets/feature-goal.svg`
+7. dodaj `content/documents/files/lesson.sr.md`
+8. dodaj `content/documents/files/quiz.sr.md`
+9. registruj lekciju u `lessons/register-lessons.js`
 
 Ne kopirati player runtime iz `animator/play-lesson/`.
 Nova lekcija treba da doda samo svoj contract i svoj content.

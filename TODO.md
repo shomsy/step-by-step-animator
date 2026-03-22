@@ -44,15 +44,15 @@ Ovaj fajl je kanonska lista za arhitekturu i sledeće veće korake ovog repoa.
 
 ### 5. Dodaj drugu lekciju da potvrdi engine shape
 
-- `Status`: `OPEN`
-- `Šta fali`: nova lesson slice sa svojim `describe-steps.js`, HTML/CSS builderima i pitanjima
-- `Napomena`: Najlogičniji sledeći kandidat je `build-top-navigation`.
+- `Status`: `DONE`
+- `Šta fali`: ništa
+- `Napomena`: Dodata je `build-top-navigation` lekcija sa sopstvenim step script-om, builderima, markdown dokumentima i goal slikom.
 
 ### 6. Dodaj lesson picker u shell
 
-- `Status`: `OPEN`
-- `Šta fali`: UI za izbor lekcije i mali flow za promenu query parametra
-- `Napomena`: Trenutno izbor lekcije radi preko `?lesson=...`, što je dovoljno za engine start.
+- `Status`: `DONE`
+- `Šta fali`: ništa
+- `Napomena`: Shell sada ima lesson picker koji menja aktivnu lekciju bez ručnog kucanja query parametra.
 
 ## Verification
 

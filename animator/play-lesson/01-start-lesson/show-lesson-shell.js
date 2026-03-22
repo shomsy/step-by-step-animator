@@ -1,3 +1,38 @@
+import { escapeInlineText } from '../escape-inline-text.js';
+
+function hideLessonGoal(lessonParts) {
+  lessonParts.lessonGoal.hidden = true;
+  lessonParts.goalHomework.hidden = true;
+  lessonParts.goalHomeworkList.innerHTML = '';
+}
+
+function showLessonGoal({ lessonParts, lesson }) {
+  if (!lesson.goalImageSrc) {
+    hideLessonGoal(lessonParts);
+    return;
+  }
+
+  lessonParts.lessonGoal.hidden = false;
+  lessonParts.goalHeading.textContent = lesson.goalTitle || 'Šta pravimo';
+  lessonParts.goalCaption.textContent = lesson.goalImageCaption || '';
+  lessonParts.goalImage.src = lesson.goalImageSrc;
+  lessonParts.goalImage.alt = lesson.goalImageAlt || lesson.goalTitle || lesson.lessonTitle;
+
+  const homeworkItems = Array.isArray(lesson.homeworkItems) ? lesson.homeworkItems : [];
+
+  if (!homeworkItems.length) {
+    lessonParts.goalHomework.hidden = true;
+    lessonParts.goalHomeworkList.innerHTML = '';
+    return;
+  }
+
+  lessonParts.goalHomework.hidden = false;
+  lessonParts.goalHomeworkTitle.textContent = lesson.homeworkTitle || 'Domaći zadatak';
+  lessonParts.goalHomeworkList.innerHTML = homeworkItems
+    .map(item => `<li>${escapeInlineText(item)}</li>`)
+    .join('');
+}
+
 export function showLessonShell({ ownerDocument, lessonParts, lesson }) {
   lessonParts.lessonHeading.textContent = lesson.lessonTitle;
 
@@ -11,5 +46,6 @@ export function showLessonShell({ ownerDocument, lessonParts, lesson }) {
   lessonParts.htmlFileLabel.textContent = lesson.htmlFileName;
   lessonParts.cssFileLabel.textContent = lesson.cssFileName;
   lessonParts.livePreviewFrame.title = lesson.previewTitle;
+  showLessonGoal({ lessonParts, lesson });
   ownerDocument.title = `Step By Step Animator · ${lesson.lessonTitle}`;
 }
