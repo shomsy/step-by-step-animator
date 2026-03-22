@@ -3,12 +3,16 @@ import { showSavedStepList } from './show-saved-step-list.js';
 import { writeSavedStepNumbers } from './write-saved-step-numbers.js';
 
 export function rememberSavedSteps({
+  lessonId,
   lessonParts,
   steps,
   goToStepNumber,
   showCurrentLesson
 }) {
-  let savedStepNumbers = readSavedStepNumbers(steps.length);
+  let savedStepNumbers = readSavedStepNumbers({
+    lessonId,
+    totalSteps: steps.length
+  });
 
   lessonParts.savedStepList.addEventListener('click', event => {
     const removeButton = event.target.closest('[data-remove-step-number]');
@@ -35,7 +39,10 @@ export function rememberSavedSteps({
       savedStepNumbers.sort((left, right) => left - right);
     }
 
-    writeSavedStepNumbers(savedStepNumbers);
+    writeSavedStepNumbers({
+      lessonId,
+      savedStepNumbers
+    });
     showCurrentLesson();
   }
 

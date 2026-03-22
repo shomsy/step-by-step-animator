@@ -1,4 +1,4 @@
-const THEME_STORAGE_KEY = 'sidebarTheme';
+const THEME_STORAGE_KEY = 'stepByStepAnimatorTheme';
 
 function showThemeButtonIcon(themeButton, theme) {
   themeButton.innerHTML = theme === 'dark'
@@ -22,7 +22,7 @@ export function chooseTheme({ rootElement, themeButton }) {
     applyChosenTheme(nextTheme);
   }
 
-  function initializeChosenTheme() {
+  function initializeTheme() {
     const storedTheme = localStorage.getItem(THEME_STORAGE_KEY);
     const initialTheme = storedTheme === 'light' || storedTheme === 'dark'
       ? storedTheme
@@ -32,7 +32,7 @@ export function chooseTheme({ rootElement, themeButton }) {
   }
 
   return {
-    initializeChosenTheme,
+    initializeTheme,
     toggleTheme
   };
 }

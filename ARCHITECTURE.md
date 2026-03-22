@@ -14,32 +14,38 @@ Read the tree in this order:
 Current example:
 
 ```txt
-teach-components/
-  build-sidebar/
-    build-sidebar.pipeline.js
-    lesson.css
-    escape-inline-text.js
+teach-lessons/
+  list-lessons.js
+  find-selected-lesson.js
+  teach-lesson/
+    teach-lesson.pipeline.js
+    lesson-shell.css
     01-start-lesson/
       find-lesson-parts.js
       create-lesson-progress.js
+      show-lesson-shell.js
     02-follow-lesson/
-      lesson-step-script.js
       show-current-step.js
+    03-watch-code/
+      show-growing-code.js
+    04-watch-preview/
+      show-current-preview.js
     find-step/
       present-step-finder.js
     save-step/
       remember-saved-steps.js
-    03-watch-code/
-      build-html-at-step.js
-      show-growing-code.js
-    04-watch-sidebar/
-      show-current-sidebar.js
     05-check-understanding/
       present-knowledge-check.js
     choose-theme/
       choose-theme.js
-    06-download-sidebar-files/
-      download-sidebar-files.js
+    06-download-lesson-files/
+      download-lesson-files.js
+  build-sidebar/
+    build-sidebar.lesson.js
+    describe-steps.js
+    build-html-at-step.js
+    build-css-at-step.js
+    list-knowledge-check-questions.js
 ```
 
 ## Naming Rules
@@ -51,7 +57,7 @@ Use a folder name that tells what the product is doing.
 Good:
 
 ```txt
-teach-components/
+teach-lessons/
 sell-subscriptions/
 review-progress/
 ```
@@ -72,16 +78,16 @@ The next folder must tell which concrete product scenario is being handled.
 Good:
 
 ```txt
+teach-lesson/
 build-sidebar/
-publish-lesson/
 retry-payment/
 ```
 
 Bad:
 
 ```txt
-sidebar/
 lesson/
+sidebar/
 payment/
 ```
 
@@ -95,14 +101,18 @@ If the feature is sequential, use:
 feature-name.pipeline.js
 ```
 
-If the feature is not strictly sequential, use a facade or orchestrator file that still owns the complete flow.
+If the feature is a concrete lesson contract, use:
+
+```txt
+feature-name.lesson.js
+```
 
 ### 4. Every other file owns one clear responsibility
 
 Good:
 
 ```txt
-lesson-step-script.js
+describe-steps.js
 build-css-at-step.js
 present-step-finder.js
 show-growing-code.js
@@ -121,19 +131,17 @@ processor.js
 
 ### 5. Use numbers only when sequence truly matters
 
-Use `01-...`, `02-...` only when the file order itself carries meaning without opening the pipeline.
+Use `01-...`, `02-...` only when the folder order itself carries product meaning without opening the pipeline.
 
-If names are already naturally readable, do not add numbers.
-
-This repo uses numeric prefixes only on the main lesson journey inside `build-sidebar/`:
+This repo uses numeric prefixes only on the generic lesson journey inside `teach-lesson/`:
 
 ```txt
 01-start-lesson/
 02-follow-lesson/
 03-watch-code/
-04-watch-sidebar/
+04-watch-preview/
 05-check-understanding/
-06-download-sidebar-files/
+06-download-lesson-files/
 ```
 
 Support flows such as `find-step/`, `save-step/`, and `choose-theme/` stay unnumbered because they are available across the lesson and are not mandatory sequence steps.
@@ -146,10 +154,8 @@ Good:
 
 ```txt
 build-sidebar/
-  02-follow-lesson/
-    lesson-step-script.js
-  03-watch-code/
-    show-growing-code.js
+  describe-steps.js
+  build-html-at-step.js
 ```
 
 Bad:
@@ -167,11 +173,10 @@ build-sidebar/
 Good:
 
 ```txt
-teachBuildSidebar()
-goToStepNumber()
-goToNextStep()
+teachLesson()
+findSelectedLesson()
 showGrowingCode()
-downloadSidebarFiles()
+downloadLessonFiles()
 ```
 
 Bad:
@@ -192,7 +197,10 @@ Use verbs consistently by responsibility:
 - `show...` writes current lesson content into already-found page parts.
 - `present...` owns an interactive user flow such as finder or knowledge check.
 - `create...` initializes progress for a flow.
-- `read...` is reserved for persistence reads, while `find...` is used for locating existing page parts.
+- `find...` locates a selected lesson or existing page parts.
+- `read...` is reserved for persistence reads.
+- `write...` is reserved for persistence writes.
+- `teach...` orchestrates the complete lesson flow.
 
 ## Anti-Patterns
 

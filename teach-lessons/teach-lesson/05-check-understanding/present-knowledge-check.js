@@ -3,6 +3,18 @@ import { showKnowledgeCheckQuestion } from './show-knowledge-check-question.js';
 import { showKnowledgeCheckScore } from './show-knowledge-check-score.js';
 
 export function presentKnowledgeCheck({ lessonParts, knowledgeCheckQuestions }) {
+  if (!knowledgeCheckQuestions.length) {
+    lessonParts.openKnowledgeCheckButton.hidden = true;
+
+    return {
+      closeKnowledgeCheck() {},
+      isKnowledgeCheckOpen() {
+        return false;
+      },
+      openKnowledgeCheck() {}
+    };
+  }
+
   let knowledgeCheckProgress = createKnowledgeCheckProgress();
   let advanceTimer = null;
 

@@ -12,18 +12,14 @@ function triggerFileDownload(fileName, mimeType, fileContent) {
   }, 1000);
 }
 
-export function downloadSidebarFiles({
-  steps,
-  buildHtmlAtStep,
-  buildCssAtStep
-}) {
-  const finalStep = steps.length - 1;
-  const htmlCode = buildHtmlAtStep(finalStep).join('\n');
-  const cssCode = buildCssAtStep(finalStep).join('\n');
+export function downloadLessonFiles({ lesson }) {
+  const finalStep = lesson.steps.length - 1;
+  const htmlCode = lesson.buildHtmlAtStep(finalStep).join('\n');
+  const cssCode = lesson.buildCssAtStep(finalStep).join('\n');
 
-  triggerFileDownload('sidebar.html', 'text/html', htmlCode);
+  triggerFileDownload(lesson.htmlFileName, 'text/html', htmlCode);
 
   window.setTimeout(() => {
-    triggerFileDownload('style.css', 'text/css', cssCode);
+    triggerFileDownload(lesson.cssFileName, 'text/css', cssCode);
   }, 500);
 }

@@ -11,7 +11,10 @@ function readRequiredElement(ownerDocument, id) {
 export function findLessonParts(ownerDocument) {
   return {
     ownerDocument,
+    lessonHeading: readRequiredElement(ownerDocument, 'lessonHeading'),
+    lessonIntro: readRequiredElement(ownerDocument, 'lessonIntro'),
     livePreviewFrame: readRequiredElement(ownerDocument, 'livePreviewFrame'),
+    previewAddress: readRequiredElement(ownerDocument, 'previewAddress'),
     stepTitle: readRequiredElement(ownerDocument, 'stepTitle'),
     stepDescription: readRequiredElement(ownerDocument, 'stepDesc'),
     stepNumber: readRequiredElement(ownerDocument, 'stepNumber'),
@@ -44,6 +47,8 @@ export function findLessonParts(ownerDocument) {
     savedStepSummary: readRequiredElement(ownerDocument, 'bookmarkSummary'),
     htmlCodePane: readRequiredElement(ownerDocument, 'liveHtmlPane'),
     cssCodePane: readRequiredElement(ownerDocument, 'liveCssPane'),
+    htmlFileLabel: readRequiredElement(ownerDocument, 'htmlFileLabel'),
+    cssFileLabel: readRequiredElement(ownerDocument, 'cssFileLabel'),
     currentStepBadge: readRequiredElement(ownerDocument, 'liveStepBadge'),
     lessonPanelButtons: [...ownerDocument.querySelectorAll('.tab-btn')]
   };

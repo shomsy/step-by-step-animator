@@ -9,26 +9,27 @@ dist/
 
 Ovaj fajl je kanonski operativni ugovor za rad nad ovim repo-om.
 
-Ne služi kao generički style guide. Služi da svaki sledeći agent ili developer zna:
-
-1. kako je repo organizovan
-2. kako se imenuju folderi, fajlovi i funkcije
-3. kako feature mora da se ponaša
-4. šta ne sme da se pokvari
-
 ## 1. Product Intent
 
-Ovaj repo je interaktivna lekcija koja uči korisnika kako da izgradi moderan sidebar.
+Ovaj repo je `Step By Step Animator`.
 
-Aplikacija mora da daje osećaj kao da gledaš programera preko share screen-a:
+To je lesson engine za interaktivne HTML/CSS lekcije koje treba da izgledaju kao da gledaš programera preko share screen-a.
 
-- HTML se pojavljuje korak po korak
-- CSS se pojavljuje property po property
+Engine je generičan.
+
+Trenutno isporučena lekcija je:
+
+- `build-sidebar`
+
+Svaka nova lekcija mora da koristi isti shell i isti teaching model:
+
+- HTML ide element po element
+- CSS ide property po property
 - preview prikazuje tačno isti kumulativni HTML/CSS koji je trenutno napisan
 - promene moraju da budu jasne, predvidive i lake za verbalno objašnjavanje
 
-Ovo nije statični showcase.
-Ovo nije lažni storyboard.
+Ovo nije showcase.
+Ovo nije fake storyboard.
 Ovo je teaching product.
 
 ## 2. Technical Contract
@@ -47,38 +48,37 @@ Tree čitaš ovim redom:
 Aktuelni kanonski shape:
 
 ```txt
-teach-components/
-  build-sidebar/
-    build-sidebar.pipeline.js
-    lesson.css
+teach-lessons/
+  list-lessons.js
+  find-selected-lesson.js
+  teach-lesson/
+    teach-lesson.pipeline.js
+    lesson-shell.css
     escape-inline-text.js
     01-start-lesson/
       find-lesson-parts.js
       create-lesson-progress.js
+      show-lesson-shell.js
     02-follow-lesson/
-      lesson-step-script.js
       listen-for-lesson-keys.js
       show-active-lesson-panel.js
       show-current-step.js
       show-step-timeline.js
     03-watch-code/
-      build-html-at-step.js
-      build-css-at-step.js
       compare-code-lines.js
       describe-css-line-role.js
       escape-code-text.js
       scroll-to-added-line.js
       show-growing-code.js
-    04-watch-sidebar/
-      show-current-sidebar.js
+    04-watch-preview/
+      show-current-preview.js
     05-check-understanding/
       create-knowledge-check-progress.js
-      knowledge-check-questions.js
       present-knowledge-check.js
       show-knowledge-check-question.js
       show-knowledge-check-score.js
-    06-download-sidebar-files/
-      download-sidebar-files.js
+    06-download-lesson-files/
+      download-lesson-files.js
     find-step/
       present-step-finder.js
     save-step/
@@ -88,19 +88,48 @@ teach-components/
       remember-saved-steps.js
     choose-theme/
       choose-theme.js
+  build-sidebar/
+    build-sidebar.lesson.js
+    describe-steps.js
+    build-html-at-step.js
+    build-css-at-step.js
+    list-knowledge-check-questions.js
 ```
 
-### 2.2 Architecture Rules
+### 2.2 Lesson Contract
 
-- folder says flow
-- feature folder says use case
-- root feature file says the full feature flow
-- every other file owns one clear responsibility
-- every function name says the exact action
-- if the flow is sequential, root file stays `feature-name.pipeline.js`
-- if the flow stops being strictly sequential, use one facade/orchestrator file that still owns the whole feature flow
+Svaka nova lesson slice mora da isporuči jedan root lesson file:
 
-### 2.3 Naming Rules
+```txt
+feature-name.lesson.js
+```
+
+Taj file mora da vrati kompletan lesson contract:
+
+- `lessonId`
+- `lessonTitle`
+- `lessonIntro`
+- `previewAddress`
+- `previewTitle`
+- `htmlFileName`
+- `cssFileName`
+- `steps`
+- `buildHtmlAtStep`
+- `buildCssAtStep`
+- `knowledgeCheckQuestions`
+
+Ne uvoditi paralelne lesson shape-ove.
+
+### 2.3 Runtime and Entry Rules
+
+- nema `src/` foldera
+- `main.js` je root entry
+- `index.html` je generičan lesson shell
+- `sidebar-step-by-step.html` je kompatibilni alias za `build-sidebar`
+- build ide kroz Vite
+- kanonski engine entry ostaje `teach-lessons/teach-lesson/teach-lesson.pipeline.js`
+
+### 2.4 Naming Rules
 
 Koristi ovaj filter pre svakog novog imena:
 
@@ -125,32 +154,33 @@ Zabranjeni glagoli:
 - `manage`
 - `doStuff`
 
-### 2.4 Vocabulary Rules
+### 2.5 Vocabulary Rules
 
 U ovom repo-u glagoli imaju zaključano značenje:
 
 - `build...` gradi izveden lesson output za konkretan step
 - `show...` upisuje trenutno stanje u već pronađene page parts
 - `present...` drži interaktivni user flow
-- `create...` inicijalizuje progress ili state za tok
-- `find...` pronalazi postojeće page delove u DOM-u
+- `create...` inicijalizuje progress za tok
+- `find...` pronalazi postojeće page delove u DOM-u ili u listi
 - `read...` čita iz persistence sloja
 - `write...` upisuje u persistence sloj
+- `teach...` orkestrira kompletan lesson flow
 
 Ne uvoditi novu sinonimsku generaciju ako postojeći glagol već pokriva odgovornost.
 
-### 2.5 Numbering Rules
+### 2.6 Numbering Rules
 
 Brojevi se koriste samo na flow folderima kada redosled zaista nosi značenje u product story-ju.
 
-U ovom repo-u to važi za glavni lesson journey:
+U engine-u to važi za glavni lesson journey:
 
 - `01-start-lesson`
 - `02-follow-lesson`
 - `03-watch-code`
-- `04-watch-sidebar`
+- `04-watch-preview`
 - `05-check-understanding`
-- `06-download-sidebar-files`
+- `06-download-lesson-files`
 
 Pomoćni tokovi ostaju bez brojeva:
 
@@ -158,17 +188,7 @@ Pomoćni tokovi ostaju bez brojeva:
 - `save-step`
 - `choose-theme`
 
-Ne numerisati responsibility fajlove osim ako redosled samog fajl tree-ja postane bitan za razumevanje feature-a.
-
-### 2.6 Runtime and Entry Rules
-
-- Nema `src/` foldera
-- `main.js` je root entry
-- `sidebar-step-by-step.html` je glavna lesson stranica
-- build ide kroz Vite
-- kanonski feature entry ostaje `teach-components/build-sidebar/build-sidebar.pipeline.js`
-
-Ne držati paralelnu monolitnu implementaciju pored slice-ovane verzije.
+Ne numerisati responsibility fajlove.
 
 ### 2.7 Preview Integrity Rules
 
@@ -176,29 +196,38 @@ Desni preview mora da bude stvarni render istog kumulativnog HTML/CSS koda koji 
 
 To znači:
 
-- nema ručno režiranog “fake scene” preview-a
+- nema ručno režiranog fake preview-a
 - nema posebnog preview DOM-a koji odstupa od lesson koda
-- preview mora da se hrani iz istih builder funkcija koje hrane code panel
+- preview mora da se hrani iz istih builder funkcija koje hrani lesson contract
 - HTML preview mora da pokaže sirov browser rezultat kada CSS još nije dodat
 - CSS preview mora da utiče samo onoliko koliko je trenutno napisano
-
-Ako menjaš preview, menjaj ga tako da ostane iskren prema lesson kodu.
 
 ### 2.8 Verification Rules
 
 Posle svake veće izmene obavezno pokreni:
 
 ```bash
-find teach-components -name '*.js' -print0 | xargs -0 -n1 node --check && node --check main.js
+find teach-lessons -name '*.js' -print0 | xargs -0 -n1 node --check && node --check main.js
 npm run build
 ./merge-files.sh .
 ```
 
 Ako menjaš dokumentaciju ili flow tree, osveži i merge dump.
 
-## 3. Feature Contract
+### 2.9 Delivery Discipline
 
-Ovo je behavior specifikacija proizvoda. Ako feature menjaš, ova pravila moraju ostati istinita osim ako korisnik eksplicitno zatraži drugo.
+Na kraju svakog većeg završenog rada obavezna je završna disciplina iz root-a repoa.
+
+To znači:
+
+1. pokreni `./merge-files.sh .` iz root-a
+2. uradi `git add -A`
+3. napravi normalan `git commit`
+4. uradi `git push`
+
+Ne završavaj ozbiljan implementation pass bez ovog zatvaranja, osim ako korisnik eksplicitno traži da se ne commituje ili ne pushuje.
+
+## 3. Feature Contract
 
 ### 3.1 Lesson Layout
 
@@ -218,157 +247,43 @@ Levi panel:
 
 Srednji panel:
 
-- prikazuje `index.html`
-- prikazuje `style.css`
+- prikazuje HTML fajl
+- prikazuje CSS fajl
 - oba prikaza su kumulativna
 - postojeće linije su muted
 - novo dodate linije su naglašene
 
 Desni panel:
 
-- mora da zauzima ceo viewer panel
-- mora da imitira browser
-- mora da renderuje stvarni kumulativni HTML/CSS output
+- zauzima ceo viewer panel
+- imitira browser
+- renderuje stvarni kumulativni HTML/CSS output
 
-### 3.2 Lesson Flow
+### 3.2 Current Shipped Lesson
 
-Lekcija počinje praznim `app-shell` prostorom.
+`build-sidebar` je referentna lekcija za engine.
 
-Sidebar se dodaje kao prva stvar.
+Za nju i dalje važe posebna teaching pravila:
 
-Ne dodavati nebitan sadržaj koji odvlači pažnju od lekcije, kao:
+- počinje praznim `.app-shell` prostorom
+- sidebar se dodaje kao prva stvar
+- nema filler sadržaja van onoga što lekcija zaista objašnjava
+- helper linije i pomoćni borderi ostaju dok se ne završi cela vizuelna celina
 
-- lažni `main-content`
-- generički hero blokovi
-- filler dashboard sadržaj
+### 3.3 How To Add A New Lesson
 
-Ovo je sidebar-only lekcija.
+Za novu lekciju:
 
-### 3.3 HTML Teaching Rules
+1. napravi novi feature folder pod `teach-lessons/`
+2. dodaj root `feature-name.lesson.js`
+3. dodaj `describe-steps.js`
+4. dodaj `build-html-at-step.js`
+5. dodaj `build-css-at-step.js`
+6. dodaj `list-knowledge-check-questions.js`
+7. registruj lekciju u `teach-lessons/list-lessons.js`
 
-HTML se dodaje element po element.
-
-Koraci moraju da prate realan construction flow:
-
-- prvo wrapper
-- onda child elementi
-- onda finiji pod-elementi
-
-Ne lepi više novih HTML struktura odjednom ako se mogu prirodno razložiti.
-
-### 3.4 CSS Teaching Rules
-
-CSS mora da ide property po property.
-
-Ne lepi kompletan block odjednom.
-
-Kumulativni stylesheet mora da raste korak po korak.
-
-Rani CSS koraci treba da daju vizuelnu orijentaciju u preview-u, zato prvo uvoditi stvari koje korisniku pomažu da vidi gde gleda:
-
-- helper outline / helper border
-- širinu
-- visinu
-- padding / spacing koji pravi footprint
-- background i ostale vizuelne finish property-je tek kad imaju smisla
-
-### 3.5 Helper Line Rules
-
-Helper linije su deo teaching UX-a, ne slučajni debug ostatak.
-
-Pravila:
-
-- helper border ili helper padding uvodi se eksplicitno kao pomoćno sredstvo za orijentaciju
-- u opisu koraka mora da piše da je pomoćni i da će biti uklonjen kasnije
-- u CSS snapshot-u mora da postoji komentar koji kaže da je pomoćni i da se kasnije uklanja
-- helper linija ne sme da nestane prerano
-- helper linije ostaju aktivne dok se ne završi cela celina kojoj element pripada
-
-Primer:
-
-- za `.sidebar-brand` helper linije ostaju dok se ne završi cela brand celina
-- za navigaciju helper linije ostaju dok se ne završi cela navigaciona celina
-
-### 3.6 Helper Color Rules
-
-Kada više elemenata pripada istoj celini, svaki element dobija svoju helper boju.
-
-Primer za brand celinu:
-
-- `.sidebar-brand` ima svoju helper boju
-- `.logo` ima svoju helper boju
-- `.brand-copy` ima svoju helper boju
-
-Pravilo:
-
-- isti element zadržava istu helper boju kroz celu aktivnu celinu
-- helper boja se ne menja usred iste celine bez jakog razloga
-- helper linije cele celine uklanjaju se zajedno kada se ta celina završi
-
-### 3.7 Preview Behavior Rules
-
-Preview mora da se ponaša kao pravi editor + browser tok:
-
-- kada se napiše HTML, browser mora odmah da ga pokaže bez stilova
-- kada se doda CSS property, preview mora odmah da pokaže samo efekat tog property-ja
-- kada sledeći property menja isti element, preview mora da update-uje isti render, ne da prikazuje drugu scenu
-
-Ne koristiti vizuelne prečice koje sakrivaju pravi rezultat koda.
-
-### 3.8 Playback Rules
-
-Playback kontrole imaju tačno značenje:
-
-- `Play`: kreće od trenutnog koraka i automatski nastavlja dalje
-- `Pause`: zaustavlja se na trenutnom koraku da predavač može verbalno da objasni širi kontekst
-- `Stop`: zaustavlja playback i vraća lekciju na početak
-
-`Space` radi kao `Play / Pause`.
-
-Ne vraćati `Auto` kao labelu kontrola.
-Ne koristiti `Reset` kao zamenu za `Stop`.
-
-### 3.9 Support Feature Rules
-
-Support tokovi moraju ostati funkcionalni:
-
-- step finder
-- bookmarks
-- knowledge check
-- theme toggle
-- file download
-
-Ali ne smeju da preuzmu fokus sa glavnog lesson experience-a.
-
-### 3.10 Download Rules
-
-Download mora da koristi finalni kumulativni lesson output.
-
-Ne skidati alternativan ili ručno održavan HTML/CSS.
-
-## 4. Change Rules For Future Agents
-
-Ako menjaš repo:
-
-1. prvo proveri da li novo ime stvarno govori flow / responsibility / action
-2. ne uvodi paralelnu implementaciju ako već postoji kanonski pipeline
-3. ako file nosi više nepovezanih odgovornosti, razdvoji ga
-4. ako behavior menjaš, zadrži teaching intent
-5. ako menjaš lesson flow, ažuriraj i docs i merge dump
-6. ako uvodiš helper stilove, dokumentuj kada nastaju i kada nestaju
-
-## 5. Definition Of Done
-
-Promena je gotova kada:
-
-- tree i dalje čitaš top-down kao product story
-- nema novog generičkog naming šuma
-- preview i code panel ostaju međusobno istiniti
-- helper linije rade po pravilima celina i boja
-- playback radi kao `Play / Pause / Stop`
-- `node --check` prolazi
-- `npm run build` prolazi
-- `./merge-files.sh .` je osvežen
+Ne kopirati shell iz `teach-lesson/`.
+Nova lekcija treba da doda samo svoj contract i svoj content.
 
 === ARCHITECTURE.md ===
 # Architecture
@@ -387,32 +302,38 @@ Read the tree in this order:
 Current example:
 
 ```txt
-teach-components/
-  build-sidebar/
-    build-sidebar.pipeline.js
-    lesson.css
-    escape-inline-text.js
+teach-lessons/
+  list-lessons.js
+  find-selected-lesson.js
+  teach-lesson/
+    teach-lesson.pipeline.js
+    lesson-shell.css
     01-start-lesson/
       find-lesson-parts.js
       create-lesson-progress.js
+      show-lesson-shell.js
     02-follow-lesson/
-      lesson-step-script.js
       show-current-step.js
+    03-watch-code/
+      show-growing-code.js
+    04-watch-preview/
+      show-current-preview.js
     find-step/
       present-step-finder.js
     save-step/
       remember-saved-steps.js
-    03-watch-code/
-      build-html-at-step.js
-      show-growing-code.js
-    04-watch-sidebar/
-      show-current-sidebar.js
     05-check-understanding/
       present-knowledge-check.js
     choose-theme/
       choose-theme.js
-    06-download-sidebar-files/
-      download-sidebar-files.js
+    06-download-lesson-files/
+      download-lesson-files.js
+  build-sidebar/
+    build-sidebar.lesson.js
+    describe-steps.js
+    build-html-at-step.js
+    build-css-at-step.js
+    list-knowledge-check-questions.js
 ```
 
 ## Naming Rules
@@ -424,7 +345,7 @@ Use a folder name that tells what the product is doing.
 Good:
 
 ```txt
-teach-components/
+teach-lessons/
 sell-subscriptions/
 review-progress/
 ```
@@ -445,16 +366,16 @@ The next folder must tell which concrete product scenario is being handled.
 Good:
 
 ```txt
+teach-lesson/
 build-sidebar/
-publish-lesson/
 retry-payment/
 ```
 
 Bad:
 
 ```txt
-sidebar/
 lesson/
+sidebar/
 payment/
 ```
 
@@ -468,14 +389,18 @@ If the feature is sequential, use:
 feature-name.pipeline.js
 ```
 
-If the feature is not strictly sequential, use a facade or orchestrator file that still owns the complete flow.
+If the feature is a concrete lesson contract, use:
+
+```txt
+feature-name.lesson.js
+```
 
 ### 4. Every other file owns one clear responsibility
 
 Good:
 
 ```txt
-lesson-step-script.js
+describe-steps.js
 build-css-at-step.js
 present-step-finder.js
 show-growing-code.js
@@ -494,19 +419,17 @@ processor.js
 
 ### 5. Use numbers only when sequence truly matters
 
-Use `01-...`, `02-...` only when the file order itself carries meaning without opening the pipeline.
+Use `01-...`, `02-...` only when the folder order itself carries product meaning without opening the pipeline.
 
-If names are already naturally readable, do not add numbers.
-
-This repo uses numeric prefixes only on the main lesson journey inside `build-sidebar/`:
+This repo uses numeric prefixes only on the generic lesson journey inside `teach-lesson/`:
 
 ```txt
 01-start-lesson/
 02-follow-lesson/
 03-watch-code/
-04-watch-sidebar/
+04-watch-preview/
 05-check-understanding/
-06-download-sidebar-files/
+06-download-lesson-files/
 ```
 
 Support flows such as `find-step/`, `save-step/`, and `choose-theme/` stay unnumbered because they are available across the lesson and are not mandatory sequence steps.
@@ -519,10 +442,8 @@ Good:
 
 ```txt
 build-sidebar/
-  02-follow-lesson/
-    lesson-step-script.js
-  03-watch-code/
-    show-growing-code.js
+  describe-steps.js
+  build-html-at-step.js
 ```
 
 Bad:
@@ -540,11 +461,10 @@ build-sidebar/
 Good:
 
 ```txt
-teachBuildSidebar()
-goToStepNumber()
-goToNextStep()
+teachLesson()
+findSelectedLesson()
 showGrowingCode()
-downloadSidebarFiles()
+downloadLessonFiles()
 ```
 
 Bad:
@@ -565,7 +485,10 @@ Use verbs consistently by responsibility:
 - `show...` writes current lesson content into already-found page parts.
 - `present...` owns an interactive user flow such as finder or knowledge check.
 - `create...` initializes progress for a flow.
-- `read...` is reserved for persistence reads, while `find...` is used for locating existing page parts.
+- `find...` locates a selected lesson or existing page parts.
+- `read...` is reserved for persistence reads.
+- `write...` is reserved for persistence writes.
+- `teach...` orchestrates the complete lesson flow.
 
 ## Anti-Patterns
 
@@ -589,123 +512,285 @@ Use this sentence as the filter before every new file:
 === TODO.md ===
 # TODO
 
-Ovaj fajl je kanonska lista za arhitekturu i cleanup ovog repoa.
+Ovaj fajl je kanonska lista za arhitekturu i sledeće veće korake ovog repoa.
 
 ## Status pravila
 
-- `DONE`: stavka je završena i više nema otvorenog rada.
-- `OPEN`: stavka je poznata i može da se reši u ovom repou.
-- `BLOCKED`: stavka trenutno ne može da se zatvori; obavezno napiši šta fali da bi bila rešena.
+- `DONE`: stavka je završena
+- `OPEN`: stavka je poznata i spremna za sledeći pass
+- `BLOCKED`: stavka trenutno ne može da se zatvori; napiši šta fali
 
-Svaka stavka mora da ima:
+## Engine Cleanup
 
-1. `Status`
-2. `Šta fali`
-3. `Napomena`
-
-## Final Architecture Tightening
-
-### 1. Zadrži jedan kanonski feature entry
+### 1. Pretvori repo u generičan lesson engine
 
 - `Status`: `DONE`
 - `Šta fali`: ništa
-- `Napomena`: Glavni tok ostaje u `teach-components/build-sidebar/build-sidebar.pipeline.js` i nema konkurentske monolitne implementacije.
+- `Napomena`: Generičan shell i runtime sada žive u `teach-lessons/teach-lesson/`, a `build-sidebar` je sveden na lesson contract.
 
-### 2. Drži repo u flow-first shape-u
-
-- `Status`: `DONE`
-- `Šta fali`: ništa
-- `Napomena`: Tree sada čita feature kroz glavni numerisani lesson journey `01-start-lesson`, `02-follow-lesson`, `03-watch-code`, `04-watch-sidebar`, `05-check-understanding`, `06-download-sidebar-files`, dok `find-step`, `save-step` i `choose-theme` ostaju nenumerisani pomoćni tokovi.
-
-### 3. Očisti preostale stare nazive iz dokumentacije
+### 2. Zadrži jedan kanonski engine entry
 
 - `Status`: `DONE`
 - `Šta fali`: ništa
-- `Napomena`: `ARCHITECTURE.md` više ne koristi stare repo-specifične loše primere, nego neutralne anti-pattern primere.
+- `Napomena`: Glavni tok ostaje u `teach-lessons/teach-lesson/teach-lesson.pipeline.js` i nema konkurentske monolitne implementacije.
 
-### 4. Zaključaj jednu konačnu odluku o numerisanju flow foldera
-
-- `Status`: `DONE`
-- `Šta fali`: ništa
-- `Napomena`: Konačna odluka je da samo glavni lesson journey koristi numerisane flow foldere, dok pomoćni tokovi ostaju bez brojeva.
-
-### 5. Prođi poslednji vocabulary audit za “show / present / build / watch”
+### 3. Premesti concrete lesson sadržaj van shell-a
 
 - `Status`: `DONE`
 - `Šta fali`: ništa
-- `Napomena`: `ARCHITECTURE.md` sada eksplicitno zaključava značenje glagola: `build` za derivaciju, `show` za upis u postojeće page parts, `present` za interaktivne tokove, `create` za inicijalizaciju, `find` za lociranje page parts.
+- `Napomena`: Step script, HTML builder, CSS builder i quiz pitanja sada žive u `teach-lessons/build-sidebar/`.
 
-### 6. Zategni interni naziv za prikaz trenutne lekcije
-
-- `Status`: `DONE`
-- `Šta fali`: ništa
-- `Napomena`: Helper je preimenovan u `showCurrentLesson`, pa više ne nosi nepotreban `state` vokabular.
-
-## Responsibility Checks
-
-### 7. Sačuvaj male fajlove samo tamo gde nose jednu jasnu odgovornost
+### 4. Uvedi jasan lesson contract za buduće lekcije
 
 - `Status`: `DONE`
 - `Šta fali`: ništa
-- `Napomena`: Bookmark storage/list output i knowledge-check prikaz su već razdvojeni na jasne responsibility file-ove.
+- `Napomena`: Svaka nova lekcija treba da doda root `feature-name.lesson.js` i da se registruje u `teach-lessons/list-lessons.js`.
 
-### 8. Proveri da li `present-step-finder.js` i dalje nosi samo jednu odgovornost
+## Follow-Up Work
 
-- `Status`: `DONE`
-- `Šta fali`: ništa
-- `Napomena`: Fajl i dalje nosi jednu koherentnu odgovornost: kompletan user flow za pronalazak koraka. Unutrašnji helper je dodatno pojašnjen u `showMatchingStepResults`.
+### 5. Dodaj drugu lekciju da potvrdi engine shape
 
-### 9. Proveri da li `present-knowledge-check.js` i dalje nosi samo jednu odgovornost
+- `Status`: `OPEN`
+- `Šta fali`: nova lesson slice sa svojim `describe-steps.js`, HTML/CSS builderima i pitanjima
+- `Napomena`: Najlogičniji sledeći kandidat je `build-top-navigation`.
 
-- `Status`: `DONE`
-- `Šta fali`: ništa
-- `Napomena`: Fajl i dalje nosi jednu koherentnu odgovornost: kompletan knowledge-check flow. Pitanje i rezultat ostaju izdvojeni u svoje file-ove, a interni helper je pojašnjen u `showCurrentKnowledgeCheckStep`.
+### 6. Dodaj lesson picker u shell
+
+- `Status`: `OPEN`
+- `Šta fali`: UI za izbor lekcije i mali flow za promenu query parametra
+- `Napomena`: Trenutno izbor lekcije radi preko `?lesson=...`, što je dovoljno za engine start.
 
 ## Verification
 
-### 10. Proveri da nema starih import path-ova
+### 7. Drži build i syntax check zelenim
 
 - `Status`: `DONE`
 - `Šta fali`: ništa
-- `Napomena`: Poslednji import fix pass je već urađen nakon rename-a.
+- `Napomena`: Posle svake veće izmene pokrenuti `find teach-lessons -name '*.js' -print0 | xargs -0 -n1 node --check && node --check main.js`, zatim `npm run build`.
 
-### 11. Proveri da build i syntax check prolaze
-
-- `Status`: `DONE`
-- `Šta fali`: ništa
-- `Napomena`: `node --check` i `npm run build` su ponovo prošli posle numerisanog lesson journey pass-a.
-
-### 12. Osveži repo merge dump posle svakog većeg rename/split pass-a
+### 8. Osveži merge dump posle svakog većeg pass-a
 
 - `Status`: `DONE`
 - `Šta fali`: ništa
-- `Napomena`: `./merge-files.sh .` treba pokrenuti posle svakog većeg rename/doc pass-a; biće osvežen i za numerisani lesson journey pass.
-
-## Kako da se ovaj TODO ažurira
-
-- Kada se stavka završi, promeni `Status` u `DONE` i stavi `Šta fali: ništa`.
-- Kada stavka ne može da se završi, promeni `Status` u `BLOCKED` i napiši tačno koji input, odluka ili tehnički uslov nedostaje.
-- Ne zatvaraj stavku samo zato što ime “zvuči dovoljno dobro”; zatvori je tek kada tree, file i function ime stvarno predviđaju sadržaj bez otvaranja fajla.
+- `Napomena`: `./merge-files.sh .` ostaje obavezni završni korak posle većih rename, split ili doc pass-ova.
 
 === index.html ===
-<!doctype html>
-<html lang="sr">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Step By Step Animator</title>
-    <meta http-equiv="refresh" content="0; url=/sidebar-step-by-step.html" />
-  </head>
-  <body>
-    <p>Otvori <a href="/sidebar-step-by-step.html">Step By Step Animator</a>.</p>
-  </body>
+<!DOCTYPE html>
+<html lang="sr" data-theme="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Step By Step Animator</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+</head>
+<body>
+  <!-- Header Controls -->
+  <div class="header-controls">
+    <button class="control-btn" id="searchBtn" title="Pretraži (Ctrl+K)">
+      <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+    </button>
+    <button class="control-btn" id="quizBtn" title="Kviz znanja">
+      <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"/></svg>
+    </button>
+    <button class="control-btn" id="themeBtn" title="Promeni temu">
+      <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"/></svg>
+    </button>
+    <button class="control-btn" id="downloadBtn" title="Preuzmi fajlove">
+      <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
+    </button>
+  </div>
+
+  <!-- Search Modal -->
+  <div class="modal-overlay" id="searchModal">
+    <div class="modal">
+      <div class="modal-header">
+        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+        <input type="text" class="modal-search" id="searchInput" placeholder="Pretraži korake...">
+      </div>
+      <div class="modal-body" id="searchResults"></div>
+    </div>
+  </div>
+
+  <!-- Quiz Modal -->
+  <div class="modal-overlay quiz-modal" id="quizModal">
+    <div class="modal">
+      <div class="modal-header">
+        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"/></svg>
+        <span style="font-weight:600;">Provera znanja</span>
+      </div>
+      <div id="quizContent"></div>
+    </div>
+  </div>
+
+  <div class="page">
+    <section class="panel left-panel">
+      <div class="eyebrow">
+        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+        Interaktivna lekcija
+      </div>
+      <h1 id="lessonHeading">Step By Step Animator</h1>
+      <p class="intro" id="lessonIntro">
+        Koraci po korak pratiš kako se kod i preview grade u realnom vremenu. Aktivna lekcija popunjava ovaj viewer svojim sadržajem.
+      </p>
+
+      <div class="tabs">
+        <button class="tab-btn active" data-tab="steps">
+          <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg>
+          Koraci
+        </button>
+        <button class="tab-btn" data-tab="bookmarks">
+          <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z"/></svg>
+          <span id="bookmarkCount">0</span>
+        </button>
+      </div>
+
+      <div class="panel-view" id="stepsPanel">
+        <div class="step-card" id="stepCard">
+          <div class="step-header">
+            <span class="step-number" id="stepNumber">Prizor 1 / 21</span>
+            <button class="step-bookmark" id="bookmarkBtn" title="Sačuvaj korak">
+              <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z"/></svg>
+            </button>
+          </div>
+          <h2 class="step-title" id="stepTitle"></h2>
+          <p class="step-desc" id="stepDesc"></p>
+          <div class="pro-tip" id="proTip">
+            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+            <p id="proTipText"></p>
+          </div>
+          <div class="step-dots" id="dots"></div>
+        </div>
+      </div>
+
+      <div class="panel-view" id="bookmarksPanel" hidden>
+        <div class="bookmarks-panel">
+          <div class="bookmarks-head">
+            <div>
+              <span class="step-number">Sačuvani koraci</span>
+              <h2>Bookmarkovi</h2>
+              <p>Vrati se direktno na bitne faze i očisti listu kad ti više ne trebaju.</p>
+            </div>
+            <span class="bookmark-summary" id="bookmarkSummary">0 sačuvano</span>
+          </div>
+          <div class="bookmark-empty" id="bookmarkEmpty">
+            <strong>Nema sačuvanih koraka</strong>
+            Klikni ikonicu bookmarka na bilo kom koraku i pojaviće se ovde kao brza prečica.
+          </div>
+          <div class="bookmark-list" id="bookmarkList" hidden></div>
+        </div>
+      </div>
+
+      <div class="progress-container">
+        <div class="progress-bar">
+          <div class="progress-bar-inner" id="progressBar"></div>
+        </div>
+        <div class="progress-info">
+          <span id="progressText">0% završeno</span>
+          <span id="timeEstimate">~2 min preostalo</span>
+        </div>
+      </div>
+
+      <div class="controls">
+        <button class="btn-secondary btn-icon" id="prevBtn" title="Prethodni">
+          <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/></svg>
+        </button>
+        <button class="btn-primary" id="nextBtn">
+          Sledeći
+          <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+        </button>
+        <button class="btn-secondary" id="playBtn" title="Pokreni prezentaciju">
+          <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z"/></svg>
+          <span>Play</span>
+        </button>
+        <button class="btn-secondary" id="pauseBtn" title="Pauziraj prezentaciju">
+          <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 9v6m4-6v6"/></svg>
+          <span>Pause</span>
+        </button>
+        <button class="btn-ghost" id="stopBtn" title="Zaustavi i vrati na početak">
+          <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 9h6v6H9z"/></svg>
+          <span>Stop</span>
+        </button>
+      </div>
+
+      <div class="shortcuts">
+        <div class="shortcut"><span class="kbd">←</span><span class="kbd">→</span> Navigacija</div>
+        <div class="shortcut"><span class="kbd">Space</span> Play / Pause</div>
+        <div class="shortcut"><span class="kbd">Ctrl</span><span class="kbd">K</span> Pretraga</div>
+        <div class="shortcut"><span class="kbd">B</span> Bookmark</div>
+      </div>
+    </section>
+
+    <section class="panel live-editor-panel">
+      <div class="live-editor-head">
+        <div class="live-editor-copy">
+          <h2>Ekran editora</h2>
+          <p>Kumulativni fajlovi se popunjavaju liniju po liniju, kao da gledaš live tutorijal preko share screen-a.</p>
+        </div>
+        <span class="live-editor-step" id="liveStepBadge">Prizor 1</span>
+      </div>
+
+      <div class="live-editor-body">
+        <div class="live-pane">
+          <div class="live-pane-head">
+            <span id="htmlFileLabel">index.html</span>
+            <span>Postojeće muted, novo istaknuto</span>
+          </div>
+          <div class="live-code-scroll" id="liveHtmlPane"></div>
+        </div>
+
+        <div class="live-pane">
+          <div class="live-pane-head">
+            <span id="cssFileLabel">style.css</span>
+            <span>Staro muted, novo property istaknuto</span>
+          </div>
+          <div class="live-code-scroll" id="liveCssPane"></div>
+        </div>
+      </div>
+    </section>
+
+    <section class="panel viewer">
+      <div class="stage" id="stage">
+        <div class="live-preview-shell">
+          <div class="live-preview-head">
+            <div class="live-preview-controls" aria-hidden="true">
+              <span class="live-preview-dot live-preview-dot-close"></span>
+              <span class="live-preview-dot live-preview-dot-minimize"></span>
+              <span class="live-preview-dot live-preview-dot-expand"></span>
+            </div>
+            <div class="live-preview-address">
+              <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 11c1.657 0 3-1.343 3-3S13.657 5 12 5 9 6.343 9 8s1.343 3 3 3zm0 0v8m-4-4h8"/></svg>
+              <span id="previewAddress">browser://live-lesson-preview</span>
+            </div>
+            <span class="tag accent" id="tagText">
+              <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4"/></svg>
+              lesson:ready
+            </span>
+          </div>
+          <iframe class="live-preview-frame" id="livePreviewFrame" title="Live lesson preview"></iframe>
+        </div>
+      </div>
+    </section>
+  </div>
+
+  <script type="module" src="/main.js"></script>
+</body>
 </html>
 
 === main.js ===
-import './teach-components/build-sidebar/lesson.css';
-import { teachBuildSidebar } from './teach-components/build-sidebar/build-sidebar.pipeline.js';
+import './teach-lessons/teach-lesson/lesson-shell.css';
+import { findSelectedLesson } from './teach-lessons/find-selected-lesson.js';
+import { listLessons } from './teach-lessons/list-lessons.js';
+import { teachLesson } from './teach-lessons/teach-lesson/teach-lesson.pipeline.js';
 
-teachBuildSidebar(document);
+const selectedLesson = findSelectedLesson({
+  ownerLocation: window.location,
+  lessons: listLessons()
+});
+
+teachLesson({
+  ownerDocument: document,
+  lesson: selectedLesson
+});
 
 === merge-files.sh ===
 #!/usr/bin/env bash
@@ -1641,493 +1726,24 @@ fi
 }
 
 === sidebar-step-by-step.html ===
-<!DOCTYPE html>
-<html lang="sr" data-theme="dark">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Step By Step Animator</title>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
-</head>
-<body>
-  <!-- Header Controls -->
-  <div class="header-controls">
-    <button class="control-btn" id="searchBtn" title="Pretraži (Ctrl+K)">
-      <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
-    </button>
-    <button class="control-btn" id="quizBtn" title="Kviz znanja">
-      <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"/></svg>
-    </button>
-    <button class="control-btn" id="themeBtn" title="Promeni temu">
-      <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"/></svg>
-    </button>
-    <button class="control-btn" id="downloadBtn" title="Preuzmi fajlove">
-      <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
-    </button>
-  </div>
-
-  <!-- Search Modal -->
-  <div class="modal-overlay" id="searchModal">
-    <div class="modal">
-      <div class="modal-header">
-        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
-        <input type="text" class="modal-search" id="searchInput" placeholder="Pretraži korake...">
-      </div>
-      <div class="modal-body" id="searchResults"></div>
-    </div>
-  </div>
-
-  <!-- Quiz Modal -->
-  <div class="modal-overlay quiz-modal" id="quizModal">
-    <div class="modal">
-      <div class="modal-header">
-        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"/></svg>
-        <span style="font-weight:600;">Provera znanja</span>
-      </div>
-      <div id="quizContent"></div>
-    </div>
-  </div>
-
-  <div class="page">
-    <section class="panel left-panel">
-      <div class="eyebrow">
-        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
-        Interaktivna lekcija
-      </div>
-      <h1>Kako se pravi moderan sidebar</h1>
-      <p class="intro">
-        Koraci po korak gradiš sidebar od osnove do gotove navigacije. Svaki korak uključuje kod, savete i vizuelni prikaz.
-      </p>
-
-      <div class="tabs">
-        <button class="tab-btn active" data-tab="steps">
-          <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg>
-          Koraci
-        </button>
-        <button class="tab-btn" data-tab="bookmarks">
-          <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z"/></svg>
-          <span id="bookmarkCount">0</span>
-        </button>
-      </div>
-
-      <div class="panel-view" id="stepsPanel">
-        <div class="step-card" id="stepCard">
-          <div class="step-header">
-            <span class="step-number" id="stepNumber">Prizor 1 / 21</span>
-            <button class="step-bookmark" id="bookmarkBtn" title="Sačuvaj korak">
-              <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z"/></svg>
-            </button>
-          </div>
-          <h2 class="step-title" id="stepTitle"></h2>
-          <p class="step-desc" id="stepDesc"></p>
-          <div class="pro-tip" id="proTip">
-            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
-            <p id="proTipText"></p>
-          </div>
-          <div class="step-dots" id="dots"></div>
-        </div>
-      </div>
-
-      <div class="panel-view" id="bookmarksPanel" hidden>
-        <div class="bookmarks-panel">
-          <div class="bookmarks-head">
-            <div>
-              <span class="step-number">Sačuvani koraci</span>
-              <h2>Bookmarkovi</h2>
-              <p>Vrati se direktno na bitne faze i očisti listu kad ti više ne trebaju.</p>
-            </div>
-            <span class="bookmark-summary" id="bookmarkSummary">0 sačuvano</span>
-          </div>
-          <div class="bookmark-empty" id="bookmarkEmpty">
-            <strong>Nema sačuvanih koraka</strong>
-            Klikni ikonicu bookmarka na bilo kom koraku i pojaviće se ovde kao brza prečica.
-          </div>
-          <div class="bookmark-list" id="bookmarkList" hidden></div>
-        </div>
-      </div>
-
-      <div class="progress-container">
-        <div class="progress-bar">
-          <div class="progress-bar-inner" id="progressBar"></div>
-        </div>
-        <div class="progress-info">
-          <span id="progressText">0% završeno</span>
-          <span id="timeEstimate">~2 min preostalo</span>
-        </div>
-      </div>
-
-      <div class="controls">
-        <button class="btn-secondary btn-icon" id="prevBtn" title="Prethodni">
-          <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/></svg>
-        </button>
-        <button class="btn-primary" id="nextBtn">
-          Sledeći
-          <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
-        </button>
-        <button class="btn-secondary" id="playBtn" title="Pokreni prezentaciju">
-          <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z"/></svg>
-          <span>Play</span>
-        </button>
-        <button class="btn-secondary" id="pauseBtn" title="Pauziraj prezentaciju">
-          <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 9v6m4-6v6"/></svg>
-          <span>Pause</span>
-        </button>
-        <button class="btn-ghost" id="stopBtn" title="Zaustavi i vrati na početak">
-          <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 9h6v6H9z"/></svg>
-          <span>Stop</span>
-        </button>
-      </div>
-
-      <div class="shortcuts">
-        <div class="shortcut"><span class="kbd">←</span><span class="kbd">→</span> Navigacija</div>
-        <div class="shortcut"><span class="kbd">Space</span> Play / Pause</div>
-        <div class="shortcut"><span class="kbd">Ctrl</span><span class="kbd">K</span> Pretraga</div>
-        <div class="shortcut"><span class="kbd">B</span> Bookmark</div>
-      </div>
-    </section>
-
-    <section class="panel live-editor-panel">
-      <div class="live-editor-head">
-        <div class="live-editor-copy">
-          <h2>Ekran editora</h2>
-          <p>Kumulativni fajlovi se popunjavaju liniju po liniju, kao da gledaš live tutorijal preko share screen-a.</p>
-        </div>
-        <span class="live-editor-step" id="liveStepBadge">Prizor 1</span>
-      </div>
-
-      <div class="live-editor-body">
-        <div class="live-pane">
-          <div class="live-pane-head">
-            <span>index.html</span>
-            <span>Postojeće muted, novo istaknuto</span>
-          </div>
-          <div class="live-code-scroll" id="liveHtmlPane"></div>
-        </div>
-
-        <div class="live-pane">
-          <div class="live-pane-head">
-            <span>style.css</span>
-            <span>Staro muted, novo property istaknuto</span>
-          </div>
-          <div class="live-code-scroll" id="liveCssPane"></div>
-        </div>
-      </div>
-    </section>
-
-    <section class="panel viewer">
-      <div class="stage" id="stage">
-        <div class="live-preview-shell">
-          <div class="live-preview-head">
-            <div class="live-preview-controls" aria-hidden="true">
-              <span class="live-preview-dot live-preview-dot-close"></span>
-              <span class="live-preview-dot live-preview-dot-minimize"></span>
-              <span class="live-preview-dot live-preview-dot-expand"></span>
-            </div>
-            <div class="live-preview-address">
-              <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 11c1.657 0 3-1.343 3-3S13.657 5 12 5 9 6.343 9 8s1.343 3 3 3zm0 0v8m-4-4h8"/></svg>
-              <span>browser://live-sidebar-preview</span>
-            </div>
-            <span class="tag accent" id="tagText">
-              <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4"/></svg>
-              html:aside
-            </span>
-          </div>
-          <iframe class="live-preview-frame" id="livePreviewFrame" title="Live sidebar preview"></iframe>
-        </div>
-      </div>
-    </section>
-  </div>
-
-  <script type="module" src="/main.js"></script>
-</body>
+<!doctype html>
+<html lang="sr">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Step By Step Animator</title>
+    <meta http-equiv="refresh" content="0; url=./?lesson=build-sidebar" />
+  </head>
+  <body>
+    <script>
+      window.location.replace('./?lesson=build-sidebar');
+    </script>
+    <p>Otvori <a href="./?lesson=build-sidebar">build-sidebar</a> lekciju.</p>
+  </body>
 </html>
 
-=== teach-components/build-sidebar/01-start-lesson/create-lesson-progress.js ===
-export function createLessonProgress() {
-  return {
-    currentStepNumber: 0,
-    playbackTimer: null,
-    activePanel: 'steps'
-  };
-}
-
-=== teach-components/build-sidebar/01-start-lesson/find-lesson-parts.js ===
-function readRequiredElement(ownerDocument, id) {
-  const element = ownerDocument.getElementById(id);
-
-  if (!element) {
-    throw new Error(`Missing required element: #${id}`);
-  }
-
-  return element;
-}
-
-export function findLessonParts(ownerDocument) {
-  return {
-    ownerDocument,
-    livePreviewFrame: readRequiredElement(ownerDocument, 'livePreviewFrame'),
-    stepTitle: readRequiredElement(ownerDocument, 'stepTitle'),
-    stepDescription: readRequiredElement(ownerDocument, 'stepDesc'),
-    stepNumber: readRequiredElement(ownerDocument, 'stepNumber'),
-    progressBar: readRequiredElement(ownerDocument, 'progressBar'),
-    progressText: readRequiredElement(ownerDocument, 'progressText'),
-    timeEstimate: readRequiredElement(ownerDocument, 'timeEstimate'),
-    stepTimeline: readRequiredElement(ownerDocument, 'dots'),
-    tagText: readRequiredElement(ownerDocument, 'tagText'),
-    proTipText: readRequiredElement(ownerDocument, 'proTipText'),
-    nextButton: readRequiredElement(ownerDocument, 'nextBtn'),
-    previousButton: readRequiredElement(ownerDocument, 'prevBtn'),
-    playButton: readRequiredElement(ownerDocument, 'playBtn'),
-    pauseButton: readRequiredElement(ownerDocument, 'pauseBtn'),
-    stopButton: readRequiredElement(ownerDocument, 'stopBtn'),
-    saveStepButton: readRequiredElement(ownerDocument, 'bookmarkBtn'),
-    savedStepCount: readRequiredElement(ownerDocument, 'bookmarkCount'),
-    stepFinderModal: readRequiredElement(ownerDocument, 'searchModal'),
-    stepFinderInput: readRequiredElement(ownerDocument, 'searchInput'),
-    stepFinderResults: readRequiredElement(ownerDocument, 'searchResults'),
-    knowledgeCheckModal: readRequiredElement(ownerDocument, 'quizModal'),
-    knowledgeCheckContent: readRequiredElement(ownerDocument, 'quizContent'),
-    themeButton: readRequiredElement(ownerDocument, 'themeBtn'),
-    downloadFilesButton: readRequiredElement(ownerDocument, 'downloadBtn'),
-    openStepFinderButton: readRequiredElement(ownerDocument, 'searchBtn'),
-    openKnowledgeCheckButton: readRequiredElement(ownerDocument, 'quizBtn'),
-    stepPanel: readRequiredElement(ownerDocument, 'stepsPanel'),
-    savedStepsPanel: readRequiredElement(ownerDocument, 'bookmarksPanel'),
-    savedStepList: readRequiredElement(ownerDocument, 'bookmarkList'),
-    savedStepEmptyState: readRequiredElement(ownerDocument, 'bookmarkEmpty'),
-    savedStepSummary: readRequiredElement(ownerDocument, 'bookmarkSummary'),
-    htmlCodePane: readRequiredElement(ownerDocument, 'liveHtmlPane'),
-    cssCodePane: readRequiredElement(ownerDocument, 'liveCssPane'),
-    currentStepBadge: readRequiredElement(ownerDocument, 'liveStepBadge'),
-    lessonPanelButtons: [...ownerDocument.querySelectorAll('.tab-btn')]
-  };
-}
-
-=== teach-components/build-sidebar/02-follow-lesson/lesson-step-script.js ===
-function describeHtmlElementStep(id, title, desc, tag, proTip, _sidebarScene) {
-  return { id, title, desc, tag, proTip };
-}
-
-function describeCssPropertyStep(id, selector, property, value, _sidebarScene, desc = '', proTip = '') {
-  const cssLine = `${property}: ${value};`;
-
-  return {
-    id,
-    title: `CSS: ${selector} / ${property}`,
-    desc: desc || `Dodajemo \`${cssLine}\` u \`${selector}\` i širimo stylesheet jedan property po korak.`,
-    tag: `css:${id.replace(/_/g, '-')}`,
-    proTip: proTip || 'Jedan property po korak čini promenu jasnom i lakom za praćenje u prikazu sidebara.'
-  };
-}
-
-function describeFinishedSidebarStep(id, title, desc, proTip, _sidebarScene) {
-  return { id, title, desc, tag: 'success', proTip };
-}
-
-export const lessonStepScript = [
-  describeHtmlElementStep('empty_shell', 'Start: Empty App Shell', 'Počinjemo od praznog `.app-shell` prostora. Sidebar tek dodajemo kao prvi pravi element.', 'html:app-shell', 'Neutralan početak jasno odvaja ono što je postojalo od onoga što tek gradimo.', 0),
-  describeHtmlElementStep('sidebar_html', 'HTML: Sidebar Shell', 'Ubacujemo osnovni `<aside class="sidebar">` blok kao koren cele komponente.', 'html:aside', 'Semantički HTML ti odmah daje bolju strukturu i čitljiviji DOM.', 1),
-  ...[
-    ['sidebar_outline', '.sidebar', 'outline', '2px solid #ff4757', 2, 'Dodajemo privremeni pomoćni border radi lakšeg snalaženja, da prazni sidebar odmah dobije jasnu granicu u preview-u. Kasnije ćemo ga ukloniti.', 'Outline je odličan za debug jer ne menja layout.'],
-    ['sidebar_width', '.sidebar', 'width', '280px', 3, 'Kad granica postoji, zaključavamo širinu sidebara da dobije jasan footprint.'],
-    ['sidebar_min_height', '.sidebar', 'min-height', '100vh', 4, 'Dajemo sidebaru punu visinu da box postane čitljiv i bez sadržaja.'],
-    ['sidebar_border_right', '.sidebar', 'border-right', '1px solid rgba(255,255,255,0.12)', 5, 'Tanka desna linija odvaja sidebar od ostatka layouta.'],
-    ['sidebar_background', '.sidebar', 'background', '#0b1020', 5, 'Dodajemo tamnu pozadinu da sidebar dobije svoj vizuelni identitet i uklanjamo privremeni pomoćni border, više nam ne treba.'],
-    ['sidebar_color', '.sidebar', 'color', '#edf2ff', 5, 'Osnovnu boju teksta postavljamo rano da nasledi ceo sadržaj.']
-  ].map(config => describeCssPropertyStep(...config)),
-  describeHtmlElementStep('brand_html', 'HTML: Brand Wrapper', 'Dodajemo `.sidebar-brand` kao zonu za logo i naziv proizvoda. Od ovog trenutka pomoćne linije za sve delove branda držimo dok ne završimo celu brand celinu.', 'html:brand', 'Izdvoj brand deo od navigacije da bi hijerarhija odmah bila jasna.', 7),
-  ...[
-    ['brand_outline', '.sidebar-brand', 'outline', '2px solid #2ed573', 8, 'Dodajemo privremeni pomoćni border radi lakšeg snalaženja, da odmah vidiš footprint brand zone. Držimo ga dok ne završimo celu `.sidebar-brand` celinu, pa ćemo ga tek tada ukloniti.', 'Svaki deo iste celine može da dobije svoju boju helper linije dok ta celina traje.'],
-    ['brand_padding', '.sidebar-brand', 'padding', '24px', 8, 'Unutrašnji padding daje brand zoni vazduh.'],
-    ['brand_margin_bottom', '.sidebar-brand', 'margin-bottom', '28px', 8, 'Odvajamo brand blok od navigacije ispod njega.'],
-    ['brand_display', '.sidebar-brand', 'display', 'flex', 8, 'Prebacujemo brand zonu u flex da logo i tekst mogu da stoje u istom redu.'],
-    ['brand_align_items', '.sidebar-brand', 'align-items', 'center', 8, 'Vertikalno poravnanje centrira logo i tekst.'],
-    ['brand_gap', '.sidebar-brand', 'gap', '14px', 8, 'Gap određuje koliko prostora stoji između logotipa i teksta.']
-  ].map(config => describeCssPropertyStep(...config)),
-  describeHtmlElementStep('logo_html', 'HTML: Logo Element', 'Ubacujemo `.logo` element sa slovom `A` kao placeholder identitetom.', 'html:logo', 'Počni od jednostavnog placeholder loga pa tek onda doteruj stil.', 9),
-  ...[
-    ['logo_outline', '.logo', 'outline', '2px dotted #7dd3fc', 10, 'Dodajemo privremeni pomoćni border radi lakšeg snalaženja, da footprint logotipa bude jasan i bez pozadine. Držimo ga dok ne završimo celu `.sidebar-brand` celinu, pa ga tek tada uklanjamo.', 'Logo zadržava svoju helper boju sve dok radimo ceo brand blok.'],
-    ['logo_width', '.logo', 'width', '48px', 10, 'Prvo zaključavamo širinu logotipa.'],
-    ['logo_height', '.logo', 'height', '48px', 10, 'Visina prati širinu da bismo dobili kvadratnu osnovu.'],
-    ['logo_display', '.logo', 'display', 'grid', 10, 'Grid nam daje lak centar za jedan znak ili ikonu.'],
-    ['logo_place_items', '.logo', 'place-items', 'center', 10, 'Centriramo sadržaj logotipa u oba smera.'],
-    ['logo_radius', '.logo', 'border-radius', '12px', 10, 'Blago zaobljenje daje moderniji osećaj.'],
-    ['logo_font_weight', '.logo', 'font-weight', '800', 10, 'Pojačavamo slovo da liči na pravi brand znak.'],
-    ['logo_background', '.logo', 'background', 'linear-gradient(135deg, #6d73ff, #8f5cff)', 11, 'Gradijent dodaje energiju i daje logotipu fokus. Pomoćni border namerno ostaje dok ne zatvorimo celu brand celinu.'],
-    ['logo_color', '.logo', 'color', 'white', 11, 'Bela boja daje čist kontrast preko gradijenta.'],
-    ['logo_shadow', '.logo', 'box-shadow', '0 12px 24px rgba(109,115,255,0.30)', 11, 'Shadow dodaje depth i čini logo prisutnijim.']
-  ].map(config => describeCssPropertyStep(...config)),
-  describeHtmlElementStep('brand_copy_html', 'HTML: Brand Copy', 'Dodajemo `.brand-copy` sa naslovom i podnaslovom pored logotipa. I on dobija svoju helper boju dok ne završimo celu `.sidebar-brand` celinu.', 'html:brand-copy', 'Tekstualni brand signal pomaže korisniku da zna gde se nalazi.', 12),
-  ...[
-    ['brand_copy_outline', '.brand-copy', 'outline', '1px dashed #f59e0b', 12, 'Dodajemo privremeni pomoćni border radi lakšeg snalaženja, da tekstualni brand blok bude jasno odvojen od logotipa. Držimo ga dok ne završimo celu `.sidebar-brand` celinu.', 'Isti wrapper, različiti child elementi, različite helper boje.'],
-    ['brand_strong_display', '.brand-copy strong', 'display', 'block', 12, 'Naslov pretvaramo u blok da zauzme svoj red.'],
-    ['brand_strong_font_size', '.brand-copy strong', 'font-size', '16px', 12, 'Naslov dobija čitljiviju veličinu.'],
-    ['brand_span_display', '.brand-copy span', 'display', 'block', 12, 'Podnaslov spuštamo u novi red.'],
-    ['brand_span_margin_top', '.brand-copy span', 'margin-top', '4px', 12, 'Mali razmak odvaja podnaslov od naslova.'],
-    ['brand_span_font_size', '.brand-copy span', 'font-size', '13px', 12, 'Podnaslov pravimo suptilnijim od naslova.'],
-    ['brand_span_color', '.brand-copy span', 'color', '#9aa6c8', 12, 'Muted boja pravi jasnu tekstualnu hijerarhiju.']
-  ].map(config => describeCssPropertyStep(...config)),
-  describeHtmlElementStep('nav_html', 'HTML: Nav Wrapper', 'Ubacujemo `<nav class="nav-list">` kao kontejner za buduće linkove. Brand celina je sada gotova, pa uklanjamo privremene pomoćne bordere sa `.sidebar-brand`, `.logo` i `.brand-copy`.', 'html:nav', 'Semantički `nav` element je prirodan izbor za navigaciju.', 13),
-  ...[
-    ['nav_list_outline', '.nav-list', 'outline', '1px dashed #38bdf8', 14, 'Dodajemo privremeni pomoćni border radi lakšeg snalaženja, da prazna nav zona odmah postane vidljiva. Držimo ga dok ne završimo celu navigacionu celinu.', 'Navigacija zadržava helper linije kroz sve svoje poddelove dok ne pređemo na footer.'],
-    ['nav_list_padding', '.nav-list', 'padding', '10px 8px', 14, 'Dodajemo i privremeni pomoćni padding da prazna nav zona dobije visinu i pre prvog linka. I njega držimo dok ne završimo celu navigacionu celinu.'],
-    ['nav_list_display', '.nav-list', 'display', 'grid', 14, 'Navigaciju slažemo u grid da spacing bude čist.'],
-    ['nav_list_gap', '.nav-list', 'gap', '10px', 14, 'Gap održava ravnomeran razmak između stavki.']
-  ].map(config => describeCssPropertyStep(...config)),
-  describeHtmlElementStep('nav_items_html', 'HTML: Nav Items', 'Dodajemo prve `.nav-item` linkove sa ikonama i labelama.', 'html:nav-item', 'Prvo ubaci markup za stavke, pa onda stilizuj svaki sloj ponaosob.', 15),
-  ...[
-    ['nav_item_outline', '.nav-item', 'outline', '1px solid #ffa502', 15, 'Zadržavamo helper linije za celu navigaciju, a svakoj stavci dodajemo njen privremeni border radi lakšeg snalaženja. Držimo ga dok ne završimo celu navigacionu celinu.', 'Svaki deo navigacije zadržava svoju helper boju dok traje cela navigaciona celina.'],
-    ['nav_item_display', '.nav-item', 'display', 'flex', 15, 'Svaka stavka postaje flex red da ikona i tekst stanu jedan do drugog.'],
-    ['nav_item_min_height', '.nav-item', 'min-height', '52px', 15, 'Klik zona dobija pristojnu visinu.'],
-    ['nav_item_padding', '.nav-item', 'padding', '12px 16px', 15, 'Padding pravi realnu klik zonu i diše bolje od golog teksta.'],
-    ['nav_item_align_items', '.nav-item', 'align-items', 'center', 15, 'Vertikalno centriramo sadržaj svake stavke.'],
-    ['nav_item_gap', '.nav-item', 'gap', '12px', 15, 'Gap odvaja ikonu od labele.'],
-    ['nav_icon_outline', '.nav-item .icon', 'outline', '1px dotted #7dd3fc', 15, 'Dodajemo privremeni pomoćni border i na ikonicu radi lakšeg snalaženja, da joj footprint bude jasan. Držimo ga dok ne završimo celu navigacionu celinu.'],
-    ['nav_icon_width', '.nav-item .icon', 'width', '22px', 15, 'Ikona dobija fiksnu širinu.'],
-    ['nav_icon_height', '.nav-item .icon', 'height', '22px', 15, 'Ikona dobija i fiksnu visinu radi konzistentnog kvadrata.'],
-    ['nav_icon_display', '.nav-item .icon', 'display', 'grid', 15, 'Grid olakšava centriranje sadržaja ikone.'],
-    ['nav_icon_place_items', '.nav-item .icon', 'place-items', 'center', 15, 'Ikonicu centriramo i horizontalno i vertikalno.'],
-    ['nav_label_font_size', '.nav-item .label', 'font-size', '15px', 15, 'Labela dobija čitljivu veličinu.'],
-    ['nav_label_font_weight', '.nav-item .label', 'font-weight', '600', 15, 'Blago pojačavamo labelu da zadrži hijerarhiju.'],
-    ['nav_item_radius', '.nav-item', 'border-radius', '14px', 16, 'Zaobljene ivice daju linkovima mekši, UI osećaj. Helper linije i dalje ostaju dok ne završimo celu navigacionu celinu.'],
-    ['nav_item_margin', '.nav-item', 'margin', '0 8px', 16, 'Spoljni razmak odvaja stavke od ivice sidebara.'],
-    ['nav_item_active_background', '.nav-item.active', 'background', 'rgba(109,115,255,0.14)', 17, 'Aktivna stavka dobija svoju pozadinu, ali helper linije namerno ostaju dok ne završimo celu navigacionu celinu.'],
-    ['nav_item_active_color', '.nav-item.active', 'color', 'white', 17, 'Boju aktivne stavke pojačavamo za bolji kontrast.'],
-    ['nav_item_transition', '.nav-item', 'transition', 'all 0.4s ease', 18, 'Dodajemo glatku tranziciju za hover i active stanje.'],
-    ['nav_item_hover_background', '.nav-item:hover', 'background', 'rgba(255,255,255,0.05)', 19, 'Hover feedback potvrđuje da je stavka interaktivna.'],
-    ['collapse_width', '.sidebar.is-collapsed', 'width', '108px', 20, 'Collapsed mod sužava sidebar na kompaktnu širinu.']
-  ].map(config => describeCssPropertyStep(...config)),
-  describeHtmlElementStep('footer_html', 'HTML: Sidebar Footer', 'Dodajemo `.sidebar-footer` kao završni informativni blok pri dnu sidebara. Navigaciona celina je sada gotova, pa uklanjamo privremene pomoćne bordere i paddinge sa navigacionih elemenata.', 'html:footer', 'Footer je i dalje deo sidebara, pa i njega gradimo iz istog toka.', 20),
-  ...[
-    ['sidebar_display_flex', '.sidebar', 'display', 'flex', 20, 'Sidebar pretvaramo u flex kolonu da footer može da ode na dno.'],
-    ['sidebar_flex_direction', '.sidebar', 'flex-direction', 'column', 20, 'Kolona omogućava prirodan vertikalni raspored sekcija.'],
-    ['footer_border', '.sidebar-footer', 'border', '1px solid rgba(255,255,255,0.12)', 20, 'Tanka linija razdvaja footer od pozadine.'],
-    ['footer_background', '.sidebar-footer', 'background', 'rgba(255,255,255,0.05)', 20, 'Blaga pozadina izdvaja footer bez teškog kontrasta.'],
-    ['footer_padding', '.sidebar-footer', 'padding', '16px', 20, 'Footer dobija unutrašnji spacing.'],
-    ['footer_radius', '.sidebar-footer', 'border-radius', '14px', 20, 'Zaobljenje usklađuje footer sa ostatkom UI-ja.'],
-    ['footer_margin_top', '.sidebar-footer', 'margin-top', 'auto', 20, 'Auto margin gura footer na dno kolone.'],
-    ['footer_text_margin', '.sidebar-footer p', 'margin', '6px 0 0', 20, 'Odstupamo paragraf od naslova unutar footera.'],
-    ['footer_text_color', '.sidebar-footer p', 'color', '#9aa6c8', 20, 'Muted ton čini pomoćni tekst nenametljivim.'],
-    ['footer_text_line_height', '.sidebar-footer p', 'line-height', '1.5', 20, 'Line-height daje tekstu dovoljno vazduha.'],
-    ['hide_labels', '.sidebar.is-collapsed .nav-item .label', 'display', 'none', 21, 'U collapsed modu sakrivamo tekstualne labele.', 'Collapse ne znači da gubiš strukturu, već da je svodiš na ikone.'],
-    ['responsive_sidebar_min_height', '.sidebar', 'min-height', 'auto', 21, 'Na manjim ekranima sidebar više ne mora da glumi pun viewport.']
-  ].map(config => describeCssPropertyStep(...config)),
-  describeFinishedSidebarStep('done', 'Done: Sidebar', 'Tutorijal je sada potpuno detaljan: CSS ide kumulativno, property po property.', 'Kada je tok ovako sitno razbijen, promene su mnogo lakše za praćenje i u kodu i u prikazu sidebara.', 21)
-];
-
-export const stepNumberById = Object.fromEntries(
-  lessonStepScript.map((step, index) => [step.id, index])
-);
-
-=== teach-components/build-sidebar/02-follow-lesson/listen-for-lesson-keys.js ===
-function isTypingSurface(target) {
-  return target instanceof HTMLElement && (
-    target.matches('input, textarea, select') ||
-    target.isContentEditable
-  );
-}
-
-export function listenForLessonKeys({
-  ownerDocument,
-  hasOpenLessonDialog,
-  goToNextStep,
-  goToPreviousStep,
-  togglePlayback,
-  toggleSavedStep,
-  openStepFinder,
-  closeStepFinder,
-  closeKnowledgeCheck
-}) {
-  ownerDocument.addEventListener('keydown', event => {
-    const typing = isTypingSurface(ownerDocument.activeElement);
-
-    if (!typing && !hasOpenLessonDialog() && event.key === 'ArrowRight') {
-      goToNextStep();
-    }
-
-    if (!typing && !hasOpenLessonDialog() && event.key === 'ArrowLeft') {
-      goToPreviousStep();
-    }
-
-    if (!typing && !hasOpenLessonDialog() && event.key === ' ') {
-      event.preventDefault();
-      togglePlayback();
-    }
-
-    if (!typing && !hasOpenLessonDialog() && event.key === 'b' && !event.ctrlKey && !event.metaKey) {
-      toggleSavedStep();
-    }
-
-    if (event.key === 'k' && (event.ctrlKey || event.metaKey)) {
-      event.preventDefault();
-      openStepFinder();
-    }
-
-    if (event.key === 'Escape') {
-      closeStepFinder();
-      closeKnowledgeCheck();
-    }
-  });
-}
-
-=== teach-components/build-sidebar/02-follow-lesson/show-active-lesson-panel.js ===
-export function showActiveLessonPanel(lessonParts, activePanel) {
-  lessonParts.stepPanel.hidden = activePanel !== 'steps';
-  lessonParts.savedStepsPanel.hidden = activePanel !== 'bookmarks';
-
-  lessonParts.lessonPanelButtons.forEach(button => {
-    button.classList.toggle('active', button.dataset.tab === activePanel);
-  });
-}
-
-=== teach-components/build-sidebar/02-follow-lesson/show-current-step.js ===
-function composeStepTagMarkup(tag) {
-  return `<svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4"/></svg> ${tag}`;
-}
-
-export function showCurrentStep({ lessonParts, step, currentStepNumber, totalSteps }) {
-  const progressPercent = ((currentStepNumber + 1) / totalSteps) * 100;
-  const remainingMinutes = Math.ceil((totalSteps - currentStepNumber - 1) * 0.1);
-
-  lessonParts.stepTitle.innerHTML = step.title + (currentStepNumber === totalSteps - 1 ? ' <span class="badge">GOTOV</span>' : '');
-  lessonParts.stepDescription.textContent = step.desc;
-  lessonParts.stepNumber.textContent = `Prizor ${currentStepNumber + 1} / ${totalSteps}`;
-  lessonParts.tagText.innerHTML = composeStepTagMarkup(step.tag);
-  lessonParts.proTipText.textContent = step.proTip;
-  lessonParts.progressBar.style.width = `${progressPercent}%`;
-  lessonParts.progressText.textContent = `${Math.round(progressPercent)}% završeno`;
-  lessonParts.timeEstimate.textContent = remainingMinutes > 0 ? `~${remainingMinutes} min preostalo` : 'Završeno!';
-  lessonParts.previousButton.disabled = currentStepNumber === 0;
-  lessonParts.nextButton.disabled = currentStepNumber === totalSteps - 1;
-}
-
-=== teach-components/build-sidebar/02-follow-lesson/show-step-timeline.js ===
-export function showStepTimeline({
-  lessonParts,
-  steps,
-  currentStepNumber,
-  savedStepNumbers,
-  goToStepNumber
-}) {
-  lessonParts.stepTimeline.innerHTML = '';
-
-  steps.forEach((_, index) => {
-    const dot = lessonParts.ownerDocument.createElement('div');
-    dot.className =
-      'dot' +
-      (index === currentStepNumber ? ' active' : '') +
-      (savedStepNumbers.includes(index) ? ' bookmarked' : '');
-
-    dot.addEventListener('click', () => {
-      goToStepNumber(index);
-    });
-
-    lessonParts.stepTimeline.appendChild(dot);
-  });
-}
-
-=== teach-components/build-sidebar/03-watch-code/build-css-at-step.js ===
-import { stepNumberById } from '../02-follow-lesson/lesson-step-script.js';
+=== teach-lessons/build-sidebar/build-css-at-step.js ===
+import { stepNumberById } from './describe-steps.js';
 
 function readStepBoundary(stepReference) {
   if (typeof stepReference === 'number') {
@@ -2307,8 +1923,8 @@ export function buildCssAtStep(stepNumber) {
   return lines;
 }
 
-=== teach-components/build-sidebar/03-watch-code/build-html-at-step.js ===
-import { stepNumberById } from '../02-follow-lesson/lesson-step-script.js';
+=== teach-lessons/build-sidebar/build-html-at-step.js ===
+import { stepNumberById } from './describe-steps.js';
 
 export function buildHtmlAtStep(stepNumber) {
   const lines = ['<div class="app-shell">'];
@@ -2369,7 +1985,371 @@ export function buildHtmlAtStep(stepNumber) {
   return lines;
 }
 
-=== teach-components/build-sidebar/03-watch-code/compare-code-lines.js ===
+=== teach-lessons/build-sidebar/build-sidebar.lesson.js ===
+import { buildCssAtStep } from './build-css-at-step.js';
+import { buildHtmlAtStep } from './build-html-at-step.js';
+import { lessonSteps } from './describe-steps.js';
+import { knowledgeCheckQuestions } from './list-knowledge-check-questions.js';
+
+export const buildSidebarLesson = {
+  lessonId: 'build-sidebar',
+  lessonTitle: 'Kako se pravi moderan sidebar',
+  lessonIntro: 'Koraci po korak gradiš sidebar od osnove do gotove navigacije. Svaki korak uključuje kod, savete i vizuelni prikaz.',
+  previewAddress: 'browser://build-sidebar-preview',
+  previewTitle: 'Live build sidebar preview',
+  htmlFileName: 'index.html',
+  cssFileName: 'style.css',
+  steps: lessonSteps,
+  buildHtmlAtStep,
+  buildCssAtStep,
+  knowledgeCheckQuestions
+};
+
+=== teach-lessons/build-sidebar/describe-steps.js ===
+function describeHtmlElementStep(id, title, desc, tag, proTip, _sidebarScene) {
+  return { id, title, desc, tag, proTip };
+}
+
+function describeCssPropertyStep(id, selector, property, value, _sidebarScene, desc = '', proTip = '') {
+  const cssLine = `${property}: ${value};`;
+
+  return {
+    id,
+    title: `CSS: ${selector} / ${property}`,
+    desc: desc || `Dodajemo \`${cssLine}\` u \`${selector}\` i širimo stylesheet jedan property po korak.`,
+    tag: `css:${id.replace(/_/g, '-')}`,
+    proTip: proTip || 'Jedan property po korak čini promenu jasnom i lakom za praćenje u prikazu sidebara.'
+  };
+}
+
+function describeFinishedStep(id, title, desc, proTip, _sidebarScene) {
+  return { id, title, desc, tag: 'success', proTip };
+}
+
+export const lessonSteps = [
+  describeHtmlElementStep('empty_shell', 'Start: Empty App Shell', 'Počinjemo od praznog `.app-shell` prostora. Sidebar tek dodajemo kao prvi pravi element.', 'html:app-shell', 'Neutralan početak jasno odvaja ono što je postojalo od onoga što tek gradimo.', 0),
+  describeHtmlElementStep('sidebar_html', 'HTML: Sidebar Shell', 'Ubacujemo osnovni `<aside class="sidebar">` blok kao koren cele komponente.', 'html:aside', 'Semantički HTML ti odmah daje bolju strukturu i čitljiviji DOM.', 1),
+  ...[
+    ['sidebar_outline', '.sidebar', 'outline', '2px solid #ff4757', 2, 'Dodajemo privremeni pomoćni border radi lakšeg snalaženja, da prazni sidebar odmah dobije jasnu granicu u preview-u. Kasnije ćemo ga ukloniti.', 'Outline je odličan za debug jer ne menja layout.'],
+    ['sidebar_width', '.sidebar', 'width', '280px', 3, 'Kad granica postoji, zaključavamo širinu sidebara da dobije jasan footprint.'],
+    ['sidebar_min_height', '.sidebar', 'min-height', '100vh', 4, 'Dajemo sidebaru punu visinu da box postane čitljiv i bez sadržaja.'],
+    ['sidebar_border_right', '.sidebar', 'border-right', '1px solid rgba(255,255,255,0.12)', 5, 'Tanka desna linija odvaja sidebar od ostatka layouta.'],
+    ['sidebar_background', '.sidebar', 'background', '#0b1020', 5, 'Dodajemo tamnu pozadinu da sidebar dobije svoj vizuelni identitet i uklanjamo privremeni pomoćni border, više nam ne treba.'],
+    ['sidebar_color', '.sidebar', 'color', '#edf2ff', 5, 'Osnovnu boju teksta postavljamo rano da nasledi ceo sadržaj.']
+  ].map(config => describeCssPropertyStep(...config)),
+  describeHtmlElementStep('brand_html', 'HTML: Brand Wrapper', 'Dodajemo `.sidebar-brand` kao zonu za logo i naziv proizvoda. Od ovog trenutka pomoćne linije za sve delove branda držimo dok ne završimo celu brand celinu.', 'html:brand', 'Izdvoj brand deo od navigacije da bi hijerarhija odmah bila jasna.', 7),
+  ...[
+    ['brand_outline', '.sidebar-brand', 'outline', '2px solid #2ed573', 8, 'Dodajemo privremeni pomoćni border radi lakšeg snalaženja, da odmah vidiš footprint brand zone. Držimo ga dok ne završimo celu `.sidebar-brand` celinu, pa ćemo ga tek tada ukloniti.', 'Svaki deo iste celine može da dobije svoju boju helper linije dok ta celina traje.'],
+    ['brand_padding', '.sidebar-brand', 'padding', '24px', 8, 'Unutrašnji padding daje brand zoni vazduh.'],
+    ['brand_margin_bottom', '.sidebar-brand', 'margin-bottom', '28px', 8, 'Odvajamo brand blok od navigacije ispod njega.'],
+    ['brand_display', '.sidebar-brand', 'display', 'flex', 8, 'Prebacujemo brand zonu u flex da logo i tekst mogu da stoje u istom redu.'],
+    ['brand_align_items', '.sidebar-brand', 'align-items', 'center', 8, 'Vertikalno poravnanje centrira logo i tekst.'],
+    ['brand_gap', '.sidebar-brand', 'gap', '14px', 8, 'Gap određuje koliko prostora stoji između logotipa i teksta.']
+  ].map(config => describeCssPropertyStep(...config)),
+  describeHtmlElementStep('logo_html', 'HTML: Logo Element', 'Ubacujemo `.logo` element sa slovom `A` kao placeholder identitetom.', 'html:logo', 'Počni od jednostavnog placeholder loga pa tek onda doteruj stil.', 9),
+  ...[
+    ['logo_outline', '.logo', 'outline', '2px dotted #7dd3fc', 10, 'Dodajemo privremeni pomoćni border radi lakšeg snalaženja, da footprint logotipa bude jasan i bez pozadine. Držimo ga dok ne završimo celu `.sidebar-brand` celinu, pa ga tek tada uklanjamo.', 'Logo zadržava svoju helper boju sve dok radimo ceo brand blok.'],
+    ['logo_width', '.logo', 'width', '48px', 10, 'Prvo zaključavamo širinu logotipa.'],
+    ['logo_height', '.logo', 'height', '48px', 10, 'Visina prati širinu da bismo dobili kvadratnu osnovu.'],
+    ['logo_display', '.logo', 'display', 'grid', 10, 'Grid nam daje lak centar za jedan znak ili ikonu.'],
+    ['logo_place_items', '.logo', 'place-items', 'center', 10, 'Centriramo sadržaj logotipa u oba smera.'],
+    ['logo_radius', '.logo', 'border-radius', '12px', 10, 'Blago zaobljenje daje moderniji osećaj.'],
+    ['logo_font_weight', '.logo', 'font-weight', '800', 10, 'Pojačavamo slovo da liči na pravi brand znak.'],
+    ['logo_background', '.logo', 'background', 'linear-gradient(135deg, #6d73ff, #8f5cff)', 11, 'Gradijent dodaje energiju i daje logotipu fokus. Pomoćni border namerno ostaje dok ne zatvorimo celu brand celinu.'],
+    ['logo_color', '.logo', 'color', 'white', 11, 'Bela boja daje čist kontrast preko gradijenta.'],
+    ['logo_shadow', '.logo', 'box-shadow', '0 12px 24px rgba(109,115,255,0.30)', 11, 'Shadow dodaje depth i čini logo prisutnijim.']
+  ].map(config => describeCssPropertyStep(...config)),
+  describeHtmlElementStep('brand_copy_html', 'HTML: Brand Copy', 'Dodajemo `.brand-copy` sa naslovom i podnaslovom pored logotipa. I on dobija svoju helper boju dok ne završimo celu `.sidebar-brand` celinu.', 'html:brand-copy', 'Tekstualni brand signal pomaže korisniku da zna gde se nalazi.', 12),
+  ...[
+    ['brand_copy_outline', '.brand-copy', 'outline', '1px dashed #f59e0b', 12, 'Dodajemo privremeni pomoćni border radi lakšeg snalaženja, da tekstualni brand blok bude jasno odvojen od logotipa. Držimo ga dok ne završimo celu `.sidebar-brand` celinu.', 'Isti wrapper, različiti child elementi, različite helper boje.'],
+    ['brand_strong_display', '.brand-copy strong', 'display', 'block', 12, 'Naslov pretvaramo u blok da zauzme svoj red.'],
+    ['brand_strong_font_size', '.brand-copy strong', 'font-size', '16px', 12, 'Naslov dobija čitljiviju veličinu.'],
+    ['brand_span_display', '.brand-copy span', 'display', 'block', 12, 'Podnaslov spuštamo u novi red.'],
+    ['brand_span_margin_top', '.brand-copy span', 'margin-top', '4px', 12, 'Mali razmak odvaja podnaslov od naslova.'],
+    ['brand_span_font_size', '.brand-copy span', 'font-size', '13px', 12, 'Podnaslov pravimo suptilnijim od naslova.'],
+    ['brand_span_color', '.brand-copy span', 'color', '#9aa6c8', 12, 'Muted boja pravi jasnu tekstualnu hijerarhiju.']
+  ].map(config => describeCssPropertyStep(...config)),
+  describeHtmlElementStep('nav_html', 'HTML: Nav Wrapper', 'Ubacujemo `<nav class="nav-list">` kao kontejner za buduće linkove. Brand celina je sada gotova, pa uklanjamo privremene pomoćne bordere sa `.sidebar-brand`, `.logo` i `.brand-copy`.', 'html:nav', 'Semantički `nav` element je prirodan izbor za navigaciju.', 13),
+  ...[
+    ['nav_list_outline', '.nav-list', 'outline', '1px dashed #38bdf8', 14, 'Dodajemo privremeni pomoćni border radi lakšeg snalaženja, da prazna nav zona odmah postane vidljiva. Držimo ga dok ne završimo celu navigacionu celinu.', 'Navigacija zadržava helper linije kroz sve svoje poddelove dok ne pređemo na footer.'],
+    ['nav_list_padding', '.nav-list', 'padding', '10px 8px', 14, 'Dodajemo i privremeni pomoćni padding da prazna nav zona dobije visinu i pre prvog linka. I njega držimo dok ne završimo celu navigacionu celinu.'],
+    ['nav_list_display', '.nav-list', 'display', 'grid', 14, 'Navigaciju slažemo u grid da spacing bude čist.'],
+    ['nav_list_gap', '.nav-list', 'gap', '10px', 14, 'Gap održava ravnomeran razmak između stavki.']
+  ].map(config => describeCssPropertyStep(...config)),
+  describeHtmlElementStep('nav_items_html', 'HTML: Nav Items', 'Dodajemo prve `.nav-item` linkove sa ikonama i labelama.', 'html:nav-item', 'Prvo ubaci markup za stavke, pa onda stilizuj svaki sloj ponaosob.', 15),
+  ...[
+    ['nav_item_outline', '.nav-item', 'outline', '1px solid #ffa502', 15, 'Zadržavamo helper linije za celu navigaciju, a svakoj stavci dodajemo njen privremeni border radi lakšeg snalaženja. Držimo ga dok ne završimo celu navigacionu celinu.', 'Svaki deo navigacije zadržava svoju helper boju dok traje cela navigaciona celina.'],
+    ['nav_item_display', '.nav-item', 'display', 'flex', 15, 'Svaka stavka postaje flex red da ikona i tekst stanu jedan do drugog.'],
+    ['nav_item_min_height', '.nav-item', 'min-height', '52px', 15, 'Klik zona dobija pristojnu visinu.'],
+    ['nav_item_padding', '.nav-item', 'padding', '12px 16px', 15, 'Padding pravi realnu klik zonu i diše bolje od golog teksta.'],
+    ['nav_item_align_items', '.nav-item', 'align-items', 'center', 15, 'Vertikalno centriramo sadržaj svake stavke.'],
+    ['nav_item_gap', '.nav-item', 'gap', '12px', 15, 'Gap odvaja ikonu od labele.'],
+    ['nav_icon_outline', '.nav-item .icon', 'outline', '1px dotted #7dd3fc', 15, 'Dodajemo privremeni pomoćni border i na ikonicu radi lakšeg snalaženja, da joj footprint bude jasan. Držimo ga dok ne završimo celu navigacionu celinu.'],
+    ['nav_icon_width', '.nav-item .icon', 'width', '22px', 15, 'Ikona dobija fiksnu širinu.'],
+    ['nav_icon_height', '.nav-item .icon', 'height', '22px', 15, 'Ikona dobija i fiksnu visinu radi konzistentnog kvadrata.'],
+    ['nav_icon_display', '.nav-item .icon', 'display', 'grid', 15, 'Grid olakšava centriranje sadržaja ikone.'],
+    ['nav_icon_place_items', '.nav-item .icon', 'place-items', 'center', 15, 'Ikonicu centriramo i horizontalno i vertikalno.'],
+    ['nav_label_font_size', '.nav-item .label', 'font-size', '15px', 15, 'Labela dobija čitljivu veličinu.'],
+    ['nav_label_font_weight', '.nav-item .label', 'font-weight', '600', 15, 'Blago pojačavamo labelu da zadrži hijerarhiju.'],
+    ['nav_item_radius', '.nav-item', 'border-radius', '14px', 16, 'Zaobljene ivice daju linkovima mekši, UI osećaj. Helper linije i dalje ostaju dok ne završimo celu navigacionu celinu.'],
+    ['nav_item_margin', '.nav-item', 'margin', '0 8px', 16, 'Spoljni razmak odvaja stavke od ivice sidebara.'],
+    ['nav_item_active_background', '.nav-item.active', 'background', 'rgba(109,115,255,0.14)', 17, 'Aktivna stavka dobija svoju pozadinu, ali helper linije namerno ostaju dok ne završimo celu navigacionu celinu.'],
+    ['nav_item_active_color', '.nav-item.active', 'color', 'white', 17, 'Boju aktivne stavke pojačavamo za bolji kontrast.'],
+    ['nav_item_transition', '.nav-item', 'transition', 'all 0.4s ease', 18, 'Dodajemo glatku tranziciju za hover i active stanje.'],
+    ['nav_item_hover_background', '.nav-item:hover', 'background', 'rgba(255,255,255,0.05)', 19, 'Hover feedback potvrđuje da je stavka interaktivna.'],
+    ['collapse_width', '.sidebar.is-collapsed', 'width', '108px', 20, 'Collapsed mod sužava sidebar na kompaktnu širinu.']
+  ].map(config => describeCssPropertyStep(...config)),
+  describeHtmlElementStep('footer_html', 'HTML: Sidebar Footer', 'Dodajemo `.sidebar-footer` kao završni informativni blok pri dnu sidebara. Navigaciona celina je sada gotova, pa uklanjamo privremene pomoćne bordere i paddinge sa navigacionih elemenata.', 'html:footer', 'Footer je i dalje deo sidebara, pa i njega gradimo iz istog toka.', 20),
+  ...[
+    ['sidebar_display_flex', '.sidebar', 'display', 'flex', 20, 'Sidebar pretvaramo u flex kolonu da footer može da ode na dno.'],
+    ['sidebar_flex_direction', '.sidebar', 'flex-direction', 'column', 20, 'Kolona omogućava prirodan vertikalni raspored sekcija.'],
+    ['footer_border', '.sidebar-footer', 'border', '1px solid rgba(255,255,255,0.12)', 20, 'Tanka linija razdvaja footer od pozadine.'],
+    ['footer_background', '.sidebar-footer', 'background', 'rgba(255,255,255,0.05)', 20, 'Blaga pozadina izdvaja footer bez teškog kontrasta.'],
+    ['footer_padding', '.sidebar-footer', 'padding', '16px', 20, 'Footer dobija unutrašnji spacing.'],
+    ['footer_radius', '.sidebar-footer', 'border-radius', '14px', 20, 'Zaobljenje usklađuje footer sa ostatkom UI-ja.'],
+    ['footer_margin_top', '.sidebar-footer', 'margin-top', 'auto', 20, 'Auto margin gura footer na dno kolone.'],
+    ['footer_text_margin', '.sidebar-footer p', 'margin', '6px 0 0', 20, 'Odstupamo paragraf od naslova unutar footera.'],
+    ['footer_text_color', '.sidebar-footer p', 'color', '#9aa6c8', 20, 'Muted ton čini pomoćni tekst nenametljivim.'],
+    ['footer_text_line_height', '.sidebar-footer p', 'line-height', '1.5', 20, 'Line-height daje tekstu dovoljno vazduha.'],
+    ['hide_labels', '.sidebar.is-collapsed .nav-item .label', 'display', 'none', 21, 'U collapsed modu sakrivamo tekstualne labele.', 'Collapse ne znači da gubiš strukturu, već da je svodiš na ikone.'],
+    ['responsive_sidebar_min_height', '.sidebar', 'min-height', 'auto', 21, 'Na manjim ekranima sidebar više ne mora da glumi pun viewport.']
+  ].map(config => describeCssPropertyStep(...config)),
+  describeFinishedStep('done', 'Done: Sidebar', 'Tutorijal je sada potpuno detaljan: CSS ide kumulativno, property po property.', 'Kada je tok ovako sitno razbijen, promene su mnogo lakše za praćenje i u kodu i u prikazu sidebara.', 21)
+];
+
+export const stepNumberById = Object.fromEntries(
+  lessonSteps.map((step, index) => [step.id, index])
+);
+
+=== teach-lessons/build-sidebar/list-knowledge-check-questions.js ===
+export const knowledgeCheckQuestions = [
+  {
+    question: 'Koji HTML tag se koristi za bočnu navigaciju?',
+    options: ['<div>', '<aside>', '<sidebar>', '<nav>'],
+    correct: 1
+  },
+  {
+    question: 'Šta znači "100vh" u CSS-u?',
+    options: ['100% širine', '100% visine viewporta', '100 piksela', 'Fiksno 100'],
+    correct: 1
+  },
+  {
+    question: 'Koja vrednost border-radiusa daje pun krug?',
+    options: ['0px', '50%', '100%', '360deg'],
+    correct: 1
+  },
+  {
+    question: 'Šta koristimo za razmak između grid item-a?',
+    options: ['margin', 'padding', 'gap', 'spacing'],
+    correct: 2
+  },
+  {
+    question: 'Koji property omogućava glatke animacije?',
+    options: ['animation', 'transition', 'transform', 'motion'],
+    correct: 1
+  }
+];
+
+=== teach-lessons/find-selected-lesson.js ===
+export function findSelectedLesson({ ownerLocation, lessons }) {
+  const selectedLessonId = new URL(ownerLocation.href).searchParams.get('lesson');
+  const selectedLesson = lessons.find(lesson => lesson.lessonId === selectedLessonId);
+
+  return selectedLesson || lessons[0];
+}
+
+=== teach-lessons/list-lessons.js ===
+import { buildSidebarLesson } from './build-sidebar/build-sidebar.lesson.js';
+
+export function listLessons() {
+  return [buildSidebarLesson];
+}
+
+=== teach-lessons/teach-lesson/01-start-lesson/create-lesson-progress.js ===
+export function createLessonProgress() {
+  return {
+    currentStepNumber: 0,
+    playbackTimer: null,
+    activePanel: 'steps'
+  };
+}
+
+=== teach-lessons/teach-lesson/01-start-lesson/find-lesson-parts.js ===
+function readRequiredElement(ownerDocument, id) {
+  const element = ownerDocument.getElementById(id);
+
+  if (!element) {
+    throw new Error(`Missing required element: #${id}`);
+  }
+
+  return element;
+}
+
+export function findLessonParts(ownerDocument) {
+  return {
+    ownerDocument,
+    lessonHeading: readRequiredElement(ownerDocument, 'lessonHeading'),
+    lessonIntro: readRequiredElement(ownerDocument, 'lessonIntro'),
+    livePreviewFrame: readRequiredElement(ownerDocument, 'livePreviewFrame'),
+    previewAddress: readRequiredElement(ownerDocument, 'previewAddress'),
+    stepTitle: readRequiredElement(ownerDocument, 'stepTitle'),
+    stepDescription: readRequiredElement(ownerDocument, 'stepDesc'),
+    stepNumber: readRequiredElement(ownerDocument, 'stepNumber'),
+    progressBar: readRequiredElement(ownerDocument, 'progressBar'),
+    progressText: readRequiredElement(ownerDocument, 'progressText'),
+    timeEstimate: readRequiredElement(ownerDocument, 'timeEstimate'),
+    stepTimeline: readRequiredElement(ownerDocument, 'dots'),
+    tagText: readRequiredElement(ownerDocument, 'tagText'),
+    proTipText: readRequiredElement(ownerDocument, 'proTipText'),
+    nextButton: readRequiredElement(ownerDocument, 'nextBtn'),
+    previousButton: readRequiredElement(ownerDocument, 'prevBtn'),
+    playButton: readRequiredElement(ownerDocument, 'playBtn'),
+    pauseButton: readRequiredElement(ownerDocument, 'pauseBtn'),
+    stopButton: readRequiredElement(ownerDocument, 'stopBtn'),
+    saveStepButton: readRequiredElement(ownerDocument, 'bookmarkBtn'),
+    savedStepCount: readRequiredElement(ownerDocument, 'bookmarkCount'),
+    stepFinderModal: readRequiredElement(ownerDocument, 'searchModal'),
+    stepFinderInput: readRequiredElement(ownerDocument, 'searchInput'),
+    stepFinderResults: readRequiredElement(ownerDocument, 'searchResults'),
+    knowledgeCheckModal: readRequiredElement(ownerDocument, 'quizModal'),
+    knowledgeCheckContent: readRequiredElement(ownerDocument, 'quizContent'),
+    themeButton: readRequiredElement(ownerDocument, 'themeBtn'),
+    downloadFilesButton: readRequiredElement(ownerDocument, 'downloadBtn'),
+    openStepFinderButton: readRequiredElement(ownerDocument, 'searchBtn'),
+    openKnowledgeCheckButton: readRequiredElement(ownerDocument, 'quizBtn'),
+    stepPanel: readRequiredElement(ownerDocument, 'stepsPanel'),
+    savedStepsPanel: readRequiredElement(ownerDocument, 'bookmarksPanel'),
+    savedStepList: readRequiredElement(ownerDocument, 'bookmarkList'),
+    savedStepEmptyState: readRequiredElement(ownerDocument, 'bookmarkEmpty'),
+    savedStepSummary: readRequiredElement(ownerDocument, 'bookmarkSummary'),
+    htmlCodePane: readRequiredElement(ownerDocument, 'liveHtmlPane'),
+    cssCodePane: readRequiredElement(ownerDocument, 'liveCssPane'),
+    htmlFileLabel: readRequiredElement(ownerDocument, 'htmlFileLabel'),
+    cssFileLabel: readRequiredElement(ownerDocument, 'cssFileLabel'),
+    currentStepBadge: readRequiredElement(ownerDocument, 'liveStepBadge'),
+    lessonPanelButtons: [...ownerDocument.querySelectorAll('.tab-btn')]
+  };
+}
+
+=== teach-lessons/teach-lesson/01-start-lesson/show-lesson-shell.js ===
+export function showLessonShell({ ownerDocument, lessonParts, lesson }) {
+  lessonParts.lessonHeading.textContent = lesson.lessonTitle;
+  lessonParts.lessonIntro.textContent = lesson.lessonIntro;
+  lessonParts.previewAddress.textContent = lesson.previewAddress;
+  lessonParts.htmlFileLabel.textContent = lesson.htmlFileName;
+  lessonParts.cssFileLabel.textContent = lesson.cssFileName;
+  lessonParts.livePreviewFrame.title = lesson.previewTitle;
+  ownerDocument.title = `Step By Step Animator · ${lesson.lessonTitle}`;
+}
+
+=== teach-lessons/teach-lesson/02-follow-lesson/listen-for-lesson-keys.js ===
+function isTypingSurface(target) {
+  return target instanceof HTMLElement && (
+    target.matches('input, textarea, select') ||
+    target.isContentEditable
+  );
+}
+
+export function listenForLessonKeys({
+  ownerDocument,
+  hasOpenLessonDialog,
+  goToNextStep,
+  goToPreviousStep,
+  togglePlayback,
+  toggleSavedStep,
+  openStepFinder,
+  closeStepFinder,
+  closeKnowledgeCheck
+}) {
+  ownerDocument.addEventListener('keydown', event => {
+    const typing = isTypingSurface(ownerDocument.activeElement);
+
+    if (!typing && !hasOpenLessonDialog() && event.key === 'ArrowRight') {
+      goToNextStep();
+    }
+
+    if (!typing && !hasOpenLessonDialog() && event.key === 'ArrowLeft') {
+      goToPreviousStep();
+    }
+
+    if (!typing && !hasOpenLessonDialog() && event.key === ' ') {
+      event.preventDefault();
+      togglePlayback();
+    }
+
+    if (!typing && !hasOpenLessonDialog() && event.key === 'b' && !event.ctrlKey && !event.metaKey) {
+      toggleSavedStep();
+    }
+
+    if (event.key === 'k' && (event.ctrlKey || event.metaKey)) {
+      event.preventDefault();
+      openStepFinder();
+    }
+
+    if (event.key === 'Escape') {
+      closeStepFinder();
+      closeKnowledgeCheck();
+    }
+  });
+}
+
+=== teach-lessons/teach-lesson/02-follow-lesson/show-active-lesson-panel.js ===
+export function showActiveLessonPanel(lessonParts, activePanel) {
+  lessonParts.stepPanel.hidden = activePanel !== 'steps';
+  lessonParts.savedStepsPanel.hidden = activePanel !== 'bookmarks';
+
+  lessonParts.lessonPanelButtons.forEach(button => {
+    button.classList.toggle('active', button.dataset.tab === activePanel);
+  });
+}
+
+=== teach-lessons/teach-lesson/02-follow-lesson/show-current-step.js ===
+function composeStepTagMarkup(tag) {
+  return `<svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4"/></svg> ${tag}`;
+}
+
+export function showCurrentStep({ lessonParts, step, currentStepNumber, totalSteps }) {
+  const progressPercent = ((currentStepNumber + 1) / totalSteps) * 100;
+  const remainingMinutes = Math.ceil((totalSteps - currentStepNumber - 1) * 0.1);
+
+  lessonParts.stepTitle.innerHTML = step.title + (currentStepNumber === totalSteps - 1 ? ' <span class="badge">GOTOV</span>' : '');
+  lessonParts.stepDescription.textContent = step.desc;
+  lessonParts.stepNumber.textContent = `Prizor ${currentStepNumber + 1} / ${totalSteps}`;
+  lessonParts.tagText.innerHTML = composeStepTagMarkup(step.tag);
+  lessonParts.proTipText.textContent = step.proTip;
+  lessonParts.progressBar.style.width = `${progressPercent}%`;
+  lessonParts.progressText.textContent = `${Math.round(progressPercent)}% završeno`;
+  lessonParts.timeEstimate.textContent = remainingMinutes > 0 ? `~${remainingMinutes} min preostalo` : 'Završeno!';
+  lessonParts.previousButton.disabled = currentStepNumber === 0;
+  lessonParts.nextButton.disabled = currentStepNumber === totalSteps - 1;
+}
+
+=== teach-lessons/teach-lesson/02-follow-lesson/show-step-timeline.js ===
+export function showStepTimeline({
+  lessonParts,
+  steps,
+  currentStepNumber,
+  savedStepNumbers,
+  goToStepNumber
+}) {
+  lessonParts.stepTimeline.innerHTML = '';
+
+  steps.forEach((_, index) => {
+    const dot = lessonParts.ownerDocument.createElement('div');
+    dot.className =
+      'dot' +
+      (index === currentStepNumber ? ' active' : '') +
+      (savedStepNumbers.includes(index) ? ' bookmarked' : '');
+
+    dot.addEventListener('click', () => {
+      goToStepNumber(index);
+    });
+
+    lessonParts.stepTimeline.appendChild(dot);
+  });
+}
+
+=== teach-lessons/teach-lesson/03-watch-code/compare-code-lines.js ===
 export function compareCodeLines(currentLines, previousLines) {
   let previousLineIndex = 0;
 
@@ -2390,7 +2370,7 @@ export function compareCodeLines(currentLines, previousLines) {
   });
 }
 
-=== teach-components/build-sidebar/03-watch-code/describe-css-line-role.js ===
+=== teach-lessons/teach-lesson/03-watch-code/describe-css-line-role.js ===
 export function describeCssLineRole(lineText) {
   const trimmedLine = lineText.trim();
 
@@ -2413,7 +2393,7 @@ export function describeCssLineRole(lineText) {
   return 'plain';
 }
 
-=== teach-components/build-sidebar/03-watch-code/escape-code-text.js ===
+=== teach-lessons/teach-lesson/03-watch-code/escape-code-text.js ===
 export function escapeCodeText(value) {
   return value
     .replace(/&/g, '&amp;')
@@ -2421,7 +2401,7 @@ export function escapeCodeText(value) {
     .replace(/>/g, '&gt;');
 }
 
-=== teach-components/build-sidebar/03-watch-code/scroll-to-added-line.js ===
+=== teach-lessons/teach-lesson/03-watch-code/scroll-to-added-line.js ===
 export function scrollToAddedLine(container) {
   const addedLine = container.querySelector('[data-added="true"]');
 
@@ -2434,7 +2414,7 @@ export function scrollToAddedLine(container) {
   });
 }
 
-=== teach-components/build-sidebar/03-watch-code/show-growing-code.js ===
+=== teach-lessons/teach-lesson/03-watch-code/show-growing-code.js ===
 import { compareCodeLines } from './compare-code-lines.js';
 import { describeCssLineRole } from './describe-css-line-role.js';
 import { escapeCodeText } from './escape-code-text.js';
@@ -2480,14 +2460,14 @@ export function showGrowingCode({
   scrollToAddedLine(lessonParts.cssCodePane);
 }
 
-=== teach-components/build-sidebar/04-watch-sidebar/show-current-sidebar.js ===
-function composeLivePreviewDocument(currentStepNumber, buildHtmlAtStep, buildCssAtStep) {
-  const htmlMarkup = buildHtmlAtStep(currentStepNumber).join('\n');
-  const cssMarkup = buildCssAtStep(currentStepNumber).join('\n');
+=== teach-lessons/teach-lesson/04-watch-preview/show-current-preview.js ===
+function composeLivePreviewDocument(lesson, currentStepNumber) {
+  const htmlMarkup = lesson.buildHtmlAtStep(currentStepNumber).join('\n');
+  const cssMarkup = lesson.buildCssAtStep(currentStepNumber).join('\n');
   const cssBlock = cssMarkup ? `<style>${cssMarkup}</style>` : '';
 
   return `<!DOCTYPE html>
-<html lang="sr">
+<html lang="${lesson.documentLanguage || 'sr'}">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -2499,17 +2479,12 @@ ${htmlMarkup}
 </html>`;
 }
 
-export function showCurrentSidebar({
+export function showCurrentPreview({
   lessonParts,
-  currentStepNumber,
-  buildHtmlAtStep,
-  buildCssAtStep
+  lesson,
+  currentStepNumber
 }) {
-  const livePreviewDocument = composeLivePreviewDocument(
-    currentStepNumber,
-    buildHtmlAtStep,
-    buildCssAtStep
-  );
+  const livePreviewDocument = composeLivePreviewDocument(lesson, currentStepNumber);
 
   if (lessonParts.livePreviewFrame.srcdoc === livePreviewDocument) {
     return;
@@ -2518,7 +2493,7 @@ export function showCurrentSidebar({
   lessonParts.livePreviewFrame.srcdoc = livePreviewDocument;
 }
 
-=== teach-components/build-sidebar/05-check-understanding/create-knowledge-check-progress.js ===
+=== teach-lessons/teach-lesson/05-check-understanding/create-knowledge-check-progress.js ===
 export function createKnowledgeCheckProgress() {
   return {
     currentQuestionNumber: 0,
@@ -2526,41 +2501,24 @@ export function createKnowledgeCheckProgress() {
   };
 }
 
-=== teach-components/build-sidebar/05-check-understanding/knowledge-check-questions.js ===
-export const knowledgeCheckQuestions = [
-  {
-    question: 'Koji HTML tag se koristi za bočnu navigaciju?',
-    options: ['<div>', '<aside>', '<sidebar>', '<nav>'],
-    correct: 1
-  },
-  {
-    question: 'Šta znači "100vh" u CSS-u?',
-    options: ['100% širine', '100% visine viewporta', '100 piksela', 'Fiksno 100'],
-    correct: 1
-  },
-  {
-    question: 'Koja vrednost border-radiusa daje pun krug?',
-    options: ['0px', '50%', '100%', '360deg'],
-    correct: 1
-  },
-  {
-    question: 'Šta koristimo za razmak između grid item-a?',
-    options: ['margin', 'padding', 'gap', 'spacing'],
-    correct: 2
-  },
-  {
-    question: 'Koji property omogućava glatke animacije?',
-    options: ['animation', 'transition', 'transform', 'motion'],
-    correct: 1
-  }
-];
-
-=== teach-components/build-sidebar/05-check-understanding/present-knowledge-check.js ===
+=== teach-lessons/teach-lesson/05-check-understanding/present-knowledge-check.js ===
 import { createKnowledgeCheckProgress } from './create-knowledge-check-progress.js';
 import { showKnowledgeCheckQuestion } from './show-knowledge-check-question.js';
 import { showKnowledgeCheckScore } from './show-knowledge-check-score.js';
 
 export function presentKnowledgeCheck({ lessonParts, knowledgeCheckQuestions }) {
+  if (!knowledgeCheckQuestions.length) {
+    lessonParts.openKnowledgeCheckButton.hidden = true;
+
+    return {
+      closeKnowledgeCheck() {},
+      isKnowledgeCheckOpen() {
+        return false;
+      },
+      openKnowledgeCheck() {}
+    };
+  }
+
   let knowledgeCheckProgress = createKnowledgeCheckProgress();
   let advanceTimer = null;
 
@@ -2674,7 +2632,7 @@ export function presentKnowledgeCheck({ lessonParts, knowledgeCheckQuestions }) 
   };
 }
 
-=== teach-components/build-sidebar/05-check-understanding/show-knowledge-check-question.js ===
+=== teach-lessons/teach-lesson/05-check-understanding/show-knowledge-check-question.js ===
 import { escapeInlineText } from '../escape-inline-text.js';
 
 export function showKnowledgeCheckQuestion({
@@ -2701,7 +2659,7 @@ export function showKnowledgeCheckQuestion({
   `;
 }
 
-=== teach-components/build-sidebar/05-check-understanding/show-knowledge-check-score.js ===
+=== teach-lessons/teach-lesson/05-check-understanding/show-knowledge-check-score.js ===
 export function showKnowledgeCheckScore({
   lessonParts,
   correctAnswerCount,
@@ -2722,7 +2680,7 @@ export function showKnowledgeCheckScore({
   `;
 }
 
-=== teach-components/build-sidebar/06-download-sidebar-files/download-sidebar-files.js ===
+=== teach-lessons/teach-lesson/06-download-lesson-files/download-lesson-files.js ===
 function triggerFileDownload(fileName, mimeType, fileContent) {
   const blob = new Blob([fileContent], { type: mimeType });
   const downloadLink = document.createElement('a');
@@ -2737,244 +2695,20 @@ function triggerFileDownload(fileName, mimeType, fileContent) {
   }, 1000);
 }
 
-export function downloadSidebarFiles({
-  steps,
-  buildHtmlAtStep,
-  buildCssAtStep
-}) {
-  const finalStep = steps.length - 1;
-  const htmlCode = buildHtmlAtStep(finalStep).join('\n');
-  const cssCode = buildCssAtStep(finalStep).join('\n');
+export function downloadLessonFiles({ lesson }) {
+  const finalStep = lesson.steps.length - 1;
+  const htmlCode = lesson.buildHtmlAtStep(finalStep).join('\n');
+  const cssCode = lesson.buildCssAtStep(finalStep).join('\n');
 
-  triggerFileDownload('sidebar.html', 'text/html', htmlCode);
+  triggerFileDownload(lesson.htmlFileName, 'text/html', htmlCode);
 
   window.setTimeout(() => {
-    triggerFileDownload('style.css', 'text/css', cssCode);
+    triggerFileDownload(lesson.cssFileName, 'text/css', cssCode);
   }, 500);
 }
 
-=== teach-components/build-sidebar/build-sidebar.pipeline.js ===
-import { findLessonParts } from './01-start-lesson/find-lesson-parts.js';
-import { createLessonProgress } from './01-start-lesson/create-lesson-progress.js';
-import { lessonStepScript } from './02-follow-lesson/lesson-step-script.js';
-import { knowledgeCheckQuestions } from './05-check-understanding/knowledge-check-questions.js';
-import { buildHtmlAtStep } from './03-watch-code/build-html-at-step.js';
-import { buildCssAtStep } from './03-watch-code/build-css-at-step.js';
-import { showGrowingCode } from './03-watch-code/show-growing-code.js';
-import { showCurrentStep } from './02-follow-lesson/show-current-step.js';
-import { showStepTimeline } from './02-follow-lesson/show-step-timeline.js';
-import { showCurrentSidebar } from './04-watch-sidebar/show-current-sidebar.js';
-import { showActiveLessonPanel } from './02-follow-lesson/show-active-lesson-panel.js';
-import { rememberSavedSteps } from './save-step/remember-saved-steps.js';
-import { presentStepFinder } from './find-step/present-step-finder.js';
-import { presentKnowledgeCheck } from './05-check-understanding/present-knowledge-check.js';
-import { chooseTheme } from './choose-theme/choose-theme.js';
-import { listenForLessonKeys } from './02-follow-lesson/listen-for-lesson-keys.js';
-import { downloadSidebarFiles } from './06-download-sidebar-files/download-sidebar-files.js';
-
-export function teachBuildSidebar(ownerDocument) {
-  const lessonParts = findLessonParts(ownerDocument);
-  const lessonProgress = createLessonProgress();
-
-  const savedSteps = rememberSavedSteps({
-    lessonParts,
-    steps: lessonStepScript,
-    goToStepNumber,
-    showCurrentLesson
-  });
-
-  const stepFinder = presentStepFinder({
-    lessonParts,
-    steps: lessonStepScript,
-    goToStepNumber
-  });
-
-  const knowledgeCheck = presentKnowledgeCheck({
-    lessonParts,
-    knowledgeCheckQuestions
-  });
-
-  const themeChoice = chooseTheme({
-    rootElement: ownerDocument.documentElement,
-    themeButton: lessonParts.themeButton
-  });
-
-  lessonParts.nextButton.addEventListener('click', () => {
-    pausePlayback();
-    goToNextStep();
-  });
-
-  lessonParts.previousButton.addEventListener('click', () => {
-    pausePlayback();
-    goToPreviousStep();
-  });
-
-  lessonParts.playButton.addEventListener('click', startPlayback);
-  lessonParts.pauseButton.addEventListener('click', pausePlayback);
-  lessonParts.stopButton.addEventListener('click', stopPlayback);
-  lessonParts.saveStepButton.addEventListener('click', () => {
-    savedSteps.toggleSavedStepNumber(lessonProgress.currentStepNumber);
-  });
-  lessonParts.openStepFinderButton.addEventListener('click', stepFinder.openStepFinder);
-  lessonParts.openKnowledgeCheckButton.addEventListener('click', knowledgeCheck.openKnowledgeCheck);
-  lessonParts.themeButton.addEventListener('click', themeChoice.toggleTheme);
-  lessonParts.downloadFilesButton.addEventListener('click', () => {
-    downloadSidebarFiles({
-      steps: lessonStepScript,
-      buildHtmlAtStep,
-      buildCssAtStep
-    });
-  });
-
-  lessonParts.lessonPanelButtons.forEach(button => {
-    button.addEventListener('click', () => {
-      lessonProgress.activePanel = button.dataset.tab;
-      showCurrentLesson();
-    });
-  });
-
-  listenForLessonKeys({
-    ownerDocument,
-    hasOpenLessonDialog,
-    goToNextStep,
-    goToPreviousStep,
-    togglePlayback,
-    toggleSavedStep: () => savedSteps.toggleSavedStepNumber(lessonProgress.currentStepNumber),
-    openStepFinder: stepFinder.openStepFinder,
-    closeStepFinder: stepFinder.closeStepFinder,
-    closeKnowledgeCheck: knowledgeCheck.closeKnowledgeCheck
-  });
-
-  themeChoice.initializeChosenTheme();
-  showCurrentLesson();
-
-  function hasOpenLessonDialog() {
-    return stepFinder.isStepFinderOpen() || knowledgeCheck.isKnowledgeCheckOpen();
-  }
-
-  function goToStepNumber(stepNumber, options = {}) {
-    const { showStepPanel = false } = options;
-    const boundedStep = Math.max(0, Math.min(stepNumber, lessonStepScript.length - 1));
-
-    pausePlayback();
-    lessonProgress.currentStepNumber = boundedStep;
-
-    if (showStepPanel) {
-      lessonProgress.activePanel = 'steps';
-    }
-
-    showCurrentLesson();
-  }
-
-  function goToNextStep() {
-    if (lessonProgress.currentStepNumber < lessonStepScript.length - 1) {
-      lessonProgress.currentStepNumber += 1;
-      lessonProgress.activePanel = 'steps';
-      showCurrentLesson();
-      return;
-    }
-
-    pausePlayback();
-  }
-
-  function goToPreviousStep() {
-    if (lessonProgress.currentStepNumber === 0) {
-      return;
-    }
-
-    lessonProgress.currentStepNumber -= 1;
-    lessonProgress.activePanel = 'steps';
-    showCurrentLesson();
-  }
-
-  function startPlayback() {
-    if (lessonProgress.playbackTimer || lessonProgress.currentStepNumber === lessonStepScript.length - 1) {
-      return;
-    }
-
-    lessonProgress.playbackTimer = window.setInterval(goToNextStep, 4000);
-    updatePlaybackControls();
-  }
-
-  function pausePlayback() {
-    if (!lessonProgress.playbackTimer) {
-      updatePlaybackControls();
-      return;
-    }
-
-    window.clearInterval(lessonProgress.playbackTimer);
-    lessonProgress.playbackTimer = null;
-    updatePlaybackControls();
-  }
-
-  function togglePlayback() {
-    if (lessonProgress.playbackTimer) {
-      pausePlayback();
-      return;
-    }
-
-    startPlayback();
-  }
-
-  function stopPlayback() {
-    pausePlayback();
-    lessonProgress.currentStepNumber = 0;
-    lessonProgress.activePanel = 'steps';
-    showCurrentLesson();
-  }
-
-  function updatePlaybackControls() {
-    const isPlaying = Boolean(lessonProgress.playbackTimer);
-    const isAtLastStep = lessonProgress.currentStepNumber === lessonStepScript.length - 1;
-
-    lessonParts.playButton.disabled = isPlaying || isAtLastStep;
-    lessonParts.pauseButton.disabled = !isPlaying;
-    lessonParts.stopButton.disabled = !isPlaying && lessonProgress.currentStepNumber === 0;
-  }
-
-  function showCurrentLesson() {
-    const step = lessonStepScript[lessonProgress.currentStepNumber];
-    const savedStepNumbers = savedSteps.listSavedStepNumbers();
-
-    showCurrentSidebar({
-      lessonParts,
-      currentStepNumber: lessonProgress.currentStepNumber,
-      buildHtmlAtStep,
-      buildCssAtStep
-    });
-
-    showCurrentStep({
-      lessonParts,
-      step,
-      currentStepNumber: lessonProgress.currentStepNumber,
-      totalSteps: lessonStepScript.length
-    });
-
-    showStepTimeline({
-      lessonParts,
-      steps: lessonStepScript,
-      currentStepNumber: lessonProgress.currentStepNumber,
-      savedStepNumbers,
-      goToStepNumber: stepNumber => {
-        goToStepNumber(stepNumber, { showStepPanel: true });
-      }
-    });
-
-    showGrowingCode({
-      lessonParts,
-      currentStepNumber: lessonProgress.currentStepNumber,
-      buildHtmlAtStep,
-      buildCssAtStep
-    });
-
-    savedSteps.showSavedStepList(lessonProgress.currentStepNumber);
-    showActiveLessonPanel(lessonParts, lessonProgress.activePanel);
-    updatePlaybackControls();
-  }
-}
-
-=== teach-components/build-sidebar/choose-theme/choose-theme.js ===
-const THEME_STORAGE_KEY = 'sidebarTheme';
+=== teach-lessons/teach-lesson/choose-theme/choose-theme.js ===
+const THEME_STORAGE_KEY = 'stepByStepAnimatorTheme';
 
 function showThemeButtonIcon(themeButton, theme) {
   themeButton.innerHTML = theme === 'dark'
@@ -2998,7 +2732,7 @@ export function chooseTheme({ rootElement, themeButton }) {
     applyChosenTheme(nextTheme);
   }
 
-  function initializeChosenTheme() {
+  function initializeTheme() {
     const storedTheme = localStorage.getItem(THEME_STORAGE_KEY);
     const initialTheme = storedTheme === 'light' || storedTheme === 'dark'
       ? storedTheme
@@ -3008,12 +2742,12 @@ export function chooseTheme({ rootElement, themeButton }) {
   }
 
   return {
-    initializeChosenTheme,
+    initializeTheme,
     toggleTheme
   };
 }
 
-=== teach-components/build-sidebar/escape-inline-text.js ===
+=== teach-lessons/teach-lesson/escape-inline-text.js ===
 export function escapeInlineText(value) {
   return String(value)
     .replace(/&/g, '&amp;')
@@ -3023,7 +2757,7 @@ export function escapeInlineText(value) {
     .replace(/'/g, '&#39;');
 }
 
-=== teach-components/build-sidebar/find-step/present-step-finder.js ===
+=== teach-lessons/teach-lesson/find-step/present-step-finder.js ===
 import { escapeInlineText } from '../escape-inline-text.js';
 
 export function presentStepFinder({ lessonParts, steps, goToStepNumber }) {
@@ -3091,7 +2825,7 @@ export function presentStepFinder({ lessonParts, steps, goToStepNumber }) {
   };
 }
 
-=== teach-components/build-sidebar/lesson.css ===
+=== teach-lessons/teach-lesson/lesson-shell.css ===
 :root {
   /* Dark Theme (Default) */
   --bg: #0b1020;
@@ -3114,7 +2848,6 @@ export function presentStepFinder({ lessonParts, steps, goToStepNumber }) {
   --radius: 24px;
   --radius-sm: 14px;
   --radius-xs: 10px;
-  --sidebar-w: 300px;
   --ease: 480ms cubic-bezier(.22,1,.36,1);
   --ease-fast: 260ms ease;
   --ease-bounce: 500ms cubic-bezier(0.34, 1.56, 0.64, 1);
@@ -4283,12 +4016,14 @@ button:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
   .shortcuts { display: none; }
 }
 
-=== teach-components/build-sidebar/save-step/read-saved-step-numbers.js ===
-const SAVED_STEP_STORAGE_KEY = 'sidebarBookmarks';
+=== teach-lessons/teach-lesson/save-step/read-saved-step-numbers.js ===
+function composeSavedStepStorageKey(lessonId) {
+  return `stepByStepAnimator:${lessonId}:savedSteps`;
+}
 
-export function readSavedStepNumbers(totalSteps) {
+export function readSavedStepNumbers({ lessonId, totalSteps }) {
   try {
-    const rawValue = localStorage.getItem(SAVED_STEP_STORAGE_KEY) || '[]';
+    const rawValue = localStorage.getItem(composeSavedStepStorageKey(lessonId)) || '[]';
     const parsedStepNumbers = JSON.parse(rawValue);
 
     return [...new Set(
@@ -4303,18 +4038,22 @@ export function readSavedStepNumbers(totalSteps) {
   }
 }
 
-=== teach-components/build-sidebar/save-step/remember-saved-steps.js ===
+=== teach-lessons/teach-lesson/save-step/remember-saved-steps.js ===
 import { readSavedStepNumbers } from './read-saved-step-numbers.js';
 import { showSavedStepList } from './show-saved-step-list.js';
 import { writeSavedStepNumbers } from './write-saved-step-numbers.js';
 
 export function rememberSavedSteps({
+  lessonId,
   lessonParts,
   steps,
   goToStepNumber,
   showCurrentLesson
 }) {
-  let savedStepNumbers = readSavedStepNumbers(steps.length);
+  let savedStepNumbers = readSavedStepNumbers({
+    lessonId,
+    totalSteps: steps.length
+  });
 
   lessonParts.savedStepList.addEventListener('click', event => {
     const removeButton = event.target.closest('[data-remove-step-number]');
@@ -4341,7 +4080,10 @@ export function rememberSavedSteps({
       savedStepNumbers.sort((left, right) => left - right);
     }
 
-    writeSavedStepNumbers(savedStepNumbers);
+    writeSavedStepNumbers({
+      lessonId,
+      savedStepNumbers
+    });
     showCurrentLesson();
   }
 
@@ -4365,7 +4107,7 @@ export function rememberSavedSteps({
   };
 }
 
-=== teach-components/build-sidebar/save-step/show-saved-step-list.js ===
+=== teach-lessons/teach-lesson/save-step/show-saved-step-list.js ===
 import { escapeInlineText } from '../escape-inline-text.js';
 
 export function showSavedStepList({
@@ -4403,11 +4145,228 @@ export function showSavedStepList({
   `).join('');
 }
 
-=== teach-components/build-sidebar/save-step/write-saved-step-numbers.js ===
-const SAVED_STEP_STORAGE_KEY = 'sidebarBookmarks';
+=== teach-lessons/teach-lesson/save-step/write-saved-step-numbers.js ===
+function composeSavedStepStorageKey(lessonId) {
+  return `stepByStepAnimator:${lessonId}:savedSteps`;
+}
 
-export function writeSavedStepNumbers(savedStepNumbers) {
-  localStorage.setItem(SAVED_STEP_STORAGE_KEY, JSON.stringify(savedStepNumbers));
+export function writeSavedStepNumbers({ lessonId, savedStepNumbers }) {
+  localStorage.setItem(composeSavedStepStorageKey(lessonId), JSON.stringify(savedStepNumbers));
+}
+
+=== teach-lessons/teach-lesson/teach-lesson.pipeline.js ===
+import { createLessonProgress } from './01-start-lesson/create-lesson-progress.js';
+import { findLessonParts } from './01-start-lesson/find-lesson-parts.js';
+import { showLessonShell } from './01-start-lesson/show-lesson-shell.js';
+import { listenForLessonKeys } from './02-follow-lesson/listen-for-lesson-keys.js';
+import { showActiveLessonPanel } from './02-follow-lesson/show-active-lesson-panel.js';
+import { showCurrentStep } from './02-follow-lesson/show-current-step.js';
+import { showStepTimeline } from './02-follow-lesson/show-step-timeline.js';
+import { showGrowingCode } from './03-watch-code/show-growing-code.js';
+import { showCurrentPreview } from './04-watch-preview/show-current-preview.js';
+import { presentKnowledgeCheck } from './05-check-understanding/present-knowledge-check.js';
+import { downloadLessonFiles } from './06-download-lesson-files/download-lesson-files.js';
+import { chooseTheme } from './choose-theme/choose-theme.js';
+import { presentStepFinder } from './find-step/present-step-finder.js';
+import { rememberSavedSteps } from './save-step/remember-saved-steps.js';
+
+export function teachLesson({ ownerDocument, lesson }) {
+  const lessonParts = findLessonParts(ownerDocument);
+  const lessonProgress = createLessonProgress();
+
+  showLessonShell({ ownerDocument, lessonParts, lesson });
+
+  const savedSteps = rememberSavedSteps({
+    lessonId: lesson.lessonId,
+    lessonParts,
+    steps: lesson.steps,
+    goToStepNumber,
+    showCurrentLesson
+  });
+
+  const stepFinder = presentStepFinder({
+    lessonParts,
+    steps: lesson.steps,
+    goToStepNumber
+  });
+
+  const knowledgeCheck = presentKnowledgeCheck({
+    lessonParts,
+    knowledgeCheckQuestions: lesson.knowledgeCheckQuestions || []
+  });
+
+  const themeChoice = chooseTheme({
+    rootElement: ownerDocument.documentElement,
+    themeButton: lessonParts.themeButton
+  });
+
+  lessonParts.nextButton.addEventListener('click', () => {
+    pausePlayback();
+    goToNextStep();
+  });
+
+  lessonParts.previousButton.addEventListener('click', () => {
+    pausePlayback();
+    goToPreviousStep();
+  });
+
+  lessonParts.playButton.addEventListener('click', startPlayback);
+  lessonParts.pauseButton.addEventListener('click', pausePlayback);
+  lessonParts.stopButton.addEventListener('click', stopPlayback);
+  lessonParts.saveStepButton.addEventListener('click', () => {
+    savedSteps.toggleSavedStepNumber(lessonProgress.currentStepNumber);
+  });
+  lessonParts.openStepFinderButton.addEventListener('click', stepFinder.openStepFinder);
+  lessonParts.openKnowledgeCheckButton.addEventListener('click', knowledgeCheck.openKnowledgeCheck);
+  lessonParts.themeButton.addEventListener('click', themeChoice.toggleTheme);
+  lessonParts.downloadFilesButton.addEventListener('click', () => {
+    downloadLessonFiles({ lesson });
+  });
+
+  lessonParts.lessonPanelButtons.forEach(button => {
+    button.addEventListener('click', () => {
+      lessonProgress.activePanel = button.dataset.tab;
+      showCurrentLesson();
+    });
+  });
+
+  listenForLessonKeys({
+    ownerDocument,
+    hasOpenLessonDialog,
+    goToNextStep,
+    goToPreviousStep,
+    togglePlayback,
+    toggleSavedStep: () => savedSteps.toggleSavedStepNumber(lessonProgress.currentStepNumber),
+    openStepFinder: stepFinder.openStepFinder,
+    closeStepFinder: stepFinder.closeStepFinder,
+    closeKnowledgeCheck: knowledgeCheck.closeKnowledgeCheck
+  });
+
+  themeChoice.initializeTheme();
+  showCurrentLesson();
+
+  function hasOpenLessonDialog() {
+    return stepFinder.isStepFinderOpen() || knowledgeCheck.isKnowledgeCheckOpen();
+  }
+
+  function goToStepNumber(stepNumber, options = {}) {
+    const { showStepPanel = false } = options;
+    const boundedStep = Math.max(0, Math.min(stepNumber, lesson.steps.length - 1));
+
+    pausePlayback();
+    lessonProgress.currentStepNumber = boundedStep;
+
+    if (showStepPanel) {
+      lessonProgress.activePanel = 'steps';
+    }
+
+    showCurrentLesson();
+  }
+
+  function goToNextStep() {
+    if (lessonProgress.currentStepNumber < lesson.steps.length - 1) {
+      lessonProgress.currentStepNumber += 1;
+      lessonProgress.activePanel = 'steps';
+      showCurrentLesson();
+      return;
+    }
+
+    pausePlayback();
+  }
+
+  function goToPreviousStep() {
+    if (lessonProgress.currentStepNumber === 0) {
+      return;
+    }
+
+    lessonProgress.currentStepNumber -= 1;
+    lessonProgress.activePanel = 'steps';
+    showCurrentLesson();
+  }
+
+  function startPlayback() {
+    if (lessonProgress.playbackTimer || lessonProgress.currentStepNumber === lesson.steps.length - 1) {
+      return;
+    }
+
+    lessonProgress.playbackTimer = window.setInterval(goToNextStep, 4000);
+    updatePlaybackControls();
+  }
+
+  function pausePlayback() {
+    if (!lessonProgress.playbackTimer) {
+      updatePlaybackControls();
+      return;
+    }
+
+    window.clearInterval(lessonProgress.playbackTimer);
+    lessonProgress.playbackTimer = null;
+    updatePlaybackControls();
+  }
+
+  function togglePlayback() {
+    if (lessonProgress.playbackTimer) {
+      pausePlayback();
+      return;
+    }
+
+    startPlayback();
+  }
+
+  function stopPlayback() {
+    pausePlayback();
+    lessonProgress.currentStepNumber = 0;
+    lessonProgress.activePanel = 'steps';
+    showCurrentLesson();
+  }
+
+  function updatePlaybackControls() {
+    const isPlaying = Boolean(lessonProgress.playbackTimer);
+    const isAtLastStep = lessonProgress.currentStepNumber === lesson.steps.length - 1;
+
+    lessonParts.playButton.disabled = isPlaying || isAtLastStep;
+    lessonParts.pauseButton.disabled = !isPlaying;
+    lessonParts.stopButton.disabled = !isPlaying && lessonProgress.currentStepNumber === 0;
+  }
+
+  function showCurrentLesson() {
+    const step = lesson.steps[lessonProgress.currentStepNumber];
+    const savedStepNumbers = savedSteps.listSavedStepNumbers();
+
+    showCurrentPreview({
+      lessonParts,
+      lesson,
+      currentStepNumber: lessonProgress.currentStepNumber
+    });
+
+    showCurrentStep({
+      lessonParts,
+      step,
+      currentStepNumber: lessonProgress.currentStepNumber,
+      totalSteps: lesson.steps.length
+    });
+
+    showStepTimeline({
+      lessonParts,
+      steps: lesson.steps,
+      currentStepNumber: lessonProgress.currentStepNumber,
+      savedStepNumbers,
+      goToStepNumber: stepNumber => {
+        goToStepNumber(stepNumber, { showStepPanel: true });
+      }
+    });
+
+    showGrowingCode({
+      lessonParts,
+      currentStepNumber: lessonProgress.currentStepNumber,
+      buildHtmlAtStep: lesson.buildHtmlAtStep,
+      buildCssAtStep: lesson.buildCssAtStep
+    });
+
+    savedSteps.showSavedStepList(lessonProgress.currentStepNumber);
+    showActiveLessonPanel(lessonParts, lessonProgress.activePanel);
+    updatePlaybackControls();
+  }
 }
 
 === vite.config.js ===
@@ -4419,7 +4378,7 @@ export default defineConfig({
     rollupOptions: {
       input: {
         index: resolve(process.cwd(), 'index.html'),
-        sidebarTutorial: resolve(process.cwd(), 'sidebar-step-by-step.html')
+        sidebarAlias: resolve(process.cwd(), 'sidebar-step-by-step.html')
       }
     }
   }

@@ -1,41 +1,41 @@
-import { findLessonParts } from './01-start-lesson/find-lesson-parts.js';
 import { createLessonProgress } from './01-start-lesson/create-lesson-progress.js';
-import { lessonStepScript } from './02-follow-lesson/lesson-step-script.js';
-import { knowledgeCheckQuestions } from './05-check-understanding/knowledge-check-questions.js';
-import { buildHtmlAtStep } from './03-watch-code/build-html-at-step.js';
-import { buildCssAtStep } from './03-watch-code/build-css-at-step.js';
-import { showGrowingCode } from './03-watch-code/show-growing-code.js';
+import { findLessonParts } from './01-start-lesson/find-lesson-parts.js';
+import { showLessonShell } from './01-start-lesson/show-lesson-shell.js';
+import { listenForLessonKeys } from './02-follow-lesson/listen-for-lesson-keys.js';
+import { showActiveLessonPanel } from './02-follow-lesson/show-active-lesson-panel.js';
 import { showCurrentStep } from './02-follow-lesson/show-current-step.js';
 import { showStepTimeline } from './02-follow-lesson/show-step-timeline.js';
-import { showCurrentSidebar } from './04-watch-sidebar/show-current-sidebar.js';
-import { showActiveLessonPanel } from './02-follow-lesson/show-active-lesson-panel.js';
-import { rememberSavedSteps } from './save-step/remember-saved-steps.js';
-import { presentStepFinder } from './find-step/present-step-finder.js';
+import { showGrowingCode } from './03-watch-code/show-growing-code.js';
+import { showCurrentPreview } from './04-watch-preview/show-current-preview.js';
 import { presentKnowledgeCheck } from './05-check-understanding/present-knowledge-check.js';
+import { downloadLessonFiles } from './06-download-lesson-files/download-lesson-files.js';
 import { chooseTheme } from './choose-theme/choose-theme.js';
-import { listenForLessonKeys } from './02-follow-lesson/listen-for-lesson-keys.js';
-import { downloadSidebarFiles } from './06-download-sidebar-files/download-sidebar-files.js';
+import { presentStepFinder } from './find-step/present-step-finder.js';
+import { rememberSavedSteps } from './save-step/remember-saved-steps.js';
 
-export function teachBuildSidebar(ownerDocument) {
+export function teachLesson({ ownerDocument, lesson }) {
   const lessonParts = findLessonParts(ownerDocument);
   const lessonProgress = createLessonProgress();
 
+  showLessonShell({ ownerDocument, lessonParts, lesson });
+
   const savedSteps = rememberSavedSteps({
+    lessonId: lesson.lessonId,
     lessonParts,
-    steps: lessonStepScript,
+    steps: lesson.steps,
     goToStepNumber,
     showCurrentLesson
   });
 
   const stepFinder = presentStepFinder({
     lessonParts,
-    steps: lessonStepScript,
+    steps: lesson.steps,
     goToStepNumber
   });
 
   const knowledgeCheck = presentKnowledgeCheck({
     lessonParts,
-    knowledgeCheckQuestions
+    knowledgeCheckQuestions: lesson.knowledgeCheckQuestions || []
   });
 
   const themeChoice = chooseTheme({
@@ -63,11 +63,7 @@ export function teachBuildSidebar(ownerDocument) {
   lessonParts.openKnowledgeCheckButton.addEventListener('click', knowledgeCheck.openKnowledgeCheck);
   lessonParts.themeButton.addEventListener('click', themeChoice.toggleTheme);
   lessonParts.downloadFilesButton.addEventListener('click', () => {
-    downloadSidebarFiles({
-      steps: lessonStepScript,
-      buildHtmlAtStep,
-      buildCssAtStep
-    });
+    downloadLessonFiles({ lesson });
   });
 
   lessonParts.lessonPanelButtons.forEach(button => {
@@ -89,7 +85,7 @@ export function teachBuildSidebar(ownerDocument) {
     closeKnowledgeCheck: knowledgeCheck.closeKnowledgeCheck
   });
 
-  themeChoice.initializeChosenTheme();
+  themeChoice.initializeTheme();
   showCurrentLesson();
 
   function hasOpenLessonDialog() {
@@ -98,7 +94,7 @@ export function teachBuildSidebar(ownerDocument) {
 
   function goToStepNumber(stepNumber, options = {}) {
     const { showStepPanel = false } = options;
-    const boundedStep = Math.max(0, Math.min(stepNumber, lessonStepScript.length - 1));
+    const boundedStep = Math.max(0, Math.min(stepNumber, lesson.steps.length - 1));
 
     pausePlayback();
     lessonProgress.currentStepNumber = boundedStep;
@@ -111,7 +107,7 @@ export function teachBuildSidebar(ownerDocument) {
   }
 
   function goToNextStep() {
-    if (lessonProgress.currentStepNumber < lessonStepScript.length - 1) {
+    if (lessonProgress.currentStepNumber < lesson.steps.length - 1) {
       lessonProgress.currentStepNumber += 1;
       lessonProgress.activePanel = 'steps';
       showCurrentLesson();
@@ -132,7 +128,7 @@ export function teachBuildSidebar(ownerDocument) {
   }
 
   function startPlayback() {
-    if (lessonProgress.playbackTimer || lessonProgress.currentStepNumber === lessonStepScript.length - 1) {
+    if (lessonProgress.playbackTimer || lessonProgress.currentStepNumber === lesson.steps.length - 1) {
       return;
     }
 
@@ -169,7 +165,7 @@ export function teachBuildSidebar(ownerDocument) {
 
   function updatePlaybackControls() {
     const isPlaying = Boolean(lessonProgress.playbackTimer);
-    const isAtLastStep = lessonProgress.currentStepNumber === lessonStepScript.length - 1;
+    const isAtLastStep = lessonProgress.currentStepNumber === lesson.steps.length - 1;
 
     lessonParts.playButton.disabled = isPlaying || isAtLastStep;
     lessonParts.pauseButton.disabled = !isPlaying;
@@ -177,26 +173,25 @@ export function teachBuildSidebar(ownerDocument) {
   }
 
   function showCurrentLesson() {
-    const step = lessonStepScript[lessonProgress.currentStepNumber];
+    const step = lesson.steps[lessonProgress.currentStepNumber];
     const savedStepNumbers = savedSteps.listSavedStepNumbers();
 
-    showCurrentSidebar({
+    showCurrentPreview({
       lessonParts,
-      currentStepNumber: lessonProgress.currentStepNumber,
-      buildHtmlAtStep,
-      buildCssAtStep
+      lesson,
+      currentStepNumber: lessonProgress.currentStepNumber
     });
 
     showCurrentStep({
       lessonParts,
       step,
       currentStepNumber: lessonProgress.currentStepNumber,
-      totalSteps: lessonStepScript.length
+      totalSteps: lesson.steps.length
     });
 
     showStepTimeline({
       lessonParts,
-      steps: lessonStepScript,
+      steps: lesson.steps,
       currentStepNumber: lessonProgress.currentStepNumber,
       savedStepNumbers,
       goToStepNumber: stepNumber => {
@@ -207,8 +202,8 @@ export function teachBuildSidebar(ownerDocument) {
     showGrowingCode({
       lessonParts,
       currentStepNumber: lessonProgress.currentStepNumber,
-      buildHtmlAtStep,
-      buildCssAtStep
+      buildHtmlAtStep: lesson.buildHtmlAtStep,
+      buildCssAtStep: lesson.buildCssAtStep
     });
 
     savedSteps.showSavedStepList(lessonProgress.currentStepNumber);

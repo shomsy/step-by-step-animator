@@ -1,8 +1,10 @@
-const SAVED_STEP_STORAGE_KEY = 'sidebarBookmarks';
+function composeSavedStepStorageKey(lessonId) {
+  return `stepByStepAnimator:${lessonId}:savedSteps`;
+}
 
-export function readSavedStepNumbers(totalSteps) {
+export function readSavedStepNumbers({ lessonId, totalSteps }) {
   try {
-    const rawValue = localStorage.getItem(SAVED_STEP_STORAGE_KEY) || '[]';
+    const rawValue = localStorage.getItem(composeSavedStepStorageKey(lessonId)) || '[]';
     const parsedStepNumbers = JSON.parse(rawValue);
 
     return [...new Set(

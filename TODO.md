@@ -1,99 +1,63 @@
 # TODO
 
-Ovaj fajl je kanonska lista za arhitekturu i cleanup ovog repoa.
+Ovaj fajl je kanonska lista za arhitekturu i sledeće veće korake ovog repoa.
 
 ## Status pravila
 
-- `DONE`: stavka je završena i više nema otvorenog rada.
-- `OPEN`: stavka je poznata i može da se reši u ovom repou.
-- `BLOCKED`: stavka trenutno ne može da se zatvori; obavezno napiši šta fali da bi bila rešena.
+- `DONE`: stavka je završena
+- `OPEN`: stavka je poznata i spremna za sledeći pass
+- `BLOCKED`: stavka trenutno ne može da se zatvori; napiši šta fali
 
-Svaka stavka mora da ima:
+## Engine Cleanup
 
-1. `Status`
-2. `Šta fali`
-3. `Napomena`
-
-## Final Architecture Tightening
-
-### 1. Zadrži jedan kanonski feature entry
+### 1. Pretvori repo u generičan lesson engine
 
 - `Status`: `DONE`
 - `Šta fali`: ništa
-- `Napomena`: Glavni tok ostaje u `teach-components/build-sidebar/build-sidebar.pipeline.js` i nema konkurentske monolitne implementacije.
+- `Napomena`: Generičan shell i runtime sada žive u `teach-lessons/teach-lesson/`, a `build-sidebar` je sveden na lesson contract.
 
-### 2. Drži repo u flow-first shape-u
-
-- `Status`: `DONE`
-- `Šta fali`: ništa
-- `Napomena`: Tree sada čita feature kroz glavni numerisani lesson journey `01-start-lesson`, `02-follow-lesson`, `03-watch-code`, `04-watch-sidebar`, `05-check-understanding`, `06-download-sidebar-files`, dok `find-step`, `save-step` i `choose-theme` ostaju nenumerisani pomoćni tokovi.
-
-### 3. Očisti preostale stare nazive iz dokumentacije
+### 2. Zadrži jedan kanonski engine entry
 
 - `Status`: `DONE`
 - `Šta fali`: ništa
-- `Napomena`: `ARCHITECTURE.md` više ne koristi stare repo-specifične loše primere, nego neutralne anti-pattern primere.
+- `Napomena`: Glavni tok ostaje u `teach-lessons/teach-lesson/teach-lesson.pipeline.js` i nema konkurentske monolitne implementacije.
 
-### 4. Zaključaj jednu konačnu odluku o numerisanju flow foldera
-
-- `Status`: `DONE`
-- `Šta fali`: ništa
-- `Napomena`: Konačna odluka je da samo glavni lesson journey koristi numerisane flow foldere, dok pomoćni tokovi ostaju bez brojeva.
-
-### 5. Prođi poslednji vocabulary audit za “show / present / build / watch”
+### 3. Premesti concrete lesson sadržaj van shell-a
 
 - `Status`: `DONE`
 - `Šta fali`: ništa
-- `Napomena`: `ARCHITECTURE.md` sada eksplicitno zaključava značenje glagola: `build` za derivaciju, `show` za upis u postojeće page parts, `present` za interaktivne tokove, `create` za inicijalizaciju, `find` za lociranje page parts.
+- `Napomena`: Step script, HTML builder, CSS builder i quiz pitanja sada žive u `teach-lessons/build-sidebar/`.
 
-### 6. Zategni interni naziv za prikaz trenutne lekcije
-
-- `Status`: `DONE`
-- `Šta fali`: ništa
-- `Napomena`: Helper je preimenovan u `showCurrentLesson`, pa više ne nosi nepotreban `state` vokabular.
-
-## Responsibility Checks
-
-### 7. Sačuvaj male fajlove samo tamo gde nose jednu jasnu odgovornost
+### 4. Uvedi jasan lesson contract za buduće lekcije
 
 - `Status`: `DONE`
 - `Šta fali`: ništa
-- `Napomena`: Bookmark storage/list output i knowledge-check prikaz su već razdvojeni na jasne responsibility file-ove.
+- `Napomena`: Svaka nova lekcija treba da doda root `feature-name.lesson.js` i da se registruje u `teach-lessons/list-lessons.js`.
 
-### 8. Proveri da li `present-step-finder.js` i dalje nosi samo jednu odgovornost
+## Follow-Up Work
 
-- `Status`: `DONE`
-- `Šta fali`: ništa
-- `Napomena`: Fajl i dalje nosi jednu koherentnu odgovornost: kompletan user flow za pronalazak koraka. Unutrašnji helper je dodatno pojašnjen u `showMatchingStepResults`.
+### 5. Dodaj drugu lekciju da potvrdi engine shape
 
-### 9. Proveri da li `present-knowledge-check.js` i dalje nosi samo jednu odgovornost
+- `Status`: `OPEN`
+- `Šta fali`: nova lesson slice sa svojim `describe-steps.js`, HTML/CSS builderima i pitanjima
+- `Napomena`: Najlogičniji sledeći kandidat je `build-top-navigation`.
 
-- `Status`: `DONE`
-- `Šta fali`: ništa
-- `Napomena`: Fajl i dalje nosi jednu koherentnu odgovornost: kompletan knowledge-check flow. Pitanje i rezultat ostaju izdvojeni u svoje file-ove, a interni helper je pojašnjen u `showCurrentKnowledgeCheckStep`.
+### 6. Dodaj lesson picker u shell
+
+- `Status`: `OPEN`
+- `Šta fali`: UI za izbor lekcije i mali flow za promenu query parametra
+- `Napomena`: Trenutno izbor lekcije radi preko `?lesson=...`, što je dovoljno za engine start.
 
 ## Verification
 
-### 10. Proveri da nema starih import path-ova
+### 7. Drži build i syntax check zelenim
 
 - `Status`: `DONE`
 - `Šta fali`: ništa
-- `Napomena`: Poslednji import fix pass je već urađen nakon rename-a.
+- `Napomena`: Posle svake veće izmene pokrenuti `find teach-lessons -name '*.js' -print0 | xargs -0 -n1 node --check && node --check main.js`, zatim `npm run build`.
 
-### 11. Proveri da build i syntax check prolaze
-
-- `Status`: `DONE`
-- `Šta fali`: ništa
-- `Napomena`: `node --check` i `npm run build` su ponovo prošli posle numerisanog lesson journey pass-a.
-
-### 12. Osveži repo merge dump posle svakog većeg rename/split pass-a
+### 8. Osveži merge dump posle svakog većeg pass-a
 
 - `Status`: `DONE`
 - `Šta fali`: ništa
-- `Napomena`: `./merge-files.sh .` treba pokrenuti posle svakog većeg rename/doc pass-a; biće osvežen i za numerisani lesson journey pass.
-
-## Kako da se ovaj TODO ažurira
-
-- Kada se stavka završi, promeni `Status` u `DONE` i stavi `Šta fali: ništa`.
-- Kada stavka ne može da se završi, promeni `Status` u `BLOCKED` i napiši tačno koji input, odluka ili tehnički uslov nedostaje.
-- Ne zatvaraj stavku samo zato što ime “zvuči dovoljno dobro”; zatvori je tek kada tree, file i function ime stvarno predviđaju sadržaj bez otvaranja fajla.
+- `Napomena`: `./merge-files.sh .` ostaje obavezni završni korak posle većih rename, split ili doc pass-ova.

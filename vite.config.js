@@ -6,7 +6,7 @@ export default defineConfig({
     rollupOptions: {
       input: {
         index: resolve(process.cwd(), 'index.html'),
-        sidebarTutorial: resolve(process.cwd(), 'sidebar-step-by-step.html')
+        sidebarAlias: resolve(process.cwd(), 'sidebar-step-by-step.html')
       }
     }
   }

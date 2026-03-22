@@ -1,4 +1,4 @@
-import { stepNumberById } from '../02-follow-lesson/lesson-step-script.js';
+import { stepNumberById } from './describe-steps.js';
 
 function readStepBoundary(stepReference) {
   if (typeof stepReference === 'number') {

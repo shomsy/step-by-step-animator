@@ -1,4 +1,14 @@
-import './teach-components/build-sidebar/lesson.css';
-import { teachBuildSidebar } from './teach-components/build-sidebar/build-sidebar.pipeline.js';
+import './teach-lessons/teach-lesson/lesson-shell.css';
+import { findSelectedLesson } from './teach-lessons/find-selected-lesson.js';
+import { listLessons } from './teach-lessons/list-lessons.js';
+import { teachLesson } from './teach-lessons/teach-lesson/teach-lesson.pipeline.js';
 
-teachBuildSidebar(document);
+const selectedLesson = findSelectedLesson({
+  ownerLocation: window.location,
+  lessons: listLessons()
+});
+
+teachLesson({
+  ownerDocument: document,
+  lesson: selectedLesson
+});

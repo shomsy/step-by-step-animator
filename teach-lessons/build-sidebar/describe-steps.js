@@ -14,11 +14,11 @@ function describeCssPropertyStep(id, selector, property, value, _sidebarScene, d
   };
 }
 
-function describeFinishedSidebarStep(id, title, desc, proTip, _sidebarScene) {
+function describeFinishedStep(id, title, desc, proTip, _sidebarScene) {
   return { id, title, desc, tag: 'success', proTip };
 }
 
-export const lessonStepScript = [
+export const lessonSteps = [
   describeHtmlElementStep('empty_shell', 'Start: Empty App Shell', 'Počinjemo od praznog `.app-shell` prostora. Sidebar tek dodajemo kao prvi pravi element.', 'html:app-shell', 'Neutralan početak jasno odvaja ono što je postojalo od onoga što tek gradimo.', 0),
   describeHtmlElementStep('sidebar_html', 'HTML: Sidebar Shell', 'Ubacujemo osnovni `<aside class="sidebar">` blok kao koren cele komponente.', 'html:aside', 'Semantički HTML ti odmah daje bolju strukturu i čitljiviji DOM.', 1),
   ...[
@@ -106,9 +106,9 @@ export const lessonStepScript = [
     ['hide_labels', '.sidebar.is-collapsed .nav-item .label', 'display', 'none', 21, 'U collapsed modu sakrivamo tekstualne labele.', 'Collapse ne znači da gubiš strukturu, već da je svodiš na ikone.'],
     ['responsive_sidebar_min_height', '.sidebar', 'min-height', 'auto', 21, 'Na manjim ekranima sidebar više ne mora da glumi pun viewport.']
   ].map(config => describeCssPropertyStep(...config)),
-  describeFinishedSidebarStep('done', 'Done: Sidebar', 'Tutorijal je sada potpuno detaljan: CSS ide kumulativno, property po property.', 'Kada je tok ovako sitno razbijen, promene su mnogo lakše za praćenje i u kodu i u prikazu sidebara.', 21)
+  describeFinishedStep('done', 'Done: Sidebar', 'Tutorijal je sada potpuno detaljan: CSS ide kumulativno, property po property.', 'Kada je tok ovako sitno razbijen, promene su mnogo lakše za praćenje i u kodu i u prikazu sidebara.', 21)
 ];
 
 export const stepNumberById = Object.fromEntries(
-  lessonStepScript.map((step, index) => [step.id, index])
+  lessonSteps.map((step, index) => [step.id, index])
 );
