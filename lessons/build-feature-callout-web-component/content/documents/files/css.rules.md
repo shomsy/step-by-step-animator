@@ -23,9 +23,13 @@
       { "from": "host_display", "line": "display: block;" },
       { "from": "host_width", "line": "width: min(100%, 420px);" },
       { "from": "host_surface_token", "line": "--callout-surface: #0f172a;" },
+      { "from": "host_surface_alt_token", "line": "--callout-surface-alt: rgba(15, 23, 42, 0.92);" },
       { "from": "host_border_token", "line": "--callout-border: rgba(148,163,184,0.24);" },
       { "from": "host_accent_token", "line": "--callout-accent: #38bdf8;" },
+      { "from": "host_accent_strong_token", "line": "--callout-accent-strong: #2563eb;" },
       { "from": "host_text_token", "line": "--callout-text: #e2e8f0;" },
+      { "from": "host_muted_token", "line": "--callout-muted: #cbd5e1;" },
+      { "from": "host_shadow_token", "line": "--callout-shadow: 0 26px 60px rgba(15, 23, 42, 0.24);" },
       { "from": "host_summary", "line": "/* helper outline removed in final feature-callout host summary */" }
     ]
   }

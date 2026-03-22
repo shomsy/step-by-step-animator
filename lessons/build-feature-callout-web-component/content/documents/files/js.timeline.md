@@ -29,7 +29,7 @@
     "target": "template-style-rules",
     "lines": [
       "    :host {",
-      "      font-family: Inter, ui-sans-serif, system-ui, sans-serif;",
+      "      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, \"Segoe UI\", sans-serif;",
       "      @@slot:host-style-body@@",
       "    }"
     ]
@@ -92,14 +92,18 @@
     "from": "card_background",
     "target": "card-style-body",
     "lines": [
-      "      background: linear-gradient(180deg, rgba(15,23,42,0.98), rgba(15,23,42,0.92));"
+      "      background: linear-gradient(",
+      "        180deg,",
+      "        var(--callout-surface, rgba(15, 23, 42, 0.98)),",
+      "        var(--callout-surface-alt, rgba(15, 23, 42, 0.92))",
+      "      );"
     ]
   },
   {
     "from": "card_shadow",
     "target": "card-style-body",
     "lines": [
-      "      box-shadow: 0 26px 60px rgba(15,23,42,0.24);"
+      "      box-shadow: var(--callout-shadow, 0 26px 60px rgba(15, 23, 42, 0.24));"
     ]
   },
   {
@@ -126,6 +130,27 @@
     "target": "eyebrow-style-body",
     "lines": [
       "      display: inline-flex;"
+    ]
+  },
+  {
+    "from": "eyebrow_align_items",
+    "target": "eyebrow-style-body",
+    "lines": [
+      "      align-items: center;"
+    ]
+  },
+  {
+    "from": "eyebrow_justify_content",
+    "target": "eyebrow-style-body",
+    "lines": [
+      "      justify-content: center;"
+    ]
+  },
+  {
+    "from": "eyebrow_width",
+    "target": "eyebrow-style-body",
+    "lines": [
+      "      width: fit-content;"
     ]
   },
   {
@@ -171,6 +196,20 @@
     ]
   },
   {
+    "from": "eyebrow_letter_spacing",
+    "target": "eyebrow-style-body",
+    "lines": [
+      "      letter-spacing: 0.04em;"
+    ]
+  },
+  {
+    "from": "eyebrow_text_transform",
+    "target": "eyebrow-style-body",
+    "lines": [
+      "      text-transform: uppercase;"
+    ]
+  },
+  {
     "from": "eyebrow_summary",
     "target": "eyebrow-summary-comment",
     "lines": [
@@ -189,10 +228,24 @@
     ]
   },
   {
+    "from": "title_margin",
+    "target": "title-style-body",
+    "lines": [
+      "      margin: 0;"
+    ]
+  },
+  {
     "from": "title_font_size",
     "target": "title-style-body",
     "lines": [
-      "      font-size: 28px;"
+      "      font-size: clamp(1.75rem, 4vw, 2rem);"
+    ]
+  },
+  {
+    "from": "title_line_height",
+    "target": "title-style-body",
+    "lines": [
+      "      line-height: 1.1;"
     ]
   },
   {
@@ -217,7 +270,7 @@
     "from": "summary_color",
     "target": "summary-style-body",
     "lines": [
-      "      color: #cbd5e1;"
+      "      color: var(--callout-muted, #cbd5e1);"
     ]
   },
   {
@@ -247,6 +300,13 @@
     ]
   },
   {
+    "from": "cta_appearance",
+    "target": "cta-style-body",
+    "lines": [
+      "      appearance: none;"
+    ]
+  },
+  {
     "from": "cta_padding",
     "target": "cta-style-body",
     "lines": [
@@ -271,7 +331,11 @@
     "from": "cta_background",
     "target": "cta-style-body",
     "lines": [
-      "      background: linear-gradient(135deg, var(--callout-accent, #38bdf8), #2563eb);"
+      "      background: linear-gradient(",
+      "        135deg,",
+      "        var(--callout-accent, #38bdf8),",
+      "        var(--callout-accent-strong, #2563eb)",
+      "      );"
     ]
   },
   {
@@ -282,10 +346,38 @@
     ]
   },
   {
+    "from": "cta_font",
+    "target": "cta-style-body",
+    "lines": [
+      "      font: inherit;"
+    ]
+  },
+  {
     "from": "cta_font_weight",
     "target": "cta-style-body",
     "lines": [
       "      font-weight: 700;"
+    ]
+  },
+  {
+    "from": "cta_cursor",
+    "target": "cta-style-body",
+    "lines": [
+      "      cursor: pointer;"
+    ]
+  },
+  {
+    "from": "cta_transition",
+    "target": "cta-style-body",
+    "lines": [
+      "      transition: transform 160ms ease, filter 160ms ease, box-shadow 160ms ease;"
+    ]
+  },
+  {
+    "from": "cta_box_shadow",
+    "target": "cta-style-body",
+    "lines": [
+      "      box-shadow: 0 14px 30px rgba(37, 99, 235, 0.28);"
     ]
   },
   {
@@ -296,22 +388,68 @@
     ]
   },
   {
+    "from": "cta_hover_filter",
+    "target": "template-style-rules",
+    "lines": [
+      "",
+      "    .cta:hover {",
+      "      filter: brightness(1.06);",
+      "      @@slot:cta-hover-body@@",
+      "    }"
+    ]
+  },
+  {
+    "from": "cta_hover_transform",
+    "target": "cta-hover-body",
+    "lines": [
+      "      transform: translateY(-1px);"
+    ]
+  },
+  {
+    "from": "cta_active_transform",
+    "target": "template-style-rules",
+    "lines": [
+      "",
+      "    .cta:active {",
+      "      transform: translateY(0);",
+      "    }"
+    ]
+  },
+  {
+    "from": "cta_focus_outline",
+    "target": "template-style-rules",
+    "lines": [
+      "",
+      "    .cta:focus-visible {",
+      "      outline: 3px solid rgba(56, 189, 248, 0.45);",
+      "      @@slot:cta-focus-body@@",
+      "    }"
+    ]
+  },
+  {
+    "from": "cta_focus_outline_offset",
+    "target": "cta-focus-body",
+    "lines": [
+      "      outline-offset: 3px;"
+    ]
+  },
+  {
     "from": "card_markup",
     "target": "template-markup",
     "lines": [
       "",
-      "  <article class=\"card\">",
-      "    <span class=\"eyebrow\">",
+      "  <article class=\"card\" part=\"card\">",
+      "    <span class=\"eyebrow\" part=\"eyebrow\">",
       "      <slot name=\"eyebrow\">Vanilla JS</slot>",
       "    </span>",
       "",
-      "    <strong class=\"title\"></strong>",
+      "    <h2 class=\"title\" part=\"title\"></h2>",
       "",
-      "    <p class=\"summary\">",
+      "    <p class=\"summary\" part=\"summary\">",
       "      <slot>Dodaj opis komponente kroz default slot.</slot>",
       "    </p>",
       "",
-      "    <button class=\"cta\" type=\"button\"></button>",
+      "    <button class=\"cta\" part=\"cta\" type=\"button\"></button>",
       "  </article>"
     ]
   },
@@ -370,6 +508,13 @@
     ]
   },
   {
+    "from": "constructor_bind_click",
+    "target": "constructor-body",
+    "lines": [
+      "    this.handleClick = this.handleClick.bind(this);"
+    ]
+  },
+  {
     "from": "render_declaration",
     "target": "class-body",
     "lines": [
@@ -398,7 +543,31 @@
     "target": "class-body",
     "lines": [
       "  connectedCallback() {",
-      "    this.render();",
+      "    @@slot:connected-callback-body@@",
+      "  }",
+      ""
+    ]
+  },
+  {
+    "from": "connected_callback_render",
+    "target": "connected-callback-body",
+    "lines": [
+      "    this.render();"
+    ]
+  },
+  {
+    "from": "connected_callback_listener",
+    "target": "connected-callback-body",
+    "lines": [
+      "    this.ctaElement.addEventListener('click', this.handleClick);"
+    ]
+  },
+  {
+    "from": "disconnected_callback",
+    "target": "class-body",
+    "lines": [
+      "  disconnectedCallback() {",
+      "    this.ctaElement.removeEventListener('click', this.handleClick);",
       "  }",
       ""
     ]
@@ -408,15 +577,45 @@
     "target": "class-body",
     "lines": [
       "  attributeChangedCallback() {",
-      "    this.render();",
+      "    if (this.isConnected) {",
+      "      this.render();",
+      "    }",
+      "  }",
+      ""
+    ]
+  },
+  {
+    "from": "handle_click_dispatch_event",
+    "target": "class-body",
+    "lines": [
+      "  handleClick() {",
+      "    this.dispatchEvent(",
+      "      new CustomEvent('callout-action', {",
+      "        bubbles: true,",
+      "        composed: true,",
+      "        detail: {",
+      "          title: this.getAttribute('title') || 'Naslov komponente',",
+      "          ctaLabel: this.getAttribute('cta-label') || 'Saznaj više'",
+      "        }",
+      "      })",
+      "    );",
       "  }"
     ]
   },
   {
-    "from": "define_element",
+    "from": "define_guard",
     "target": "after-class",
     "lines": [
-      "customElements.define('feature-callout', FeatureCallout);"
+      "if (!customElements.get('feature-callout')) {",
+      "  @@slot:define-body@@",
+      "}"
+    ]
+  },
+  {
+    "from": "define_element",
+    "target": "define-body",
+    "lines": [
+      "  customElements.define('feature-callout', FeatureCallout);"
     ]
   }
 ]

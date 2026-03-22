@@ -6,7 +6,10 @@ const focusHtmlNeedlesBySelector = {
   '.eyebrow': ['slot="eyebrow"', '<feature-callout'],
   '.title': ['<feature-callout'],
   '.summary': ['<feature-callout'],
-  '.cta': ['<feature-callout']
+  '.cta': ['<feature-callout'],
+  '.cta:hover': ['<feature-callout'],
+  '.cta:active': ['<feature-callout'],
+  '.cta:focus-visible': ['<feature-callout']
 };
 
 function readFocusHtmlNeedles(selector) {
@@ -80,13 +83,17 @@ const shellCssSteps = [
   ['host_display', 'feature-callout', 'display', 'block', 'Host pretvaramo u block da zauzme svoj red i dobije realan footprint.'],
   ['host_width', 'feature-callout', 'width', 'min(100%, 420px)', 'Širinu zaključavamo rano da card skeleton ne šeta po sceni.'],
   ['host_surface_token', 'feature-callout', '--callout-surface', '#0f172a', 'Spolja uvodimo surface token koji shadow DOM kasnije povlači kroz `var(...)`.'],
+  ['host_surface_alt_token', 'feature-callout', '--callout-surface-alt', 'rgba(15, 23, 42, 0.92)', 'Dodajemo i drugi surface ton da unutrašnji gradijent ne zavisi od hardkodovanog fallback-a.'],
   ['host_border_token', 'feature-callout', '--callout-border', 'rgba(148,163,184,0.24)', 'Border token služi da spolja theme-ujemo ivicu komponente.'],
   ['host_accent_token', 'feature-callout', '--callout-accent', '#38bdf8', 'Accent token će obojiti badge i CTA unutar shadow DOM-a.'],
-  ['host_text_token', 'feature-callout', '--callout-text', '#e2e8f0', 'Text token daje konzistentnu boju celom Web Component sadržaju.']
+  ['host_accent_strong_token', 'feature-callout', '--callout-accent-strong', '#2563eb', 'Jači accent ton služi za dublji kraj CTA gradijenta.'],
+  ['host_text_token', 'feature-callout', '--callout-text', '#e2e8f0', 'Text token daje konzistentnu boju celom Web Component sadržaju.'],
+  ['host_muted_token', 'feature-callout', '--callout-muted', '#cbd5e1', 'Muted token služi sekundarnom tekstu unutar komponente.'],
+  ['host_shadow_token', 'feature-callout', '--callout-shadow', '0 26px 60px rgba(15, 23, 42, 0.24)', 'Shadow token prebacuje i dubinu komponente u spoljašnji theme sloj.']
 ];
 
 const templateStyleSteps = [
-  ['host_font', ':host', 'font-family', 'Inter, ui-sans-serif, system-ui, sans-serif', 'Počinje unutrašnji template CSS: host dobija isti font kao ostatak scene.'],
+  ['host_font', ':host', 'font-family', 'Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif', 'Počinje unutrašnji template CSS: host dobija isti font stack kao i ostatak scene.'],
   ['host_color', ':host', 'color', 'var(--callout-text, #e2e8f0)', 'Host odmah koristi spoljašnji text token, pa vidiš kako custom property prolazi kroz granicu shadow DOM-a.'],
   ['card_outline', '.card', 'outline', '1px dashed #38bdf8', 'Dodajemo helper outline za glavni card blok i držimo ga do završnog card rezimea.', 'Glavni card outline ostaje dok ne završimo celu unutrašnju celinu.'],
   ['card_display', '.card', 'display', 'grid', 'Card raspored uvodimo grid-om jer imamo vertikalnu stack strukturu.'],
@@ -94,30 +101,47 @@ const templateStyleSteps = [
   ['card_padding', '.card', 'padding', '24px', 'Padding pravi pravi card footprint unutar shadow DOM-a.'],
   ['card_radius', '.card', 'border-radius', '28px', 'Zaobljenje daje modernu card siluetu.'],
   ['card_border', '.card', 'border', '1px solid var(--callout-border, rgba(148,163,184,0.24))', 'Ivica koristi host token, pa spoljašnji CSS zaista utiče na unutrašnji card.'],
-  ['card_background', '.card', 'background', 'linear-gradient(180deg, rgba(15,23,42,0.98), rgba(15,23,42,0.92))', 'Tamna pozadina zatvara card kao jasnu, samostalnu celinu.'],
-  ['card_shadow', '.card', 'box-shadow', '0 26px 60px rgba(15,23,42,0.24)', 'Shadow daje card-u odvajanje od pozadine i završava osnovni volume.'],
+  ['card_background', '.card', 'background', 'linear-gradient(180deg, var(--callout-surface, rgba(15,23,42,0.98)), var(--callout-surface-alt, rgba(15,23,42,0.92)))', 'Tamna pozadina sada čita oba surface tokena direktno sa host elementa.'],
+  ['card_shadow', '.card', 'box-shadow', 'var(--callout-shadow, 0 26px 60px rgba(15,23,42,0.24))', 'Shadow sada takođe čita spoljašnji token, pa i dubina komponente postaje deo API-ja.'],
   ['eyebrow_outline', '.eyebrow', 'outline', '1px dotted #facc15', 'Dodajemo helper outline za eyebrow badge i držimo ga do završnog eyebrow rezimea.', 'Badge je mali element i zato mu outline posebno pomaže tokom objašnjenja.'],
   ['eyebrow_display', '.eyebrow', 'display', 'inline-flex', 'Badge ostaje kompakatan i prirodno prati svoj sadržaj.'],
+  ['eyebrow_align_items', '.eyebrow', 'align-items', 'center', 'Vertikalno centriramo sadržaj badge-a da kapsula izgleda urednije.'],
+  ['eyebrow_justify_content', '.eyebrow', 'justify-content', 'center', 'Tekst badge-a ostaje simetrično centriran i kada se sadržaj menja.'],
+  ['eyebrow_width', '.eyebrow', 'width', 'fit-content', 'Badge širinu vežemo isključivo za sadržaj, ne za širinu roditelja.'],
   ['eyebrow_padding', '.eyebrow', 'padding', '8px 12px', 'Padding daje badge-u jasan pill footprint.'],
   ['eyebrow_radius', '.eyebrow', 'border-radius', '999px', 'Veliki radius zatvara badge u kapsulu.'],
   ['eyebrow_background', '.eyebrow', 'background', 'rgba(56,189,248,0.14)', 'Poluprovidna pozadina pravi nežan badge signal.'],
   ['eyebrow_color', '.eyebrow', 'color', 'var(--callout-accent, #38bdf8)', 'Boju badge-a takođe vežemo za host accent token.'],
   ['eyebrow_font_size', '.eyebrow', 'font-size', '12px', 'Manji font čini badge sekundarnim, ali čitljivim.'],
   ['eyebrow_font_weight', '.eyebrow', 'font-weight', '700', 'Težina fonta čini badge labelu kompaktnom i jasnom.'],
+  ['eyebrow_letter_spacing', '.eyebrow', 'letter-spacing', '0.04em', 'Mali tracking daje badge-u uredniji, label-like karakter.'],
+  ['eyebrow_text_transform', '.eyebrow', 'text-transform', 'uppercase', 'Uppercase zatvara eyebrow kao jasnu oznaku kategorije.'],
   ['title_display', '.title', 'display', 'block', 'Naslovu dajemo sopstveni red da ne deli liniju sa drugim delovima.'],
-  ['title_font_size', '.title', 'font-size', '28px', 'Naslov dobija dominantnu veličinu card komponente.'],
+  ['title_margin', '.title', 'margin', '0', 'Pošto prelazimo na semantički `h2`, prvo gasimo podrazumevani margin.'],
+  ['title_font_size', '.title', 'font-size', 'clamp(1.75rem, 4vw, 2rem)', 'Naslov dobija responzivniju veličinu, bližu finalnom polished utisku.'],
+  ['title_line_height', '.title', 'line-height', '1.1', 'Kraći line-height drži naslov zategnutim i čitljivim.'],
   ['title_font_weight', '.title', 'font-weight', '800', 'Pojačavamo naslov da odmah nosi hijerarhiju.'],
   ['summary_margin', '.summary', 'margin', '0', 'Brišemo podrazumevani paragraf margin da spacing kontrolišemo iz card gap-a.'],
-  ['summary_color', '.summary', 'color', '#cbd5e1', 'Opis dobija prigušenu, ali čitljivu boju.'],
+  ['summary_color', '.summary', 'color', 'var(--callout-muted, #cbd5e1)', 'Opis dobija muted token, pa i sekundarni tekst postaje deo spoljašnjeg theme API-ja.'],
   ['summary_line_height', '.summary', 'line-height', '1.65', 'Line-height otvara tekst i čini ga lakšim za čitanje.'],
   ['cta_outline', '.cta', 'outline', '1px dashed #34d399', 'Dodajemo helper outline za CTA i držimo ga do završnog CTA rezimea.', 'CTA outline ostaje dok ne zaključimo poslednju interaktivnu zonu.'],
   ['cta_justify_self', '.cta', 'justify-self', 'start', 'CTA ostaje uz levu ivicu card sadržaja umesto da se rasteže.'],
+  ['cta_appearance', '.cta', 'appearance', 'none', 'Gasimo browser-native izgled dugmeta da komponenta zadrži konzistentan cross-browser izgled.'],
   ['cta_padding', '.cta', 'padding', '12px 16px', 'Padding daje dugmetu njegovu klik zonu.'],
   ['cta_border', '.cta', 'border', '0', 'Uklanjamo podrazumevanu border liniju dugmeta.'],
   ['cta_radius', '.cta', 'border-radius', '999px', 'Pil radius drži CTA vizuelno bliskim badge logici.'],
-  ['cta_background', '.cta', 'background', 'linear-gradient(135deg, var(--callout-accent, #38bdf8), #2563eb)', 'CTA koristi accent token u gradijentu i zato živi iz istog theme vocabulary-ja.'],
+  ['cta_background', '.cta', 'background', 'linear-gradient(135deg, var(--callout-accent, #38bdf8), var(--callout-accent-strong, #2563eb))', 'CTA sada koristi i jači accent token za dublji, kontrolisan gradijent.'],
   ['cta_color', '.cta', 'color', '#ffffff', 'Beli tekst drži jasan kontrast preko gradijenta.'],
-  ['cta_font_weight', '.cta', 'font-weight', '700', 'Težina fonta zatvara CTA kao jasan action element.']
+  ['cta_font', '.cta', 'font', 'inherit', 'Dugme preuzima isti font vocabulary kao i ostatak komponente.'],
+  ['cta_font_weight', '.cta', 'font-weight', '700', 'Težina fonta zatvara CTA kao jasan action element.'],
+  ['cta_cursor', '.cta', 'cursor', 'pointer', 'Kursor eksplicitno potvrđuje interaktivnost CTA dugmeta.'],
+  ['cta_transition', '.cta', 'transition', 'transform 160ms ease, filter 160ms ease, box-shadow 160ms ease', 'Dodajemo finu tranziciju da hover i focus states ne deluju grubo.'],
+  ['cta_box_shadow', '.cta', 'box-shadow', '0 14px 30px rgba(37, 99, 235, 0.28)', 'Mali shadow pojačava CTA kao završni action sloj.'],
+  ['cta_hover_filter', '.cta:hover', 'filter', 'brightness(1.06)', 'Hover blago podiže svetlinu CTA dugmeta bez agresivne promene boje.'],
+  ['cta_hover_transform', '.cta:hover', 'transform', 'translateY(-1px)', 'Minimalni lift daje osećaj da dugme odgovara na hover.'],
+  ['cta_active_transform', '.cta:active', 'transform', 'translateY(0)', 'Na active vraćamo dugme nazad, da klik ima malu fizičku povratnu informaciju.'],
+  ['cta_focus_outline', '.cta:focus-visible', 'outline', '3px solid rgba(56, 189, 248, 0.45)', 'Focus-visible dodaje jasan tastaturski focus ring bez oslanjanja na browser default.'],
+  ['cta_focus_outline_offset', '.cta:focus-visible', 'outline-offset', '3px', 'Offset odvaja focus ring od same pil ivice dugmeta.']
 ];
 
 export const lessonSteps = [
@@ -168,8 +192,8 @@ export const lessonSteps = [
   describeJsFlowStep(
     'card_markup',
     'JS: Dodajemo Shadow DOM Markup',
-    'Sada ubacujemo unutrašnji markup: card wrapper, named slot za eyebrow, naslov, paragraf sa default slotom i CTA dugme.',
-    'Prvo pravimo stvarni shadow DOM markup koji preview može da pokaže; stilovi dolaze odmah posle toga.'
+    'Sada ubacujemo unutrašnji markup: card wrapper, named slot za eyebrow, semantički `h2` naslov, paragraf sa default slotom, CTA dugme i `part` atribute za kasniji escape hatch.',
+    'Prvo pravimo stvarni shadow DOM markup koji preview može da pokaže; stilovi i component polish dolaze odmah posle toga.'
   ),
   describeJsFlowStep(
     'class_declaration',
@@ -186,7 +210,7 @@ export const lessonSteps = [
   describeJsFlowStep(
     'constructor_clone',
     'JS: Kloniramo Template',
-    'Dodajemo `appendChild(template.content.cloneNode(true))`, pa svaka instanca komponente dobija isti početni shadow DOM skeleton.',
+    'Dodajemo `appendChild(featureCalloutTemplate.content.cloneNode(true))`, pa svaka instanca komponente dobija isti početni shadow DOM skeleton.',
     'Kloniranje template-a je najčistiji način da jednu definiciju koristiš u više instanci.'
   ),
   describeJsFlowStep(
@@ -200,6 +224,12 @@ export const lessonSteps = [
     'JS: Keširamo CTA Element',
     'Na isti način čuvamo referencu na `.cta`, jer će tekst dugmeta stizati iz atributa host elementa.',
     'Render treba da govori šta menja, ne da svaki put iznova objašnjava kako traži iste čvorove.'
+  ),
+  describeJsFlowStep(
+    'constructor_bind_click',
+    'JS: Bindujemo CTA Handler',
+    'U konstruktoru vezujemo `this.handleClick = this.handleClick.bind(this)`, da isti handler može bezbedno da se koristi i za add i za remove listener.',
+    'Ako komponenta ima cleanup, stabilna referenca handlera više nije optional polish nego deo korektnog lifecycle ponašanja.'
   ),
   describeJsFlowStep(
     'render_declaration',
@@ -221,9 +251,27 @@ export const lessonSteps = [
   ),
   describeJsFlowStep(
     'connected_callback',
+    'JS: connectedCallback Lifecycle',
+    'Dodajemo `connectedCallback()` kao mesto gde komponenta obavlja prvi render i povezuje runtime ponašanje.',
+    'Kada komponenta pređe iz statičnog prikaza u živi UI, connectedCallback postaje prirodan lifecycle ulaz.'
+  ),
+  describeJsFlowStep(
+    'connected_callback_render',
     'JS: connectedCallback Pokreće Prvi Render',
-    'Dodajemo `connectedCallback()` i u njemu pozivamo `this.render()`, pa komponenta dobija sadržaj čim uđe u DOM.',
+    'U `connectedCallback()` pozivamo `this.render()`, pa komponenta dobija sadržaj čim uđe u DOM.',
     'Prvi render je prirodno vezati za trenutak kada je element stvarno povezan sa dokumentom.'
+  ),
+  describeJsFlowStep(
+    'connected_callback_listener',
+    'JS: connectedCallback Vezuje Click Listener',
+    'U istom lifecycle koraku vezujemo click listener na CTA dugme, pa komponenta više ne samo prikazuje UI nego i emituje akciju.',
+    'Tek ovde komponenta postaje i interaktivna, ne samo vizuelno renderovana.'
+  ),
+  describeJsFlowStep(
+    'disconnected_callback',
+    'JS: disconnectedCallback Cleanup',
+    'Dodajemo `disconnectedCallback()` i skidamo CTA listener kada komponenta izađe iz DOM-a.',
+    'Cleanup je pravi production-grade signal da komponenta poštuje ceo lifecycle, ne samo mount.'
   ),
   describeJsFlowStep(
     'observed_attributes',
@@ -234,13 +282,25 @@ export const lessonSteps = [
   describeJsFlowStep(
     'attribute_changed_callback',
     'JS: attributeChangedCallback',
-    'Dodajemo `attributeChangedCallback()` i ponovo pozivamo `this.render()`. Tako komponenta ostaje sinhronizovana i kada se atributi promene posle prvog mount-a.',
-    'Ovo je važna razlika između statičnog HTML snimka i stvarne, žive komponente.'
+    'Dodajemo `attributeChangedCallback()` sa guard-om za `isConnected`, pa render radimo samo kada komponenta zaista živi u DOM-u.',
+    'To je mali, ali važan robustness detalj: lifecycle više nije samo ispravan, nego i disciplinovan.'
+  ),
+  describeJsFlowStep(
+    'handle_click_dispatch_event',
+    'JS: CTA Emituje callout-action',
+    "Dodajemo `handleClick()` i iz njega emitujemo `CustomEvent('callout-action', ...)`, pa komponenta dobija jasan izlazni signal.",
+    'Komponenta time dobija izlazni API: ne prima samo atribute, nego i javlja korisničku akciju spolja.'
+  ),
+  describeJsFlowStep(
+    'define_guard',
+    'JS: Čuvamo se duplog define-a',
+    'Pre registracije proveravamo `customElements.get(\'feature-callout\')`, da isti custom element ne pokušamo da definišemo dva puta.',
+    'Ovo nije samo defensive code; u okruženjima sa hot reload-om ili više mount ciklusa to je praktično obavezna zaštita.'
   ),
   describeJsFlowStep(
     'define_element',
     'JS: Registrujemo Custom Element',
-    'Pozivamo `customElements.define(\'feature-callout\', FeatureCallout)`. Od ovog trenutka browser zna kako da upgrade-uje `<feature-callout>` u pravu komponentu i preview dobija prvi stvarni, još uvek sirovi render.',
+    'Unutar guard-a pozivamo `customElements.define(\'feature-callout\', FeatureCallout)`. Od ovog trenutka browser zna kako da upgrade-uje `<feature-callout>` u pravu komponentu i preview dobija prvi stvarni, još uvek sirovi render.',
     'Tek kada browser dobije živu komponentu, ima smisla da preko nje gradiš spoljašnji i unutrašnji CSS sloj.'
   ),
   ...shellCssSteps.map(config => describeCssPropertyStep(...config)),
@@ -260,13 +320,13 @@ export const lessonSteps = [
   describeSummaryStep(
     'cta_summary',
     'Rezime: .cta unutar template-a',
-    'Rezime za CTA dugme: helper outline više nije potreban, jer završni stil i render već jasno pokazuju njegovu ulogu.',
+    'Rezime za CTA dugme: helper outline više nije potreban, jer završni stil, event i hover/focus ponašanje već jasno pokazuju njegovu ulogu.',
     'Outline služi učenju; kad je element potpuno objašnjen, može da nestane.'
   ),
   describeSummaryStep(
     'host_summary',
     'Rezime: feature-callout host',
-    'Završni host rezime: spoljašnji outline host elementa više nije potreban, jer su API atributi i theme tokeni sada jasni.',
+    'Završni host rezime: spoljašnji outline host elementa više nije potreban, jer su API atributi, theme tokeni i safe registration sada jasni.',
     'Host outline ostaje dok ne pokažemo i spoljašnji API i unutrašnju implementaciju komponente.'
   ),
   describeSummaryStep(
@@ -279,8 +339,8 @@ export const lessonSteps = [
   describeFinishedStep(
     'done',
     'Done: Feature Callout Web Component',
-    'Lekcija je završena: od praznog shell-a stigli smo do pravog custom elementa sa host atributima, slotovima, shadow DOM-om, render lifecycle-om i stilovima koji dolaze tek nad stvarnim renderom.',
-    'Sledeći logičan korak je da napraviš drugu komponentu sa više slotova ili da uvedeš `part` i `exportparts` kao napredniji nivo.'
+    'Lekcija je završena: od praznog shell-a stigli smo do pravog custom elementa sa host atributima, slotovima, shadow DOM-om, render lifecycle-om, cleanup-om, sigurnom registracijom, izlaznim event-om i interaction polish slojem.',
+    'Sledeći logičan korak je da napraviš drugu komponentu sa više slotova, `part`/`exportparts` strategijom ili još bogatijim public API-jem.'
   )
 ];
 

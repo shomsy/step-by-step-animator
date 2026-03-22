@@ -8,7 +8,7 @@ import { readLessonMetadata } from '../../animator/lesson-documents/read-lesson-
 
 const lessonMetadata = readLessonMetadata(lessonDocument, {
   lessonTitle: 'Web Components 2/2 · Shadow DOM feature callout',
-  lessonIntro: 'Druga Web Components lekcija nadograđuje osnove: isti nivo komponente sada gradiš kroz template, shadow DOM, slotove i render lifecycle.',
+  lessonIntro: 'Druga Web Components lekcija nadograđuje osnove: isti nivo komponente sada gradiš kroz template, shadow DOM, slotove, render lifecycle, cleanup i sigurniju registraciju.',
   previewAddress: 'browser://build-feature-callout-web-component-preview',
   previewTitle: 'Live Web Component preview',
   htmlFileName: 'index.html',
@@ -29,7 +29,7 @@ export const buildFeatureCalloutWebComponentLesson = {
   goalTitle: 'Šta gradimo u ovoj lekciji',
   goalImageSrc: goalImage,
   goalImageAlt: 'Referentna slika tamnog feature callout card Web Component-a na svetloj pozadini, sa badge oznakom, velikim naslovom, opisom i CTA dugmetom.',
-  goalImageCaption: 'Ovo je drugi Web Components korak: host HTML ostaje mali, a prava komponenta se sada sklapa iz template-a, shadow DOM-a i slotova.',
+  goalImageCaption: 'Ovo je drugi Web Components korak: host HTML ostaje mali, a prava komponenta se sada sklapa iz template-a, shadow DOM-a, slotova i završnog production polish sloja.',
   steps: lessonSteps,
   buildHtmlAtStep,
   buildCssAtStep,
