@@ -41,13 +41,11 @@ function stripFrontmatter(markdown) {
 function buildLessonBook(documentsFolder) {
   const lessonFolder = path.basename(path.resolve(documentsFolder, '../../..'));
   const lessonPart = stripFrontmatter(readDocumentPart(documentsFolder, 'lesson.sr.md'));
-  const quizPart = readDocumentPart(documentsFolder, 'quiz.sr.md');
 
   const parts = [
     '<!-- Generated from the same markdown sources used by the web lesson. -->',
     `# ${lessonFolder}`,
-    lessonPart,
-    quizPart ? '## Quiz\n\n' + quizPart : ''
+    lessonPart
   ].filter(Boolean);
 
   const outputFolder = path.resolve(documentsFolder, '..');

@@ -3,9 +3,7 @@ import { buildHtmlAtStep } from './build-html-at-step.js';
 import { buildJsAtStep } from './build-js-at-step.js';
 import { lessonSteps } from './describe-steps.js';
 import lessonDocument from './content/documents/files/lesson.sr.md?raw';
-import knowledgeCheckDocument from './content/documents/files/quiz.sr.md?raw';
 import goalImage from './content/assets/callout-custom-element-goal.svg';
-import { readKnowledgeCheckQuestions } from '../../animator/lesson-documents/read-knowledge-check-questions.js';
 import { readLessonMetadata } from '../../animator/lesson-documents/read-lesson-metadata.js';
 
 const lessonMetadata = readLessonMetadata(lessonDocument, {
@@ -17,8 +15,6 @@ const lessonMetadata = readLessonMetadata(lessonDocument, {
   cssFileName: 'style.css',
   jsFileName: 'callout-card.js'
 });
-
-const knowledgeCheckQuestions = readKnowledgeCheckQuestions(knowledgeCheckDocument);
 
 export const buildCalloutCustomElementLesson = {
   lessonId: 'build-callout-custom-element',
@@ -37,6 +33,5 @@ export const buildCalloutCustomElementLesson = {
   steps: lessonSteps,
   buildHtmlAtStep,
   buildCssAtStep,
-  buildJsAtStep,
-  knowledgeCheckQuestions
+  buildJsAtStep
 };

@@ -2,9 +2,7 @@ import { buildCssAtStep } from './build-css-at-step.js';
 import { buildHtmlAtStep } from './build-html-at-step.js';
 import { lessonSteps } from './describe-steps.js';
 import lessonDocument from './content/documents/files/lesson.sr.md?raw';
-import knowledgeCheckDocument from './content/documents/files/quiz.sr.md?raw';
 import goalImage from './content/assets/top-navigation-goal.svg';
-import { readKnowledgeCheckQuestions } from '../../animator/lesson-documents/read-knowledge-check-questions.js';
 import { readLessonMetadata } from '../../animator/lesson-documents/read-lesson-metadata.js';
 
 const lessonMetadata = readLessonMetadata(lessonDocument, {
@@ -15,8 +13,6 @@ const lessonMetadata = readLessonMetadata(lessonDocument, {
   htmlFileName: 'index.html',
   cssFileName: 'style.css'
 });
-
-const knowledgeCheckQuestions = readKnowledgeCheckQuestions(knowledgeCheckDocument);
 
 export const buildTopNavigationLesson = {
   lessonId: 'build-top-navigation',
@@ -38,6 +34,5 @@ export const buildTopNavigationLesson = {
   ],
   steps: lessonSteps,
   buildHtmlAtStep,
-  buildCssAtStep,
-  knowledgeCheckQuestions
+  buildCssAtStep
 };

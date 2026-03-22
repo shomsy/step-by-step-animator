@@ -34,19 +34,16 @@ animator/
       show-growing-code.js
     04-watch-preview/
       show-current-preview.js
+    05-download-lesson-files/
+      download-lesson-files.js
     find-step/
       present-step-finder.js
     save-step/
       remember-saved-steps.js
-    05-check-understanding/
-      present-knowledge-check.js
     choose-theme/
       choose-theme.js
-    06-download-lesson-files/
-      download-lesson-files.js
   lesson-documents/
     read-lesson-metadata.js
-    read-knowledge-check-questions.js
     sync-lesson-documents.js
 lessons/
   register-lessons.js
@@ -60,7 +57,6 @@ lessons/
         build_sidebar.md
         files/
           lesson.sr.md
-          quiz.sr.md
   build-top-navigation/
     build-top-navigation.lesson.js
     describe-steps.js
@@ -73,7 +69,6 @@ lessons/
         build_top_navigation.md
         files/
           lesson.sr.md
-          quiz.sr.md
 ```
 
 ## Naming Rules
@@ -140,10 +135,9 @@ Markdown lesson documents may live next to the lesson contract:
 
 ```txt
 content/documents/files/lesson.sr.md
-content/documents/files/quiz.sr.md
 ```
 
-Use markdown for lesson metadata and question content.
+Use markdown for lesson metadata.
 Keep step-by-step HTML/CSS builder logic explicit until a dedicated step DSL exists.
 
 ### 4. Every other file owns one clear responsibility
@@ -179,8 +173,7 @@ This repo uses numeric prefixes only on the generic lesson journey inside `play-
 02-follow-lesson/
 03-watch-code/
 04-watch-preview/
-05-check-understanding/
-06-download-lesson-files/
+05-download-lesson-files/
 ```
 
 Support flows such as `find-step/`, `save-step/`, and `choose-theme/` stay unnumbered because they are available across the lesson and are not mandatory sequence steps.
@@ -234,7 +227,7 @@ Use verbs consistently by responsibility:
 
 - `build...` creates derived lesson code for a specific step.
 - `show...` writes current lesson content into already-found page parts.
-- `present...` owns an interactive user flow such as finder or knowledge check.
+- `present...` owns an interactive user flow such as lesson picker or step finder.
 - `create...` initializes progress for a flow.
 - `find...` locates a selected lesson or existing page parts.
 - `read...` is reserved for persistence reads.

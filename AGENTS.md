@@ -75,12 +75,7 @@ animator/
       show-growing-code.js
     04-watch-preview/
       show-current-preview.js
-    05-check-understanding/
-      create-knowledge-check-progress.js
-      present-knowledge-check.js
-      show-knowledge-check-question.js
-      show-knowledge-check-score.js
-    06-download-lesson-files/
+    05-download-lesson-files/
       download-lesson-files.js
     find-step/
       present-step-finder.js
@@ -109,7 +104,6 @@ lessons/
         build_sidebar.md
         files/
           lesson.sr.md
-          quiz.sr.md
   build-feature-callout-web-component/
     build-feature-callout-web-component.lesson.js
     describe-steps.js
@@ -123,7 +117,6 @@ lessons/
         build_feature_callout_web_component.md
         files/
           lesson.sr.md
-          quiz.sr.md
   build-callout-custom-element/
     build-callout-custom-element.lesson.js
     describe-steps.js
@@ -137,7 +130,6 @@ lessons/
         build_callout_custom_element.md
         files/
           lesson.sr.md
-          quiz.sr.md
   build-top-navigation/
     build-top-navigation.lesson.js
     describe-steps.js
@@ -150,7 +142,6 @@ lessons/
         build_top_navigation.md
         files/
           lesson.sr.md
-          quiz.sr.md
 ```
 
 ### 2.2 Lesson Contract
@@ -175,7 +166,6 @@ Taj file mora da vrati kompletan lesson contract:
 - `buildHtmlAtStep`
 - `buildCssAtStep`
 - `buildJsAtStep` kada lekcija traži živi JavaScript u preview-u
-- `knowledgeCheckQuestions`
 
 Opciona lesson shell polja kada želiš da pokažeš vizuelni cilj i homework:
 
@@ -198,7 +188,6 @@ feature-name/
     documents/
       files/
         lesson.sr.md
-        quiz.sr.md
 ```
 
 Ako lesson ima referentnu sliku cilja, asset ide ovde:
@@ -213,7 +202,6 @@ feature-name/
 Pravila:
 
 - `lesson.sr.md` je kanonski source za title, intro i lesson metadata
-- `quiz.sr.md` je kanonski source za knowledge check pitanja
 - generated book output ide u `content/documents/<lesson_name>.md`
 - generated output se ne uređuje ručno
 - interaktivni HTML/CSS/JS step builderi i dalje ostaju strogo definisani u JS-u dok ne uvedemo poseban step markdown DSL
@@ -280,8 +268,7 @@ U player runtime-u to važi za glavni lesson journey:
 - `02-follow-lesson`
 - `03-watch-code`
 - `04-watch-preview`
-- `05-check-understanding`
-- `06-download-lesson-files`
+- `05-download-lesson-files`
 
 Pomoćni tokovi ostaju bez brojeva:
 
@@ -419,8 +406,7 @@ Za novu lekciju:
 6. kada lekcija traži JavaScript, dodaj `build-js-at-step.js`
 7. po potrebi dodaj `content/assets/feature-goal.svg`
 7. dodaj `content/documents/files/lesson.sr.md`
-8. dodaj `content/documents/files/quiz.sr.md`
-9. registruj lekciju u `lessons/register-lessons.js`
+8. registruj lekciju u `lessons/register-lessons.js`
 
 Ne kopirati player runtime iz `animator/play-lesson/`.
 Nova lekcija treba da doda samo svoj contract i svoj content.

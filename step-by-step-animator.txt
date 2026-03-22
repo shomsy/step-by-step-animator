@@ -83,12 +83,7 @@ animator/
       show-growing-code.js
     04-watch-preview/
       show-current-preview.js
-    05-check-understanding/
-      create-knowledge-check-progress.js
-      present-knowledge-check.js
-      show-knowledge-check-question.js
-      show-knowledge-check-score.js
-    06-download-lesson-files/
+    05-download-lesson-files/
       download-lesson-files.js
     find-step/
       present-step-finder.js
@@ -117,7 +112,6 @@ lessons/
         build_sidebar.md
         files/
           lesson.sr.md
-          quiz.sr.md
   build-feature-callout-web-component/
     build-feature-callout-web-component.lesson.js
     describe-steps.js
@@ -131,7 +125,6 @@ lessons/
         build_feature_callout_web_component.md
         files/
           lesson.sr.md
-          quiz.sr.md
   build-callout-custom-element/
     build-callout-custom-element.lesson.js
     describe-steps.js
@@ -145,7 +138,6 @@ lessons/
         build_callout_custom_element.md
         files/
           lesson.sr.md
-          quiz.sr.md
   build-top-navigation/
     build-top-navigation.lesson.js
     describe-steps.js
@@ -158,7 +150,6 @@ lessons/
         build_top_navigation.md
         files/
           lesson.sr.md
-          quiz.sr.md
 ```
 
 ### 2.2 Lesson Contract
@@ -183,7 +174,6 @@ Taj file mora da vrati kompletan lesson contract:
 - `buildHtmlAtStep`
 - `buildCssAtStep`
 - `buildJsAtStep` kada lekcija traži živi JavaScript u preview-u
-- `knowledgeCheckQuestions`
 
 Opciona lesson shell polja kada želiš da pokažeš vizuelni cilj i homework:
 
@@ -206,7 +196,6 @@ feature-name/
     documents/
       files/
         lesson.sr.md
-        quiz.sr.md
 ```
 
 Ako lesson ima referentnu sliku cilja, asset ide ovde:
@@ -221,7 +210,6 @@ feature-name/
 Pravila:
 
 - `lesson.sr.md` je kanonski source za title, intro i lesson metadata
-- `quiz.sr.md` je kanonski source za knowledge check pitanja
 - generated book output ide u `content/documents/<lesson_name>.md`
 - generated output se ne uređuje ručno
 - interaktivni HTML/CSS/JS step builderi i dalje ostaju strogo definisani u JS-u dok ne uvedemo poseban step markdown DSL
@@ -288,8 +276,7 @@ U player runtime-u to važi za glavni lesson journey:
 - `02-follow-lesson`
 - `03-watch-code`
 - `04-watch-preview`
-- `05-check-understanding`
-- `06-download-lesson-files`
+- `05-download-lesson-files`
 
 Pomoćni tokovi ostaju bez brojeva:
 
@@ -427,8 +414,7 @@ Za novu lekciju:
 6. kada lekcija traži JavaScript, dodaj `build-js-at-step.js`
 7. po potrebi dodaj `content/assets/feature-goal.svg`
 7. dodaj `content/documents/files/lesson.sr.md`
-8. dodaj `content/documents/files/quiz.sr.md`
-9. registruj lekciju u `lessons/register-lessons.js`
+8. registruj lekciju u `lessons/register-lessons.js`
 
 Ne kopirati player runtime iz `animator/play-lesson/`.
 Nova lekcija treba da doda samo svoj contract i svoj content.
@@ -470,19 +456,16 @@ animator/
       show-growing-code.js
     04-watch-preview/
       show-current-preview.js
+    05-download-lesson-files/
+      download-lesson-files.js
     find-step/
       present-step-finder.js
     save-step/
       remember-saved-steps.js
-    05-check-understanding/
-      present-knowledge-check.js
     choose-theme/
       choose-theme.js
-    06-download-lesson-files/
-      download-lesson-files.js
   lesson-documents/
     read-lesson-metadata.js
-    read-knowledge-check-questions.js
     sync-lesson-documents.js
 lessons/
   register-lessons.js
@@ -496,7 +479,6 @@ lessons/
         build_sidebar.md
         files/
           lesson.sr.md
-          quiz.sr.md
   build-top-navigation/
     build-top-navigation.lesson.js
     describe-steps.js
@@ -509,7 +491,6 @@ lessons/
         build_top_navigation.md
         files/
           lesson.sr.md
-          quiz.sr.md
 ```
 
 ## Naming Rules
@@ -576,10 +557,9 @@ Markdown lesson documents may live next to the lesson contract:
 
 ```txt
 content/documents/files/lesson.sr.md
-content/documents/files/quiz.sr.md
 ```
 
-Use markdown for lesson metadata and question content.
+Use markdown for lesson metadata.
 Keep step-by-step HTML/CSS builder logic explicit until a dedicated step DSL exists.
 
 ### 4. Every other file owns one clear responsibility
@@ -615,8 +595,7 @@ This repo uses numeric prefixes only on the generic lesson journey inside `play-
 02-follow-lesson/
 03-watch-code/
 04-watch-preview/
-05-check-understanding/
-06-download-lesson-files/
+05-download-lesson-files/
 ```
 
 Support flows such as `find-step/`, `save-step/`, and `choose-theme/` stay unnumbered because they are available across the lesson and are not mandatory sequence steps.
@@ -670,7 +649,7 @@ Use verbs consistently by responsibility:
 
 - `build...` creates derived lesson code for a specific step.
 - `show...` writes current lesson content into already-found page parts.
-- `present...` owns an interactive user flow such as finder or knowledge check.
+- `present...` owns an interactive user flow such as lesson picker or step finder.
 - `create...` initializes progress for a flow.
 - `find...` locates a selected lesson or existing page parts.
 - `read...` is reserved for persistence reads.
@@ -744,7 +723,6 @@ lessons/
       documents/
         files/
           lesson.sr.md
-          quiz.sr.md
 ```
 
 ## 3. Šta svaki fajl radi
@@ -756,7 +734,6 @@ lessons/
 - povezuje step script
 - povezuje HTML/CSS builder funkcije
 - kada lekcija to traži, povezuje i JS builder funkciju
-- povezuje knowledge check pitanja
 - opciono povezuje referentnu sliku cilja i homework napomene za shell
 
 `describe-steps.js`
@@ -787,10 +764,6 @@ lessons/
 `content/documents/files/lesson.sr.md`
 
 - drži title, intro i metadata
-
-`content/documents/files/quiz.sr.md`
-
-- drži knowledge check pitanja
 
 `content/assets/feature-goal.svg`
 
@@ -927,17 +900,6 @@ jsFileName: component.js
 Kratak uvod u lekciju.
 ```
 
-`quiz.sr.md`:
-
-```md
-## Question 1
-? Pitanje
-- [ ] Pogrešan odgovor
-- [x] Tačan odgovor
-- [ ] Pogrešan odgovor
-! Kratko objašnjenje zašto je to tačno.
-```
-
 ## 6a. Goal image contract
 
 Ako lesson ima referentni vizuelni cilj, taj deo ostaje u lesson JS contract-u jer je asset tehnički import.
@@ -980,7 +942,6 @@ Repo contract:
   - `build-js-at-step.js` kada lekcija traži JavaScript
   - `content/assets/[feature-name]-goal.svg` kada postoji referentna slika
   - `content/documents/files/lesson.sr.md`
-  - `content/documents/files/quiz.sr.md`
 
 Animaciona pravila:
 - HTML ide element po element
@@ -1051,7 +1012,7 @@ Ovaj fajl je kanonska lista za arhitekturu i sledeće veće korake ovog repoa.
 
 - `Status`: `DONE`
 - `Šta fali`: ništa
-- `Napomena`: Step script, HTML builder, CSS builder i quiz pitanja sada žive u `lessons/build-sidebar/`.
+- `Napomena`: Step script, HTML builder i CSS builder sada žive u `lessons/build-sidebar/`.
 
 ### 4. Uvedi jasan lesson contract za buduće lekcije
 
@@ -1059,11 +1020,11 @@ Ovaj fajl je kanonska lista za arhitekturu i sledeće veće korake ovog repoa.
 - `Šta fali`: ništa
 - `Napomena`: Svaka nova lekcija treba da doda root `feature-name.lesson.js` i da se registruje u `lessons/register-lessons.js`.
 
-### 4a. Uvedi markdown source za lesson metadata i quiz
+### 4a. Uvedi markdown source za lesson metadata
 
 - `Status`: `DONE`
 - `Šta fali`: ništa
-- `Napomena`: `build-sidebar` sada koristi `content/documents/files/lesson.sr.md` i `quiz.sr.md`, uz generisani `content/documents/build_sidebar.md`.
+- `Napomena`: `build-sidebar` sada koristi `content/documents/files/lesson.sr.md`, uz generisani `content/documents/build_sidebar.md`.
 
 ## Follow-Up Work
 
@@ -1187,73 +1148,6 @@ export function parseFrontmatter(markdown) {
     attributes,
     body: source.slice(match[0].length).trim()
   };
-}
-
-=== animator/lesson-documents/read-knowledge-check-questions.js ===
-export function readKnowledgeCheckQuestions(markdown) {
-  if (!markdown) {
-    return [];
-  }
-
-  const questions = [];
-  let activeQuestion = null;
-
-  String(markdown).split('\n').forEach(line => {
-    const trimmedLine = line.trim();
-
-    if (!trimmedLine) {
-      return;
-    }
-
-    if (trimmedLine.startsWith('## ')) {
-      if (activeQuestion) {
-        questions.push(activeQuestion);
-      }
-
-      activeQuestion = {
-        question: '',
-        options: [],
-        correct: -1
-      };
-      return;
-    }
-
-    if (!activeQuestion) {
-      return;
-    }
-
-    if (trimmedLine.startsWith('? ')) {
-      activeQuestion.question = trimmedLine.slice(2).trim();
-      return;
-    }
-
-    const optionMatch = trimmedLine.match(/^-\s+\[(x| )\]\s+(.+)$/i);
-
-    if (optionMatch) {
-      const [, marker, label] = optionMatch;
-
-      if (marker.toLowerCase() === 'x') {
-        activeQuestion.correct = activeQuestion.options.length;
-      }
-
-      activeQuestion.options.push(label.trim());
-      return;
-    }
-
-    if (trimmedLine.startsWith('! ')) {
-      activeQuestion.explanation = trimmedLine.slice(2).trim();
-    }
-  });
-
-  if (activeQuestion) {
-    questions.push(activeQuestion);
-  }
-
-  return questions.filter(question =>
-    question.question &&
-    question.options.length > 0 &&
-    question.correct >= 0
-  );
 }
 
 === animator/lesson-documents/read-lesson-metadata.js ===
@@ -1542,13 +1436,11 @@ function stripFrontmatter(markdown) {
 function buildLessonBook(documentsFolder) {
   const lessonFolder = path.basename(path.resolve(documentsFolder, '../../..'));
   const lessonPart = stripFrontmatter(readDocumentPart(documentsFolder, 'lesson.sr.md'));
-  const quizPart = readDocumentPart(documentsFolder, 'quiz.sr.md');
 
   const parts = [
     '<!-- Generated from the same markdown sources used by the web lesson. -->',
     `# ${lessonFolder}`,
-    lessonPart,
-    quizPart ? '## Quiz\n\n' + quizPart : ''
+    lessonPart
   ].filter(Boolean);
 
   const outputFolder = path.resolve(documentsFolder, '..');
@@ -1618,12 +1510,9 @@ export function findLessonParts(ownerDocument) {
     stepFinderModal: readRequiredElement(ownerDocument, 'searchModal'),
     stepFinderInput: readRequiredElement(ownerDocument, 'searchInput'),
     stepFinderResults: readRequiredElement(ownerDocument, 'searchResults'),
-    knowledgeCheckModal: readRequiredElement(ownerDocument, 'quizModal'),
-    knowledgeCheckContent: readRequiredElement(ownerDocument, 'quizContent'),
     themeButton: readRequiredElement(ownerDocument, 'themeBtn'),
     downloadFilesButton: readRequiredElement(ownerDocument, 'downloadBtn'),
     openStepFinderButton: readRequiredElement(ownerDocument, 'searchBtn'),
-    openKnowledgeCheckButton: readRequiredElement(ownerDocument, 'quizBtn'),
     stepPanel: readRequiredElement(ownerDocument, 'stepsPanel'),
     savedStepsPanel: readRequiredElement(ownerDocument, 'bookmarksPanel'),
     savedStepList: readRequiredElement(ownerDocument, 'bookmarkList'),
@@ -1723,8 +1612,7 @@ export function listenForLessonKeys({
   togglePlayback,
   toggleSavedStep,
   openStepFinder,
-  closeStepFinder,
-  closeKnowledgeCheck
+  closeStepFinder
 }) {
   ownerDocument.addEventListener('keydown', event => {
     const typing = isTypingSurface(ownerDocument.activeElement);
@@ -1753,7 +1641,6 @@ export function listenForLessonKeys({
 
     if (event.key === 'Escape') {
       closeStepFinder();
-      closeKnowledgeCheck();
     }
   });
 }
@@ -1983,194 +1870,7 @@ export function showCurrentPreview({
   lessonParts.livePreviewFrame.srcdoc = livePreviewDocument;
 }
 
-=== animator/play-lesson/05-check-understanding/create-knowledge-check-progress.js ===
-export function createKnowledgeCheckProgress() {
-  return {
-    currentQuestionNumber: 0,
-    correctAnswerCount: 0
-  };
-}
-
-=== animator/play-lesson/05-check-understanding/present-knowledge-check.js ===
-import { createKnowledgeCheckProgress } from './create-knowledge-check-progress.js';
-import { showKnowledgeCheckQuestion } from './show-knowledge-check-question.js';
-import { showKnowledgeCheckScore } from './show-knowledge-check-score.js';
-
-export function presentKnowledgeCheck({ lessonParts, knowledgeCheckQuestions }) {
-  if (!knowledgeCheckQuestions.length) {
-    lessonParts.openKnowledgeCheckButton.hidden = true;
-
-    return {
-      closeKnowledgeCheck() {},
-      isKnowledgeCheckOpen() {
-        return false;
-      },
-      openKnowledgeCheck() {}
-    };
-  }
-
-  let knowledgeCheckProgress = createKnowledgeCheckProgress();
-  let advanceTimer = null;
-
-  lessonParts.knowledgeCheckModal.addEventListener('click', event => {
-    if (event.target === lessonParts.knowledgeCheckModal) {
-      closeKnowledgeCheck();
-    }
-  });
-
-  lessonParts.knowledgeCheckContent.addEventListener('click', event => {
-    const actionButton = event.target.closest('[data-action]');
-
-    if (actionButton) {
-      if (actionButton.dataset.action === 'restart-knowledge-check') {
-        restartKnowledgeCheck();
-      }
-
-      if (actionButton.dataset.action === 'close-knowledge-check') {
-        closeKnowledgeCheck();
-      }
-
-      return;
-    }
-
-    const optionButton = event.target.closest('[data-answer-index]');
-
-    if (optionButton) {
-      gradeAnswer(parseInt(optionButton.dataset.answerIndex, 10));
-    }
-  });
-
-  function clearAdvanceTimer() {
-    if (!advanceTimer) {
-      return;
-    }
-
-    window.clearTimeout(advanceTimer);
-    advanceTimer = null;
-  }
-
-  function showCurrentKnowledgeCheckStep() {
-    if (knowledgeCheckProgress.currentQuestionNumber >= knowledgeCheckQuestions.length) {
-      showKnowledgeCheckScore({
-        lessonParts,
-        correctAnswerCount: knowledgeCheckProgress.correctAnswerCount,
-        totalQuestions: knowledgeCheckQuestions.length
-      });
-      return;
-    }
-
-    showKnowledgeCheckQuestion({
-      lessonParts,
-      question: knowledgeCheckQuestions[knowledgeCheckProgress.currentQuestionNumber],
-      currentQuestionNumber: knowledgeCheckProgress.currentQuestionNumber,
-      totalQuestions: knowledgeCheckQuestions.length
-    });
-  }
-
-  function gradeAnswer(answerIndex) {
-    const activeQuestion = knowledgeCheckQuestions[knowledgeCheckProgress.currentQuestionNumber];
-    const optionButtons = lessonParts.knowledgeCheckContent.querySelectorAll('[data-answer-index]');
-
-    optionButtons.forEach((optionButton, index) => {
-      optionButton.disabled = true;
-
-      if (index === activeQuestion.correct) {
-        optionButton.classList.add('correct');
-      }
-
-      if (index === answerIndex && answerIndex !== activeQuestion.correct) {
-        optionButton.classList.add('incorrect');
-      }
-    });
-
-    if (answerIndex === activeQuestion.correct) {
-      knowledgeCheckProgress.correctAnswerCount += 1;
-    }
-
-    clearAdvanceTimer();
-    advanceTimer = window.setTimeout(() => {
-      knowledgeCheckProgress.currentQuestionNumber += 1;
-      showCurrentKnowledgeCheckStep();
-    }, 1500);
-  }
-
-  function openKnowledgeCheck() {
-    knowledgeCheckProgress = createKnowledgeCheckProgress();
-    lessonParts.knowledgeCheckModal.classList.add('active');
-    showCurrentKnowledgeCheckStep();
-  }
-
-  function closeKnowledgeCheck() {
-    clearAdvanceTimer();
-    lessonParts.knowledgeCheckModal.classList.remove('active');
-  }
-
-  function restartKnowledgeCheck() {
-    clearAdvanceTimer();
-    knowledgeCheckProgress = createKnowledgeCheckProgress();
-    showCurrentKnowledgeCheckStep();
-  }
-
-  function isKnowledgeCheckOpen() {
-    return lessonParts.knowledgeCheckModal.classList.contains('active');
-  }
-
-  return {
-    closeKnowledgeCheck,
-    isKnowledgeCheckOpen,
-    openKnowledgeCheck
-  };
-}
-
-=== animator/play-lesson/05-check-understanding/show-knowledge-check-question.js ===
-import { escapeInlineText } from '../escape-inline-text.js';
-
-export function showKnowledgeCheckQuestion({
-  lessonParts,
-  question,
-  currentQuestionNumber,
-  totalQuestions
-}) {
-  lessonParts.knowledgeCheckContent.innerHTML = `
-    <div class="quiz-question">
-      <h3>Pitanje ${currentQuestionNumber + 1}/${totalQuestions}: ${escapeInlineText(question.question)}</h3>
-      <div class="quiz-options">
-        ${question.options.map((option, index) => `
-          <button class="quiz-option" type="button" data-answer-index="${index}">
-            <div class="quiz-option-letter">${String.fromCharCode(65 + index)}</div>
-            <span>${escapeInlineText(option)}</span>
-          </button>
-        `).join('')}
-      </div>
-    </div>
-    <div class="quiz-actions">
-      <button class="btn-secondary" type="button" data-action="close-knowledge-check">Zatvori</button>
-    </div>
-  `;
-}
-
-=== animator/play-lesson/05-check-understanding/show-knowledge-check-score.js ===
-export function showKnowledgeCheckScore({
-  lessonParts,
-  correctAnswerCount,
-  totalQuestions
-}) {
-  const percentage = Math.round((correctAnswerCount / totalQuestions) * 100);
-  const summaryIcon = percentage >= 80 ? '🎉' : percentage >= 60 ? '👍' : '📚';
-
-  lessonParts.knowledgeCheckContent.innerHTML = `
-    <div class="quiz-score">
-      <h2>${summaryIcon} ${percentage}%</h2>
-      <p>Odgovorili ste tačno na ${correctAnswerCount} od ${totalQuestions} pitanja.</p>
-    </div>
-    <div class="quiz-actions">
-      <button class="btn-primary" type="button" data-action="restart-knowledge-check">Pokušaj ponovo</button>
-      <button class="btn-secondary" type="button" data-action="close-knowledge-check">Zatvori</button>
-    </div>
-  `;
-}
-
-=== animator/play-lesson/06-download-lesson-files/download-lesson-files.js ===
+=== animator/play-lesson/05-download-lesson-files/download-lesson-files.js ===
 function triggerFileDownload(fileName, mimeType, fileContent) {
   const blob = new Blob([fileContent], { type: mimeType });
   const downloadLink = document.createElement('a');
@@ -2538,88 +2238,6 @@ body { padding: 24px; }
 .search-result-info p {
   font-size: 13px;
   color: var(--text-secondary);
-}
-
-/* Quiz Modal */
-.quiz-modal .modal {
-  max-width: 700px;
-}
-
-.quiz-question {
-  padding: 24px;
-}
-
-.quiz-question h3 {
-  font-size: 18px;
-  margin-bottom: 20px;
-  line-height: 1.5;
-}
-
-.quiz-options {
-  display: grid;
-  gap: 12px;
-}
-
-.quiz-option {
-  display: flex;
-  align-items: center;
-  gap: 14px;
-  padding: 16px 18px;
-  border-radius: var(--radius-sm);
-  background: var(--panel);
-  border: 2px solid var(--border);
-  cursor: pointer;
-  transition: var(--ease-fast);
-}
-
-.quiz-option:hover {
-  border-color: var(--accent);
-  background: var(--panel-strong);
-}
-
-.quiz-option.correct {
-  border-color: var(--success);
-  background: rgba(54,211,153,0.1);
-}
-
-.quiz-option.incorrect {
-  border-color: var(--error);
-  background: rgba(255,107,107,0.1);
-}
-
-.quiz-option-letter {
-  width: 28px;
-  height: 28px;
-  border-radius: 8px;
-  background: var(--bg-3);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-weight: 700;
-  font-size: 14px;
-}
-
-.quiz-score {
-  text-align: center;
-  padding: 40px;
-}
-
-.quiz-score h2 {
-  font-size: 32px;
-  margin-bottom: 12px;
-}
-
-.quiz-score p {
-  color: var(--text-secondary);
-  margin-bottom: 24px;
-}
-
-.quiz-actions {
-  display: flex;
-  gap: 12px;
-  justify-content: center;
-  padding: 20px 24px;
-  border-top: 1px solid var(--border);
 }
 
 /* Page Layout */
@@ -3676,8 +3294,7 @@ import { showCurrentStep } from './02-follow-lesson/show-current-step.js';
 import { showStepTimeline } from './02-follow-lesson/show-step-timeline.js';
 import { showGrowingCode } from './03-watch-code/show-growing-code.js';
 import { showCurrentPreview } from './04-watch-preview/show-current-preview.js';
-import { presentKnowledgeCheck } from './05-check-understanding/present-knowledge-check.js';
-import { downloadLessonFiles } from './06-download-lesson-files/download-lesson-files.js';
+import { downloadLessonFiles } from './05-download-lesson-files/download-lesson-files.js';
 import { chooseTheme } from './choose-theme/choose-theme.js';
 import { presentStepFinder } from './find-step/present-step-finder.js';
 import { rememberSavedSteps } from './save-step/remember-saved-steps.js';
@@ -3709,11 +3326,6 @@ export function playLesson({ ownerDocument, ownerLocation, ownerWindow, lesson, 
     goToStepNumber
   });
 
-  const knowledgeCheck = presentKnowledgeCheck({
-    lessonParts,
-    knowledgeCheckQuestions: lesson.knowledgeCheckQuestions || []
-  });
-
   const themeChoice = chooseTheme({
     rootElement: ownerDocument.documentElement,
     themeButton: lessonParts.themeButton
@@ -3736,7 +3348,6 @@ export function playLesson({ ownerDocument, ownerLocation, ownerWindow, lesson, 
     savedSteps.toggleSavedStepNumber(lessonProgress.currentStepNumber);
   });
   lessonParts.openStepFinderButton.addEventListener('click', stepFinder.openStepFinder);
-  lessonParts.openKnowledgeCheckButton.addEventListener('click', knowledgeCheck.openKnowledgeCheck);
   lessonParts.themeButton.addEventListener('click', themeChoice.toggleTheme);
   lessonParts.downloadFilesButton.addEventListener('click', () => {
     downloadLessonFiles({ lesson });
@@ -3757,15 +3368,14 @@ export function playLesson({ ownerDocument, ownerLocation, ownerWindow, lesson, 
     togglePlayback,
     toggleSavedStep: () => savedSteps.toggleSavedStepNumber(lessonProgress.currentStepNumber),
     openStepFinder: stepFinder.openStepFinder,
-    closeStepFinder: stepFinder.closeStepFinder,
-    closeKnowledgeCheck: knowledgeCheck.closeKnowledgeCheck
+    closeStepFinder: stepFinder.closeStepFinder
   });
 
   themeChoice.initializeTheme();
   showCurrentLesson();
 
   function hasOpenLessonDialog() {
-    return stepFinder.isStepFinderOpen() || knowledgeCheck.isKnowledgeCheckOpen();
+    return stepFinder.isStepFinderOpen();
   }
 
   function goToStepNumber(stepNumber, options = {}) {
@@ -4043,9 +3653,6 @@ export function writeSavedStepNumbers({ lessonId, savedStepNumbers }) {
     <button class="control-btn" id="searchBtn" title="Pretraži (Ctrl+K)">
       <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
     </button>
-    <button class="control-btn" id="quizBtn" title="Kviz znanja">
-      <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"/></svg>
-    </button>
     <button class="control-btn" id="themeBtn" title="Promeni temu">
       <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"/></svg>
     </button>
@@ -4062,17 +3669,6 @@ export function writeSavedStepNumbers({ lessonId, savedStepNumbers }) {
         <input type="text" class="modal-search" id="searchInput" placeholder="Pretraži korake...">
       </div>
       <div class="modal-body" id="searchResults"></div>
-    </div>
-  </div>
-
-  <!-- Quiz Modal -->
-  <div class="modal-overlay quiz-modal" id="quizModal">
-    <div class="modal">
-      <div class="modal-header">
-        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"/></svg>
-        <span style="font-weight:600;">Provera znanja</span>
-      </div>
-      <div id="quizContent"></div>
     </div>
   </div>
 
@@ -4262,9 +3858,7 @@ import { buildHtmlAtStep } from './build-html-at-step.js';
 import { buildJsAtStep } from './build-js-at-step.js';
 import { lessonSteps } from './describe-steps.js';
 import lessonDocument from './content/documents/files/lesson.sr.md?raw';
-import knowledgeCheckDocument from './content/documents/files/quiz.sr.md?raw';
 import goalImage from './content/assets/callout-custom-element-goal.svg';
-import { readKnowledgeCheckQuestions } from '../../animator/lesson-documents/read-knowledge-check-questions.js';
 import { readLessonMetadata } from '../../animator/lesson-documents/read-lesson-metadata.js';
 
 const lessonMetadata = readLessonMetadata(lessonDocument, {
@@ -4276,8 +3870,6 @@ const lessonMetadata = readLessonMetadata(lessonDocument, {
   cssFileName: 'style.css',
   jsFileName: 'callout-card.js'
 });
-
-const knowledgeCheckQuestions = readKnowledgeCheckQuestions(knowledgeCheckDocument);
 
 export const buildCalloutCustomElementLesson = {
   lessonId: 'build-callout-custom-element',
@@ -4296,8 +3888,7 @@ export const buildCalloutCustomElementLesson = {
   steps: lessonSteps,
   buildHtmlAtStep,
   buildCssAtStep,
-  buildJsAtStep,
-  knowledgeCheckQuestions
+  buildJsAtStep
 };
 
 === lessons/build-callout-custom-element/build-css-at-step.js ===
@@ -4514,48 +4105,6 @@ export function buildJsAtStep(stepNumber) {
 
 Prva Web Components lekcija namerno kreće bez shadow DOM-a. Tako prvo vidiš samu osnovu platforme: custom tag sa crticom, registraciju preko `customElements.define`, atribute kao spoljašnji API i prvi render kroz `connectedCallback()`. Tek posle toga prelazimo na shadow DOM, template i slotove.
 
-## Quiz
-
-## Question 1
-? Koja je glavna ideja ove prve Web Components lekcije?
-- [ ] Da odmah sakrijemo sve iza shadow DOM-a
-- [x] Da prvo razjasnimo host tag, registraciju i atribute kroz light DOM
-- [ ] Da izbegnemo JavaScript potpuno
-- [ ] Da radimo samo CSS
-! Light DOM uvodna lekcija ostavlja sve vidljivim da bi custom element osnove bile potpuno jasne.
-
-## Question 2
-? Šta radi `customElements.define('callout-card', CalloutCard)`?
-- [ ] Briše host element iz DOM-a
-- [x] Registruje custom element i govori browseru koju klasu koristi za dati tag
-- [ ] Menja CSS temu stranice
-- [ ] Dodaje shadow DOM automatski
-! `customElements.define()` povezuje custom tag ime i klasu, pa browser zna kako da upgrade-uje taj element.
-
-## Question 3
-? Zašto u ovoj lekciji čitamo `title` i `cta-label` atribute sa host elementa?
-- [ ] Da bismo izbegli HTML
-- [x] Da atributi postanu jednostavan spoljašnji API komponente
-- [ ] Da bismo sakrili CSS
-- [ ] Da bismo uklonili render
-! Atributi su najjednostavniji prvi API za custom element: lako ih pišeš u HTML-u i lako ih čitaš u klasi.
-
-## Question 4
-? Zašto koristimo `connectedCallback()` za prvi render?
-- [ ] Zato što custom element tada još nije u DOM-u
-- [x] Zato što je to prirodan lifecycle trenutak kada je element povezan sa dokumentom
-- [ ] Zato što jedino tamo CSS radi
-- [ ] Zato što je to zamena za `template`
-! `connectedCallback()` je zgodna ulazna tačka za prvi render čim browser ubaci element u dokument.
-
-## Question 5
-? Šta ćemo sledeće dodati u drugoj Web Components lekciji?
-- [ ] jQuery plugin sistem
-- [ ] server-side rendering
-- [x] shadow DOM, template i slotove
-- [ ] CSS framework
-! Druga lekcija gradi isti nivo komponente, ali uvodi pravu Web Components dubinu kroz shadow DOM, template i slot projekciju.
-
 === lessons/build-callout-custom-element/content/documents/files/lesson.sr.md ===
 ---
 title: Web Components 1/2 · Light DOM custom element
@@ -4567,47 +4116,6 @@ jsFileName: callout-card.js
 ---
 
 Prva Web Components lekcija namerno kreće bez shadow DOM-a. Tako prvo vidiš samu osnovu platforme: custom tag sa crticom, registraciju preko `customElements.define`, atribute kao spoljašnji API i prvi render kroz `connectedCallback()`. Tek posle toga prelazimo na shadow DOM, template i slotove.
-
-=== lessons/build-callout-custom-element/content/documents/files/quiz.sr.md ===
-## Question 1
-? Koja je glavna ideja ove prve Web Components lekcije?
-- [ ] Da odmah sakrijemo sve iza shadow DOM-a
-- [x] Da prvo razjasnimo host tag, registraciju i atribute kroz light DOM
-- [ ] Da izbegnemo JavaScript potpuno
-- [ ] Da radimo samo CSS
-! Light DOM uvodna lekcija ostavlja sve vidljivim da bi custom element osnove bile potpuno jasne.
-
-## Question 2
-? Šta radi `customElements.define('callout-card', CalloutCard)`?
-- [ ] Briše host element iz DOM-a
-- [x] Registruje custom element i govori browseru koju klasu koristi za dati tag
-- [ ] Menja CSS temu stranice
-- [ ] Dodaje shadow DOM automatski
-! `customElements.define()` povezuje custom tag ime i klasu, pa browser zna kako da upgrade-uje taj element.
-
-## Question 3
-? Zašto u ovoj lekciji čitamo `title` i `cta-label` atribute sa host elementa?
-- [ ] Da bismo izbegli HTML
-- [x] Da atributi postanu jednostavan spoljašnji API komponente
-- [ ] Da bismo sakrili CSS
-- [ ] Da bismo uklonili render
-! Atributi su najjednostavniji prvi API za custom element: lako ih pišeš u HTML-u i lako ih čitaš u klasi.
-
-## Question 4
-? Zašto koristimo `connectedCallback()` za prvi render?
-- [ ] Zato što custom element tada još nije u DOM-u
-- [x] Zato što je to prirodan lifecycle trenutak kada je element povezan sa dokumentom
-- [ ] Zato što jedino tamo CSS radi
-- [ ] Zato što je to zamena za `template`
-! `connectedCallback()` je zgodna ulazna tačka za prvi render čim browser ubaci element u dokument.
-
-## Question 5
-? Šta ćemo sledeće dodati u drugoj Web Components lekciji?
-- [ ] jQuery plugin sistem
-- [ ] server-side rendering
-- [x] shadow DOM, template i slotove
-- [ ] CSS framework
-! Druga lekcija gradi isti nivo komponente, ali uvodi pravu Web Components dubinu kroz shadow DOM, template i slot projekciju.
 
 === lessons/build-callout-custom-element/describe-steps.js ===
 const focusHtmlNeedlesBySelector = {
@@ -4875,9 +4383,7 @@ import { buildHtmlAtStep } from './build-html-at-step.js';
 import { buildJsAtStep } from './build-js-at-step.js';
 import { lessonSteps } from './describe-steps.js';
 import lessonDocument from './content/documents/files/lesson.sr.md?raw';
-import knowledgeCheckDocument from './content/documents/files/quiz.sr.md?raw';
 import goalImage from './content/assets/feature-callout-goal.svg';
-import { readKnowledgeCheckQuestions } from '../../animator/lesson-documents/read-knowledge-check-questions.js';
 import { readLessonMetadata } from '../../animator/lesson-documents/read-lesson-metadata.js';
 
 const lessonMetadata = readLessonMetadata(lessonDocument, {
@@ -4889,8 +4395,6 @@ const lessonMetadata = readLessonMetadata(lessonDocument, {
   cssFileName: 'style.css',
   jsFileName: 'feature-callout.js'
 });
-
-const knowledgeCheckQuestions = readKnowledgeCheckQuestions(knowledgeCheckDocument);
 
 export const buildFeatureCalloutWebComponentLesson = {
   lessonId: 'build-feature-callout-web-component',
@@ -4909,8 +4413,7 @@ export const buildFeatureCalloutWebComponentLesson = {
   steps: lessonSteps,
   buildHtmlAtStep,
   buildCssAtStep,
-  buildJsAtStep,
-  knowledgeCheckQuestions
+  buildJsAtStep
 };
 
 === lessons/build-feature-callout-web-component/build-html-at-step.js ===
@@ -5170,48 +4673,6 @@ export function buildJsAtStep(stepNumber) {
 
 Druga Web Components lekcija nadograđuje osnove iz prve: isti nivo komponente sada gradiš kroz template, shadow DOM, slotove i render lifecycle. Lekcija namerno ide detaljno, da jasno vidiš kada host HTML postaje pravi custom element, kako template ulazi u shadow root i kako spoljašnji CSS tokeni utiču na unutrašnji izgled komponente.
 
-## Quiz
-
-## Question 1
-? Koje pravilo mora da poštuje naziv autonomous custom elementa?
-- [ ] Mora da počinje velikim slovom
-- [x] Mora da sadrži crticu
-- [ ] Mora da se završava sa `-component`
-- [ ] Mora da bude jedno slovo
-! Custom element ime mora da sadrži crticu, npr. `feature-callout`, da bi browser znao da nije standardan HTML tag.
-
-## Question 2
-? Šta nam daje `document.createElement('template')` u ovoj lekciji?
-- [ ] Automatski CSS reset
-- [x] Inertan markup i stil koji možemo da kloniramo u svakoj instanci
-- [ ] Novi window objekat
-- [ ] Zamenu za `customElements.define`
-! `template` čuva inertan sadržaj koji kasnije kloniramo u shadow DOM svake instance komponente.
-
-## Question 3
-? Zašto host elementu spolja postavljamo CSS custom properties kao `--callout-accent`?
-- [ ] Da bismo izbegli JavaScript potpuno
-- [x] Da bismo theme-ovali unutrašnji shadow DOM preko `var(...)`
-- [ ] Da bismo izbrisali slot sadržaj
-- [ ] Da bismo registrovali novi custom element
-! CSS custom properties prelaze kroz shadow DOM granicu i zato su dobar kanal za spoljašnje theme-ovanje komponente.
-
-## Question 4
-? Čemu služi `connectedCallback()` u ovoj lekciji?
-- [ ] Da zabrani render
-- [x] Da pokrene prvi render kada je element povezan sa DOM-om
-- [ ] Da kreira template umesto konstruktora
-- [ ] Da doda novu HTML stranicu
-! `connectedCallback()` je lifecycle tačka u kojoj pokrećemo prvi render, jer je element tada zaista u dokumentu.
-
-## Question 5
-? Kada `attributeChangedCallback()` ima smisla?
-- [ ] Samo kada komponenta nema shadow DOM
-- [ ] Samo kada ne koristimo slotove
-- [x] Kada želimo da komponenta reaguje na promene posmatranih atributa i posle prvog mount-a
-- [ ] Kada CSS više nije potreban
-! Ako komponenta treba da ostane živa i posle inicijalnog rendera, `attributeChangedCallback()` je prirodno mesto da reaguje na promene atributa.
-
 === lessons/build-feature-callout-web-component/content/documents/files/lesson.sr.md ===
 ---
 title: Web Components 2/2 · Shadow DOM feature callout
@@ -5223,47 +4684,6 @@ jsFileName: feature-callout.js
 ---
 
 Druga Web Components lekcija nadograđuje osnove iz prve: isti nivo komponente sada gradiš kroz template, shadow DOM, slotove i render lifecycle. Lekcija namerno ide detaljno, da jasno vidiš kada host HTML postaje pravi custom element, kako template ulazi u shadow root i kako spoljašnji CSS tokeni utiču na unutrašnji izgled komponente.
-
-=== lessons/build-feature-callout-web-component/content/documents/files/quiz.sr.md ===
-## Question 1
-? Koje pravilo mora da poštuje naziv autonomous custom elementa?
-- [ ] Mora da počinje velikim slovom
-- [x] Mora da sadrži crticu
-- [ ] Mora da se završava sa `-component`
-- [ ] Mora da bude jedno slovo
-! Custom element ime mora da sadrži crticu, npr. `feature-callout`, da bi browser znao da nije standardan HTML tag.
-
-## Question 2
-? Šta nam daje `document.createElement('template')` u ovoj lekciji?
-- [ ] Automatski CSS reset
-- [x] Inertan markup i stil koji možemo da kloniramo u svakoj instanci
-- [ ] Novi window objekat
-- [ ] Zamenu za `customElements.define`
-! `template` čuva inertan sadržaj koji kasnije kloniramo u shadow DOM svake instance komponente.
-
-## Question 3
-? Zašto host elementu spolja postavljamo CSS custom properties kao `--callout-accent`?
-- [ ] Da bismo izbegli JavaScript potpuno
-- [x] Da bismo theme-ovali unutrašnji shadow DOM preko `var(...)`
-- [ ] Da bismo izbrisali slot sadržaj
-- [ ] Da bismo registrovali novi custom element
-! CSS custom properties prelaze kroz shadow DOM granicu i zato su dobar kanal za spoljašnje theme-ovanje komponente.
-
-## Question 4
-? Čemu služi `connectedCallback()` u ovoj lekciji?
-- [ ] Da zabrani render
-- [x] Da pokrene prvi render kada je element povezan sa DOM-om
-- [ ] Da kreira template umesto konstruktora
-- [ ] Da doda novu HTML stranicu
-! `connectedCallback()` je lifecycle tačka u kojoj pokrećemo prvi render, jer je element tada zaista u dokumentu.
-
-## Question 5
-? Kada `attributeChangedCallback()` ima smisla?
-- [ ] Samo kada komponenta nema shadow DOM
-- [ ] Samo kada ne koristimo slotove
-- [x] Kada želimo da komponenta reaguje na promene posmatranih atributa i posle prvog mount-a
-- [ ] Kada CSS više nije potreban
-! Ako komponenta treba da ostane živa i posle inicijalnog rendera, `attributeChangedCallback()` je prirodno mesto da reaguje na promene atributa.
 
 === lessons/build-feature-callout-web-component/describe-steps.js ===
 const focusHtmlNeedlesBySelector = {
@@ -5811,8 +5231,6 @@ import { buildCssAtStep } from './build-css-at-step.js';
 import { buildHtmlAtStep } from './build-html-at-step.js';
 import { lessonSteps } from './describe-steps.js';
 import lessonDocument from './content/documents/files/lesson.sr.md?raw';
-import knowledgeCheckDocument from './content/documents/files/quiz.sr.md?raw';
-import { readKnowledgeCheckQuestions } from '../../animator/lesson-documents/read-knowledge-check-questions.js';
 import { readLessonMetadata } from '../../animator/lesson-documents/read-lesson-metadata.js';
 
 const lessonMetadata = readLessonMetadata(lessonDocument, {
@@ -5823,8 +5241,6 @@ const lessonMetadata = readLessonMetadata(lessonDocument, {
   htmlFileName: 'index.html',
   cssFileName: 'style.css'
 });
-
-const knowledgeCheckQuestions = readKnowledgeCheckQuestions(knowledgeCheckDocument);
 
 export const buildSidebarLesson = {
   lessonId: 'build-sidebar',
@@ -5837,8 +5253,7 @@ export const buildSidebarLesson = {
   cssFileName: lessonMetadata.cssFileName,
   steps: lessonSteps,
   buildHtmlAtStep,
-  buildCssAtStep,
-  knowledgeCheckQuestions
+  buildCssAtStep
 };
 
 === lessons/build-sidebar/content/documents/build_sidebar.md ===
@@ -5847,48 +5262,6 @@ export const buildSidebarLesson = {
 # build-sidebar
 
 Koraci po korak gradiš sidebar od osnove do gotove navigacije. Svaki korak uključuje kod, savete i vizuelni prikaz.
-
-## Quiz
-
-## Question 1
-? Koji HTML tag se koristi za bočnu navigaciju?
-- [ ] `<div>`
-- [x] `<aside>`
-- [ ] `<sidebar>`
-- [ ] `<nav>`
-! `aside` je prirodan semantički izbor za bočnu navigacionu zonu.
-
-## Question 2
-? Šta znači `100vh` u CSS-u?
-- [ ] 100% širine
-- [x] 100% visine viewporta
-- [ ] 100 piksela
-- [ ] Fiksno 100
-! `vh` meri procenat visine viewporta, pa `100vh` znači puna visina ekrana.
-
-## Question 3
-? Koja vrednost `border-radius`-a daje pun krug?
-- [ ] `0px`
-- [x] `50%`
-- [ ] `100%`
-- [ ] `360deg`
-! Kada je element kvadrat, `50%` radius zatvara ga u krug.
-
-## Question 4
-? Šta koristimo za razmak između grid item-a?
-- [ ] `margin`
-- [ ] `padding`
-- [x] `gap`
-- [ ] `spacing`
-! `gap` je najčistiji način da zadaš razmak između elemenata u grid i flex rasporedu.
-
-## Question 5
-? Koji property omogućava glatke animacije između stanja?
-- [ ] `animation`
-- [x] `transition`
-- [ ] `transform`
-- [ ] `motion`
-! `transition` je pravi izbor kada želiš da promene stanja budu glatke.
 
 === lessons/build-sidebar/content/documents/files/lesson.sr.md ===
 ---
@@ -5900,47 +5273,6 @@ cssFileName: style.css
 ---
 
 Koraci po korak gradiš sidebar od osnove do gotove navigacije. Svaki korak uključuje kod, savete i vizuelni prikaz.
-
-=== lessons/build-sidebar/content/documents/files/quiz.sr.md ===
-## Question 1
-? Koji HTML tag se koristi za bočnu navigaciju?
-- [ ] `<div>`
-- [x] `<aside>`
-- [ ] `<sidebar>`
-- [ ] `<nav>`
-! `aside` je prirodan semantički izbor za bočnu navigacionu zonu.
-
-## Question 2
-? Šta znači `100vh` u CSS-u?
-- [ ] 100% širine
-- [x] 100% visine viewporta
-- [ ] 100 piksela
-- [ ] Fiksno 100
-! `vh` meri procenat visine viewporta, pa `100vh` znači puna visina ekrana.
-
-## Question 3
-? Koja vrednost `border-radius`-a daje pun krug?
-- [ ] `0px`
-- [x] `50%`
-- [ ] `100%`
-- [ ] `360deg`
-! Kada je element kvadrat, `50%` radius zatvara ga u krug.
-
-## Question 4
-? Šta koristimo za razmak između grid item-a?
-- [ ] `margin`
-- [ ] `padding`
-- [x] `gap`
-- [ ] `spacing`
-! `gap` je najčistiji način da zadaš razmak između elemenata u grid i flex rasporedu.
-
-## Question 5
-? Koji property omogućava glatke animacije između stanja?
-- [ ] `animation`
-- [x] `transition`
-- [ ] `transform`
-- [ ] `motion`
-! `transition` je pravi izbor kada želiš da promene stanja budu glatke.
 
 === lessons/build-sidebar/describe-steps.js ===
 const focusHtmlNeedlesBySelector = {
@@ -6345,9 +5677,7 @@ import { buildCssAtStep } from './build-css-at-step.js';
 import { buildHtmlAtStep } from './build-html-at-step.js';
 import { lessonSteps } from './describe-steps.js';
 import lessonDocument from './content/documents/files/lesson.sr.md?raw';
-import knowledgeCheckDocument from './content/documents/files/quiz.sr.md?raw';
 import goalImage from './content/assets/top-navigation-goal.svg';
-import { readKnowledgeCheckQuestions } from '../../animator/lesson-documents/read-knowledge-check-questions.js';
 import { readLessonMetadata } from '../../animator/lesson-documents/read-lesson-metadata.js';
 
 const lessonMetadata = readLessonMetadata(lessonDocument, {
@@ -6358,8 +5688,6 @@ const lessonMetadata = readLessonMetadata(lessonDocument, {
   htmlFileName: 'index.html',
   cssFileName: 'style.css'
 });
-
-const knowledgeCheckQuestions = readKnowledgeCheckQuestions(knowledgeCheckDocument);
 
 export const buildTopNavigationLesson = {
   lessonId: 'build-top-navigation',
@@ -6381,8 +5709,7 @@ export const buildTopNavigationLesson = {
   ],
   steps: lessonSteps,
   buildHtmlAtStep,
-  buildCssAtStep,
-  knowledgeCheckQuestions
+  buildCssAtStep
 };
 
 === lessons/build-top-navigation/content/assets/top-navigation-goal.svg ===
@@ -6465,48 +5792,6 @@ export const buildTopNavigationLesson = {
 
 Koraci po korak gradiš prvi navbar iz reference: logo levo, linkovi u sredini i CTA dugme desno. Druga dva rasporeda iz iste slike ostaju kao domaći zadatak.
 
-## Quiz
-
-## Question 1
-? Koji HTML element je prirodan izbor za grupu glavnih navigacionih linkova?
-- [ ] `<section>`
-- [x] `<nav>`
-- [ ] `<article>`
-- [ ] `<aside>`
-! `nav` je semantički pravi izbor za glavnu navigacionu zonu.
-
-## Question 2
-? Zašto uvodimo helper outline pre završne pozadine?
-- [ ] Da bi element bio teži za klik
-- [x] Da bi footprint elementa bio jasan i pre finalnog dizajna
-- [ ] Da bi CSS bio kraći
-- [ ] Da bismo izbegli HTML
-! Helper outline služi orijentaciji dok komponenta još nema svoj završni vizuelni identitet.
-
-## Question 3
-? Koji property koristimo da rasporedimo delove navbara u jedan red?
-- [ ] `display: block`
-- [ ] `display: inline`
-- [x] `display: flex`
-- [ ] `display: grid`
-! `display: flex` je najpraktičniji izbor za horizontalni navbar raspored.
-
-## Question 4
-? Šta radi `margin-left: auto` na centralnoj grupi linkova u ovom primeru?
-- [ ] Smanjuje font-size linkova
-- [x] Gura grupu dalje od loga i pomaže centriranju
-- [ ] Dodaje hover efekat
-- [ ] Zaobljava CTA dugme
-! Auto margine su jednostavan način da gurneš jedan flex item od susednog elementa.
-
-## Question 5
-? Koji property daje CTA dugmetu pil oblik?
-- [ ] `box-shadow`
-- [ ] `padding`
-- [x] `border-radius`
-- [ ] `font-weight`
-! Veliki `border-radius`, kao `999px`, zatvara CTA u pil oblik.
-
 === lessons/build-top-navigation/content/documents/files/lesson.sr.md ===
 ---
 title: Kako se pravi top navigation bar
@@ -6517,47 +5802,6 @@ cssFileName: style.css
 ---
 
 Koraci po korak gradiš prvi navbar iz reference: logo levo, linkovi u sredini i CTA dugme desno. Druga dva rasporeda iz iste slike ostaju kao domaći zadatak.
-
-=== lessons/build-top-navigation/content/documents/files/quiz.sr.md ===
-## Question 1
-? Koji HTML element je prirodan izbor za grupu glavnih navigacionih linkova?
-- [ ] `<section>`
-- [x] `<nav>`
-- [ ] `<article>`
-- [ ] `<aside>`
-! `nav` je semantički pravi izbor za glavnu navigacionu zonu.
-
-## Question 2
-? Zašto uvodimo helper outline pre završne pozadine?
-- [ ] Da bi element bio teži za klik
-- [x] Da bi footprint elementa bio jasan i pre finalnog dizajna
-- [ ] Da bi CSS bio kraći
-- [ ] Da bismo izbegli HTML
-! Helper outline služi orijentaciji dok komponenta još nema svoj završni vizuelni identitet.
-
-## Question 3
-? Koji property koristimo da rasporedimo delove navbara u jedan red?
-- [ ] `display: block`
-- [ ] `display: inline`
-- [x] `display: flex`
-- [ ] `display: grid`
-! `display: flex` je najpraktičniji izbor za horizontalni navbar raspored.
-
-## Question 4
-? Šta radi `margin-left: auto` na centralnoj grupi linkova u ovom primeru?
-- [ ] Smanjuje font-size linkova
-- [x] Gura grupu dalje od loga i pomaže centriranju
-- [ ] Dodaje hover efekat
-- [ ] Zaobljava CTA dugme
-! Auto margine su jednostavan način da gurneš jedan flex item od susednog elementa.
-
-## Question 5
-? Koji property daje CTA dugmetu pil oblik?
-- [ ] `box-shadow`
-- [ ] `padding`
-- [x] `border-radius`
-- [ ] `font-weight`
-! Veliki `border-radius`, kao `999px`, zatvara CTA u pil oblik.
 
 === lessons/build-top-navigation/describe-steps.js ===
 const focusHtmlNeedlesBySelector = {

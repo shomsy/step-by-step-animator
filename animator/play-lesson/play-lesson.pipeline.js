@@ -8,8 +8,7 @@ import { showCurrentStep } from './02-follow-lesson/show-current-step.js';
 import { showStepTimeline } from './02-follow-lesson/show-step-timeline.js';
 import { showGrowingCode } from './03-watch-code/show-growing-code.js';
 import { showCurrentPreview } from './04-watch-preview/show-current-preview.js';
-import { presentKnowledgeCheck } from './05-check-understanding/present-knowledge-check.js';
-import { downloadLessonFiles } from './06-download-lesson-files/download-lesson-files.js';
+import { downloadLessonFiles } from './05-download-lesson-files/download-lesson-files.js';
 import { chooseTheme } from './choose-theme/choose-theme.js';
 import { presentStepFinder } from './find-step/present-step-finder.js';
 import { rememberSavedSteps } from './save-step/remember-saved-steps.js';
@@ -41,11 +40,6 @@ export function playLesson({ ownerDocument, ownerLocation, ownerWindow, lesson, 
     goToStepNumber
   });
 
-  const knowledgeCheck = presentKnowledgeCheck({
-    lessonParts,
-    knowledgeCheckQuestions: lesson.knowledgeCheckQuestions || []
-  });
-
   const themeChoice = chooseTheme({
     rootElement: ownerDocument.documentElement,
     themeButton: lessonParts.themeButton
@@ -68,7 +62,6 @@ export function playLesson({ ownerDocument, ownerLocation, ownerWindow, lesson, 
     savedSteps.toggleSavedStepNumber(lessonProgress.currentStepNumber);
   });
   lessonParts.openStepFinderButton.addEventListener('click', stepFinder.openStepFinder);
-  lessonParts.openKnowledgeCheckButton.addEventListener('click', knowledgeCheck.openKnowledgeCheck);
   lessonParts.themeButton.addEventListener('click', themeChoice.toggleTheme);
   lessonParts.downloadFilesButton.addEventListener('click', () => {
     downloadLessonFiles({ lesson });
@@ -89,15 +82,14 @@ export function playLesson({ ownerDocument, ownerLocation, ownerWindow, lesson, 
     togglePlayback,
     toggleSavedStep: () => savedSteps.toggleSavedStepNumber(lessonProgress.currentStepNumber),
     openStepFinder: stepFinder.openStepFinder,
-    closeStepFinder: stepFinder.closeStepFinder,
-    closeKnowledgeCheck: knowledgeCheck.closeKnowledgeCheck
+    closeStepFinder: stepFinder.closeStepFinder
   });
 
   themeChoice.initializeTheme();
   showCurrentLesson();
 
   function hasOpenLessonDialog() {
-    return stepFinder.isStepFinderOpen() || knowledgeCheck.isKnowledgeCheckOpen();
+    return stepFinder.isStepFinderOpen();
   }
 
   function goToStepNumber(stepNumber, options = {}) {

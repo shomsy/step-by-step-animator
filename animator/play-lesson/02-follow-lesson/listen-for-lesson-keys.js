@@ -13,8 +13,7 @@ export function listenForLessonKeys({
   togglePlayback,
   toggleSavedStep,
   openStepFinder,
-  closeStepFinder,
-  closeKnowledgeCheck
+  closeStepFinder
 }) {
   ownerDocument.addEventListener('keydown', event => {
     const typing = isTypingSurface(ownerDocument.activeElement);
@@ -43,7 +42,6 @@ export function listenForLessonKeys({
 
     if (event.key === 'Escape') {
       closeStepFinder();
-      closeKnowledgeCheck();
     }
   });
 }

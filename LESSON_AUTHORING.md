@@ -41,7 +41,6 @@ lessons/
       documents/
         files/
           lesson.sr.md
-          quiz.sr.md
 ```
 
 ## 3. Šta svaki fajl radi
@@ -53,7 +52,6 @@ lessons/
 - povezuje step script
 - povezuje HTML/CSS builder funkcije
 - kada lekcija to traži, povezuje i JS builder funkciju
-- povezuje knowledge check pitanja
 - opciono povezuje referentnu sliku cilja i homework napomene za shell
 
 `describe-steps.js`
@@ -84,10 +82,6 @@ lessons/
 `content/documents/files/lesson.sr.md`
 
 - drži title, intro i metadata
-
-`content/documents/files/quiz.sr.md`
-
-- drži knowledge check pitanja
 
 `content/assets/feature-goal.svg`
 
@@ -224,17 +218,6 @@ jsFileName: component.js
 Kratak uvod u lekciju.
 ```
 
-`quiz.sr.md`:
-
-```md
-## Question 1
-? Pitanje
-- [ ] Pogrešan odgovor
-- [x] Tačan odgovor
-- [ ] Pogrešan odgovor
-! Kratko objašnjenje zašto je to tačno.
-```
-
 ## 6a. Goal image contract
 
 Ako lesson ima referentni vizuelni cilj, taj deo ostaje u lesson JS contract-u jer je asset tehnički import.
@@ -277,7 +260,6 @@ Repo contract:
   - `build-js-at-step.js` kada lekcija traži JavaScript
   - `content/assets/[feature-name]-goal.svg` kada postoji referentna slika
   - `content/documents/files/lesson.sr.md`
-  - `content/documents/files/quiz.sr.md`
 
 Animaciona pravila:
 - HTML ide element po element

@@ -26,7 +26,7 @@ Ovaj fajl je kanonska lista za arhitekturu i sledeće veće korake ovog repoa.
 
 - `Status`: `DONE`
 - `Šta fali`: ništa
-- `Napomena`: Step script, HTML builder, CSS builder i quiz pitanja sada žive u `lessons/build-sidebar/`.
+- `Napomena`: Step script, HTML builder i CSS builder sada žive u `lessons/build-sidebar/`.
 
 ### 4. Uvedi jasan lesson contract za buduće lekcije
 
@@ -34,11 +34,11 @@ Ovaj fajl je kanonska lista za arhitekturu i sledeće veće korake ovog repoa.
 - `Šta fali`: ništa
 - `Napomena`: Svaka nova lekcija treba da doda root `feature-name.lesson.js` i da se registruje u `lessons/register-lessons.js`.
 
-### 4a. Uvedi markdown source za lesson metadata i quiz
+### 4a. Uvedi markdown source za lesson metadata
 
 - `Status`: `DONE`
 - `Šta fali`: ništa
-- `Napomena`: `build-sidebar` sada koristi `content/documents/files/lesson.sr.md` i `quiz.sr.md`, uz generisani `content/documents/build_sidebar.md`.
+- `Napomena`: `build-sidebar` sada koristi `content/documents/files/lesson.sr.md`, uz generisani `content/documents/build_sidebar.md`.
 
 ## Follow-Up Work
 
