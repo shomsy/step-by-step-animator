@@ -14,12 +14,24 @@ Read the tree in this order:
 Current example:
 
 ```txt
-teach-lessons/
-  list-lessons.js
-  find-selected-lesson.js
-  teach-lesson/
-    teach-lesson.pipeline.js
-    lesson-shell.css
+lessons/
+  register-lessons.js
+  build-sidebar/
+    build-sidebar.lesson.js
+    describe-steps.js
+    build-html-at-step.js
+    build-css-at-step.js
+    content/
+      documents/
+        build_sidebar.md
+        files/
+          lesson.sr.md
+          quiz.sr.md
+lesson-player/
+  select-lesson-from-location.js
+  play-lesson/
+    play-lesson.pipeline.js
+    lesson-player.css
     01-start-lesson/
       find-lesson-parts.js
       create-lesson-progress.js
@@ -40,17 +52,10 @@ teach-lessons/
       choose-theme.js
     06-download-lesson-files/
       download-lesson-files.js
-  build-sidebar/
-    build-sidebar.lesson.js
-    describe-steps.js
-    build-html-at-step.js
-    build-css-at-step.js
-    content/
-      documents/
-        build_sidebar.md
-        files/
-          lesson.sr.md
-          quiz.sr.md
+lesson-documents/
+  read-lesson-metadata.js
+  read-knowledge-check-questions.js
+  sync-lesson-documents.js
 ```
 
 ## Naming Rules
@@ -62,7 +67,7 @@ Use a folder name that tells what the product is doing.
 Good:
 
 ```txt
-teach-lessons/
+lessons/
 sell-subscriptions/
 review-progress/
 ```
@@ -83,7 +88,7 @@ The next folder must tell which concrete product scenario is being handled.
 Good:
 
 ```txt
-teach-lesson/
+play-lesson/
 build-sidebar/
 retry-payment/
 ```
@@ -148,7 +153,7 @@ processor.js
 
 Use `01-...`, `02-...` only when the folder order itself carries product meaning without opening the pipeline.
 
-This repo uses numeric prefixes only on the generic lesson journey inside `teach-lesson/`:
+This repo uses numeric prefixes only on the generic lesson journey inside `play-lesson/`:
 
 ```txt
 01-start-lesson/
@@ -188,8 +193,8 @@ build-sidebar/
 Good:
 
 ```txt
-teachLesson()
-findSelectedLesson()
+playLesson()
+selectLessonFromLocation()
 showGrowingCode()
 downloadLessonFiles()
 ```
@@ -215,7 +220,7 @@ Use verbs consistently by responsibility:
 - `find...` locates a selected lesson or existing page parts.
 - `read...` is reserved for persistence reads.
 - `write...` is reserved for persistence writes.
-- `teach...` orchestrates the complete lesson flow.
+- `play...` orchestrates the complete lesson flow.
 
 ## Anti-Patterns
 

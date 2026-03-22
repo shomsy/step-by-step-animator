@@ -14,25 +14,25 @@ Ovaj fajl je kanonska lista za arhitekturu i sledeće veće korake ovog repoa.
 
 - `Status`: `DONE`
 - `Šta fali`: ništa
-- `Napomena`: Generičan shell i runtime sada žive u `teach-lessons/teach-lesson/`, a `build-sidebar` je sveden na lesson contract.
+- `Napomena`: Business lekcije sada žive u `lessons/`, generičan player runtime u `lesson-player/play-lesson/`, a `build-sidebar` je sveden na lesson contract.
 
 ### 2. Zadrži jedan kanonski engine entry
 
 - `Status`: `DONE`
 - `Šta fali`: ništa
-- `Napomena`: Glavni tok ostaje u `teach-lessons/teach-lesson/teach-lesson.pipeline.js` i nema konkurentske monolitne implementacije.
+- `Napomena`: Glavni player tok ostaje u `lesson-player/play-lesson/play-lesson.pipeline.js` i nema konkurentske monolitne implementacije.
 
 ### 3. Premesti concrete lesson sadržaj van shell-a
 
 - `Status`: `DONE`
 - `Šta fali`: ništa
-- `Napomena`: Step script, HTML builder, CSS builder i quiz pitanja sada žive u `teach-lessons/build-sidebar/`.
+- `Napomena`: Step script, HTML builder, CSS builder i quiz pitanja sada žive u `lessons/build-sidebar/`.
 
 ### 4. Uvedi jasan lesson contract za buduće lekcije
 
 - `Status`: `DONE`
 - `Šta fali`: ništa
-- `Napomena`: Svaka nova lekcija treba da doda root `feature-name.lesson.js` i da se registruje u `teach-lessons/list-lessons.js`.
+- `Napomena`: Svaka nova lekcija treba da doda root `feature-name.lesson.js` i da se registruje u `lessons/register-lessons.js`.
 
 ### 4a. Uvedi markdown source za lesson metadata i quiz
 
@@ -60,7 +60,7 @@ Ovaj fajl je kanonska lista za arhitekturu i sledeće veće korake ovog repoa.
 
 - `Status`: `DONE`
 - `Šta fali`: ništa
-- `Napomena`: Posle svake veće izmene pokrenuti `find teach-lessons -name '*.js' -print0 | xargs -0 -n1 node --check && node --check main.js`, zatim `npm run build`.
+- `Napomena`: Posle svake veće izmene pokrenuti `find lessons lesson-player lesson-documents -name '*.js' -print0 | xargs -0 -n1 node --check && node --check main.js`, zatim `npm run build`.
 
 ### 8. Osveži merge dump posle svakog većeg pass-a
 

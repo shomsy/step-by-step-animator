@@ -13,7 +13,7 @@ import { chooseTheme } from './choose-theme/choose-theme.js';
 import { presentStepFinder } from './find-step/present-step-finder.js';
 import { rememberSavedSteps } from './save-step/remember-saved-steps.js';
 
-export function teachLesson({ ownerDocument, lesson }) {
+export function playLesson({ ownerDocument, lesson }) {
   const lessonParts = findLessonParts(ownerDocument);
   const lessonProgress = createLessonProgress();
 

@@ -3,11 +3,11 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const currentDir = path.dirname(fileURLToPath(import.meta.url));
-const lessonsRoot = path.resolve(currentDir, '..');
+const lessonsRoot = path.resolve(currentDir, '../lessons');
 
 function collectLessonDocumentFolders() {
   return fs.readdirSync(lessonsRoot, { withFileTypes: true })
-    .filter(entry => entry.isDirectory() && entry.name !== 'teach-lesson' && entry.name !== 'read-lesson-documents')
+    .filter(entry => entry.isDirectory())
     .map(entry => path.join(lessonsRoot, entry.name, 'content', 'documents', 'files'))
     .filter(documentsFolder => fs.existsSync(documentsFolder));
 }

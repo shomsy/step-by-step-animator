@@ -41,12 +41,24 @@ Tree čitaš ovim redom:
 Aktuelni kanonski shape:
 
 ```txt
-teach-lessons/
-  list-lessons.js
-  find-selected-lesson.js
-  teach-lesson/
-    teach-lesson.pipeline.js
-    lesson-shell.css
+lessons/
+  register-lessons.js
+  build-sidebar/
+    build-sidebar.lesson.js
+    describe-steps.js
+    build-html-at-step.js
+    build-css-at-step.js
+    content/
+      documents/
+        build_sidebar.md
+        files/
+          lesson.sr.md
+          quiz.sr.md
+lesson-player/
+  select-lesson-from-location.js
+  play-lesson/
+    play-lesson.pipeline.js
+    lesson-player.css
     escape-inline-text.js
     01-start-lesson/
       find-lesson-parts.js
@@ -81,17 +93,12 @@ teach-lessons/
       remember-saved-steps.js
     choose-theme/
       choose-theme.js
-  build-sidebar/
-    build-sidebar.lesson.js
-    describe-steps.js
-    build-html-at-step.js
-    build-css-at-step.js
-    content/
-      documents/
-        build_sidebar.md
-        files/
-          lesson.sr.md
-          quiz.sr.md
+lesson-documents/
+  parse-frontmatter.js
+  render-markdown.js
+  read-lesson-metadata.js
+  read-knowledge-check-questions.js
+  sync-lesson-documents.js
 ```
 
 ### 2.2 Lesson Contract
@@ -146,7 +153,10 @@ Pravila:
 - `index.html` je generičan lesson shell
 - `sidebar-step-by-step.html` je kompatibilni alias za `build-sidebar`
 - build ide kroz Vite
-- kanonski engine entry ostaje `teach-lessons/teach-lesson/teach-lesson.pipeline.js`
+- business lekcije žive pod `lessons/`
+- tehnički player runtime živi pod `lesson-player/`
+- markdown parsing i sync tooling žive pod `lesson-documents/`
+- kanonski player entry ostaje `lesson-player/play-lesson/play-lesson.pipeline.js`
 
 ### 2.5 Naming Rules
 
@@ -184,7 +194,7 @@ U ovom repo-u glagoli imaju zaključano značenje:
 - `find...` pronalazi postojeće page delove u DOM-u ili u listi
 - `read...` čita iz persistence sloja
 - `write...` upisuje u persistence sloj
-- `teach...` orkestrira kompletan lesson flow
+- `play...` orkestrira kompletan lesson flow
 
 Ne uvoditi novu sinonimsku generaciju ako postojeći glagol već pokriva odgovornost.
 
@@ -192,7 +202,7 @@ Ne uvoditi novu sinonimsku generaciju ako postojeći glagol već pokriva odgovor
 
 Brojevi se koriste samo na flow folderima kada redosled zaista nosi značenje u product story-ju.
 
-U engine-u to važi za glavni lesson journey:
+U player runtime-u to važi za glavni lesson journey:
 
 - `01-start-lesson`
 - `02-follow-lesson`
@@ -226,7 +236,7 @@ To znači:
 Posle svake veće izmene obavezno pokreni:
 
 ```bash
-find teach-lessons -name '*.js' -print0 | xargs -0 -n1 node --check && node --check main.js
+find lessons lesson-player lesson-documents -name '*.js' -print0 | xargs -0 -n1 node --check && node --check main.js
 npm run sync:lesson-documents
 npm run build
 ./merge-files.sh .
@@ -294,14 +304,14 @@ Za nju i dalje važe posebna teaching pravila:
 
 Za novu lekciju:
 
-1. napravi novi feature folder pod `teach-lessons/`
+1. napravi novi feature folder pod `lessons/`
 2. dodaj root `feature-name.lesson.js`
 3. dodaj `describe-steps.js`
 4. dodaj `build-html-at-step.js`
 5. dodaj `build-css-at-step.js`
 6. dodaj `content/documents/files/lesson.sr.md`
 7. dodaj `content/documents/files/quiz.sr.md`
-8. registruj lekciju u `teach-lessons/list-lessons.js`
+8. registruj lekciju u `lessons/register-lessons.js`
 
-Ne kopirati shell iz `teach-lesson/`.
+Ne kopirati player runtime iz `lesson-player/play-lesson/`.
 Nova lekcija treba da doda samo svoj contract i svoj content.

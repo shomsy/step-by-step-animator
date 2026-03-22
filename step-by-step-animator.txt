@@ -48,12 +48,24 @@ Tree čitaš ovim redom:
 Aktuelni kanonski shape:
 
 ```txt
-teach-lessons/
-  list-lessons.js
-  find-selected-lesson.js
-  teach-lesson/
-    teach-lesson.pipeline.js
-    lesson-shell.css
+lessons/
+  register-lessons.js
+  build-sidebar/
+    build-sidebar.lesson.js
+    describe-steps.js
+    build-html-at-step.js
+    build-css-at-step.js
+    content/
+      documents/
+        build_sidebar.md
+        files/
+          lesson.sr.md
+          quiz.sr.md
+lesson-player/
+  select-lesson-from-location.js
+  play-lesson/
+    play-lesson.pipeline.js
+    lesson-player.css
     escape-inline-text.js
     01-start-lesson/
       find-lesson-parts.js
@@ -88,17 +100,12 @@ teach-lessons/
       remember-saved-steps.js
     choose-theme/
       choose-theme.js
-  build-sidebar/
-    build-sidebar.lesson.js
-    describe-steps.js
-    build-html-at-step.js
-    build-css-at-step.js
-    content/
-      documents/
-        build_sidebar.md
-        files/
-          lesson.sr.md
-          quiz.sr.md
+lesson-documents/
+  parse-frontmatter.js
+  render-markdown.js
+  read-lesson-metadata.js
+  read-knowledge-check-questions.js
+  sync-lesson-documents.js
 ```
 
 ### 2.2 Lesson Contract
@@ -153,7 +160,10 @@ Pravila:
 - `index.html` je generičan lesson shell
 - `sidebar-step-by-step.html` je kompatibilni alias za `build-sidebar`
 - build ide kroz Vite
-- kanonski engine entry ostaje `teach-lessons/teach-lesson/teach-lesson.pipeline.js`
+- business lekcije žive pod `lessons/`
+- tehnički player runtime živi pod `lesson-player/`
+- markdown parsing i sync tooling žive pod `lesson-documents/`
+- kanonski player entry ostaje `lesson-player/play-lesson/play-lesson.pipeline.js`
 
 ### 2.5 Naming Rules
 
@@ -191,7 +201,7 @@ U ovom repo-u glagoli imaju zaključano značenje:
 - `find...` pronalazi postojeće page delove u DOM-u ili u listi
 - `read...` čita iz persistence sloja
 - `write...` upisuje u persistence sloj
-- `teach...` orkestrira kompletan lesson flow
+- `play...` orkestrira kompletan lesson flow
 
 Ne uvoditi novu sinonimsku generaciju ako postojeći glagol već pokriva odgovornost.
 
@@ -199,7 +209,7 @@ Ne uvoditi novu sinonimsku generaciju ako postojeći glagol već pokriva odgovor
 
 Brojevi se koriste samo na flow folderima kada redosled zaista nosi značenje u product story-ju.
 
-U engine-u to važi za glavni lesson journey:
+U player runtime-u to važi za glavni lesson journey:
 
 - `01-start-lesson`
 - `02-follow-lesson`
@@ -233,7 +243,7 @@ To znači:
 Posle svake veće izmene obavezno pokreni:
 
 ```bash
-find teach-lessons -name '*.js' -print0 | xargs -0 -n1 node --check && node --check main.js
+find lessons lesson-player lesson-documents -name '*.js' -print0 | xargs -0 -n1 node --check && node --check main.js
 npm run sync:lesson-documents
 npm run build
 ./merge-files.sh .
@@ -301,16 +311,16 @@ Za nju i dalje važe posebna teaching pravila:
 
 Za novu lekciju:
 
-1. napravi novi feature folder pod `teach-lessons/`
+1. napravi novi feature folder pod `lessons/`
 2. dodaj root `feature-name.lesson.js`
 3. dodaj `describe-steps.js`
 4. dodaj `build-html-at-step.js`
 5. dodaj `build-css-at-step.js`
 6. dodaj `content/documents/files/lesson.sr.md`
 7. dodaj `content/documents/files/quiz.sr.md`
-8. registruj lekciju u `teach-lessons/list-lessons.js`
+8. registruj lekciju u `lessons/register-lessons.js`
 
-Ne kopirati shell iz `teach-lesson/`.
+Ne kopirati player runtime iz `lesson-player/play-lesson/`.
 Nova lekcija treba da doda samo svoj contract i svoj content.
 
 === ARCHITECTURE.md ===
@@ -330,12 +340,24 @@ Read the tree in this order:
 Current example:
 
 ```txt
-teach-lessons/
-  list-lessons.js
-  find-selected-lesson.js
-  teach-lesson/
-    teach-lesson.pipeline.js
-    lesson-shell.css
+lessons/
+  register-lessons.js
+  build-sidebar/
+    build-sidebar.lesson.js
+    describe-steps.js
+    build-html-at-step.js
+    build-css-at-step.js
+    content/
+      documents/
+        build_sidebar.md
+        files/
+          lesson.sr.md
+          quiz.sr.md
+lesson-player/
+  select-lesson-from-location.js
+  play-lesson/
+    play-lesson.pipeline.js
+    lesson-player.css
     01-start-lesson/
       find-lesson-parts.js
       create-lesson-progress.js
@@ -356,17 +378,10 @@ teach-lessons/
       choose-theme.js
     06-download-lesson-files/
       download-lesson-files.js
-  build-sidebar/
-    build-sidebar.lesson.js
-    describe-steps.js
-    build-html-at-step.js
-    build-css-at-step.js
-    content/
-      documents/
-        build_sidebar.md
-        files/
-          lesson.sr.md
-          quiz.sr.md
+lesson-documents/
+  read-lesson-metadata.js
+  read-knowledge-check-questions.js
+  sync-lesson-documents.js
 ```
 
 ## Naming Rules
@@ -378,7 +393,7 @@ Use a folder name that tells what the product is doing.
 Good:
 
 ```txt
-teach-lessons/
+lessons/
 sell-subscriptions/
 review-progress/
 ```
@@ -399,7 +414,7 @@ The next folder must tell which concrete product scenario is being handled.
 Good:
 
 ```txt
-teach-lesson/
+play-lesson/
 build-sidebar/
 retry-payment/
 ```
@@ -464,7 +479,7 @@ processor.js
 
 Use `01-...`, `02-...` only when the folder order itself carries product meaning without opening the pipeline.
 
-This repo uses numeric prefixes only on the generic lesson journey inside `teach-lesson/`:
+This repo uses numeric prefixes only on the generic lesson journey inside `play-lesson/`:
 
 ```txt
 01-start-lesson/
@@ -504,8 +519,8 @@ build-sidebar/
 Good:
 
 ```txt
-teachLesson()
-findSelectedLesson()
+playLesson()
+selectLessonFromLocation()
 showGrowingCode()
 downloadLessonFiles()
 ```
@@ -531,7 +546,7 @@ Use verbs consistently by responsibility:
 - `find...` locates a selected lesson or existing page parts.
 - `read...` is reserved for persistence reads.
 - `write...` is reserved for persistence writes.
-- `teach...` orchestrates the complete lesson flow.
+- `play...` orchestrates the complete lesson flow.
 
 ## Anti-Patterns
 
@@ -569,25 +584,25 @@ Ovaj fajl je kanonska lista za arhitekturu i sledeće veće korake ovog repoa.
 
 - `Status`: `DONE`
 - `Šta fali`: ništa
-- `Napomena`: Generičan shell i runtime sada žive u `teach-lessons/teach-lesson/`, a `build-sidebar` je sveden na lesson contract.
+- `Napomena`: Business lekcije sada žive u `lessons/`, generičan player runtime u `lesson-player/play-lesson/`, a `build-sidebar` je sveden na lesson contract.
 
 ### 2. Zadrži jedan kanonski engine entry
 
 - `Status`: `DONE`
 - `Šta fali`: ništa
-- `Napomena`: Glavni tok ostaje u `teach-lessons/teach-lesson/teach-lesson.pipeline.js` i nema konkurentske monolitne implementacije.
+- `Napomena`: Glavni player tok ostaje u `lesson-player/play-lesson/play-lesson.pipeline.js` i nema konkurentske monolitne implementacije.
 
 ### 3. Premesti concrete lesson sadržaj van shell-a
 
 - `Status`: `DONE`
 - `Šta fali`: ništa
-- `Napomena`: Step script, HTML builder, CSS builder i quiz pitanja sada žive u `teach-lessons/build-sidebar/`.
+- `Napomena`: Step script, HTML builder, CSS builder i quiz pitanja sada žive u `lessons/build-sidebar/`.
 
 ### 4. Uvedi jasan lesson contract za buduće lekcije
 
 - `Status`: `DONE`
 - `Šta fali`: ništa
-- `Napomena`: Svaka nova lekcija treba da doda root `feature-name.lesson.js` i da se registruje u `teach-lessons/list-lessons.js`.
+- `Napomena`: Svaka nova lekcija treba da doda root `feature-name.lesson.js` i da se registruje u `lessons/register-lessons.js`.
 
 ### 4a. Uvedi markdown source za lesson metadata i quiz
 
@@ -615,7 +630,7 @@ Ovaj fajl je kanonska lista za arhitekturu i sledeće veće korake ovog repoa.
 
 - `Status`: `DONE`
 - `Šta fali`: ništa
-- `Napomena`: Posle svake veće izmene pokrenuti `find teach-lessons -name '*.js' -print0 | xargs -0 -n1 node --check && node --check main.js`, zatim `npm run build`.
+- `Napomena`: Posle svake veće izmene pokrenuti `find lessons lesson-player lesson-documents -name '*.js' -print0 | xargs -0 -n1 node --check && node --check main.js`, zatim `npm run build`.
 
 ### 8. Osveži merge dump posle svakog većeg pass-a
 
@@ -825,1484 +840,7 @@ Ovaj fajl je kanonska lista za arhitekturu i sledeće veće korake ovog repoa.
 </body>
 </html>
 
-=== main.js ===
-import './teach-lessons/teach-lesson/lesson-shell.css';
-import { findSelectedLesson } from './teach-lessons/find-selected-lesson.js';
-import { listLessons } from './teach-lessons/list-lessons.js';
-import { teachLesson } from './teach-lessons/teach-lesson/teach-lesson.pipeline.js';
-
-const selectedLesson = findSelectedLesson({
-  ownerLocation: window.location,
-  lessons: listLessons()
-});
-
-teachLesson({
-  ownerDocument: document,
-  lesson: selectedLesson
-});
-
-=== merge-files.sh ===
-#!/usr/bin/env bash
-set -euo pipefail
-
-# Canonical PolyMoly wrapper, adapted to run from this repository by delegating
-# into the PolyMoly toolchain and passing an absolute target directory.
-POLYMOLY_ROOT="${POLYMOLY_ROOT:-/home/shomsy/projects/polymoly}"
-
-if [[ ! -d "$POLYMOLY_ROOT" ]]; then
-  echo "PolyMoly repo not found at: $POLYMOLY_ROOT" >&2
-  exit 1
-fi
-
-if [[ $# -lt 1 ]]; then
-  echo "Usage: $0 <target-dir> [review-pack-options...]" >&2
-  exit 1
-fi
-
-TARGET_DIR="$1"
-shift
-
-if [[ "$TARGET_DIR" != /* ]]; then
-  TARGET_DIR="$(pwd)/$TARGET_DIR"
-fi
-
-TARGET_DIR="$(cd "$TARGET_DIR" && pwd)"
-
-PACKAGE_NAME=""
-
-if [[ -f "$TARGET_DIR/package.json" ]]; then
-  PACKAGE_NAME="$(sed -n 's/^[[:space:]]*"name":[[:space:]]*"\([^"]*\)".*/\1/p' "$TARGET_DIR/package.json" | head -n 1)"
-fi
-
-TARGET_BASENAME="$(basename "$TARGET_DIR")"
-
-(
-  cd "$POLYMOLY_ROOT"
-  env TMPDIR=/tmp GOTMPDIR=/tmp GOCACHE=/tmp/gocache \
-    go run ./system/tools/poly/cmd/poly review pack "$TARGET_DIR" "$@"
-)
-
-if [[ -n "$PACKAGE_NAME" && "$PACKAGE_NAME" != "$TARGET_BASENAME" ]]; then
-  ORIGINAL_OUTPUT="$TARGET_DIR/$TARGET_BASENAME.txt"
-  RENAMED_OUTPUT="$TARGET_DIR/$PACKAGE_NAME.txt"
-
-  if [[ -f "$ORIGINAL_OUTPUT" ]]; then
-    mv -f "$ORIGINAL_OUTPUT" "$RENAMED_OUTPUT"
-  fi
-fi
-
-=== package-lock.json ===
-{
-  "name": "step-by-step-animator",
-  "lockfileVersion": 3,
-  "requires": true,
-  "packages": {
-    "": {
-      "name": "step-by-step-animator",
-      "devDependencies": {
-        "vite": "^8.0.1"
-      }
-    },
-    "node_modules/@emnapi/core": {
-      "version": "1.9.1",
-      "resolved": "https://registry.npmjs.org/@emnapi/core/-/core-1.9.1.tgz",
-      "integrity": "sha512-mukuNALVsoix/w1BJwFzwXBN/dHeejQtuVzcDsfOEsdpCumXb/E9j8w11h5S54tT1xhifGfbbSm/ICrObRb3KA==",
-      "dev": true,
-      "license": "MIT",
-      "optional": true,
-      "dependencies": {
-        "@emnapi/wasi-threads": "1.2.0",
-        "tslib": "^2.4.0"
-      }
-    },
-    "node_modules/@emnapi/runtime": {
-      "version": "1.9.1",
-      "resolved": "https://registry.npmjs.org/@emnapi/runtime/-/runtime-1.9.1.tgz",
-      "integrity": "sha512-VYi5+ZVLhpgK4hQ0TAjiQiZ6ol0oe4mBx7mVv7IflsiEp0OWoVsp/+f9Vc1hOhE0TtkORVrI1GvzyreqpgWtkA==",
-      "dev": true,
-      "license": "MIT",
-      "optional": true,
-      "dependencies": {
-        "tslib": "^2.4.0"
-      }
-    },
-    "node_modules/@emnapi/wasi-threads": {
-      "version": "1.2.0",
-      "resolved": "https://registry.npmjs.org/@emnapi/wasi-threads/-/wasi-threads-1.2.0.tgz",
-      "integrity": "sha512-N10dEJNSsUx41Z6pZsXU8FjPjpBEplgH24sfkmITrBED1/U2Esum9F3lfLrMjKHHjmi557zQn7kR9R+XWXu5Rg==",
-      "dev": true,
-      "license": "MIT",
-      "optional": true,
-      "dependencies": {
-        "tslib": "^2.4.0"
-      }
-    },
-    "node_modules/@napi-rs/wasm-runtime": {
-      "version": "1.1.1",
-      "resolved": "https://registry.npmjs.org/@napi-rs/wasm-runtime/-/wasm-runtime-1.1.1.tgz",
-      "integrity": "sha512-p64ah1M1ld8xjWv3qbvFwHiFVWrq1yFvV4f7w+mzaqiR4IlSgkqhcRdHwsGgomwzBH51sRY4NEowLxnaBjcW/A==",
-      "dev": true,
-      "license": "MIT",
-      "optional": true,
-      "dependencies": {
-        "@emnapi/core": "^1.7.1",
-        "@emnapi/runtime": "^1.7.1",
-        "@tybys/wasm-util": "^0.10.1"
-      },
-      "funding": {
-        "type": "github",
-        "url": "https://github.com/sponsors/Brooooooklyn"
-      }
-    },
-    "node_modules/@oxc-project/types": {
-      "version": "0.120.0",
-      "resolved": "https://registry.npmjs.org/@oxc-project/types/-/types-0.120.0.tgz",
-      "integrity": "sha512-k1YNu55DuvAip/MGE1FTsIuU3FUCn6v/ujG9V7Nq5Df/kX2CWb13hhwD0lmJGMGqE+bE1MXvv9SZVnMzEXlWcg==",
-      "dev": true,
-      "license": "MIT",
-      "funding": {
-        "url": "https://github.com/sponsors/Boshen"
-      }
-    },
-    "node_modules/@rolldown/binding-android-arm64": {
-      "version": "1.0.0-rc.10",
-      "resolved": "https://registry.npmjs.org/@rolldown/binding-android-arm64/-/binding-android-arm64-1.0.0-rc.10.tgz",
-      "integrity": "sha512-jOHxwXhxmFKuXztiu1ORieJeTbx5vrTkcOkkkn2d35726+iwhrY1w/+nYY/AGgF12thg33qC3R1LMBF5tHTZHg==",
-      "cpu": [
-        "arm64"
-      ],
-      "dev": true,
-      "license": "MIT",
-      "optional": true,
-      "os": [
-        "android"
-      ],
-      "engines": {
-        "node": "^20.19.0 || >=22.12.0"
-      }
-    },
-    "node_modules/@rolldown/binding-darwin-arm64": {
-      "version": "1.0.0-rc.10",
-      "resolved": "https://registry.npmjs.org/@rolldown/binding-darwin-arm64/-/binding-darwin-arm64-1.0.0-rc.10.tgz",
-      "integrity": "sha512-gED05Teg/vtTZbIJBc4VNMAxAFDUPkuO/rAIyyxZjTj1a1/s6z5TII/5yMGZ0uLRCifEtwUQn8OlYzuYc0m70w==",
-      "cpu": [
-        "arm64"
-      ],
-      "dev": true,
-      "license": "MIT",
-      "optional": true,
-      "os": [
-        "darwin"
-      ],
-      "engines": {
-        "node": "^20.19.0 || >=22.12.0"
-      }
-    },
-    "node_modules/@rolldown/binding-darwin-x64": {
-      "version": "1.0.0-rc.10",
-      "resolved": "https://registry.npmjs.org/@rolldown/binding-darwin-x64/-/binding-darwin-x64-1.0.0-rc.10.tgz",
-      "integrity": "sha512-rI15NcM1mA48lqrIxVkHfAqcyFLcQwyXWThy+BQ5+mkKKPvSO26ir+ZDp36AgYoYVkqvMcdS8zOE6SeBsR9e8A==",
-      "cpu": [
-        "x64"
-      ],
-      "dev": true,
-      "license": "MIT",
-      "optional": true,
-      "os": [
-        "darwin"
-      ],
-      "engines": {
-        "node": "^20.19.0 || >=22.12.0"
-      }
-    },
-    "node_modules/@rolldown/binding-freebsd-x64": {
-      "version": "1.0.0-rc.10",
-      "resolved": "https://registry.npmjs.org/@rolldown/binding-freebsd-x64/-/binding-freebsd-x64-1.0.0-rc.10.tgz",
-      "integrity": "sha512-XZRXHdTa+4ME1MuDVp021+doQ+z6Ei4CCFmNc5/sKbqb8YmkiJdj8QKlV3rCI0AJtAeSB5n0WGPuJWNL9p/L2w==",
-      "cpu": [
-        "x64"
-      ],
-      "dev": true,
-      "license": "MIT",
-      "optional": true,
-      "os": [
-        "freebsd"
-      ],
-      "engines": {
-        "node": "^20.19.0 || >=22.12.0"
-      }
-    },
-    "node_modules/@rolldown/binding-linux-arm-gnueabihf": {
-      "version": "1.0.0-rc.10",
-      "resolved": "https://registry.npmjs.org/@rolldown/binding-linux-arm-gnueabihf/-/binding-linux-arm-gnueabihf-1.0.0-rc.10.tgz",
-      "integrity": "sha512-R0SQMRluISSLzFE20sPWYHVmJdDQnRyc/FzSCN72BqQmh2SOZUFG+N3/vBZpR4C6WpEUVYJLrYUXaj43sJsNLA==",
-      "cpu": [
-        "arm"
-      ],
-      "dev": true,
-      "license": "MIT",
-      "optional": true,
-      "os": [
-        "linux"
-      ],
-      "engines": {
-        "node": "^20.19.0 || >=22.12.0"
-      }
-    },
-    "node_modules/@rolldown/binding-linux-arm64-gnu": {
-      "version": "1.0.0-rc.10",
-      "resolved": "https://registry.npmjs.org/@rolldown/binding-linux-arm64-gnu/-/binding-linux-arm64-gnu-1.0.0-rc.10.tgz",
-      "integrity": "sha512-Y1reMrV/o+cwpduYhJuOE3OMKx32RMYCidf14y+HssARRmhDuWXJ4yVguDg2R/8SyyGNo+auzz64LnPK9Hq6jg==",
-      "cpu": [
-        "arm64"
-      ],
-      "dev": true,
-      "license": "MIT",
-      "optional": true,
-      "os": [
-        "linux"
-      ],
-      "engines": {
-        "node": "^20.19.0 || >=22.12.0"
-      }
-    },
-    "node_modules/@rolldown/binding-linux-arm64-musl": {
-      "version": "1.0.0-rc.10",
-      "resolved": "https://registry.npmjs.org/@rolldown/binding-linux-arm64-musl/-/binding-linux-arm64-musl-1.0.0-rc.10.tgz",
-      "integrity": "sha512-vELN+HNb2IzuzSBUOD4NHmP9yrGwl1DVM29wlQvx1OLSclL0NgVWnVDKl/8tEks79EFek/kebQKnNJkIAA4W2g==",
-      "cpu": [
-        "arm64"
-      ],
-      "dev": true,
-      "license": "MIT",
-      "optional": true,
-      "os": [
-        "linux"
-      ],
-      "engines": {
-        "node": "^20.19.0 || >=22.12.0"
-      }
-    },
-    "node_modules/@rolldown/binding-linux-ppc64-gnu": {
-      "version": "1.0.0-rc.10",
-      "resolved": "https://registry.npmjs.org/@rolldown/binding-linux-ppc64-gnu/-/binding-linux-ppc64-gnu-1.0.0-rc.10.tgz",
-      "integrity": "sha512-ZqrufYTgzxbHwpqOjzSsb0UV/aV2TFIY5rP8HdsiPTv/CuAgCRjM6s9cYFwQ4CNH+hf9Y4erHW1GjZuZ7WoI7w==",
-      "cpu": [
-        "ppc64"
-      ],
-      "dev": true,
-      "license": "MIT",
-      "optional": true,
-      "os": [
-        "linux"
-      ],
-      "engines": {
-        "node": "^20.19.0 || >=22.12.0"
-      }
-    },
-    "node_modules/@rolldown/binding-linux-s390x-gnu": {
-      "version": "1.0.0-rc.10",
-      "resolved": "https://registry.npmjs.org/@rolldown/binding-linux-s390x-gnu/-/binding-linux-s390x-gnu-1.0.0-rc.10.tgz",
-      "integrity": "sha512-gSlmVS1FZJSRicA6IyjoRoKAFK7IIHBs7xJuHRSmjImqk3mPPWbR7RhbnfH2G6bcmMEllCt2vQ/7u9e6bBnByg==",
-      "cpu": [
-        "s390x"
-      ],
-      "dev": true,
-      "license": "MIT",
-      "optional": true,
-      "os": [
-        "linux"
-      ],
-      "engines": {
-        "node": "^20.19.0 || >=22.12.0"
-      }
-    },
-    "node_modules/@rolldown/binding-linux-x64-gnu": {
-      "version": "1.0.0-rc.10",
-      "resolved": "https://registry.npmjs.org/@rolldown/binding-linux-x64-gnu/-/binding-linux-x64-gnu-1.0.0-rc.10.tgz",
-      "integrity": "sha512-eOCKUpluKgfObT2pHjztnaWEIbUabWzk3qPZ5PuacuPmr4+JtQG4k2vGTY0H15edaTnicgU428XW/IH6AimcQw==",
-      "cpu": [
-        "x64"
-      ],
-      "dev": true,
-      "license": "MIT",
-      "optional": true,
-      "os": [
-        "linux"
-      ],
-      "engines": {
-        "node": "^20.19.0 || >=22.12.0"
-      }
-    },
-    "node_modules/@rolldown/binding-linux-x64-musl": {
-      "version": "1.0.0-rc.10",
-      "resolved": "https://registry.npmjs.org/@rolldown/binding-linux-x64-musl/-/binding-linux-x64-musl-1.0.0-rc.10.tgz",
-      "integrity": "sha512-Xdf2jQbfQowJnLcgYfD/m0Uu0Qj5OdxKallD78/IPPfzaiaI4KRAwZzHcKQ4ig1gtg1SuzC7jovNiM2TzQsBXA==",
-      "cpu": [
-        "x64"
-      ],
-      "dev": true,
-      "license": "MIT",
-      "optional": true,
-      "os": [
-        "linux"
-      ],
-      "engines": {
-        "node": "^20.19.0 || >=22.12.0"
-      }
-    },
-    "node_modules/@rolldown/binding-openharmony-arm64": {
-      "version": "1.0.0-rc.10",
-      "resolved": "https://registry.npmjs.org/@rolldown/binding-openharmony-arm64/-/binding-openharmony-arm64-1.0.0-rc.10.tgz",
-      "integrity": "sha512-o1hYe8hLi1EY6jgPFyxQgQ1wcycX+qz8eEbVmot2hFkgUzPxy9+kF0u0NIQBeDq+Mko47AkaFFaChcvZa9UX9Q==",
-      "cpu": [
-        "arm64"
-      ],
-      "dev": true,
-      "license": "MIT",
-      "optional": true,
-      "os": [
-        "openharmony"
-      ],
-      "engines": {
-        "node": "^20.19.0 || >=22.12.0"
-      }
-    },
-    "node_modules/@rolldown/binding-wasm32-wasi": {
-      "version": "1.0.0-rc.10",
-      "resolved": "https://registry.npmjs.org/@rolldown/binding-wasm32-wasi/-/binding-wasm32-wasi-1.0.0-rc.10.tgz",
-      "integrity": "sha512-Ugv9o7qYJudqQO5Y5y2N2SOo6S4WiqiNOpuQyoPInnhVzCY+wi/GHltcLHypG9DEUYMB0iTB/huJrpadiAcNcA==",
-      "cpu": [
-        "wasm32"
-      ],
-      "dev": true,
-      "license": "MIT",
-      "optional": true,
-      "dependencies": {
-        "@napi-rs/wasm-runtime": "^1.1.1"
-      },
-      "engines": {
-        "node": ">=14.0.0"
-      }
-    },
-    "node_modules/@rolldown/binding-win32-arm64-msvc": {
-      "version": "1.0.0-rc.10",
-      "resolved": "https://registry.npmjs.org/@rolldown/binding-win32-arm64-msvc/-/binding-win32-arm64-msvc-1.0.0-rc.10.tgz",
-      "integrity": "sha512-7UODQb4fQUNT/vmgDZBl3XOBAIOutP5R3O/rkxg0aLfEGQ4opbCgU5vOw/scPe4xOqBwL9fw7/RP1vAMZ6QlAQ==",
-      "cpu": [
-        "arm64"
-      ],
-      "dev": true,
-      "license": "MIT",
-      "optional": true,
-      "os": [
-        "win32"
-      ],
-      "engines": {
-        "node": "^20.19.0 || >=22.12.0"
-      }
-    },
-    "node_modules/@rolldown/binding-win32-x64-msvc": {
-      "version": "1.0.0-rc.10",
-      "resolved": "https://registry.npmjs.org/@rolldown/binding-win32-x64-msvc/-/binding-win32-x64-msvc-1.0.0-rc.10.tgz",
-      "integrity": "sha512-PYxKHMVHOb5NJuDL53vBUl1VwUjymDcYI6rzpIni0C9+9mTiJedvUxSk7/RPp7OOAm3v+EjgMu9bIy3N6b408w==",
-      "cpu": [
-        "x64"
-      ],
-      "dev": true,
-      "license": "MIT",
-      "optional": true,
-      "os": [
-        "win32"
-      ],
-      "engines": {
-        "node": "^20.19.0 || >=22.12.0"
-      }
-    },
-    "node_modules/@rolldown/pluginutils": {
-      "version": "1.0.0-rc.10",
-      "resolved": "https://registry.npmjs.org/@rolldown/pluginutils/-/pluginutils-1.0.0-rc.10.tgz",
-      "integrity": "sha512-UkVDEFk1w3mveXeKgaTuYfKWtPbvgck1dT8TUG3bnccrH0XtLTuAyfCoks4Q/M5ZGToSVJTIQYCzy2g/atAOeg==",
-      "dev": true,
-      "license": "MIT"
-    },
-    "node_modules/@tybys/wasm-util": {
-      "version": "0.10.1",
-      "resolved": "https://registry.npmjs.org/@tybys/wasm-util/-/wasm-util-0.10.1.tgz",
-      "integrity": "sha512-9tTaPJLSiejZKx+Bmog4uSubteqTvFrVrURwkmHixBo0G4seD0zUxp98E1DzUBJxLQ3NPwXrGKDiVjwx/DpPsg==",
-      "dev": true,
-      "license": "MIT",
-      "optional": true,
-      "dependencies": {
-        "tslib": "^2.4.0"
-      }
-    },
-    "node_modules/detect-libc": {
-      "version": "2.1.2",
-      "resolved": "https://registry.npmjs.org/detect-libc/-/detect-libc-2.1.2.tgz",
-      "integrity": "sha512-Btj2BOOO83o3WyH59e8MgXsxEQVcarkUOpEYrubB0urwnN10yQ364rsiByU11nZlqWYZm05i/of7io4mzihBtQ==",
-      "dev": true,
-      "license": "Apache-2.0",
-      "engines": {
-        "node": ">=8"
-      }
-    },
-    "node_modules/fdir": {
-      "version": "6.5.0",
-      "resolved": "https://registry.npmjs.org/fdir/-/fdir-6.5.0.tgz",
-      "integrity": "sha512-tIbYtZbucOs0BRGqPJkshJUYdL+SDH7dVM8gjy+ERp3WAUjLEFJE+02kanyHtwjWOnwrKYBiwAmM0p4kLJAnXg==",
-      "dev": true,
-      "license": "MIT",
-      "engines": {
-        "node": ">=12.0.0"
-      },
-      "peerDependencies": {
-        "picomatch": "^3 || ^4"
-      },
-      "peerDependenciesMeta": {
-        "picomatch": {
-          "optional": true
-        }
-      }
-    },
-    "node_modules/fsevents": {
-      "version": "2.3.3",
-      "resolved": "https://registry.npmjs.org/fsevents/-/fsevents-2.3.3.tgz",
-      "integrity": "sha512-5xoDfX+fL7faATnagmWPpbFtwh/R77WmMMqqHGS65C3vvB0YHrgF+B1YmZ3441tMj5n63k0212XNoJwzlhffQw==",
-      "dev": true,
-      "hasInstallScript": true,
-      "license": "MIT",
-      "optional": true,
-      "os": [
-        "darwin"
-      ],
-      "engines": {
-        "node": "^8.16.0 || ^10.6.0 || >=11.0.0"
-      }
-    },
-    "node_modules/lightningcss": {
-      "version": "1.32.0",
-      "resolved": "https://registry.npmjs.org/lightningcss/-/lightningcss-1.32.0.tgz",
-      "integrity": "sha512-NXYBzinNrblfraPGyrbPoD19C1h9lfI/1mzgWYvXUTe414Gz/X1FD2XBZSZM7rRTrMA8JL3OtAaGifrIKhQ5yQ==",
-      "dev": true,
-      "license": "MPL-2.0",
-      "dependencies": {
-        "detect-libc": "^2.0.3"
-      },
-      "engines": {
-        "node": ">= 12.0.0"
-      },
-      "funding": {
-        "type": "opencollective",
-        "url": "https://opencollective.com/parcel"
-      },
-      "optionalDependencies": {
-        "lightningcss-android-arm64": "1.32.0",
-        "lightningcss-darwin-arm64": "1.32.0",
-        "lightningcss-darwin-x64": "1.32.0",
-        "lightningcss-freebsd-x64": "1.32.0",
-        "lightningcss-linux-arm-gnueabihf": "1.32.0",
-        "lightningcss-linux-arm64-gnu": "1.32.0",
-        "lightningcss-linux-arm64-musl": "1.32.0",
-        "lightningcss-linux-x64-gnu": "1.32.0",
-        "lightningcss-linux-x64-musl": "1.32.0",
-        "lightningcss-win32-arm64-msvc": "1.32.0",
-        "lightningcss-win32-x64-msvc": "1.32.0"
-      }
-    },
-    "node_modules/lightningcss-android-arm64": {
-      "version": "1.32.0",
-      "resolved": "https://registry.npmjs.org/lightningcss-android-arm64/-/lightningcss-android-arm64-1.32.0.tgz",
-      "integrity": "sha512-YK7/ClTt4kAK0vo6w3X+Pnm0D2cf2vPHbhOXdoNti1Ga0al1P4TBZhwjATvjNwLEBCnKvjJc2jQgHXH0NEwlAg==",
-      "cpu": [
-        "arm64"
-      ],
-      "dev": true,
-      "license": "MPL-2.0",
-      "optional": true,
-      "os": [
-        "android"
-      ],
-      "engines": {
-        "node": ">= 12.0.0"
-      },
-      "funding": {
-        "type": "opencollective",
-        "url": "https://opencollective.com/parcel"
-      }
-    },
-    "node_modules/lightningcss-darwin-arm64": {
-      "version": "1.32.0",
-      "resolved": "https://registry.npmjs.org/lightningcss-darwin-arm64/-/lightningcss-darwin-arm64-1.32.0.tgz",
-      "integrity": "sha512-RzeG9Ju5bag2Bv1/lwlVJvBE3q6TtXskdZLLCyfg5pt+HLz9BqlICO7LZM7VHNTTn/5PRhHFBSjk5lc4cmscPQ==",
-      "cpu": [
-        "arm64"
-      ],
-      "dev": true,
-      "license": "MPL-2.0",
-      "optional": true,
-      "os": [
-        "darwin"
-      ],
-      "engines": {
-        "node": ">= 12.0.0"
-      },
-      "funding": {
-        "type": "opencollective",
-        "url": "https://opencollective.com/parcel"
-      }
-    },
-    "node_modules/lightningcss-darwin-x64": {
-      "version": "1.32.0",
-      "resolved": "https://registry.npmjs.org/lightningcss-darwin-x64/-/lightningcss-darwin-x64-1.32.0.tgz",
-      "integrity": "sha512-U+QsBp2m/s2wqpUYT/6wnlagdZbtZdndSmut/NJqlCcMLTWp5muCrID+K5UJ6jqD2BFshejCYXniPDbNh73V8w==",
-      "cpu": [
-        "x64"
-      ],
-      "dev": true,
-      "license": "MPL-2.0",
-      "optional": true,
-      "os": [
-        "darwin"
-      ],
-      "engines": {
-        "node": ">= 12.0.0"
-      },
-      "funding": {
-        "type": "opencollective",
-        "url": "https://opencollective.com/parcel"
-      }
-    },
-    "node_modules/lightningcss-freebsd-x64": {
-      "version": "1.32.0",
-      "resolved": "https://registry.npmjs.org/lightningcss-freebsd-x64/-/lightningcss-freebsd-x64-1.32.0.tgz",
-      "integrity": "sha512-JCTigedEksZk3tHTTthnMdVfGf61Fky8Ji2E4YjUTEQX14xiy/lTzXnu1vwiZe3bYe0q+SpsSH/CTeDXK6WHig==",
-      "cpu": [
-        "x64"
-      ],
-      "dev": true,
-      "license": "MPL-2.0",
-      "optional": true,
-      "os": [
-        "freebsd"
-      ],
-      "engines": {
-        "node": ">= 12.0.0"
-      },
-      "funding": {
-        "type": "opencollective",
-        "url": "https://opencollective.com/parcel"
-      }
-    },
-    "node_modules/lightningcss-linux-arm-gnueabihf": {
-      "version": "1.32.0",
-      "resolved": "https://registry.npmjs.org/lightningcss-linux-arm-gnueabihf/-/lightningcss-linux-arm-gnueabihf-1.32.0.tgz",
-      "integrity": "sha512-x6rnnpRa2GL0zQOkt6rts3YDPzduLpWvwAF6EMhXFVZXD4tPrBkEFqzGowzCsIWsPjqSK+tyNEODUBXeeVHSkw==",
-      "cpu": [
-        "arm"
-      ],
-      "dev": true,
-      "license": "MPL-2.0",
-      "optional": true,
-      "os": [
-        "linux"
-      ],
-      "engines": {
-        "node": ">= 12.0.0"
-      },
-      "funding": {
-        "type": "opencollective",
-        "url": "https://opencollective.com/parcel"
-      }
-    },
-    "node_modules/lightningcss-linux-arm64-gnu": {
-      "version": "1.32.0",
-      "resolved": "https://registry.npmjs.org/lightningcss-linux-arm64-gnu/-/lightningcss-linux-arm64-gnu-1.32.0.tgz",
-      "integrity": "sha512-0nnMyoyOLRJXfbMOilaSRcLH3Jw5z9HDNGfT/gwCPgaDjnx0i8w7vBzFLFR1f6CMLKF8gVbebmkUN3fa/kQJpQ==",
-      "cpu": [
-        "arm64"
-      ],
-      "dev": true,
-      "license": "MPL-2.0",
-      "optional": true,
-      "os": [
-        "linux"
-      ],
-      "engines": {
-        "node": ">= 12.0.0"
-      },
-      "funding": {
-        "type": "opencollective",
-        "url": "https://opencollective.com/parcel"
-      }
-    },
-    "node_modules/lightningcss-linux-arm64-musl": {
-      "version": "1.32.0",
-      "resolved": "https://registry.npmjs.org/lightningcss-linux-arm64-musl/-/lightningcss-linux-arm64-musl-1.32.0.tgz",
-      "integrity": "sha512-UpQkoenr4UJEzgVIYpI80lDFvRmPVg6oqboNHfoH4CQIfNA+HOrZ7Mo7KZP02dC6LjghPQJeBsvXhJod/wnIBg==",
-      "cpu": [
-        "arm64"
-      ],
-      "dev": true,
-      "license": "MPL-2.0",
-      "optional": true,
-      "os": [
-        "linux"
-      ],
-      "engines": {
-        "node": ">= 12.0.0"
-      },
-      "funding": {
-        "type": "opencollective",
-        "url": "https://opencollective.com/parcel"
-      }
-    },
-    "node_modules/lightningcss-linux-x64-gnu": {
-      "version": "1.32.0",
-      "resolved": "https://registry.npmjs.org/lightningcss-linux-x64-gnu/-/lightningcss-linux-x64-gnu-1.32.0.tgz",
-      "integrity": "sha512-V7Qr52IhZmdKPVr+Vtw8o+WLsQJYCTd8loIfpDaMRWGUZfBOYEJeyJIkqGIDMZPwPx24pUMfwSxxI8phr/MbOA==",
-      "cpu": [
-        "x64"
-      ],
-      "dev": true,
-      "license": "MPL-2.0",
-      "optional": true,
-      "os": [
-        "linux"
-      ],
-      "engines": {
-        "node": ">= 12.0.0"
-      },
-      "funding": {
-        "type": "opencollective",
-        "url": "https://opencollective.com/parcel"
-      }
-    },
-    "node_modules/lightningcss-linux-x64-musl": {
-      "version": "1.32.0",
-      "resolved": "https://registry.npmjs.org/lightningcss-linux-x64-musl/-/lightningcss-linux-x64-musl-1.32.0.tgz",
-      "integrity": "sha512-bYcLp+Vb0awsiXg/80uCRezCYHNg1/l3mt0gzHnWV9XP1W5sKa5/TCdGWaR/zBM2PeF/HbsQv/j2URNOiVuxWg==",
-      "cpu": [
-        "x64"
-      ],
-      "dev": true,
-      "license": "MPL-2.0",
-      "optional": true,
-      "os": [
-        "linux"
-      ],
-      "engines": {
-        "node": ">= 12.0.0"
-      },
-      "funding": {
-        "type": "opencollective",
-        "url": "https://opencollective.com/parcel"
-      }
-    },
-    "node_modules/lightningcss-win32-arm64-msvc": {
-      "version": "1.32.0",
-      "resolved": "https://registry.npmjs.org/lightningcss-win32-arm64-msvc/-/lightningcss-win32-arm64-msvc-1.32.0.tgz",
-      "integrity": "sha512-8SbC8BR40pS6baCM8sbtYDSwEVQd4JlFTOlaD3gWGHfThTcABnNDBda6eTZeqbofalIJhFx0qKzgHJmcPTnGdw==",
-      "cpu": [
-        "arm64"
-      ],
-      "dev": true,
-      "license": "MPL-2.0",
-      "optional": true,
-      "os": [
-        "win32"
-      ],
-      "engines": {
-        "node": ">= 12.0.0"
-      },
-      "funding": {
-        "type": "opencollective",
-        "url": "https://opencollective.com/parcel"
-      }
-    },
-    "node_modules/lightningcss-win32-x64-msvc": {
-      "version": "1.32.0",
-      "resolved": "https://registry.npmjs.org/lightningcss-win32-x64-msvc/-/lightningcss-win32-x64-msvc-1.32.0.tgz",
-      "integrity": "sha512-Amq9B/SoZYdDi1kFrojnoqPLxYhQ4Wo5XiL8EVJrVsB8ARoC1PWW6VGtT0WKCemjy8aC+louJnjS7U18x3b06Q==",
-      "cpu": [
-        "x64"
-      ],
-      "dev": true,
-      "license": "MPL-2.0",
-      "optional": true,
-      "os": [
-        "win32"
-      ],
-      "engines": {
-        "node": ">= 12.0.0"
-      },
-      "funding": {
-        "type": "opencollective",
-        "url": "https://opencollective.com/parcel"
-      }
-    },
-    "node_modules/nanoid": {
-      "version": "3.3.11",
-      "resolved": "https://registry.npmjs.org/nanoid/-/nanoid-3.3.11.tgz",
-      "integrity": "sha512-N8SpfPUnUp1bK+PMYW8qSWdl9U+wwNWI4QKxOYDy9JAro3WMX7p2OeVRF9v+347pnakNevPmiHhNmZ2HbFA76w==",
-      "dev": true,
-      "funding": [
-        {
-          "type": "github",
-          "url": "https://github.com/sponsors/ai"
-        }
-      ],
-      "license": "MIT",
-      "bin": {
-        "nanoid": "bin/nanoid.cjs"
-      },
-      "engines": {
-        "node": "^10 || ^12 || ^13.7 || ^14 || >=15.0.1"
-      }
-    },
-    "node_modules/picocolors": {
-      "version": "1.1.1",
-      "resolved": "https://registry.npmjs.org/picocolors/-/picocolors-1.1.1.tgz",
-      "integrity": "sha512-xceH2snhtb5M9liqDsmEw56le376mTZkEX/jEb/RxNFyegNul7eNslCXP9FDj/Lcu0X8KEyMceP2ntpaHrDEVA==",
-      "dev": true,
-      "license": "ISC"
-    },
-    "node_modules/picomatch": {
-      "version": "4.0.3",
-      "resolved": "https://registry.npmjs.org/picomatch/-/picomatch-4.0.3.tgz",
-      "integrity": "sha512-5gTmgEY/sqK6gFXLIsQNH19lWb4ebPDLA4SdLP7dsWkIXHWlG66oPuVvXSGFPppYZz8ZDZq0dYYrbHfBCVUb1Q==",
-      "dev": true,
-      "license": "MIT",
-      "engines": {
-        "node": ">=12"
-      },
-      "funding": {
-        "url": "https://github.com/sponsors/jonschlinkert"
-      }
-    },
-    "node_modules/postcss": {
-      "version": "8.5.8",
-      "resolved": "https://registry.npmjs.org/postcss/-/postcss-8.5.8.tgz",
-      "integrity": "sha512-OW/rX8O/jXnm82Ey1k44pObPtdblfiuWnrd8X7GJ7emImCOstunGbXUpp7HdBrFQX6rJzn3sPT397Wp5aCwCHg==",
-      "dev": true,
-      "funding": [
-        {
-          "type": "opencollective",
-          "url": "https://opencollective.com/postcss/"
-        },
-        {
-          "type": "tidelift",
-          "url": "https://tidelift.com/funding/github/npm/postcss"
-        },
-        {
-          "type": "github",
-          "url": "https://github.com/sponsors/ai"
-        }
-      ],
-      "license": "MIT",
-      "dependencies": {
-        "nanoid": "^3.3.11",
-        "picocolors": "^1.1.1",
-        "source-map-js": "^1.2.1"
-      },
-      "engines": {
-        "node": "^10 || ^12 || >=14"
-      }
-    },
-    "node_modules/rolldown": {
-      "version": "1.0.0-rc.10",
-      "resolved": "https://registry.npmjs.org/rolldown/-/rolldown-1.0.0-rc.10.tgz",
-      "integrity": "sha512-q7j6vvarRFmKpgJUT8HCAUljkgzEp4LAhPlJUvQhA5LA1SUL36s5QCysMutErzL3EbNOZOkoziSx9iZC4FddKA==",
-      "dev": true,
-      "license": "MIT",
-      "dependencies": {
-        "@oxc-project/types": "=0.120.0",
-        "@rolldown/pluginutils": "1.0.0-rc.10"
-      },
-      "bin": {
-        "rolldown": "bin/cli.mjs"
-      },
-      "engines": {
-        "node": "^20.19.0 || >=22.12.0"
-      },
-      "optionalDependencies": {
-        "@rolldown/binding-android-arm64": "1.0.0-rc.10",
-        "@rolldown/binding-darwin-arm64": "1.0.0-rc.10",
-        "@rolldown/binding-darwin-x64": "1.0.0-rc.10",
-        "@rolldown/binding-freebsd-x64": "1.0.0-rc.10",
-        "@rolldown/binding-linux-arm-gnueabihf": "1.0.0-rc.10",
-        "@rolldown/binding-linux-arm64-gnu": "1.0.0-rc.10",
-        "@rolldown/binding-linux-arm64-musl": "1.0.0-rc.10",
-        "@rolldown/binding-linux-ppc64-gnu": "1.0.0-rc.10",
-        "@rolldown/binding-linux-s390x-gnu": "1.0.0-rc.10",
-        "@rolldown/binding-linux-x64-gnu": "1.0.0-rc.10",
-        "@rolldown/binding-linux-x64-musl": "1.0.0-rc.10",
-        "@rolldown/binding-openharmony-arm64": "1.0.0-rc.10",
-        "@rolldown/binding-wasm32-wasi": "1.0.0-rc.10",
-        "@rolldown/binding-win32-arm64-msvc": "1.0.0-rc.10",
-        "@rolldown/binding-win32-x64-msvc": "1.0.0-rc.10"
-      }
-    },
-    "node_modules/source-map-js": {
-      "version": "1.2.1",
-      "resolved": "https://registry.npmjs.org/source-map-js/-/source-map-js-1.2.1.tgz",
-      "integrity": "sha512-UXWMKhLOwVKb728IUtQPXxfYU+usdybtUrK/8uGE8CQMvrhOpwvzDBwj0QhSL7MQc7vIsISBG8VQ8+IDQxpfQA==",
-      "dev": true,
-      "license": "BSD-3-Clause",
-      "engines": {
-        "node": ">=0.10.0"
-      }
-    },
-    "node_modules/tinyglobby": {
-      "version": "0.2.15",
-      "resolved": "https://registry.npmjs.org/tinyglobby/-/tinyglobby-0.2.15.tgz",
-      "integrity": "sha512-j2Zq4NyQYG5XMST4cbs02Ak8iJUdxRM0XI5QyxXuZOzKOINmWurp3smXu3y5wDcJrptwpSjgXHzIQxR0omXljQ==",
-      "dev": true,
-      "license": "MIT",
-      "dependencies": {
-        "fdir": "^6.5.0",
-        "picomatch": "^4.0.3"
-      },
-      "engines": {
-        "node": ">=12.0.0"
-      },
-      "funding": {
-        "url": "https://github.com/sponsors/SuperchupuDev"
-      }
-    },
-    "node_modules/tslib": {
-      "version": "2.8.1",
-      "resolved": "https://registry.npmjs.org/tslib/-/tslib-2.8.1.tgz",
-      "integrity": "sha512-oJFu94HQb+KVduSUQL7wnpmqnfmLsOA/nAh6b6EH0wCEoK0/mPeXU6c3wKDV83MkOuHPRHtSXKKU99IBazS/2w==",
-      "dev": true,
-      "license": "0BSD",
-      "optional": true
-    },
-    "node_modules/vite": {
-      "version": "8.0.1",
-      "resolved": "https://registry.npmjs.org/vite/-/vite-8.0.1.tgz",
-      "integrity": "sha512-wt+Z2qIhfFt85uiyRt5LPU4oVEJBXj8hZNWKeqFG4gRG/0RaRGJ7njQCwzFVjO+v4+Ipmf5CY7VdmZRAYYBPHw==",
-      "dev": true,
-      "license": "MIT",
-      "dependencies": {
-        "lightningcss": "^1.32.0",
-        "picomatch": "^4.0.3",
-        "postcss": "^8.5.8",
-        "rolldown": "1.0.0-rc.10",
-        "tinyglobby": "^0.2.15"
-      },
-      "bin": {
-        "vite": "bin/vite.js"
-      },
-      "engines": {
-        "node": "^20.19.0 || >=22.12.0"
-      },
-      "funding": {
-        "url": "https://github.com/vitejs/vite?sponsor=1"
-      },
-      "optionalDependencies": {
-        "fsevents": "~2.3.3"
-      },
-      "peerDependencies": {
-        "@types/node": "^20.19.0 || >=22.12.0",
-        "@vitejs/devtools": "^0.1.0",
-        "esbuild": "^0.27.0",
-        "jiti": ">=1.21.0",
-        "less": "^4.0.0",
-        "sass": "^1.70.0",
-        "sass-embedded": "^1.70.0",
-        "stylus": ">=0.54.8",
-        "sugarss": "^5.0.0",
-        "terser": "^5.16.0",
-        "tsx": "^4.8.1",
-        "yaml": "^2.4.2"
-      },
-      "peerDependenciesMeta": {
-        "@types/node": {
-          "optional": true
-        },
-        "@vitejs/devtools": {
-          "optional": true
-        },
-        "esbuild": {
-          "optional": true
-        },
-        "jiti": {
-          "optional": true
-        },
-        "less": {
-          "optional": true
-        },
-        "sass": {
-          "optional": true
-        },
-        "sass-embedded": {
-          "optional": true
-        },
-        "stylus": {
-          "optional": true
-        },
-        "sugarss": {
-          "optional": true
-        },
-        "terser": {
-          "optional": true
-        },
-        "tsx": {
-          "optional": true
-        },
-        "yaml": {
-          "optional": true
-        }
-      }
-    }
-  }
-}
-
-=== package.json ===
-{
-  "name": "step-by-step-animator",
-  "private": true,
-  "type": "module",
-  "scripts": {
-    "dev": "vite",
-    "build": "vite build",
-    "preview": "vite preview",
-    "sync:lesson-documents": "node teach-lessons/read-lesson-documents/sync-lesson-documents.js"
-  },
-  "devDependencies": {
-    "vite": "^8.0.1"
-  }
-}
-
-=== sidebar-step-by-step.html ===
-<!doctype html>
-<html lang="sr">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Step By Step Animator</title>
-    <meta http-equiv="refresh" content="0; url=./?lesson=build-sidebar" />
-  </head>
-  <body>
-    <script>
-      window.location.replace('./?lesson=build-sidebar');
-    </script>
-    <p>Otvori <a href="./?lesson=build-sidebar">build-sidebar</a> lekciju.</p>
-  </body>
-</html>
-
-=== teach-lessons/build-sidebar/build-css-at-step.js ===
-import { stepNumberById } from './describe-steps.js';
-
-function readStepBoundary(stepReference) {
-  if (typeof stepReference === 'number') {
-    return stepReference;
-  }
-
-  if (!stepReference) {
-    return Number.POSITIVE_INFINITY;
-  }
-
-  return stepNumberById[stepReference] ?? Number.POSITIVE_INFINITY;
-}
-
-function appendVisibleCssRuleBlock(lines, header, entries, stepNumber, showFrom = Number.POSITIVE_INFINITY) {
-  const activeEntries = entries.filter(entry =>
-    stepNumber >= readStepBoundary(entry.from) &&
-    (entry.untilBefore === undefined || stepNumber < readStepBoundary(entry.untilBefore))
-  );
-
-  if (!activeEntries.length && stepNumber < readStepBoundary(showFrom)) {
-    return;
-  }
-
-  if (lines.length) {
-    lines.push('');
-  }
-
-  if (Array.isArray(header)) {
-    header.forEach(line => lines.push(line));
-  } else {
-    lines.push(header);
-  }
-
-  activeEntries.forEach(entry => {
-    lines.push(`  ${entry.line}`);
-  });
-
-  lines.push('}');
-}
-
-export function buildCssAtStep(stepNumber) {
-  const lines = [];
-
-  appendVisibleCssRuleBlock(lines, '.sidebar {', [
-    { from: 'sidebar_outline', untilBefore: 'sidebar_background', line: '/* privremeni pomoćni border radi lakšeg snalaženja; uklanjamo ga kasnije */' },
-    { from: 'sidebar_outline', untilBefore: 'sidebar_background', line: 'outline: 2px solid #ff4757;' },
-    { from: 'sidebar_width', line: 'width: 280px;' },
-    { from: 'sidebar_min_height', line: 'min-height: 100vh;' },
-    { from: 'sidebar_border_right', line: 'border-right: 1px solid rgba(255,255,255,0.12);' },
-    { from: 'sidebar_background', line: 'background: #0b1020;' },
-    { from: 'sidebar_color', line: 'color: #edf2ff;' },
-    { from: 'sidebar_display_flex', line: 'display: flex;' },
-    { from: 'sidebar_flex_direction', line: 'flex-direction: column;' }
-  ], stepNumber, 'sidebar_html');
-
-  appendVisibleCssRuleBlock(lines, '.sidebar-brand {', [
-    { from: 'brand_outline', untilBefore: 'nav_html', line: '/* helper boja za wrapper; držimo je dok ne završimo celu brand celinu */' },
-    { from: 'brand_outline', untilBefore: 'nav_html', line: 'outline: 2px solid #2ed573;' },
-    { from: 'brand_padding', line: 'padding: 24px;' },
-    { from: 'brand_margin_bottom', line: 'margin-bottom: 28px;' },
-    { from: 'brand_display', line: 'display: flex;' },
-    { from: 'brand_align_items', line: 'align-items: center;' },
-    { from: 'brand_gap', line: 'gap: 14px;' },
-  ], stepNumber, 'brand_html');
-
-  appendVisibleCssRuleBlock(lines, '.logo {', [
-    { from: 'logo_outline', untilBefore: 'nav_html', line: '/* helper boja za logo; držimo je dok ne završimo celu brand celinu */' },
-    { from: 'logo_outline', untilBefore: 'nav_html', line: 'outline: 2px dotted #7dd3fc;' },
-    { from: 'logo_width', line: 'width: 48px;' },
-    { from: 'logo_height', line: 'height: 48px;' },
-    { from: 'logo_display', line: 'display: grid;' },
-    { from: 'logo_place_items', line: 'place-items: center;' },
-    { from: 'logo_radius', line: 'border-radius: 12px;' },
-    { from: 'logo_font_weight', line: 'font-weight: 800;' },
-    { from: 'logo_background', line: 'background: linear-gradient(135deg, #6d73ff, #8f5cff);' },
-    { from: 'logo_color', line: 'color: white;' },
-    { from: 'logo_shadow', line: 'box-shadow: 0 12px 24px rgba(109,115,255,0.30);' }
-  ], stepNumber, 'logo_html');
-
-  appendVisibleCssRuleBlock(lines, '.brand-copy {', [
-    { from: 'brand_copy_outline', untilBefore: 'nav_html', line: '/* helper boja za brand-copy; držimo je dok ne završimo celu brand celinu */' },
-    { from: 'brand_copy_outline', untilBefore: 'nav_html', line: 'outline: 1px dashed #f59e0b;' }
-  ], stepNumber, 'brand_copy_html');
-
-  appendVisibleCssRuleBlock(lines, '.brand-copy strong {', [
-    { from: 'brand_strong_display', line: 'display: block;' },
-    { from: 'brand_strong_font_size', line: 'font-size: 16px;' }
-  ], stepNumber);
-
-  appendVisibleCssRuleBlock(lines, '.brand-copy span {', [
-    { from: 'brand_span_display', line: 'display: block;' },
-    { from: 'brand_span_margin_top', line: 'margin-top: 4px;' },
-    { from: 'brand_span_font_size', line: 'font-size: 13px;' },
-    { from: 'brand_span_color', line: 'color: #9aa6c8;' }
-  ], stepNumber);
-
-  appendVisibleCssRuleBlock(lines, '.nav-list {', [
-    { from: 'nav_list_outline', untilBefore: 'footer_html', line: '/* helper boja za nav wrapper; držimo je dok ne završimo celu navigacionu celinu */' },
-    { from: 'nav_list_outline', untilBefore: 'footer_html', line: 'outline: 1px dashed #38bdf8;' },
-    { from: 'nav_list_padding', untilBefore: 'footer_html', line: 'padding: 10px 8px;' },
-    { from: 'nav_list_display', line: 'display: grid;' },
-    { from: 'nav_list_gap', line: 'gap: 10px;' }
-  ], stepNumber, 'nav_html');
-
-  appendVisibleCssRuleBlock(lines, '.nav-item {', [
-    { from: 'nav_item_outline', untilBefore: 'footer_html', line: '/* helper boja za nav item; držimo je dok ne završimo celu navigacionu celinu */' },
-    { from: 'nav_item_outline', untilBefore: 'footer_html', line: 'outline: 1px solid #ffa502;' },
-    { from: 'nav_item_display', line: 'display: flex;' },
-    { from: 'nav_item_min_height', line: 'min-height: 52px;' },
-    { from: 'nav_item_padding', line: 'padding: 12px 16px;' },
-    { from: 'nav_item_align_items', line: 'align-items: center;' },
-    { from: 'nav_item_gap', line: 'gap: 12px;' },
-    { from: 'nav_item_radius', line: 'border-radius: 14px;' },
-    { from: 'nav_item_margin', line: 'margin: 0 8px;' },
-    { from: 'nav_item_transition', line: 'transition: all 0.4s ease;' }
-  ], stepNumber, 'nav_items_html');
-
-  appendVisibleCssRuleBlock(lines, '.nav-item .icon {', [
-    { from: 'nav_icon_outline', untilBefore: 'footer_html', line: '/* helper boja za icon; držimo je dok ne završimo celu navigacionu celinu */' },
-    { from: 'nav_icon_outline', untilBefore: 'footer_html', line: 'outline: 1px dotted #7dd3fc;' },
-    { from: 'nav_icon_width', line: 'width: 22px;' },
-    { from: 'nav_icon_height', line: 'height: 22px;' },
-    { from: 'nav_icon_display', line: 'display: grid;' },
-    { from: 'nav_icon_place_items', line: 'place-items: center;' }
-  ], stepNumber);
-
-  appendVisibleCssRuleBlock(lines, '.nav-item .label {', [
-    { from: 'nav_label_font_size', line: 'font-size: 15px;' },
-    { from: 'nav_label_font_weight', line: 'font-weight: 600;' }
-  ], stepNumber);
-
-  appendVisibleCssRuleBlock(lines, '.nav-item.active {', [
-    { from: 'nav_item_active_background', line: 'background: rgba(109,115,255,0.14);' },
-    { from: 'nav_item_active_color', line: 'color: white;' }
-  ], stepNumber);
-
-  appendVisibleCssRuleBlock(lines, '.nav-item:hover {', [
-    { from: 'nav_item_hover_background', line: 'background: rgba(255,255,255,0.05);' }
-  ], stepNumber);
-
-  appendVisibleCssRuleBlock(lines, '.sidebar.is-collapsed {', [
-    { from: 'collapse_width', line: 'width: 108px;' }
-  ], stepNumber);
-
-  appendVisibleCssRuleBlock(lines, [
-    '.sidebar.is-collapsed .brand-copy,',
-    '.sidebar.is-collapsed .nav-item .label {'
-  ], [
-    { from: 'hide_labels', line: 'display: none;' }
-  ], stepNumber);
-
-  appendVisibleCssRuleBlock(lines, '.sidebar-footer {', [
-    { from: 'footer_border', line: 'border: 1px solid rgba(255,255,255,0.12);' },
-    { from: 'footer_background', line: 'background: rgba(255,255,255,0.05);' },
-    { from: 'footer_padding', line: 'padding: 16px;' },
-    { from: 'footer_radius', line: 'border-radius: 14px;' },
-    { from: 'footer_margin_top', line: 'margin-top: auto;' }
-  ], stepNumber, 'footer_html');
-
-  appendVisibleCssRuleBlock(lines, '.sidebar-footer p {', [
-    { from: 'footer_text_margin', line: 'margin: 6px 0 0;' },
-    { from: 'footer_text_color', line: 'color: #9aa6c8;' },
-    { from: 'footer_text_line_height', line: 'line-height: 1.5;' }
-  ], stepNumber);
-
-  if (stepNumber >= stepNumberById.responsive_sidebar_min_height) {
-    lines.push(
-      '',
-      '@media (max-width: 980px) {',
-      '  .sidebar {',
-      '    min-height: auto;',
-      '  }',
-      '}'
-    );
-  }
-
-  return lines;
-}
-
-=== teach-lessons/build-sidebar/build-html-at-step.js ===
-import { stepNumberById } from './describe-steps.js';
-
-export function buildHtmlAtStep(stepNumber) {
-  const lines = ['<div class="app-shell">'];
-
-  if (stepNumber >= stepNumberById.sidebar_html) {
-    lines.push('  <aside class="sidebar">');
-
-    if (stepNumber >= stepNumberById.brand_html) {
-      lines.push('    <div class="sidebar-brand">');
-
-      if (stepNumber >= stepNumberById.logo_html) {
-        lines.push('      <div class="logo">A</div>');
-      }
-
-      if (stepNumber >= stepNumberById.brand_copy_html) {
-        lines.push(
-          '      <div class="brand-copy">',
-          '        <strong>AdminPro</strong>',
-          '        <span>Dashboard</span>',
-          '      </div>'
-        );
-      }
-
-      lines.push('    </div>');
-    }
-
-    if (stepNumber >= stepNumberById.nav_html) {
-      lines.push('', '    <nav class="nav-list">');
-
-      if (stepNumber >= stepNumberById.nav_items_html) {
-        lines.push(
-          '      <a href="#" class="nav-item active"><span class="icon">⌂</span><span class="label">Overview</span></a>',
-          '      <a href="#" class="nav-item"><span class="icon">◫</span><span class="label">Analytics</span></a>',
-          '      <a href="#" class="nav-item"><span class="icon">◧</span><span class="label">Orders</span></a>',
-          '      <a href="#" class="nav-item"><span class="icon">◎</span><span class="label">Customers</span></a>',
-          '      <a href="#" class="nav-item"><span class="icon">▣</span><span class="label">Products</span></a>',
-          '      <a href="#" class="nav-item"><span class="icon">⚙</span><span class="label">Settings</span></a>'
-        );
-      }
-
-      lines.push('    </nav>');
-    }
-
-    if (stepNumber >= stepNumberById.footer_html) {
-      lines.push(
-        '',
-        '    <div class="sidebar-footer">',
-        '      <strong>Pro Tip</strong>',
-        '      <p>Sidebar nije samo lista linkova. On je layout zona sa ritmom, hijerarhijom i stanjima.</p>',
-        '    </div>'
-      );
-    }
-
-    lines.push('  </aside>');
-  }
-
-  lines.push('</div>');
-  return lines;
-}
-
-=== teach-lessons/build-sidebar/build-sidebar.lesson.js ===
-import { buildCssAtStep } from './build-css-at-step.js';
-import { buildHtmlAtStep } from './build-html-at-step.js';
-import { lessonSteps } from './describe-steps.js';
-import lessonDocument from './content/documents/files/lesson.sr.md?raw';
-import knowledgeCheckDocument from './content/documents/files/quiz.sr.md?raw';
-import { readKnowledgeCheckQuestions } from '../read-lesson-documents/read-knowledge-check-questions.js';
-import { readLessonMetadata } from '../read-lesson-documents/read-lesson-metadata.js';
-
-const lessonMetadata = readLessonMetadata(lessonDocument, {
-  lessonTitle: 'Kako se pravi moderan sidebar',
-  lessonIntro: 'Koraci po korak gradiš sidebar od osnove do gotove navigacije. Svaki korak uključuje kod, savete i vizuelni prikaz.',
-  previewAddress: 'browser://build-sidebar-preview',
-  previewTitle: 'Live build sidebar preview',
-  htmlFileName: 'index.html',
-  cssFileName: 'style.css'
-});
-
-const knowledgeCheckQuestions = readKnowledgeCheckQuestions(knowledgeCheckDocument);
-
-export const buildSidebarLesson = {
-  lessonId: 'build-sidebar',
-  lessonTitle: lessonMetadata.lessonTitle,
-  lessonIntro: lessonMetadata.lessonIntro,
-  lessonIntroHtml: lessonMetadata.lessonIntroHtml,
-  previewAddress: lessonMetadata.previewAddress,
-  previewTitle: lessonMetadata.previewTitle,
-  htmlFileName: lessonMetadata.htmlFileName,
-  cssFileName: lessonMetadata.cssFileName,
-  steps: lessonSteps,
-  buildHtmlAtStep,
-  buildCssAtStep,
-  knowledgeCheckQuestions
-};
-
-=== teach-lessons/build-sidebar/content/documents/build_sidebar.md ===
-<!-- Generated from the same markdown sources used by the web lesson. -->
-
-# build-sidebar
-
-Koraci po korak gradiš sidebar od osnove do gotove navigacije. Svaki korak uključuje kod, savete i vizuelni prikaz.
-
-## Quiz
-
-## Question 1
-? Koji HTML tag se koristi za bočnu navigaciju?
-- [ ] `<div>`
-- [x] `<aside>`
-- [ ] `<sidebar>`
-- [ ] `<nav>`
-! `aside` je prirodan semantički izbor za bočnu navigacionu zonu.
-
-## Question 2
-? Šta znači `100vh` u CSS-u?
-- [ ] 100% širine
-- [x] 100% visine viewporta
-- [ ] 100 piksela
-- [ ] Fiksno 100
-! `vh` meri procenat visine viewporta, pa `100vh` znači puna visina ekrana.
-
-## Question 3
-? Koja vrednost `border-radius`-a daje pun krug?
-- [ ] `0px`
-- [x] `50%`
-- [ ] `100%`
-- [ ] `360deg`
-! Kada je element kvadrat, `50%` radius zatvara ga u krug.
-
-## Question 4
-? Šta koristimo za razmak između grid item-a?
-- [ ] `margin`
-- [ ] `padding`
-- [x] `gap`
-- [ ] `spacing`
-! `gap` je najčistiji način da zadaš razmak između elemenata u grid i flex rasporedu.
-
-## Question 5
-? Koji property omogućava glatke animacije između stanja?
-- [ ] `animation`
-- [x] `transition`
-- [ ] `transform`
-- [ ] `motion`
-! `transition` je pravi izbor kada želiš da promene stanja budu glatke.
-
-=== teach-lessons/build-sidebar/content/documents/files/lesson.sr.md ===
----
-title: Kako se pravi moderan sidebar
-previewAddress: browser://build-sidebar-preview
-previewTitle: Live build sidebar preview
-htmlFileName: index.html
-cssFileName: style.css
----
-
-Koraci po korak gradiš sidebar od osnove do gotove navigacije. Svaki korak uključuje kod, savete i vizuelni prikaz.
-
-=== teach-lessons/build-sidebar/content/documents/files/quiz.sr.md ===
-## Question 1
-? Koji HTML tag se koristi za bočnu navigaciju?
-- [ ] `<div>`
-- [x] `<aside>`
-- [ ] `<sidebar>`
-- [ ] `<nav>`
-! `aside` je prirodan semantički izbor za bočnu navigacionu zonu.
-
-## Question 2
-? Šta znači `100vh` u CSS-u?
-- [ ] 100% širine
-- [x] 100% visine viewporta
-- [ ] 100 piksela
-- [ ] Fiksno 100
-! `vh` meri procenat visine viewporta, pa `100vh` znači puna visina ekrana.
-
-## Question 3
-? Koja vrednost `border-radius`-a daje pun krug?
-- [ ] `0px`
-- [x] `50%`
-- [ ] `100%`
-- [ ] `360deg`
-! Kada je element kvadrat, `50%` radius zatvara ga u krug.
-
-## Question 4
-? Šta koristimo za razmak između grid item-a?
-- [ ] `margin`
-- [ ] `padding`
-- [x] `gap`
-- [ ] `spacing`
-! `gap` je najčistiji način da zadaš razmak između elemenata u grid i flex rasporedu.
-
-## Question 5
-? Koji property omogućava glatke animacije između stanja?
-- [ ] `animation`
-- [x] `transition`
-- [ ] `transform`
-- [ ] `motion`
-! `transition` je pravi izbor kada želiš da promene stanja budu glatke.
-
-=== teach-lessons/build-sidebar/describe-steps.js ===
-function describeHtmlElementStep(id, title, desc, tag, proTip, _sidebarScene) {
-  return { id, title, desc, tag, proTip };
-}
-
-function describeCssPropertyStep(id, selector, property, value, _sidebarScene, desc = '', proTip = '') {
-  const cssLine = `${property}: ${value};`;
-
-  return {
-    id,
-    title: `CSS: ${selector} / ${property}`,
-    desc: desc || `Dodajemo \`${cssLine}\` u \`${selector}\` i širimo stylesheet jedan property po korak.`,
-    tag: `css:${id.replace(/_/g, '-')}`,
-    proTip: proTip || 'Jedan property po korak čini promenu jasnom i lakom za praćenje u prikazu sidebara.'
-  };
-}
-
-function describeFinishedStep(id, title, desc, proTip, _sidebarScene) {
-  return { id, title, desc, tag: 'success', proTip };
-}
-
-export const lessonSteps = [
-  describeHtmlElementStep('empty_shell', 'Start: Empty App Shell', 'Počinjemo od praznog `.app-shell` prostora. Sidebar tek dodajemo kao prvi pravi element.', 'html:app-shell', 'Neutralan početak jasno odvaja ono što je postojalo od onoga što tek gradimo.', 0),
-  describeHtmlElementStep('sidebar_html', 'HTML: Sidebar Shell', 'Ubacujemo osnovni `<aside class="sidebar">` blok kao koren cele komponente.', 'html:aside', 'Semantički HTML ti odmah daje bolju strukturu i čitljiviji DOM.', 1),
-  ...[
-    ['sidebar_outline', '.sidebar', 'outline', '2px solid #ff4757', 2, 'Dodajemo privremeni pomoćni border radi lakšeg snalaženja, da prazni sidebar odmah dobije jasnu granicu u preview-u. Kasnije ćemo ga ukloniti.', 'Outline je odličan za debug jer ne menja layout.'],
-    ['sidebar_width', '.sidebar', 'width', '280px', 3, 'Kad granica postoji, zaključavamo širinu sidebara da dobije jasan footprint.'],
-    ['sidebar_min_height', '.sidebar', 'min-height', '100vh', 4, 'Dajemo sidebaru punu visinu da box postane čitljiv i bez sadržaja.'],
-    ['sidebar_border_right', '.sidebar', 'border-right', '1px solid rgba(255,255,255,0.12)', 5, 'Tanka desna linija odvaja sidebar od ostatka layouta.'],
-    ['sidebar_background', '.sidebar', 'background', '#0b1020', 5, 'Dodajemo tamnu pozadinu da sidebar dobije svoj vizuelni identitet i uklanjamo privremeni pomoćni border, više nam ne treba.'],
-    ['sidebar_color', '.sidebar', 'color', '#edf2ff', 5, 'Osnovnu boju teksta postavljamo rano da nasledi ceo sadržaj.']
-  ].map(config => describeCssPropertyStep(...config)),
-  describeHtmlElementStep('brand_html', 'HTML: Brand Wrapper', 'Dodajemo `.sidebar-brand` kao zonu za logo i naziv proizvoda. Od ovog trenutka pomoćne linije za sve delove branda držimo dok ne završimo celu brand celinu.', 'html:brand', 'Izdvoj brand deo od navigacije da bi hijerarhija odmah bila jasna.', 7),
-  ...[
-    ['brand_outline', '.sidebar-brand', 'outline', '2px solid #2ed573', 8, 'Dodajemo privremeni pomoćni border radi lakšeg snalaženja, da odmah vidiš footprint brand zone. Držimo ga dok ne završimo celu `.sidebar-brand` celinu, pa ćemo ga tek tada ukloniti.', 'Svaki deo iste celine može da dobije svoju boju helper linije dok ta celina traje.'],
-    ['brand_padding', '.sidebar-brand', 'padding', '24px', 8, 'Unutrašnji padding daje brand zoni vazduh.'],
-    ['brand_margin_bottom', '.sidebar-brand', 'margin-bottom', '28px', 8, 'Odvajamo brand blok od navigacije ispod njega.'],
-    ['brand_display', '.sidebar-brand', 'display', 'flex', 8, 'Prebacujemo brand zonu u flex da logo i tekst mogu da stoje u istom redu.'],
-    ['brand_align_items', '.sidebar-brand', 'align-items', 'center', 8, 'Vertikalno poravnanje centrira logo i tekst.'],
-    ['brand_gap', '.sidebar-brand', 'gap', '14px', 8, 'Gap određuje koliko prostora stoji između logotipa i teksta.']
-  ].map(config => describeCssPropertyStep(...config)),
-  describeHtmlElementStep('logo_html', 'HTML: Logo Element', 'Ubacujemo `.logo` element sa slovom `A` kao placeholder identitetom.', 'html:logo', 'Počni od jednostavnog placeholder loga pa tek onda doteruj stil.', 9),
-  ...[
-    ['logo_outline', '.logo', 'outline', '2px dotted #7dd3fc', 10, 'Dodajemo privremeni pomoćni border radi lakšeg snalaženja, da footprint logotipa bude jasan i bez pozadine. Držimo ga dok ne završimo celu `.sidebar-brand` celinu, pa ga tek tada uklanjamo.', 'Logo zadržava svoju helper boju sve dok radimo ceo brand blok.'],
-    ['logo_width', '.logo', 'width', '48px', 10, 'Prvo zaključavamo širinu logotipa.'],
-    ['logo_height', '.logo', 'height', '48px', 10, 'Visina prati širinu da bismo dobili kvadratnu osnovu.'],
-    ['logo_display', '.logo', 'display', 'grid', 10, 'Grid nam daje lak centar za jedan znak ili ikonu.'],
-    ['logo_place_items', '.logo', 'place-items', 'center', 10, 'Centriramo sadržaj logotipa u oba smera.'],
-    ['logo_radius', '.logo', 'border-radius', '12px', 10, 'Blago zaobljenje daje moderniji osećaj.'],
-    ['logo_font_weight', '.logo', 'font-weight', '800', 10, 'Pojačavamo slovo da liči na pravi brand znak.'],
-    ['logo_background', '.logo', 'background', 'linear-gradient(135deg, #6d73ff, #8f5cff)', 11, 'Gradijent dodaje energiju i daje logotipu fokus. Pomoćni border namerno ostaje dok ne zatvorimo celu brand celinu.'],
-    ['logo_color', '.logo', 'color', 'white', 11, 'Bela boja daje čist kontrast preko gradijenta.'],
-    ['logo_shadow', '.logo', 'box-shadow', '0 12px 24px rgba(109,115,255,0.30)', 11, 'Shadow dodaje depth i čini logo prisutnijim.']
-  ].map(config => describeCssPropertyStep(...config)),
-  describeHtmlElementStep('brand_copy_html', 'HTML: Brand Copy', 'Dodajemo `.brand-copy` sa naslovom i podnaslovom pored logotipa. I on dobija svoju helper boju dok ne završimo celu `.sidebar-brand` celinu.', 'html:brand-copy', 'Tekstualni brand signal pomaže korisniku da zna gde se nalazi.', 12),
-  ...[
-    ['brand_copy_outline', '.brand-copy', 'outline', '1px dashed #f59e0b', 12, 'Dodajemo privremeni pomoćni border radi lakšeg snalaženja, da tekstualni brand blok bude jasno odvojen od logotipa. Držimo ga dok ne završimo celu `.sidebar-brand` celinu.', 'Isti wrapper, različiti child elementi, različite helper boje.'],
-    ['brand_strong_display', '.brand-copy strong', 'display', 'block', 12, 'Naslov pretvaramo u blok da zauzme svoj red.'],
-    ['brand_strong_font_size', '.brand-copy strong', 'font-size', '16px', 12, 'Naslov dobija čitljiviju veličinu.'],
-    ['brand_span_display', '.brand-copy span', 'display', 'block', 12, 'Podnaslov spuštamo u novi red.'],
-    ['brand_span_margin_top', '.brand-copy span', 'margin-top', '4px', 12, 'Mali razmak odvaja podnaslov od naslova.'],
-    ['brand_span_font_size', '.brand-copy span', 'font-size', '13px', 12, 'Podnaslov pravimo suptilnijim od naslova.'],
-    ['brand_span_color', '.brand-copy span', 'color', '#9aa6c8', 12, 'Muted boja pravi jasnu tekstualnu hijerarhiju.']
-  ].map(config => describeCssPropertyStep(...config)),
-  describeHtmlElementStep('nav_html', 'HTML: Nav Wrapper', 'Ubacujemo `<nav class="nav-list">` kao kontejner za buduće linkove. Brand celina je sada gotova, pa uklanjamo privremene pomoćne bordere sa `.sidebar-brand`, `.logo` i `.brand-copy`.', 'html:nav', 'Semantički `nav` element je prirodan izbor za navigaciju.', 13),
-  ...[
-    ['nav_list_outline', '.nav-list', 'outline', '1px dashed #38bdf8', 14, 'Dodajemo privremeni pomoćni border radi lakšeg snalaženja, da prazna nav zona odmah postane vidljiva. Držimo ga dok ne završimo celu navigacionu celinu.', 'Navigacija zadržava helper linije kroz sve svoje poddelove dok ne pređemo na footer.'],
-    ['nav_list_padding', '.nav-list', 'padding', '10px 8px', 14, 'Dodajemo i privremeni pomoćni padding da prazna nav zona dobije visinu i pre prvog linka. I njega držimo dok ne završimo celu navigacionu celinu.'],
-    ['nav_list_display', '.nav-list', 'display', 'grid', 14, 'Navigaciju slažemo u grid da spacing bude čist.'],
-    ['nav_list_gap', '.nav-list', 'gap', '10px', 14, 'Gap održava ravnomeran razmak između stavki.']
-  ].map(config => describeCssPropertyStep(...config)),
-  describeHtmlElementStep('nav_items_html', 'HTML: Nav Items', 'Dodajemo prve `.nav-item` linkove sa ikonama i labelama.', 'html:nav-item', 'Prvo ubaci markup za stavke, pa onda stilizuj svaki sloj ponaosob.', 15),
-  ...[
-    ['nav_item_outline', '.nav-item', 'outline', '1px solid #ffa502', 15, 'Zadržavamo helper linije za celu navigaciju, a svakoj stavci dodajemo njen privremeni border radi lakšeg snalaženja. Držimo ga dok ne završimo celu navigacionu celinu.', 'Svaki deo navigacije zadržava svoju helper boju dok traje cela navigaciona celina.'],
-    ['nav_item_display', '.nav-item', 'display', 'flex', 15, 'Svaka stavka postaje flex red da ikona i tekst stanu jedan do drugog.'],
-    ['nav_item_min_height', '.nav-item', 'min-height', '52px', 15, 'Klik zona dobija pristojnu visinu.'],
-    ['nav_item_padding', '.nav-item', 'padding', '12px 16px', 15, 'Padding pravi realnu klik zonu i diše bolje od golog teksta.'],
-    ['nav_item_align_items', '.nav-item', 'align-items', 'center', 15, 'Vertikalno centriramo sadržaj svake stavke.'],
-    ['nav_item_gap', '.nav-item', 'gap', '12px', 15, 'Gap odvaja ikonu od labele.'],
-    ['nav_icon_outline', '.nav-item .icon', 'outline', '1px dotted #7dd3fc', 15, 'Dodajemo privremeni pomoćni border i na ikonicu radi lakšeg snalaženja, da joj footprint bude jasan. Držimo ga dok ne završimo celu navigacionu celinu.'],
-    ['nav_icon_width', '.nav-item .icon', 'width', '22px', 15, 'Ikona dobija fiksnu širinu.'],
-    ['nav_icon_height', '.nav-item .icon', 'height', '22px', 15, 'Ikona dobija i fiksnu visinu radi konzistentnog kvadrata.'],
-    ['nav_icon_display', '.nav-item .icon', 'display', 'grid', 15, 'Grid olakšava centriranje sadržaja ikone.'],
-    ['nav_icon_place_items', '.nav-item .icon', 'place-items', 'center', 15, 'Ikonicu centriramo i horizontalno i vertikalno.'],
-    ['nav_label_font_size', '.nav-item .label', 'font-size', '15px', 15, 'Labela dobija čitljivu veličinu.'],
-    ['nav_label_font_weight', '.nav-item .label', 'font-weight', '600', 15, 'Blago pojačavamo labelu da zadrži hijerarhiju.'],
-    ['nav_item_radius', '.nav-item', 'border-radius', '14px', 16, 'Zaobljene ivice daju linkovima mekši, UI osećaj. Helper linije i dalje ostaju dok ne završimo celu navigacionu celinu.'],
-    ['nav_item_margin', '.nav-item', 'margin', '0 8px', 16, 'Spoljni razmak odvaja stavke od ivice sidebara.'],
-    ['nav_item_active_background', '.nav-item.active', 'background', 'rgba(109,115,255,0.14)', 17, 'Aktivna stavka dobija svoju pozadinu, ali helper linije namerno ostaju dok ne završimo celu navigacionu celinu.'],
-    ['nav_item_active_color', '.nav-item.active', 'color', 'white', 17, 'Boju aktivne stavke pojačavamo za bolji kontrast.'],
-    ['nav_item_transition', '.nav-item', 'transition', 'all 0.4s ease', 18, 'Dodajemo glatku tranziciju za hover i active stanje.'],
-    ['nav_item_hover_background', '.nav-item:hover', 'background', 'rgba(255,255,255,0.05)', 19, 'Hover feedback potvrđuje da je stavka interaktivna.'],
-    ['collapse_width', '.sidebar.is-collapsed', 'width', '108px', 20, 'Collapsed mod sužava sidebar na kompaktnu širinu.']
-  ].map(config => describeCssPropertyStep(...config)),
-  describeHtmlElementStep('footer_html', 'HTML: Sidebar Footer', 'Dodajemo `.sidebar-footer` kao završni informativni blok pri dnu sidebara. Navigaciona celina je sada gotova, pa uklanjamo privremene pomoćne bordere i paddinge sa navigacionih elemenata.', 'html:footer', 'Footer je i dalje deo sidebara, pa i njega gradimo iz istog toka.', 20),
-  ...[
-    ['sidebar_display_flex', '.sidebar', 'display', 'flex', 20, 'Sidebar pretvaramo u flex kolonu da footer može da ode na dno.'],
-    ['sidebar_flex_direction', '.sidebar', 'flex-direction', 'column', 20, 'Kolona omogućava prirodan vertikalni raspored sekcija.'],
-    ['footer_border', '.sidebar-footer', 'border', '1px solid rgba(255,255,255,0.12)', 20, 'Tanka linija razdvaja footer od pozadine.'],
-    ['footer_background', '.sidebar-footer', 'background', 'rgba(255,255,255,0.05)', 20, 'Blaga pozadina izdvaja footer bez teškog kontrasta.'],
-    ['footer_padding', '.sidebar-footer', 'padding', '16px', 20, 'Footer dobija unutrašnji spacing.'],
-    ['footer_radius', '.sidebar-footer', 'border-radius', '14px', 20, 'Zaobljenje usklađuje footer sa ostatkom UI-ja.'],
-    ['footer_margin_top', '.sidebar-footer', 'margin-top', 'auto', 20, 'Auto margin gura footer na dno kolone.'],
-    ['footer_text_margin', '.sidebar-footer p', 'margin', '6px 0 0', 20, 'Odstupamo paragraf od naslova unutar footera.'],
-    ['footer_text_color', '.sidebar-footer p', 'color', '#9aa6c8', 20, 'Muted ton čini pomoćni tekst nenametljivim.'],
-    ['footer_text_line_height', '.sidebar-footer p', 'line-height', '1.5', 20, 'Line-height daje tekstu dovoljno vazduha.'],
-    ['hide_labels', '.sidebar.is-collapsed .nav-item .label', 'display', 'none', 21, 'U collapsed modu sakrivamo tekstualne labele.', 'Collapse ne znači da gubiš strukturu, već da je svodiš na ikone.'],
-    ['responsive_sidebar_min_height', '.sidebar', 'min-height', 'auto', 21, 'Na manjim ekranima sidebar više ne mora da glumi pun viewport.']
-  ].map(config => describeCssPropertyStep(...config)),
-  describeFinishedStep('done', 'Done: Sidebar', 'Tutorijal je sada potpuno detaljan: CSS ide kumulativno, property po property.', 'Kada je tok ovako sitno razbijen, promene su mnogo lakše za praćenje i u kodu i u prikazu sidebara.', 21)
-];
-
-export const stepNumberById = Object.fromEntries(
-  lessonSteps.map((step, index) => [step.id, index])
-);
-
-=== teach-lessons/find-selected-lesson.js ===
-export function findSelectedLesson({ ownerLocation, lessons }) {
-  const selectedLessonId = new URL(ownerLocation.href).searchParams.get('lesson');
-  const selectedLesson = lessons.find(lesson => lesson.lessonId === selectedLessonId);
-
-  return selectedLesson || lessons[0];
-}
-
-=== teach-lessons/list-lessons.js ===
-import { buildSidebarLesson } from './build-sidebar/build-sidebar.lesson.js';
-
-export function listLessons() {
-  return [buildSidebarLesson];
-}
-
-=== teach-lessons/read-lesson-documents/parse-frontmatter.js ===
+=== lesson-documents/parse-frontmatter.js ===
 export function parseFrontmatter(markdown) {
   if (!markdown) {
     return { attributes: {}, body: '' };
@@ -2359,7 +897,7 @@ export function parseFrontmatter(markdown) {
   };
 }
 
-=== teach-lessons/read-lesson-documents/read-knowledge-check-questions.js ===
+=== lesson-documents/read-knowledge-check-questions.js ===
 export function readKnowledgeCheckQuestions(markdown) {
   if (!markdown) {
     return [];
@@ -2426,7 +964,7 @@ export function readKnowledgeCheckQuestions(markdown) {
   );
 }
 
-=== teach-lessons/read-lesson-documents/read-lesson-metadata.js ===
+=== lesson-documents/read-lesson-metadata.js ===
 import { parseFrontmatter } from './parse-frontmatter.js';
 import { renderMarkdown } from './render-markdown.js';
 
@@ -2453,7 +991,7 @@ export function readLessonMetadata(markdown, defaults = {}) {
   };
 }
 
-=== teach-lessons/read-lesson-documents/render-markdown.js ===
+=== lesson-documents/render-markdown.js ===
 function escapeHtml(text) {
   return String(text)
     .replaceAll('&', '&amp;')
@@ -2667,17 +1205,17 @@ export function renderMarkdown(markdown) {
   return htmlParts.join('\n');
 }
 
-=== teach-lessons/read-lesson-documents/sync-lesson-documents.js ===
+=== lesson-documents/sync-lesson-documents.js ===
 import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const currentDir = path.dirname(fileURLToPath(import.meta.url));
-const lessonsRoot = path.resolve(currentDir, '..');
+const lessonsRoot = path.resolve(currentDir, '../lessons');
 
 function collectLessonDocumentFolders() {
   return fs.readdirSync(lessonsRoot, { withFileTypes: true })
-    .filter(entry => entry.isDirectory() && entry.name !== 'teach-lesson' && entry.name !== 'read-lesson-documents')
+    .filter(entry => entry.isDirectory())
     .map(entry => path.join(lessonsRoot, entry.name, 'content', 'documents', 'files'))
     .filter(documentsFolder => fs.existsSync(documentsFolder));
 }
@@ -2733,7 +1271,7 @@ generatedFiles.forEach(filePath => {
   console.log(`Generated: ${path.relative(process.cwd(), filePath)}`);
 });
 
-=== teach-lessons/teach-lesson/01-start-lesson/create-lesson-progress.js ===
+=== lesson-player/play-lesson/01-start-lesson/create-lesson-progress.js ===
 export function createLessonProgress() {
   return {
     currentStepNumber: 0,
@@ -2742,7 +1280,7 @@ export function createLessonProgress() {
   };
 }
 
-=== teach-lessons/teach-lesson/01-start-lesson/find-lesson-parts.js ===
+=== lesson-player/play-lesson/01-start-lesson/find-lesson-parts.js ===
 function readRequiredElement(ownerDocument, id) {
   const element = ownerDocument.getElementById(id);
 
@@ -2799,7 +1337,7 @@ export function findLessonParts(ownerDocument) {
   };
 }
 
-=== teach-lessons/teach-lesson/01-start-lesson/show-lesson-shell.js ===
+=== lesson-player/play-lesson/01-start-lesson/show-lesson-shell.js ===
 export function showLessonShell({ ownerDocument, lessonParts, lesson }) {
   lessonParts.lessonHeading.textContent = lesson.lessonTitle;
 
@@ -2816,7 +1354,7 @@ export function showLessonShell({ ownerDocument, lessonParts, lesson }) {
   ownerDocument.title = `Step By Step Animator · ${lesson.lessonTitle}`;
 }
 
-=== teach-lessons/teach-lesson/02-follow-lesson/listen-for-lesson-keys.js ===
+=== lesson-player/play-lesson/02-follow-lesson/listen-for-lesson-keys.js ===
 function isTypingSurface(target) {
   return target instanceof HTMLElement && (
     target.matches('input, textarea, select') ||
@@ -2867,7 +1405,7 @@ export function listenForLessonKeys({
   });
 }
 
-=== teach-lessons/teach-lesson/02-follow-lesson/show-active-lesson-panel.js ===
+=== lesson-player/play-lesson/02-follow-lesson/show-active-lesson-panel.js ===
 export function showActiveLessonPanel(lessonParts, activePanel) {
   lessonParts.stepPanel.hidden = activePanel !== 'steps';
   lessonParts.savedStepsPanel.hidden = activePanel !== 'bookmarks';
@@ -2877,7 +1415,7 @@ export function showActiveLessonPanel(lessonParts, activePanel) {
   });
 }
 
-=== teach-lessons/teach-lesson/02-follow-lesson/show-current-step.js ===
+=== lesson-player/play-lesson/02-follow-lesson/show-current-step.js ===
 function composeStepTagMarkup(tag) {
   return `<svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4"/></svg> ${tag}`;
 }
@@ -2898,7 +1436,7 @@ export function showCurrentStep({ lessonParts, step, currentStepNumber, totalSte
   lessonParts.nextButton.disabled = currentStepNumber === totalSteps - 1;
 }
 
-=== teach-lessons/teach-lesson/02-follow-lesson/show-step-timeline.js ===
+=== lesson-player/play-lesson/02-follow-lesson/show-step-timeline.js ===
 export function showStepTimeline({
   lessonParts,
   steps,
@@ -2923,7 +1461,7 @@ export function showStepTimeline({
   });
 }
 
-=== teach-lessons/teach-lesson/03-watch-code/compare-code-lines.js ===
+=== lesson-player/play-lesson/03-watch-code/compare-code-lines.js ===
 export function compareCodeLines(currentLines, previousLines) {
   let previousLineIndex = 0;
 
@@ -2944,7 +1482,7 @@ export function compareCodeLines(currentLines, previousLines) {
   });
 }
 
-=== teach-lessons/teach-lesson/03-watch-code/describe-css-line-role.js ===
+=== lesson-player/play-lesson/03-watch-code/describe-css-line-role.js ===
 export function describeCssLineRole(lineText) {
   const trimmedLine = lineText.trim();
 
@@ -2967,7 +1505,7 @@ export function describeCssLineRole(lineText) {
   return 'plain';
 }
 
-=== teach-lessons/teach-lesson/03-watch-code/escape-code-text.js ===
+=== lesson-player/play-lesson/03-watch-code/escape-code-text.js ===
 export function escapeCodeText(value) {
   return value
     .replace(/&/g, '&amp;')
@@ -2975,7 +1513,7 @@ export function escapeCodeText(value) {
     .replace(/>/g, '&gt;');
 }
 
-=== teach-lessons/teach-lesson/03-watch-code/scroll-to-added-line.js ===
+=== lesson-player/play-lesson/03-watch-code/scroll-to-added-line.js ===
 export function scrollToAddedLine(container) {
   const addedLine = container.querySelector('[data-added="true"]');
 
@@ -2988,7 +1526,7 @@ export function scrollToAddedLine(container) {
   });
 }
 
-=== teach-lessons/teach-lesson/03-watch-code/show-growing-code.js ===
+=== lesson-player/play-lesson/03-watch-code/show-growing-code.js ===
 import { compareCodeLines } from './compare-code-lines.js';
 import { describeCssLineRole } from './describe-css-line-role.js';
 import { escapeCodeText } from './escape-code-text.js';
@@ -3034,7 +1572,7 @@ export function showGrowingCode({
   scrollToAddedLine(lessonParts.cssCodePane);
 }
 
-=== teach-lessons/teach-lesson/04-watch-preview/show-current-preview.js ===
+=== lesson-player/play-lesson/04-watch-preview/show-current-preview.js ===
 function composeLivePreviewDocument(lesson, currentStepNumber) {
   const htmlMarkup = lesson.buildHtmlAtStep(currentStepNumber).join('\n');
   const cssMarkup = lesson.buildCssAtStep(currentStepNumber).join('\n');
@@ -3067,7 +1605,7 @@ export function showCurrentPreview({
   lessonParts.livePreviewFrame.srcdoc = livePreviewDocument;
 }
 
-=== teach-lessons/teach-lesson/05-check-understanding/create-knowledge-check-progress.js ===
+=== lesson-player/play-lesson/05-check-understanding/create-knowledge-check-progress.js ===
 export function createKnowledgeCheckProgress() {
   return {
     currentQuestionNumber: 0,
@@ -3075,7 +1613,7 @@ export function createKnowledgeCheckProgress() {
   };
 }
 
-=== teach-lessons/teach-lesson/05-check-understanding/present-knowledge-check.js ===
+=== lesson-player/play-lesson/05-check-understanding/present-knowledge-check.js ===
 import { createKnowledgeCheckProgress } from './create-knowledge-check-progress.js';
 import { showKnowledgeCheckQuestion } from './show-knowledge-check-question.js';
 import { showKnowledgeCheckScore } from './show-knowledge-check-score.js';
@@ -3206,7 +1744,7 @@ export function presentKnowledgeCheck({ lessonParts, knowledgeCheckQuestions }) 
   };
 }
 
-=== teach-lessons/teach-lesson/05-check-understanding/show-knowledge-check-question.js ===
+=== lesson-player/play-lesson/05-check-understanding/show-knowledge-check-question.js ===
 import { escapeInlineText } from '../escape-inline-text.js';
 
 export function showKnowledgeCheckQuestion({
@@ -3233,7 +1771,7 @@ export function showKnowledgeCheckQuestion({
   `;
 }
 
-=== teach-lessons/teach-lesson/05-check-understanding/show-knowledge-check-score.js ===
+=== lesson-player/play-lesson/05-check-understanding/show-knowledge-check-score.js ===
 export function showKnowledgeCheckScore({
   lessonParts,
   correctAnswerCount,
@@ -3254,7 +1792,7 @@ export function showKnowledgeCheckScore({
   `;
 }
 
-=== teach-lessons/teach-lesson/06-download-lesson-files/download-lesson-files.js ===
+=== lesson-player/play-lesson/06-download-lesson-files/download-lesson-files.js ===
 function triggerFileDownload(fileName, mimeType, fileContent) {
   const blob = new Blob([fileContent], { type: mimeType });
   const downloadLink = document.createElement('a');
@@ -3281,7 +1819,7 @@ export function downloadLessonFiles({ lesson }) {
   }, 500);
 }
 
-=== teach-lessons/teach-lesson/choose-theme/choose-theme.js ===
+=== lesson-player/play-lesson/choose-theme/choose-theme.js ===
 const THEME_STORAGE_KEY = 'stepByStepAnimatorTheme';
 
 function showThemeButtonIcon(themeButton, theme) {
@@ -3321,7 +1859,7 @@ export function chooseTheme({ rootElement, themeButton }) {
   };
 }
 
-=== teach-lessons/teach-lesson/escape-inline-text.js ===
+=== lesson-player/play-lesson/escape-inline-text.js ===
 export function escapeInlineText(value) {
   return String(value)
     .replace(/&/g, '&amp;')
@@ -3331,7 +1869,7 @@ export function escapeInlineText(value) {
     .replace(/'/g, '&#39;');
 }
 
-=== teach-lessons/teach-lesson/find-step/present-step-finder.js ===
+=== lesson-player/play-lesson/find-step/present-step-finder.js ===
 import { escapeInlineText } from '../escape-inline-text.js';
 
 export function presentStepFinder({ lessonParts, steps, goToStepNumber }) {
@@ -3399,7 +1937,7 @@ export function presentStepFinder({ lessonParts, steps, goToStepNumber }) {
   };
 }
 
-=== teach-lessons/teach-lesson/lesson-shell.css ===
+=== lesson-player/play-lesson/lesson-player.css ===
 :root {
   /* Dark Theme (Default) */
   --bg: #0b1020;
@@ -4590,145 +3128,7 @@ button:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
   .shortcuts { display: none; }
 }
 
-=== teach-lessons/teach-lesson/save-step/read-saved-step-numbers.js ===
-function composeSavedStepStorageKey(lessonId) {
-  return `stepByStepAnimator:${lessonId}:savedSteps`;
-}
-
-export function readSavedStepNumbers({ lessonId, totalSteps }) {
-  try {
-    const rawValue = localStorage.getItem(composeSavedStepStorageKey(lessonId)) || '[]';
-    const parsedStepNumbers = JSON.parse(rawValue);
-
-    return [...new Set(
-      parsedStepNumbers.filter(stepNumber =>
-        Number.isInteger(stepNumber) &&
-        stepNumber >= 0 &&
-        stepNumber < totalSteps
-      )
-    )];
-  } catch {
-    return [];
-  }
-}
-
-=== teach-lessons/teach-lesson/save-step/remember-saved-steps.js ===
-import { readSavedStepNumbers } from './read-saved-step-numbers.js';
-import { showSavedStepList } from './show-saved-step-list.js';
-import { writeSavedStepNumbers } from './write-saved-step-numbers.js';
-
-export function rememberSavedSteps({
-  lessonId,
-  lessonParts,
-  steps,
-  goToStepNumber,
-  showCurrentLesson
-}) {
-  let savedStepNumbers = readSavedStepNumbers({
-    lessonId,
-    totalSteps: steps.length
-  });
-
-  lessonParts.savedStepList.addEventListener('click', event => {
-    const removeButton = event.target.closest('[data-remove-step-number]');
-
-    if (removeButton) {
-      toggleSavedStepNumber(parseInt(removeButton.dataset.removeStepNumber, 10));
-      return;
-    }
-
-    const stepButton = event.target.closest('[data-step-number]');
-
-    if (stepButton) {
-      goToStepNumber(parseInt(stepButton.dataset.stepNumber, 10), { showStepPanel: true });
-    }
-  });
-
-  function toggleSavedStepNumber(stepNumber) {
-    const existingIndex = savedStepNumbers.indexOf(stepNumber);
-
-    if (existingIndex > -1) {
-      savedStepNumbers.splice(existingIndex, 1);
-    } else {
-      savedStepNumbers.push(stepNumber);
-      savedStepNumbers.sort((left, right) => left - right);
-    }
-
-    writeSavedStepNumbers({
-      lessonId,
-      savedStepNumbers
-    });
-    showCurrentLesson();
-  }
-
-  function showSavedStepListForCurrentStep(currentStepNumber) {
-    showSavedStepList({
-      lessonParts,
-      savedStepNumbers,
-      currentStepNumber,
-      steps
-    });
-  }
-
-  function listSavedStepNumbers() {
-    return [...savedStepNumbers];
-  }
-
-  return {
-    listSavedStepNumbers,
-    showSavedStepList: showSavedStepListForCurrentStep,
-    toggleSavedStepNumber
-  };
-}
-
-=== teach-lessons/teach-lesson/save-step/show-saved-step-list.js ===
-import { escapeInlineText } from '../escape-inline-text.js';
-
-export function showSavedStepList({
-  lessonParts,
-  savedStepNumbers,
-  currentStepNumber,
-  steps
-}) {
-  const savedItems = savedStepNumbers
-    .map(stepNumber => ({ stepNumber, step: steps[stepNumber] }))
-    .filter(({ step }) => Boolean(step));
-
-  lessonParts.saveStepButton.classList.toggle('active', savedStepNumbers.includes(currentStepNumber));
-  lessonParts.savedStepCount.textContent = String(savedStepNumbers.length);
-  lessonParts.savedStepSummary.textContent = `${savedItems.length} sačuvano`;
-  lessonParts.savedStepEmptyState.hidden = savedItems.length > 0;
-  lessonParts.savedStepList.hidden = savedItems.length === 0;
-
-  if (!savedItems.length) {
-    lessonParts.savedStepList.innerHTML = '';
-    return;
-  }
-
-  lessonParts.savedStepList.innerHTML = savedItems.map(({ stepNumber, step }) => `
-    <div class="bookmark-item${stepNumber === currentStepNumber ? ' current' : ''}">
-      <button type="button" class="bookmark-link" data-step-number="${stepNumber}">
-        <span class="bookmark-meta">Prizor ${stepNumber + 1} <span class="bookmark-tag">${escapeInlineText(step.tag)}</span></span>
-        <strong>${escapeInlineText(step.title)}</strong>
-        <p>${escapeInlineText(step.desc)}</p>
-      </button>
-      <button type="button" class="bookmark-remove" data-remove-step-number="${stepNumber}" title="Ukloni bookmark">
-        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
-      </button>
-    </div>
-  `).join('');
-}
-
-=== teach-lessons/teach-lesson/save-step/write-saved-step-numbers.js ===
-function composeSavedStepStorageKey(lessonId) {
-  return `stepByStepAnimator:${lessonId}:savedSteps`;
-}
-
-export function writeSavedStepNumbers({ lessonId, savedStepNumbers }) {
-  localStorage.setItem(composeSavedStepStorageKey(lessonId), JSON.stringify(savedStepNumbers));
-}
-
-=== teach-lessons/teach-lesson/teach-lesson.pipeline.js ===
+=== lesson-player/play-lesson/play-lesson.pipeline.js ===
 import { createLessonProgress } from './01-start-lesson/create-lesson-progress.js';
 import { findLessonParts } from './01-start-lesson/find-lesson-parts.js';
 import { showLessonShell } from './01-start-lesson/show-lesson-shell.js';
@@ -4744,7 +3144,7 @@ import { chooseTheme } from './choose-theme/choose-theme.js';
 import { presentStepFinder } from './find-step/present-step-finder.js';
 import { rememberSavedSteps } from './save-step/remember-saved-steps.js';
 
-export function teachLesson({ ownerDocument, lesson }) {
+export function playLesson({ ownerDocument, lesson }) {
   const lessonParts = findLessonParts(ownerDocument);
   const lessonProgress = createLessonProgress();
 
@@ -4942,6 +3342,1629 @@ export function teachLesson({ ownerDocument, lesson }) {
     updatePlaybackControls();
   }
 }
+
+=== lesson-player/play-lesson/save-step/read-saved-step-numbers.js ===
+function composeSavedStepStorageKey(lessonId) {
+  return `stepByStepAnimator:${lessonId}:savedSteps`;
+}
+
+export function readSavedStepNumbers({ lessonId, totalSteps }) {
+  try {
+    const rawValue = localStorage.getItem(composeSavedStepStorageKey(lessonId)) || '[]';
+    const parsedStepNumbers = JSON.parse(rawValue);
+
+    return [...new Set(
+      parsedStepNumbers.filter(stepNumber =>
+        Number.isInteger(stepNumber) &&
+        stepNumber >= 0 &&
+        stepNumber < totalSteps
+      )
+    )];
+  } catch {
+    return [];
+  }
+}
+
+=== lesson-player/play-lesson/save-step/remember-saved-steps.js ===
+import { readSavedStepNumbers } from './read-saved-step-numbers.js';
+import { showSavedStepList } from './show-saved-step-list.js';
+import { writeSavedStepNumbers } from './write-saved-step-numbers.js';
+
+export function rememberSavedSteps({
+  lessonId,
+  lessonParts,
+  steps,
+  goToStepNumber,
+  showCurrentLesson
+}) {
+  let savedStepNumbers = readSavedStepNumbers({
+    lessonId,
+    totalSteps: steps.length
+  });
+
+  lessonParts.savedStepList.addEventListener('click', event => {
+    const removeButton = event.target.closest('[data-remove-step-number]');
+
+    if (removeButton) {
+      toggleSavedStepNumber(parseInt(removeButton.dataset.removeStepNumber, 10));
+      return;
+    }
+
+    const stepButton = event.target.closest('[data-step-number]');
+
+    if (stepButton) {
+      goToStepNumber(parseInt(stepButton.dataset.stepNumber, 10), { showStepPanel: true });
+    }
+  });
+
+  function toggleSavedStepNumber(stepNumber) {
+    const existingIndex = savedStepNumbers.indexOf(stepNumber);
+
+    if (existingIndex > -1) {
+      savedStepNumbers.splice(existingIndex, 1);
+    } else {
+      savedStepNumbers.push(stepNumber);
+      savedStepNumbers.sort((left, right) => left - right);
+    }
+
+    writeSavedStepNumbers({
+      lessonId,
+      savedStepNumbers
+    });
+    showCurrentLesson();
+  }
+
+  function showSavedStepListForCurrentStep(currentStepNumber) {
+    showSavedStepList({
+      lessonParts,
+      savedStepNumbers,
+      currentStepNumber,
+      steps
+    });
+  }
+
+  function listSavedStepNumbers() {
+    return [...savedStepNumbers];
+  }
+
+  return {
+    listSavedStepNumbers,
+    showSavedStepList: showSavedStepListForCurrentStep,
+    toggleSavedStepNumber
+  };
+}
+
+=== lesson-player/play-lesson/save-step/show-saved-step-list.js ===
+import { escapeInlineText } from '../escape-inline-text.js';
+
+export function showSavedStepList({
+  lessonParts,
+  savedStepNumbers,
+  currentStepNumber,
+  steps
+}) {
+  const savedItems = savedStepNumbers
+    .map(stepNumber => ({ stepNumber, step: steps[stepNumber] }))
+    .filter(({ step }) => Boolean(step));
+
+  lessonParts.saveStepButton.classList.toggle('active', savedStepNumbers.includes(currentStepNumber));
+  lessonParts.savedStepCount.textContent = String(savedStepNumbers.length);
+  lessonParts.savedStepSummary.textContent = `${savedItems.length} sačuvano`;
+  lessonParts.savedStepEmptyState.hidden = savedItems.length > 0;
+  lessonParts.savedStepList.hidden = savedItems.length === 0;
+
+  if (!savedItems.length) {
+    lessonParts.savedStepList.innerHTML = '';
+    return;
+  }
+
+  lessonParts.savedStepList.innerHTML = savedItems.map(({ stepNumber, step }) => `
+    <div class="bookmark-item${stepNumber === currentStepNumber ? ' current' : ''}">
+      <button type="button" class="bookmark-link" data-step-number="${stepNumber}">
+        <span class="bookmark-meta">Prizor ${stepNumber + 1} <span class="bookmark-tag">${escapeInlineText(step.tag)}</span></span>
+        <strong>${escapeInlineText(step.title)}</strong>
+        <p>${escapeInlineText(step.desc)}</p>
+      </button>
+      <button type="button" class="bookmark-remove" data-remove-step-number="${stepNumber}" title="Ukloni bookmark">
+        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+      </button>
+    </div>
+  `).join('');
+}
+
+=== lesson-player/play-lesson/save-step/write-saved-step-numbers.js ===
+function composeSavedStepStorageKey(lessonId) {
+  return `stepByStepAnimator:${lessonId}:savedSteps`;
+}
+
+export function writeSavedStepNumbers({ lessonId, savedStepNumbers }) {
+  localStorage.setItem(composeSavedStepStorageKey(lessonId), JSON.stringify(savedStepNumbers));
+}
+
+=== lesson-player/select-lesson-from-location.js ===
+import { findLesson, getDefaultLessonId } from '../lessons/register-lessons.js';
+
+export function selectLessonFromLocation({ ownerLocation }) {
+  const selectedLessonId = new URL(ownerLocation.href).searchParams.get('lesson');
+  const defaultLessonId = getDefaultLessonId();
+
+  return findLesson(selectedLessonId) || findLesson(defaultLessonId);
+}
+
+=== lessons/build-sidebar/build-css-at-step.js ===
+import { stepNumberById } from './describe-steps.js';
+
+function readStepBoundary(stepReference) {
+  if (typeof stepReference === 'number') {
+    return stepReference;
+  }
+
+  if (!stepReference) {
+    return Number.POSITIVE_INFINITY;
+  }
+
+  return stepNumberById[stepReference] ?? Number.POSITIVE_INFINITY;
+}
+
+function appendVisibleCssRuleBlock(lines, header, entries, stepNumber, showFrom = Number.POSITIVE_INFINITY) {
+  const activeEntries = entries.filter(entry =>
+    stepNumber >= readStepBoundary(entry.from) &&
+    (entry.untilBefore === undefined || stepNumber < readStepBoundary(entry.untilBefore))
+  );
+
+  if (!activeEntries.length && stepNumber < readStepBoundary(showFrom)) {
+    return;
+  }
+
+  if (lines.length) {
+    lines.push('');
+  }
+
+  if (Array.isArray(header)) {
+    header.forEach(line => lines.push(line));
+  } else {
+    lines.push(header);
+  }
+
+  activeEntries.forEach(entry => {
+    lines.push(`  ${entry.line}`);
+  });
+
+  lines.push('}');
+}
+
+export function buildCssAtStep(stepNumber) {
+  const lines = [];
+
+  appendVisibleCssRuleBlock(lines, '.sidebar {', [
+    { from: 'sidebar_outline', untilBefore: 'sidebar_background', line: '/* privremeni pomoćni border radi lakšeg snalaženja; uklanjamo ga kasnije */' },
+    { from: 'sidebar_outline', untilBefore: 'sidebar_background', line: 'outline: 2px solid #ff4757;' },
+    { from: 'sidebar_width', line: 'width: 280px;' },
+    { from: 'sidebar_min_height', line: 'min-height: 100vh;' },
+    { from: 'sidebar_border_right', line: 'border-right: 1px solid rgba(255,255,255,0.12);' },
+    { from: 'sidebar_background', line: 'background: #0b1020;' },
+    { from: 'sidebar_color', line: 'color: #edf2ff;' },
+    { from: 'sidebar_display_flex', line: 'display: flex;' },
+    { from: 'sidebar_flex_direction', line: 'flex-direction: column;' }
+  ], stepNumber, 'sidebar_html');
+
+  appendVisibleCssRuleBlock(lines, '.sidebar-brand {', [
+    { from: 'brand_outline', untilBefore: 'nav_html', line: '/* helper boja za wrapper; držimo je dok ne završimo celu brand celinu */' },
+    { from: 'brand_outline', untilBefore: 'nav_html', line: 'outline: 2px solid #2ed573;' },
+    { from: 'brand_padding', line: 'padding: 24px;' },
+    { from: 'brand_margin_bottom', line: 'margin-bottom: 28px;' },
+    { from: 'brand_display', line: 'display: flex;' },
+    { from: 'brand_align_items', line: 'align-items: center;' },
+    { from: 'brand_gap', line: 'gap: 14px;' },
+  ], stepNumber, 'brand_html');
+
+  appendVisibleCssRuleBlock(lines, '.logo {', [
+    { from: 'logo_outline', untilBefore: 'nav_html', line: '/* helper boja za logo; držimo je dok ne završimo celu brand celinu */' },
+    { from: 'logo_outline', untilBefore: 'nav_html', line: 'outline: 2px dotted #7dd3fc;' },
+    { from: 'logo_width', line: 'width: 48px;' },
+    { from: 'logo_height', line: 'height: 48px;' },
+    { from: 'logo_display', line: 'display: grid;' },
+    { from: 'logo_place_items', line: 'place-items: center;' },
+    { from: 'logo_radius', line: 'border-radius: 12px;' },
+    { from: 'logo_font_weight', line: 'font-weight: 800;' },
+    { from: 'logo_background', line: 'background: linear-gradient(135deg, #6d73ff, #8f5cff);' },
+    { from: 'logo_color', line: 'color: white;' },
+    { from: 'logo_shadow', line: 'box-shadow: 0 12px 24px rgba(109,115,255,0.30);' }
+  ], stepNumber, 'logo_html');
+
+  appendVisibleCssRuleBlock(lines, '.brand-copy {', [
+    { from: 'brand_copy_outline', untilBefore: 'nav_html', line: '/* helper boja za brand-copy; držimo je dok ne završimo celu brand celinu */' },
+    { from: 'brand_copy_outline', untilBefore: 'nav_html', line: 'outline: 1px dashed #f59e0b;' }
+  ], stepNumber, 'brand_copy_html');
+
+  appendVisibleCssRuleBlock(lines, '.brand-copy strong {', [
+    { from: 'brand_strong_display', line: 'display: block;' },
+    { from: 'brand_strong_font_size', line: 'font-size: 16px;' }
+  ], stepNumber);
+
+  appendVisibleCssRuleBlock(lines, '.brand-copy span {', [
+    { from: 'brand_span_display', line: 'display: block;' },
+    { from: 'brand_span_margin_top', line: 'margin-top: 4px;' },
+    { from: 'brand_span_font_size', line: 'font-size: 13px;' },
+    { from: 'brand_span_color', line: 'color: #9aa6c8;' }
+  ], stepNumber);
+
+  appendVisibleCssRuleBlock(lines, '.nav-list {', [
+    { from: 'nav_list_outline', untilBefore: 'footer_html', line: '/* helper boja za nav wrapper; držimo je dok ne završimo celu navigacionu celinu */' },
+    { from: 'nav_list_outline', untilBefore: 'footer_html', line: 'outline: 1px dashed #38bdf8;' },
+    { from: 'nav_list_padding', untilBefore: 'footer_html', line: 'padding: 10px 8px;' },
+    { from: 'nav_list_display', line: 'display: grid;' },
+    { from: 'nav_list_gap', line: 'gap: 10px;' }
+  ], stepNumber, 'nav_html');
+
+  appendVisibleCssRuleBlock(lines, '.nav-item {', [
+    { from: 'nav_item_outline', untilBefore: 'footer_html', line: '/* helper boja za nav item; držimo je dok ne završimo celu navigacionu celinu */' },
+    { from: 'nav_item_outline', untilBefore: 'footer_html', line: 'outline: 1px solid #ffa502;' },
+    { from: 'nav_item_display', line: 'display: flex;' },
+    { from: 'nav_item_min_height', line: 'min-height: 52px;' },
+    { from: 'nav_item_padding', line: 'padding: 12px 16px;' },
+    { from: 'nav_item_align_items', line: 'align-items: center;' },
+    { from: 'nav_item_gap', line: 'gap: 12px;' },
+    { from: 'nav_item_radius', line: 'border-radius: 14px;' },
+    { from: 'nav_item_margin', line: 'margin: 0 8px;' },
+    { from: 'nav_item_transition', line: 'transition: all 0.4s ease;' }
+  ], stepNumber, 'nav_items_html');
+
+  appendVisibleCssRuleBlock(lines, '.nav-item .icon {', [
+    { from: 'nav_icon_outline', untilBefore: 'footer_html', line: '/* helper boja za icon; držimo je dok ne završimo celu navigacionu celinu */' },
+    { from: 'nav_icon_outline', untilBefore: 'footer_html', line: 'outline: 1px dotted #7dd3fc;' },
+    { from: 'nav_icon_width', line: 'width: 22px;' },
+    { from: 'nav_icon_height', line: 'height: 22px;' },
+    { from: 'nav_icon_display', line: 'display: grid;' },
+    { from: 'nav_icon_place_items', line: 'place-items: center;' }
+  ], stepNumber);
+
+  appendVisibleCssRuleBlock(lines, '.nav-item .label {', [
+    { from: 'nav_label_font_size', line: 'font-size: 15px;' },
+    { from: 'nav_label_font_weight', line: 'font-weight: 600;' }
+  ], stepNumber);
+
+  appendVisibleCssRuleBlock(lines, '.nav-item.active {', [
+    { from: 'nav_item_active_background', line: 'background: rgba(109,115,255,0.14);' },
+    { from: 'nav_item_active_color', line: 'color: white;' }
+  ], stepNumber);
+
+  appendVisibleCssRuleBlock(lines, '.nav-item:hover {', [
+    { from: 'nav_item_hover_background', line: 'background: rgba(255,255,255,0.05);' }
+  ], stepNumber);
+
+  appendVisibleCssRuleBlock(lines, '.sidebar.is-collapsed {', [
+    { from: 'collapse_width', line: 'width: 108px;' }
+  ], stepNumber);
+
+  appendVisibleCssRuleBlock(lines, [
+    '.sidebar.is-collapsed .brand-copy,',
+    '.sidebar.is-collapsed .nav-item .label {'
+  ], [
+    { from: 'hide_labels', line: 'display: none;' }
+  ], stepNumber);
+
+  appendVisibleCssRuleBlock(lines, '.sidebar-footer {', [
+    { from: 'footer_border', line: 'border: 1px solid rgba(255,255,255,0.12);' },
+    { from: 'footer_background', line: 'background: rgba(255,255,255,0.05);' },
+    { from: 'footer_padding', line: 'padding: 16px;' },
+    { from: 'footer_radius', line: 'border-radius: 14px;' },
+    { from: 'footer_margin_top', line: 'margin-top: auto;' }
+  ], stepNumber, 'footer_html');
+
+  appendVisibleCssRuleBlock(lines, '.sidebar-footer p {', [
+    { from: 'footer_text_margin', line: 'margin: 6px 0 0;' },
+    { from: 'footer_text_color', line: 'color: #9aa6c8;' },
+    { from: 'footer_text_line_height', line: 'line-height: 1.5;' }
+  ], stepNumber);
+
+  if (stepNumber >= stepNumberById.responsive_sidebar_min_height) {
+    lines.push(
+      '',
+      '@media (max-width: 980px) {',
+      '  .sidebar {',
+      '    min-height: auto;',
+      '  }',
+      '}'
+    );
+  }
+
+  return lines;
+}
+
+=== lessons/build-sidebar/build-html-at-step.js ===
+import { stepNumberById } from './describe-steps.js';
+
+export function buildHtmlAtStep(stepNumber) {
+  const lines = ['<div class="app-shell">'];
+
+  if (stepNumber >= stepNumberById.sidebar_html) {
+    lines.push('  <aside class="sidebar">');
+
+    if (stepNumber >= stepNumberById.brand_html) {
+      lines.push('    <div class="sidebar-brand">');
+
+      if (stepNumber >= stepNumberById.logo_html) {
+        lines.push('      <div class="logo">A</div>');
+      }
+
+      if (stepNumber >= stepNumberById.brand_copy_html) {
+        lines.push(
+          '      <div class="brand-copy">',
+          '        <strong>AdminPro</strong>',
+          '        <span>Dashboard</span>',
+          '      </div>'
+        );
+      }
+
+      lines.push('    </div>');
+    }
+
+    if (stepNumber >= stepNumberById.nav_html) {
+      lines.push('', '    <nav class="nav-list">');
+
+      if (stepNumber >= stepNumberById.nav_items_html) {
+        lines.push(
+          '      <a href="#" class="nav-item active"><span class="icon">⌂</span><span class="label">Overview</span></a>',
+          '      <a href="#" class="nav-item"><span class="icon">◫</span><span class="label">Analytics</span></a>',
+          '      <a href="#" class="nav-item"><span class="icon">◧</span><span class="label">Orders</span></a>',
+          '      <a href="#" class="nav-item"><span class="icon">◎</span><span class="label">Customers</span></a>',
+          '      <a href="#" class="nav-item"><span class="icon">▣</span><span class="label">Products</span></a>',
+          '      <a href="#" class="nav-item"><span class="icon">⚙</span><span class="label">Settings</span></a>'
+        );
+      }
+
+      lines.push('    </nav>');
+    }
+
+    if (stepNumber >= stepNumberById.footer_html) {
+      lines.push(
+        '',
+        '    <div class="sidebar-footer">',
+        '      <strong>Pro Tip</strong>',
+        '      <p>Sidebar nije samo lista linkova. On je layout zona sa ritmom, hijerarhijom i stanjima.</p>',
+        '    </div>'
+      );
+    }
+
+    lines.push('  </aside>');
+  }
+
+  lines.push('</div>');
+  return lines;
+}
+
+=== lessons/build-sidebar/build-sidebar.lesson.js ===
+import { buildCssAtStep } from './build-css-at-step.js';
+import { buildHtmlAtStep } from './build-html-at-step.js';
+import { lessonSteps } from './describe-steps.js';
+import lessonDocument from './content/documents/files/lesson.sr.md?raw';
+import knowledgeCheckDocument from './content/documents/files/quiz.sr.md?raw';
+import { readKnowledgeCheckQuestions } from '../../lesson-documents/read-knowledge-check-questions.js';
+import { readLessonMetadata } from '../../lesson-documents/read-lesson-metadata.js';
+
+const lessonMetadata = readLessonMetadata(lessonDocument, {
+  lessonTitle: 'Kako se pravi moderan sidebar',
+  lessonIntro: 'Koraci po korak gradiš sidebar od osnove do gotove navigacije. Svaki korak uključuje kod, savete i vizuelni prikaz.',
+  previewAddress: 'browser://build-sidebar-preview',
+  previewTitle: 'Live build sidebar preview',
+  htmlFileName: 'index.html',
+  cssFileName: 'style.css'
+});
+
+const knowledgeCheckQuestions = readKnowledgeCheckQuestions(knowledgeCheckDocument);
+
+export const buildSidebarLesson = {
+  lessonId: 'build-sidebar',
+  lessonTitle: lessonMetadata.lessonTitle,
+  lessonIntro: lessonMetadata.lessonIntro,
+  lessonIntroHtml: lessonMetadata.lessonIntroHtml,
+  previewAddress: lessonMetadata.previewAddress,
+  previewTitle: lessonMetadata.previewTitle,
+  htmlFileName: lessonMetadata.htmlFileName,
+  cssFileName: lessonMetadata.cssFileName,
+  steps: lessonSteps,
+  buildHtmlAtStep,
+  buildCssAtStep,
+  knowledgeCheckQuestions
+};
+
+=== lessons/build-sidebar/content/documents/build_sidebar.md ===
+<!-- Generated from the same markdown sources used by the web lesson. -->
+
+# build-sidebar
+
+Koraci po korak gradiš sidebar od osnove do gotove navigacije. Svaki korak uključuje kod, savete i vizuelni prikaz.
+
+## Quiz
+
+## Question 1
+? Koji HTML tag se koristi za bočnu navigaciju?
+- [ ] `<div>`
+- [x] `<aside>`
+- [ ] `<sidebar>`
+- [ ] `<nav>`
+! `aside` je prirodan semantički izbor za bočnu navigacionu zonu.
+
+## Question 2
+? Šta znači `100vh` u CSS-u?
+- [ ] 100% širine
+- [x] 100% visine viewporta
+- [ ] 100 piksela
+- [ ] Fiksno 100
+! `vh` meri procenat visine viewporta, pa `100vh` znači puna visina ekrana.
+
+## Question 3
+? Koja vrednost `border-radius`-a daje pun krug?
+- [ ] `0px`
+- [x] `50%`
+- [ ] `100%`
+- [ ] `360deg`
+! Kada je element kvadrat, `50%` radius zatvara ga u krug.
+
+## Question 4
+? Šta koristimo za razmak između grid item-a?
+- [ ] `margin`
+- [ ] `padding`
+- [x] `gap`
+- [ ] `spacing`
+! `gap` je najčistiji način da zadaš razmak između elemenata u grid i flex rasporedu.
+
+## Question 5
+? Koji property omogućava glatke animacije između stanja?
+- [ ] `animation`
+- [x] `transition`
+- [ ] `transform`
+- [ ] `motion`
+! `transition` je pravi izbor kada želiš da promene stanja budu glatke.
+
+=== lessons/build-sidebar/content/documents/files/lesson.sr.md ===
+---
+title: Kako se pravi moderan sidebar
+previewAddress: browser://build-sidebar-preview
+previewTitle: Live build sidebar preview
+htmlFileName: index.html
+cssFileName: style.css
+---
+
+Koraci po korak gradiš sidebar od osnove do gotove navigacije. Svaki korak uključuje kod, savete i vizuelni prikaz.
+
+=== lessons/build-sidebar/content/documents/files/quiz.sr.md ===
+## Question 1
+? Koji HTML tag se koristi za bočnu navigaciju?
+- [ ] `<div>`
+- [x] `<aside>`
+- [ ] `<sidebar>`
+- [ ] `<nav>`
+! `aside` je prirodan semantički izbor za bočnu navigacionu zonu.
+
+## Question 2
+? Šta znači `100vh` u CSS-u?
+- [ ] 100% širine
+- [x] 100% visine viewporta
+- [ ] 100 piksela
+- [ ] Fiksno 100
+! `vh` meri procenat visine viewporta, pa `100vh` znači puna visina ekrana.
+
+## Question 3
+? Koja vrednost `border-radius`-a daje pun krug?
+- [ ] `0px`
+- [x] `50%`
+- [ ] `100%`
+- [ ] `360deg`
+! Kada je element kvadrat, `50%` radius zatvara ga u krug.
+
+## Question 4
+? Šta koristimo za razmak između grid item-a?
+- [ ] `margin`
+- [ ] `padding`
+- [x] `gap`
+- [ ] `spacing`
+! `gap` je najčistiji način da zadaš razmak između elemenata u grid i flex rasporedu.
+
+## Question 5
+? Koji property omogućava glatke animacije između stanja?
+- [ ] `animation`
+- [x] `transition`
+- [ ] `transform`
+- [ ] `motion`
+! `transition` je pravi izbor kada želiš da promene stanja budu glatke.
+
+=== lessons/build-sidebar/describe-steps.js ===
+function describeHtmlElementStep(id, title, desc, tag, proTip, _sidebarScene) {
+  return { id, title, desc, tag, proTip };
+}
+
+function describeCssPropertyStep(id, selector, property, value, _sidebarScene, desc = '', proTip = '') {
+  const cssLine = `${property}: ${value};`;
+
+  return {
+    id,
+    title: `CSS: ${selector} / ${property}`,
+    desc: desc || `Dodajemo \`${cssLine}\` u \`${selector}\` i širimo stylesheet jedan property po korak.`,
+    tag: `css:${id.replace(/_/g, '-')}`,
+    proTip: proTip || 'Jedan property po korak čini promenu jasnom i lakom za praćenje u prikazu sidebara.'
+  };
+}
+
+function describeFinishedStep(id, title, desc, proTip, _sidebarScene) {
+  return { id, title, desc, tag: 'success', proTip };
+}
+
+export const lessonSteps = [
+  describeHtmlElementStep('empty_shell', 'Start: Empty App Shell', 'Počinjemo od praznog `.app-shell` prostora. Sidebar tek dodajemo kao prvi pravi element.', 'html:app-shell', 'Neutralan početak jasno odvaja ono što je postojalo od onoga što tek gradimo.', 0),
+  describeHtmlElementStep('sidebar_html', 'HTML: Sidebar Shell', 'Ubacujemo osnovni `<aside class="sidebar">` blok kao koren cele komponente.', 'html:aside', 'Semantički HTML ti odmah daje bolju strukturu i čitljiviji DOM.', 1),
+  ...[
+    ['sidebar_outline', '.sidebar', 'outline', '2px solid #ff4757', 2, 'Dodajemo privremeni pomoćni border radi lakšeg snalaženja, da prazni sidebar odmah dobije jasnu granicu u preview-u. Kasnije ćemo ga ukloniti.', 'Outline je odličan za debug jer ne menja layout.'],
+    ['sidebar_width', '.sidebar', 'width', '280px', 3, 'Kad granica postoji, zaključavamo širinu sidebara da dobije jasan footprint.'],
+    ['sidebar_min_height', '.sidebar', 'min-height', '100vh', 4, 'Dajemo sidebaru punu visinu da box postane čitljiv i bez sadržaja.'],
+    ['sidebar_border_right', '.sidebar', 'border-right', '1px solid rgba(255,255,255,0.12)', 5, 'Tanka desna linija odvaja sidebar od ostatka layouta.'],
+    ['sidebar_background', '.sidebar', 'background', '#0b1020', 5, 'Dodajemo tamnu pozadinu da sidebar dobije svoj vizuelni identitet i uklanjamo privremeni pomoćni border, više nam ne treba.'],
+    ['sidebar_color', '.sidebar', 'color', '#edf2ff', 5, 'Osnovnu boju teksta postavljamo rano da nasledi ceo sadržaj.']
+  ].map(config => describeCssPropertyStep(...config)),
+  describeHtmlElementStep('brand_html', 'HTML: Brand Wrapper', 'Dodajemo `.sidebar-brand` kao zonu za logo i naziv proizvoda. Od ovog trenutka pomoćne linije za sve delove branda držimo dok ne završimo celu brand celinu.', 'html:brand', 'Izdvoj brand deo od navigacije da bi hijerarhija odmah bila jasna.', 7),
+  ...[
+    ['brand_outline', '.sidebar-brand', 'outline', '2px solid #2ed573', 8, 'Dodajemo privremeni pomoćni border radi lakšeg snalaženja, da odmah vidiš footprint brand zone. Držimo ga dok ne završimo celu `.sidebar-brand` celinu, pa ćemo ga tek tada ukloniti.', 'Svaki deo iste celine može da dobije svoju boju helper linije dok ta celina traje.'],
+    ['brand_padding', '.sidebar-brand', 'padding', '24px', 8, 'Unutrašnji padding daje brand zoni vazduh.'],
+    ['brand_margin_bottom', '.sidebar-brand', 'margin-bottom', '28px', 8, 'Odvajamo brand blok od navigacije ispod njega.'],
+    ['brand_display', '.sidebar-brand', 'display', 'flex', 8, 'Prebacujemo brand zonu u flex da logo i tekst mogu da stoje u istom redu.'],
+    ['brand_align_items', '.sidebar-brand', 'align-items', 'center', 8, 'Vertikalno poravnanje centrira logo i tekst.'],
+    ['brand_gap', '.sidebar-brand', 'gap', '14px', 8, 'Gap određuje koliko prostora stoji između logotipa i teksta.']
+  ].map(config => describeCssPropertyStep(...config)),
+  describeHtmlElementStep('logo_html', 'HTML: Logo Element', 'Ubacujemo `.logo` element sa slovom `A` kao placeholder identitetom.', 'html:logo', 'Počni od jednostavnog placeholder loga pa tek onda doteruj stil.', 9),
+  ...[
+    ['logo_outline', '.logo', 'outline', '2px dotted #7dd3fc', 10, 'Dodajemo privremeni pomoćni border radi lakšeg snalaženja, da footprint logotipa bude jasan i bez pozadine. Držimo ga dok ne završimo celu `.sidebar-brand` celinu, pa ga tek tada uklanjamo.', 'Logo zadržava svoju helper boju sve dok radimo ceo brand blok.'],
+    ['logo_width', '.logo', 'width', '48px', 10, 'Prvo zaključavamo širinu logotipa.'],
+    ['logo_height', '.logo', 'height', '48px', 10, 'Visina prati širinu da bismo dobili kvadratnu osnovu.'],
+    ['logo_display', '.logo', 'display', 'grid', 10, 'Grid nam daje lak centar za jedan znak ili ikonu.'],
+    ['logo_place_items', '.logo', 'place-items', 'center', 10, 'Centriramo sadržaj logotipa u oba smera.'],
+    ['logo_radius', '.logo', 'border-radius', '12px', 10, 'Blago zaobljenje daje moderniji osećaj.'],
+    ['logo_font_weight', '.logo', 'font-weight', '800', 10, 'Pojačavamo slovo da liči na pravi brand znak.'],
+    ['logo_background', '.logo', 'background', 'linear-gradient(135deg, #6d73ff, #8f5cff)', 11, 'Gradijent dodaje energiju i daje logotipu fokus. Pomoćni border namerno ostaje dok ne zatvorimo celu brand celinu.'],
+    ['logo_color', '.logo', 'color', 'white', 11, 'Bela boja daje čist kontrast preko gradijenta.'],
+    ['logo_shadow', '.logo', 'box-shadow', '0 12px 24px rgba(109,115,255,0.30)', 11, 'Shadow dodaje depth i čini logo prisutnijim.']
+  ].map(config => describeCssPropertyStep(...config)),
+  describeHtmlElementStep('brand_copy_html', 'HTML: Brand Copy', 'Dodajemo `.brand-copy` sa naslovom i podnaslovom pored logotipa. I on dobija svoju helper boju dok ne završimo celu `.sidebar-brand` celinu.', 'html:brand-copy', 'Tekstualni brand signal pomaže korisniku da zna gde se nalazi.', 12),
+  ...[
+    ['brand_copy_outline', '.brand-copy', 'outline', '1px dashed #f59e0b', 12, 'Dodajemo privremeni pomoćni border radi lakšeg snalaženja, da tekstualni brand blok bude jasno odvojen od logotipa. Držimo ga dok ne završimo celu `.sidebar-brand` celinu.', 'Isti wrapper, različiti child elementi, različite helper boje.'],
+    ['brand_strong_display', '.brand-copy strong', 'display', 'block', 12, 'Naslov pretvaramo u blok da zauzme svoj red.'],
+    ['brand_strong_font_size', '.brand-copy strong', 'font-size', '16px', 12, 'Naslov dobija čitljiviju veličinu.'],
+    ['brand_span_display', '.brand-copy span', 'display', 'block', 12, 'Podnaslov spuštamo u novi red.'],
+    ['brand_span_margin_top', '.brand-copy span', 'margin-top', '4px', 12, 'Mali razmak odvaja podnaslov od naslova.'],
+    ['brand_span_font_size', '.brand-copy span', 'font-size', '13px', 12, 'Podnaslov pravimo suptilnijim od naslova.'],
+    ['brand_span_color', '.brand-copy span', 'color', '#9aa6c8', 12, 'Muted boja pravi jasnu tekstualnu hijerarhiju.']
+  ].map(config => describeCssPropertyStep(...config)),
+  describeHtmlElementStep('nav_html', 'HTML: Nav Wrapper', 'Ubacujemo `<nav class="nav-list">` kao kontejner za buduće linkove. Brand celina je sada gotova, pa uklanjamo privremene pomoćne bordere sa `.sidebar-brand`, `.logo` i `.brand-copy`.', 'html:nav', 'Semantički `nav` element je prirodan izbor za navigaciju.', 13),
+  ...[
+    ['nav_list_outline', '.nav-list', 'outline', '1px dashed #38bdf8', 14, 'Dodajemo privremeni pomoćni border radi lakšeg snalaženja, da prazna nav zona odmah postane vidljiva. Držimo ga dok ne završimo celu navigacionu celinu.', 'Navigacija zadržava helper linije kroz sve svoje poddelove dok ne pređemo na footer.'],
+    ['nav_list_padding', '.nav-list', 'padding', '10px 8px', 14, 'Dodajemo i privremeni pomoćni padding da prazna nav zona dobije visinu i pre prvog linka. I njega držimo dok ne završimo celu navigacionu celinu.'],
+    ['nav_list_display', '.nav-list', 'display', 'grid', 14, 'Navigaciju slažemo u grid da spacing bude čist.'],
+    ['nav_list_gap', '.nav-list', 'gap', '10px', 14, 'Gap održava ravnomeran razmak između stavki.']
+  ].map(config => describeCssPropertyStep(...config)),
+  describeHtmlElementStep('nav_items_html', 'HTML: Nav Items', 'Dodajemo prve `.nav-item` linkove sa ikonama i labelama.', 'html:nav-item', 'Prvo ubaci markup za stavke, pa onda stilizuj svaki sloj ponaosob.', 15),
+  ...[
+    ['nav_item_outline', '.nav-item', 'outline', '1px solid #ffa502', 15, 'Zadržavamo helper linije za celu navigaciju, a svakoj stavci dodajemo njen privremeni border radi lakšeg snalaženja. Držimo ga dok ne završimo celu navigacionu celinu.', 'Svaki deo navigacije zadržava svoju helper boju dok traje cela navigaciona celina.'],
+    ['nav_item_display', '.nav-item', 'display', 'flex', 15, 'Svaka stavka postaje flex red da ikona i tekst stanu jedan do drugog.'],
+    ['nav_item_min_height', '.nav-item', 'min-height', '52px', 15, 'Klik zona dobija pristojnu visinu.'],
+    ['nav_item_padding', '.nav-item', 'padding', '12px 16px', 15, 'Padding pravi realnu klik zonu i diše bolje od golog teksta.'],
+    ['nav_item_align_items', '.nav-item', 'align-items', 'center', 15, 'Vertikalno centriramo sadržaj svake stavke.'],
+    ['nav_item_gap', '.nav-item', 'gap', '12px', 15, 'Gap odvaja ikonu od labele.'],
+    ['nav_icon_outline', '.nav-item .icon', 'outline', '1px dotted #7dd3fc', 15, 'Dodajemo privremeni pomoćni border i na ikonicu radi lakšeg snalaženja, da joj footprint bude jasan. Držimo ga dok ne završimo celu navigacionu celinu.'],
+    ['nav_icon_width', '.nav-item .icon', 'width', '22px', 15, 'Ikona dobija fiksnu širinu.'],
+    ['nav_icon_height', '.nav-item .icon', 'height', '22px', 15, 'Ikona dobija i fiksnu visinu radi konzistentnog kvadrata.'],
+    ['nav_icon_display', '.nav-item .icon', 'display', 'grid', 15, 'Grid olakšava centriranje sadržaja ikone.'],
+    ['nav_icon_place_items', '.nav-item .icon', 'place-items', 'center', 15, 'Ikonicu centriramo i horizontalno i vertikalno.'],
+    ['nav_label_font_size', '.nav-item .label', 'font-size', '15px', 15, 'Labela dobija čitljivu veličinu.'],
+    ['nav_label_font_weight', '.nav-item .label', 'font-weight', '600', 15, 'Blago pojačavamo labelu da zadrži hijerarhiju.'],
+    ['nav_item_radius', '.nav-item', 'border-radius', '14px', 16, 'Zaobljene ivice daju linkovima mekši, UI osećaj. Helper linije i dalje ostaju dok ne završimo celu navigacionu celinu.'],
+    ['nav_item_margin', '.nav-item', 'margin', '0 8px', 16, 'Spoljni razmak odvaja stavke od ivice sidebara.'],
+    ['nav_item_active_background', '.nav-item.active', 'background', 'rgba(109,115,255,0.14)', 17, 'Aktivna stavka dobija svoju pozadinu, ali helper linije namerno ostaju dok ne završimo celu navigacionu celinu.'],
+    ['nav_item_active_color', '.nav-item.active', 'color', 'white', 17, 'Boju aktivne stavke pojačavamo za bolji kontrast.'],
+    ['nav_item_transition', '.nav-item', 'transition', 'all 0.4s ease', 18, 'Dodajemo glatku tranziciju za hover i active stanje.'],
+    ['nav_item_hover_background', '.nav-item:hover', 'background', 'rgba(255,255,255,0.05)', 19, 'Hover feedback potvrđuje da je stavka interaktivna.'],
+    ['collapse_width', '.sidebar.is-collapsed', 'width', '108px', 20, 'Collapsed mod sužava sidebar na kompaktnu širinu.']
+  ].map(config => describeCssPropertyStep(...config)),
+  describeHtmlElementStep('footer_html', 'HTML: Sidebar Footer', 'Dodajemo `.sidebar-footer` kao završni informativni blok pri dnu sidebara. Navigaciona celina je sada gotova, pa uklanjamo privremene pomoćne bordere i paddinge sa navigacionih elemenata.', 'html:footer', 'Footer je i dalje deo sidebara, pa i njega gradimo iz istog toka.', 20),
+  ...[
+    ['sidebar_display_flex', '.sidebar', 'display', 'flex', 20, 'Sidebar pretvaramo u flex kolonu da footer može da ode na dno.'],
+    ['sidebar_flex_direction', '.sidebar', 'flex-direction', 'column', 20, 'Kolona omogućava prirodan vertikalni raspored sekcija.'],
+    ['footer_border', '.sidebar-footer', 'border', '1px solid rgba(255,255,255,0.12)', 20, 'Tanka linija razdvaja footer od pozadine.'],
+    ['footer_background', '.sidebar-footer', 'background', 'rgba(255,255,255,0.05)', 20, 'Blaga pozadina izdvaja footer bez teškog kontrasta.'],
+    ['footer_padding', '.sidebar-footer', 'padding', '16px', 20, 'Footer dobija unutrašnji spacing.'],
+    ['footer_radius', '.sidebar-footer', 'border-radius', '14px', 20, 'Zaobljenje usklađuje footer sa ostatkom UI-ja.'],
+    ['footer_margin_top', '.sidebar-footer', 'margin-top', 'auto', 20, 'Auto margin gura footer na dno kolone.'],
+    ['footer_text_margin', '.sidebar-footer p', 'margin', '6px 0 0', 20, 'Odstupamo paragraf od naslova unutar footera.'],
+    ['footer_text_color', '.sidebar-footer p', 'color', '#9aa6c8', 20, 'Muted ton čini pomoćni tekst nenametljivim.'],
+    ['footer_text_line_height', '.sidebar-footer p', 'line-height', '1.5', 20, 'Line-height daje tekstu dovoljno vazduha.'],
+    ['hide_labels', '.sidebar.is-collapsed .nav-item .label', 'display', 'none', 21, 'U collapsed modu sakrivamo tekstualne labele.', 'Collapse ne znači da gubiš strukturu, već da je svodiš na ikone.'],
+    ['responsive_sidebar_min_height', '.sidebar', 'min-height', 'auto', 21, 'Na manjim ekranima sidebar više ne mora da glumi pun viewport.']
+  ].map(config => describeCssPropertyStep(...config)),
+  describeFinishedStep('done', 'Done: Sidebar', 'Tutorijal je sada potpuno detaljan: CSS ide kumulativno, property po property.', 'Kada je tok ovako sitno razbijen, promene su mnogo lakše za praćenje i u kodu i u prikazu sidebara.', 21)
+];
+
+export const stepNumberById = Object.fromEntries(
+  lessonSteps.map((step, index) => [step.id, index])
+);
+
+=== lessons/register-lessons.js ===
+import { buildSidebarLesson } from './build-sidebar/build-sidebar.lesson.js';
+
+export const registeredLessons = [buildSidebarLesson];
+
+const lessonsById = new Map(registeredLessons.map(lesson => [lesson.lessonId, lesson]));
+
+export function findLesson(lessonId) {
+  return lessonsById.get(lessonId);
+}
+
+export function getDefaultLessonId() {
+  return registeredLessons[0].lessonId;
+}
+
+=== main.js ===
+import './lesson-player/play-lesson/lesson-player.css';
+import { selectLessonFromLocation } from './lesson-player/select-lesson-from-location.js';
+import { playLesson } from './lesson-player/play-lesson/play-lesson.pipeline.js';
+
+const selectedLesson = selectLessonFromLocation({
+  ownerLocation: window.location
+});
+
+playLesson({
+  ownerDocument: document,
+  lesson: selectedLesson
+});
+
+=== merge-files.sh ===
+#!/usr/bin/env bash
+set -euo pipefail
+
+# Canonical PolyMoly wrapper, adapted to run from this repository by delegating
+# into the PolyMoly toolchain and passing an absolute target directory.
+POLYMOLY_ROOT="${POLYMOLY_ROOT:-/home/shomsy/projects/polymoly}"
+
+if [[ ! -d "$POLYMOLY_ROOT" ]]; then
+  echo "PolyMoly repo not found at: $POLYMOLY_ROOT" >&2
+  exit 1
+fi
+
+if [[ $# -lt 1 ]]; then
+  echo "Usage: $0 <target-dir> [review-pack-options...]" >&2
+  exit 1
+fi
+
+TARGET_DIR="$1"
+shift
+
+if [[ "$TARGET_DIR" != /* ]]; then
+  TARGET_DIR="$(pwd)/$TARGET_DIR"
+fi
+
+TARGET_DIR="$(cd "$TARGET_DIR" && pwd)"
+
+PACKAGE_NAME=""
+
+if [[ -f "$TARGET_DIR/package.json" ]]; then
+  PACKAGE_NAME="$(sed -n 's/^[[:space:]]*"name":[[:space:]]*"\([^"]*\)".*/\1/p' "$TARGET_DIR/package.json" | head -n 1)"
+fi
+
+TARGET_BASENAME="$(basename "$TARGET_DIR")"
+
+(
+  cd "$POLYMOLY_ROOT"
+  env TMPDIR=/tmp GOTMPDIR=/tmp GOCACHE=/tmp/gocache \
+    go run ./system/tools/poly/cmd/poly review pack "$TARGET_DIR" "$@"
+)
+
+if [[ -n "$PACKAGE_NAME" && "$PACKAGE_NAME" != "$TARGET_BASENAME" ]]; then
+  ORIGINAL_OUTPUT="$TARGET_DIR/$TARGET_BASENAME.txt"
+  RENAMED_OUTPUT="$TARGET_DIR/$PACKAGE_NAME.txt"
+
+  if [[ -f "$ORIGINAL_OUTPUT" ]]; then
+    mv -f "$ORIGINAL_OUTPUT" "$RENAMED_OUTPUT"
+  fi
+fi
+
+=== package-lock.json ===
+{
+  "name": "step-by-step-animator",
+  "lockfileVersion": 3,
+  "requires": true,
+  "packages": {
+    "": {
+      "name": "step-by-step-animator",
+      "devDependencies": {
+        "vite": "^8.0.1"
+      }
+    },
+    "node_modules/@emnapi/core": {
+      "version": "1.9.1",
+      "resolved": "https://registry.npmjs.org/@emnapi/core/-/core-1.9.1.tgz",
+      "integrity": "sha512-mukuNALVsoix/w1BJwFzwXBN/dHeejQtuVzcDsfOEsdpCumXb/E9j8w11h5S54tT1xhifGfbbSm/ICrObRb3KA==",
+      "dev": true,
+      "license": "MIT",
+      "optional": true,
+      "dependencies": {
+        "@emnapi/wasi-threads": "1.2.0",
+        "tslib": "^2.4.0"
+      }
+    },
+    "node_modules/@emnapi/runtime": {
+      "version": "1.9.1",
+      "resolved": "https://registry.npmjs.org/@emnapi/runtime/-/runtime-1.9.1.tgz",
+      "integrity": "sha512-VYi5+ZVLhpgK4hQ0TAjiQiZ6ol0oe4mBx7mVv7IflsiEp0OWoVsp/+f9Vc1hOhE0TtkORVrI1GvzyreqpgWtkA==",
+      "dev": true,
+      "license": "MIT",
+      "optional": true,
+      "dependencies": {
+        "tslib": "^2.4.0"
+      }
+    },
+    "node_modules/@emnapi/wasi-threads": {
+      "version": "1.2.0",
+      "resolved": "https://registry.npmjs.org/@emnapi/wasi-threads/-/wasi-threads-1.2.0.tgz",
+      "integrity": "sha512-N10dEJNSsUx41Z6pZsXU8FjPjpBEplgH24sfkmITrBED1/U2Esum9F3lfLrMjKHHjmi557zQn7kR9R+XWXu5Rg==",
+      "dev": true,
+      "license": "MIT",
+      "optional": true,
+      "dependencies": {
+        "tslib": "^2.4.0"
+      }
+    },
+    "node_modules/@napi-rs/wasm-runtime": {
+      "version": "1.1.1",
+      "resolved": "https://registry.npmjs.org/@napi-rs/wasm-runtime/-/wasm-runtime-1.1.1.tgz",
+      "integrity": "sha512-p64ah1M1ld8xjWv3qbvFwHiFVWrq1yFvV4f7w+mzaqiR4IlSgkqhcRdHwsGgomwzBH51sRY4NEowLxnaBjcW/A==",
+      "dev": true,
+      "license": "MIT",
+      "optional": true,
+      "dependencies": {
+        "@emnapi/core": "^1.7.1",
+        "@emnapi/runtime": "^1.7.1",
+        "@tybys/wasm-util": "^0.10.1"
+      },
+      "funding": {
+        "type": "github",
+        "url": "https://github.com/sponsors/Brooooooklyn"
+      }
+    },
+    "node_modules/@oxc-project/types": {
+      "version": "0.120.0",
+      "resolved": "https://registry.npmjs.org/@oxc-project/types/-/types-0.120.0.tgz",
+      "integrity": "sha512-k1YNu55DuvAip/MGE1FTsIuU3FUCn6v/ujG9V7Nq5Df/kX2CWb13hhwD0lmJGMGqE+bE1MXvv9SZVnMzEXlWcg==",
+      "dev": true,
+      "license": "MIT",
+      "funding": {
+        "url": "https://github.com/sponsors/Boshen"
+      }
+    },
+    "node_modules/@rolldown/binding-android-arm64": {
+      "version": "1.0.0-rc.10",
+      "resolved": "https://registry.npmjs.org/@rolldown/binding-android-arm64/-/binding-android-arm64-1.0.0-rc.10.tgz",
+      "integrity": "sha512-jOHxwXhxmFKuXztiu1ORieJeTbx5vrTkcOkkkn2d35726+iwhrY1w/+nYY/AGgF12thg33qC3R1LMBF5tHTZHg==",
+      "cpu": [
+        "arm64"
+      ],
+      "dev": true,
+      "license": "MIT",
+      "optional": true,
+      "os": [
+        "android"
+      ],
+      "engines": {
+        "node": "^20.19.0 || >=22.12.0"
+      }
+    },
+    "node_modules/@rolldown/binding-darwin-arm64": {
+      "version": "1.0.0-rc.10",
+      "resolved": "https://registry.npmjs.org/@rolldown/binding-darwin-arm64/-/binding-darwin-arm64-1.0.0-rc.10.tgz",
+      "integrity": "sha512-gED05Teg/vtTZbIJBc4VNMAxAFDUPkuO/rAIyyxZjTj1a1/s6z5TII/5yMGZ0uLRCifEtwUQn8OlYzuYc0m70w==",
+      "cpu": [
+        "arm64"
+      ],
+      "dev": true,
+      "license": "MIT",
+      "optional": true,
+      "os": [
+        "darwin"
+      ],
+      "engines": {
+        "node": "^20.19.0 || >=22.12.0"
+      }
+    },
+    "node_modules/@rolldown/binding-darwin-x64": {
+      "version": "1.0.0-rc.10",
+      "resolved": "https://registry.npmjs.org/@rolldown/binding-darwin-x64/-/binding-darwin-x64-1.0.0-rc.10.tgz",
+      "integrity": "sha512-rI15NcM1mA48lqrIxVkHfAqcyFLcQwyXWThy+BQ5+mkKKPvSO26ir+ZDp36AgYoYVkqvMcdS8zOE6SeBsR9e8A==",
+      "cpu": [
+        "x64"
+      ],
+      "dev": true,
+      "license": "MIT",
+      "optional": true,
+      "os": [
+        "darwin"
+      ],
+      "engines": {
+        "node": "^20.19.0 || >=22.12.0"
+      }
+    },
+    "node_modules/@rolldown/binding-freebsd-x64": {
+      "version": "1.0.0-rc.10",
+      "resolved": "https://registry.npmjs.org/@rolldown/binding-freebsd-x64/-/binding-freebsd-x64-1.0.0-rc.10.tgz",
+      "integrity": "sha512-XZRXHdTa+4ME1MuDVp021+doQ+z6Ei4CCFmNc5/sKbqb8YmkiJdj8QKlV3rCI0AJtAeSB5n0WGPuJWNL9p/L2w==",
+      "cpu": [
+        "x64"
+      ],
+      "dev": true,
+      "license": "MIT",
+      "optional": true,
+      "os": [
+        "freebsd"
+      ],
+      "engines": {
+        "node": "^20.19.0 || >=22.12.0"
+      }
+    },
+    "node_modules/@rolldown/binding-linux-arm-gnueabihf": {
+      "version": "1.0.0-rc.10",
+      "resolved": "https://registry.npmjs.org/@rolldown/binding-linux-arm-gnueabihf/-/binding-linux-arm-gnueabihf-1.0.0-rc.10.tgz",
+      "integrity": "sha512-R0SQMRluISSLzFE20sPWYHVmJdDQnRyc/FzSCN72BqQmh2SOZUFG+N3/vBZpR4C6WpEUVYJLrYUXaj43sJsNLA==",
+      "cpu": [
+        "arm"
+      ],
+      "dev": true,
+      "license": "MIT",
+      "optional": true,
+      "os": [
+        "linux"
+      ],
+      "engines": {
+        "node": "^20.19.0 || >=22.12.0"
+      }
+    },
+    "node_modules/@rolldown/binding-linux-arm64-gnu": {
+      "version": "1.0.0-rc.10",
+      "resolved": "https://registry.npmjs.org/@rolldown/binding-linux-arm64-gnu/-/binding-linux-arm64-gnu-1.0.0-rc.10.tgz",
+      "integrity": "sha512-Y1reMrV/o+cwpduYhJuOE3OMKx32RMYCidf14y+HssARRmhDuWXJ4yVguDg2R/8SyyGNo+auzz64LnPK9Hq6jg==",
+      "cpu": [
+        "arm64"
+      ],
+      "dev": true,
+      "license": "MIT",
+      "optional": true,
+      "os": [
+        "linux"
+      ],
+      "engines": {
+        "node": "^20.19.0 || >=22.12.0"
+      }
+    },
+    "node_modules/@rolldown/binding-linux-arm64-musl": {
+      "version": "1.0.0-rc.10",
+      "resolved": "https://registry.npmjs.org/@rolldown/binding-linux-arm64-musl/-/binding-linux-arm64-musl-1.0.0-rc.10.tgz",
+      "integrity": "sha512-vELN+HNb2IzuzSBUOD4NHmP9yrGwl1DVM29wlQvx1OLSclL0NgVWnVDKl/8tEks79EFek/kebQKnNJkIAA4W2g==",
+      "cpu": [
+        "arm64"
+      ],
+      "dev": true,
+      "license": "MIT",
+      "optional": true,
+      "os": [
+        "linux"
+      ],
+      "engines": {
+        "node": "^20.19.0 || >=22.12.0"
+      }
+    },
+    "node_modules/@rolldown/binding-linux-ppc64-gnu": {
+      "version": "1.0.0-rc.10",
+      "resolved": "https://registry.npmjs.org/@rolldown/binding-linux-ppc64-gnu/-/binding-linux-ppc64-gnu-1.0.0-rc.10.tgz",
+      "integrity": "sha512-ZqrufYTgzxbHwpqOjzSsb0UV/aV2TFIY5rP8HdsiPTv/CuAgCRjM6s9cYFwQ4CNH+hf9Y4erHW1GjZuZ7WoI7w==",
+      "cpu": [
+        "ppc64"
+      ],
+      "dev": true,
+      "license": "MIT",
+      "optional": true,
+      "os": [
+        "linux"
+      ],
+      "engines": {
+        "node": "^20.19.0 || >=22.12.0"
+      }
+    },
+    "node_modules/@rolldown/binding-linux-s390x-gnu": {
+      "version": "1.0.0-rc.10",
+      "resolved": "https://registry.npmjs.org/@rolldown/binding-linux-s390x-gnu/-/binding-linux-s390x-gnu-1.0.0-rc.10.tgz",
+      "integrity": "sha512-gSlmVS1FZJSRicA6IyjoRoKAFK7IIHBs7xJuHRSmjImqk3mPPWbR7RhbnfH2G6bcmMEllCt2vQ/7u9e6bBnByg==",
+      "cpu": [
+        "s390x"
+      ],
+      "dev": true,
+      "license": "MIT",
+      "optional": true,
+      "os": [
+        "linux"
+      ],
+      "engines": {
+        "node": "^20.19.0 || >=22.12.0"
+      }
+    },
+    "node_modules/@rolldown/binding-linux-x64-gnu": {
+      "version": "1.0.0-rc.10",
+      "resolved": "https://registry.npmjs.org/@rolldown/binding-linux-x64-gnu/-/binding-linux-x64-gnu-1.0.0-rc.10.tgz",
+      "integrity": "sha512-eOCKUpluKgfObT2pHjztnaWEIbUabWzk3qPZ5PuacuPmr4+JtQG4k2vGTY0H15edaTnicgU428XW/IH6AimcQw==",
+      "cpu": [
+        "x64"
+      ],
+      "dev": true,
+      "license": "MIT",
+      "optional": true,
+      "os": [
+        "linux"
+      ],
+      "engines": {
+        "node": "^20.19.0 || >=22.12.0"
+      }
+    },
+    "node_modules/@rolldown/binding-linux-x64-musl": {
+      "version": "1.0.0-rc.10",
+      "resolved": "https://registry.npmjs.org/@rolldown/binding-linux-x64-musl/-/binding-linux-x64-musl-1.0.0-rc.10.tgz",
+      "integrity": "sha512-Xdf2jQbfQowJnLcgYfD/m0Uu0Qj5OdxKallD78/IPPfzaiaI4KRAwZzHcKQ4ig1gtg1SuzC7jovNiM2TzQsBXA==",
+      "cpu": [
+        "x64"
+      ],
+      "dev": true,
+      "license": "MIT",
+      "optional": true,
+      "os": [
+        "linux"
+      ],
+      "engines": {
+        "node": "^20.19.0 || >=22.12.0"
+      }
+    },
+    "node_modules/@rolldown/binding-openharmony-arm64": {
+      "version": "1.0.0-rc.10",
+      "resolved": "https://registry.npmjs.org/@rolldown/binding-openharmony-arm64/-/binding-openharmony-arm64-1.0.0-rc.10.tgz",
+      "integrity": "sha512-o1hYe8hLi1EY6jgPFyxQgQ1wcycX+qz8eEbVmot2hFkgUzPxy9+kF0u0NIQBeDq+Mko47AkaFFaChcvZa9UX9Q==",
+      "cpu": [
+        "arm64"
+      ],
+      "dev": true,
+      "license": "MIT",
+      "optional": true,
+      "os": [
+        "openharmony"
+      ],
+      "engines": {
+        "node": "^20.19.0 || >=22.12.0"
+      }
+    },
+    "node_modules/@rolldown/binding-wasm32-wasi": {
+      "version": "1.0.0-rc.10",
+      "resolved": "https://registry.npmjs.org/@rolldown/binding-wasm32-wasi/-/binding-wasm32-wasi-1.0.0-rc.10.tgz",
+      "integrity": "sha512-Ugv9o7qYJudqQO5Y5y2N2SOo6S4WiqiNOpuQyoPInnhVzCY+wi/GHltcLHypG9DEUYMB0iTB/huJrpadiAcNcA==",
+      "cpu": [
+        "wasm32"
+      ],
+      "dev": true,
+      "license": "MIT",
+      "optional": true,
+      "dependencies": {
+        "@napi-rs/wasm-runtime": "^1.1.1"
+      },
+      "engines": {
+        "node": ">=14.0.0"
+      }
+    },
+    "node_modules/@rolldown/binding-win32-arm64-msvc": {
+      "version": "1.0.0-rc.10",
+      "resolved": "https://registry.npmjs.org/@rolldown/binding-win32-arm64-msvc/-/binding-win32-arm64-msvc-1.0.0-rc.10.tgz",
+      "integrity": "sha512-7UODQb4fQUNT/vmgDZBl3XOBAIOutP5R3O/rkxg0aLfEGQ4opbCgU5vOw/scPe4xOqBwL9fw7/RP1vAMZ6QlAQ==",
+      "cpu": [
+        "arm64"
+      ],
+      "dev": true,
+      "license": "MIT",
+      "optional": true,
+      "os": [
+        "win32"
+      ],
+      "engines": {
+        "node": "^20.19.0 || >=22.12.0"
+      }
+    },
+    "node_modules/@rolldown/binding-win32-x64-msvc": {
+      "version": "1.0.0-rc.10",
+      "resolved": "https://registry.npmjs.org/@rolldown/binding-win32-x64-msvc/-/binding-win32-x64-msvc-1.0.0-rc.10.tgz",
+      "integrity": "sha512-PYxKHMVHOb5NJuDL53vBUl1VwUjymDcYI6rzpIni0C9+9mTiJedvUxSk7/RPp7OOAm3v+EjgMu9bIy3N6b408w==",
+      "cpu": [
+        "x64"
+      ],
+      "dev": true,
+      "license": "MIT",
+      "optional": true,
+      "os": [
+        "win32"
+      ],
+      "engines": {
+        "node": "^20.19.0 || >=22.12.0"
+      }
+    },
+    "node_modules/@rolldown/pluginutils": {
+      "version": "1.0.0-rc.10",
+      "resolved": "https://registry.npmjs.org/@rolldown/pluginutils/-/pluginutils-1.0.0-rc.10.tgz",
+      "integrity": "sha512-UkVDEFk1w3mveXeKgaTuYfKWtPbvgck1dT8TUG3bnccrH0XtLTuAyfCoks4Q/M5ZGToSVJTIQYCzy2g/atAOeg==",
+      "dev": true,
+      "license": "MIT"
+    },
+    "node_modules/@tybys/wasm-util": {
+      "version": "0.10.1",
+      "resolved": "https://registry.npmjs.org/@tybys/wasm-util/-/wasm-util-0.10.1.tgz",
+      "integrity": "sha512-9tTaPJLSiejZKx+Bmog4uSubteqTvFrVrURwkmHixBo0G4seD0zUxp98E1DzUBJxLQ3NPwXrGKDiVjwx/DpPsg==",
+      "dev": true,
+      "license": "MIT",
+      "optional": true,
+      "dependencies": {
+        "tslib": "^2.4.0"
+      }
+    },
+    "node_modules/detect-libc": {
+      "version": "2.1.2",
+      "resolved": "https://registry.npmjs.org/detect-libc/-/detect-libc-2.1.2.tgz",
+      "integrity": "sha512-Btj2BOOO83o3WyH59e8MgXsxEQVcarkUOpEYrubB0urwnN10yQ364rsiByU11nZlqWYZm05i/of7io4mzihBtQ==",
+      "dev": true,
+      "license": "Apache-2.0",
+      "engines": {
+        "node": ">=8"
+      }
+    },
+    "node_modules/fdir": {
+      "version": "6.5.0",
+      "resolved": "https://registry.npmjs.org/fdir/-/fdir-6.5.0.tgz",
+      "integrity": "sha512-tIbYtZbucOs0BRGqPJkshJUYdL+SDH7dVM8gjy+ERp3WAUjLEFJE+02kanyHtwjWOnwrKYBiwAmM0p4kLJAnXg==",
+      "dev": true,
+      "license": "MIT",
+      "engines": {
+        "node": ">=12.0.0"
+      },
+      "peerDependencies": {
+        "picomatch": "^3 || ^4"
+      },
+      "peerDependenciesMeta": {
+        "picomatch": {
+          "optional": true
+        }
+      }
+    },
+    "node_modules/fsevents": {
+      "version": "2.3.3",
+      "resolved": "https://registry.npmjs.org/fsevents/-/fsevents-2.3.3.tgz",
+      "integrity": "sha512-5xoDfX+fL7faATnagmWPpbFtwh/R77WmMMqqHGS65C3vvB0YHrgF+B1YmZ3441tMj5n63k0212XNoJwzlhffQw==",
+      "dev": true,
+      "hasInstallScript": true,
+      "license": "MIT",
+      "optional": true,
+      "os": [
+        "darwin"
+      ],
+      "engines": {
+        "node": "^8.16.0 || ^10.6.0 || >=11.0.0"
+      }
+    },
+    "node_modules/lightningcss": {
+      "version": "1.32.0",
+      "resolved": "https://registry.npmjs.org/lightningcss/-/lightningcss-1.32.0.tgz",
+      "integrity": "sha512-NXYBzinNrblfraPGyrbPoD19C1h9lfI/1mzgWYvXUTe414Gz/X1FD2XBZSZM7rRTrMA8JL3OtAaGifrIKhQ5yQ==",
+      "dev": true,
+      "license": "MPL-2.0",
+      "dependencies": {
+        "detect-libc": "^2.0.3"
+      },
+      "engines": {
+        "node": ">= 12.0.0"
+      },
+      "funding": {
+        "type": "opencollective",
+        "url": "https://opencollective.com/parcel"
+      },
+      "optionalDependencies": {
+        "lightningcss-android-arm64": "1.32.0",
+        "lightningcss-darwin-arm64": "1.32.0",
+        "lightningcss-darwin-x64": "1.32.0",
+        "lightningcss-freebsd-x64": "1.32.0",
+        "lightningcss-linux-arm-gnueabihf": "1.32.0",
+        "lightningcss-linux-arm64-gnu": "1.32.0",
+        "lightningcss-linux-arm64-musl": "1.32.0",
+        "lightningcss-linux-x64-gnu": "1.32.0",
+        "lightningcss-linux-x64-musl": "1.32.0",
+        "lightningcss-win32-arm64-msvc": "1.32.0",
+        "lightningcss-win32-x64-msvc": "1.32.0"
+      }
+    },
+    "node_modules/lightningcss-android-arm64": {
+      "version": "1.32.0",
+      "resolved": "https://registry.npmjs.org/lightningcss-android-arm64/-/lightningcss-android-arm64-1.32.0.tgz",
+      "integrity": "sha512-YK7/ClTt4kAK0vo6w3X+Pnm0D2cf2vPHbhOXdoNti1Ga0al1P4TBZhwjATvjNwLEBCnKvjJc2jQgHXH0NEwlAg==",
+      "cpu": [
+        "arm64"
+      ],
+      "dev": true,
+      "license": "MPL-2.0",
+      "optional": true,
+      "os": [
+        "android"
+      ],
+      "engines": {
+        "node": ">= 12.0.0"
+      },
+      "funding": {
+        "type": "opencollective",
+        "url": "https://opencollective.com/parcel"
+      }
+    },
+    "node_modules/lightningcss-darwin-arm64": {
+      "version": "1.32.0",
+      "resolved": "https://registry.npmjs.org/lightningcss-darwin-arm64/-/lightningcss-darwin-arm64-1.32.0.tgz",
+      "integrity": "sha512-RzeG9Ju5bag2Bv1/lwlVJvBE3q6TtXskdZLLCyfg5pt+HLz9BqlICO7LZM7VHNTTn/5PRhHFBSjk5lc4cmscPQ==",
+      "cpu": [
+        "arm64"
+      ],
+      "dev": true,
+      "license": "MPL-2.0",
+      "optional": true,
+      "os": [
+        "darwin"
+      ],
+      "engines": {
+        "node": ">= 12.0.0"
+      },
+      "funding": {
+        "type": "opencollective",
+        "url": "https://opencollective.com/parcel"
+      }
+    },
+    "node_modules/lightningcss-darwin-x64": {
+      "version": "1.32.0",
+      "resolved": "https://registry.npmjs.org/lightningcss-darwin-x64/-/lightningcss-darwin-x64-1.32.0.tgz",
+      "integrity": "sha512-U+QsBp2m/s2wqpUYT/6wnlagdZbtZdndSmut/NJqlCcMLTWp5muCrID+K5UJ6jqD2BFshejCYXniPDbNh73V8w==",
+      "cpu": [
+        "x64"
+      ],
+      "dev": true,
+      "license": "MPL-2.0",
+      "optional": true,
+      "os": [
+        "darwin"
+      ],
+      "engines": {
+        "node": ">= 12.0.0"
+      },
+      "funding": {
+        "type": "opencollective",
+        "url": "https://opencollective.com/parcel"
+      }
+    },
+    "node_modules/lightningcss-freebsd-x64": {
+      "version": "1.32.0",
+      "resolved": "https://registry.npmjs.org/lightningcss-freebsd-x64/-/lightningcss-freebsd-x64-1.32.0.tgz",
+      "integrity": "sha512-JCTigedEksZk3tHTTthnMdVfGf61Fky8Ji2E4YjUTEQX14xiy/lTzXnu1vwiZe3bYe0q+SpsSH/CTeDXK6WHig==",
+      "cpu": [
+        "x64"
+      ],
+      "dev": true,
+      "license": "MPL-2.0",
+      "optional": true,
+      "os": [
+        "freebsd"
+      ],
+      "engines": {
+        "node": ">= 12.0.0"
+      },
+      "funding": {
+        "type": "opencollective",
+        "url": "https://opencollective.com/parcel"
+      }
+    },
+    "node_modules/lightningcss-linux-arm-gnueabihf": {
+      "version": "1.32.0",
+      "resolved": "https://registry.npmjs.org/lightningcss-linux-arm-gnueabihf/-/lightningcss-linux-arm-gnueabihf-1.32.0.tgz",
+      "integrity": "sha512-x6rnnpRa2GL0zQOkt6rts3YDPzduLpWvwAF6EMhXFVZXD4tPrBkEFqzGowzCsIWsPjqSK+tyNEODUBXeeVHSkw==",
+      "cpu": [
+        "arm"
+      ],
+      "dev": true,
+      "license": "MPL-2.0",
+      "optional": true,
+      "os": [
+        "linux"
+      ],
+      "engines": {
+        "node": ">= 12.0.0"
+      },
+      "funding": {
+        "type": "opencollective",
+        "url": "https://opencollective.com/parcel"
+      }
+    },
+    "node_modules/lightningcss-linux-arm64-gnu": {
+      "version": "1.32.0",
+      "resolved": "https://registry.npmjs.org/lightningcss-linux-arm64-gnu/-/lightningcss-linux-arm64-gnu-1.32.0.tgz",
+      "integrity": "sha512-0nnMyoyOLRJXfbMOilaSRcLH3Jw5z9HDNGfT/gwCPgaDjnx0i8w7vBzFLFR1f6CMLKF8gVbebmkUN3fa/kQJpQ==",
+      "cpu": [
+        "arm64"
+      ],
+      "dev": true,
+      "license": "MPL-2.0",
+      "optional": true,
+      "os": [
+        "linux"
+      ],
+      "engines": {
+        "node": ">= 12.0.0"
+      },
+      "funding": {
+        "type": "opencollective",
+        "url": "https://opencollective.com/parcel"
+      }
+    },
+    "node_modules/lightningcss-linux-arm64-musl": {
+      "version": "1.32.0",
+      "resolved": "https://registry.npmjs.org/lightningcss-linux-arm64-musl/-/lightningcss-linux-arm64-musl-1.32.0.tgz",
+      "integrity": "sha512-UpQkoenr4UJEzgVIYpI80lDFvRmPVg6oqboNHfoH4CQIfNA+HOrZ7Mo7KZP02dC6LjghPQJeBsvXhJod/wnIBg==",
+      "cpu": [
+        "arm64"
+      ],
+      "dev": true,
+      "license": "MPL-2.0",
+      "optional": true,
+      "os": [
+        "linux"
+      ],
+      "engines": {
+        "node": ">= 12.0.0"
+      },
+      "funding": {
+        "type": "opencollective",
+        "url": "https://opencollective.com/parcel"
+      }
+    },
+    "node_modules/lightningcss-linux-x64-gnu": {
+      "version": "1.32.0",
+      "resolved": "https://registry.npmjs.org/lightningcss-linux-x64-gnu/-/lightningcss-linux-x64-gnu-1.32.0.tgz",
+      "integrity": "sha512-V7Qr52IhZmdKPVr+Vtw8o+WLsQJYCTd8loIfpDaMRWGUZfBOYEJeyJIkqGIDMZPwPx24pUMfwSxxI8phr/MbOA==",
+      "cpu": [
+        "x64"
+      ],
+      "dev": true,
+      "license": "MPL-2.0",
+      "optional": true,
+      "os": [
+        "linux"
+      ],
+      "engines": {
+        "node": ">= 12.0.0"
+      },
+      "funding": {
+        "type": "opencollective",
+        "url": "https://opencollective.com/parcel"
+      }
+    },
+    "node_modules/lightningcss-linux-x64-musl": {
+      "version": "1.32.0",
+      "resolved": "https://registry.npmjs.org/lightningcss-linux-x64-musl/-/lightningcss-linux-x64-musl-1.32.0.tgz",
+      "integrity": "sha512-bYcLp+Vb0awsiXg/80uCRezCYHNg1/l3mt0gzHnWV9XP1W5sKa5/TCdGWaR/zBM2PeF/HbsQv/j2URNOiVuxWg==",
+      "cpu": [
+        "x64"
+      ],
+      "dev": true,
+      "license": "MPL-2.0",
+      "optional": true,
+      "os": [
+        "linux"
+      ],
+      "engines": {
+        "node": ">= 12.0.0"
+      },
+      "funding": {
+        "type": "opencollective",
+        "url": "https://opencollective.com/parcel"
+      }
+    },
+    "node_modules/lightningcss-win32-arm64-msvc": {
+      "version": "1.32.0",
+      "resolved": "https://registry.npmjs.org/lightningcss-win32-arm64-msvc/-/lightningcss-win32-arm64-msvc-1.32.0.tgz",
+      "integrity": "sha512-8SbC8BR40pS6baCM8sbtYDSwEVQd4JlFTOlaD3gWGHfThTcABnNDBda6eTZeqbofalIJhFx0qKzgHJmcPTnGdw==",
+      "cpu": [
+        "arm64"
+      ],
+      "dev": true,
+      "license": "MPL-2.0",
+      "optional": true,
+      "os": [
+        "win32"
+      ],
+      "engines": {
+        "node": ">= 12.0.0"
+      },
+      "funding": {
+        "type": "opencollective",
+        "url": "https://opencollective.com/parcel"
+      }
+    },
+    "node_modules/lightningcss-win32-x64-msvc": {
+      "version": "1.32.0",
+      "resolved": "https://registry.npmjs.org/lightningcss-win32-x64-msvc/-/lightningcss-win32-x64-msvc-1.32.0.tgz",
+      "integrity": "sha512-Amq9B/SoZYdDi1kFrojnoqPLxYhQ4Wo5XiL8EVJrVsB8ARoC1PWW6VGtT0WKCemjy8aC+louJnjS7U18x3b06Q==",
+      "cpu": [
+        "x64"
+      ],
+      "dev": true,
+      "license": "MPL-2.0",
+      "optional": true,
+      "os": [
+        "win32"
+      ],
+      "engines": {
+        "node": ">= 12.0.0"
+      },
+      "funding": {
+        "type": "opencollective",
+        "url": "https://opencollective.com/parcel"
+      }
+    },
+    "node_modules/nanoid": {
+      "version": "3.3.11",
+      "resolved": "https://registry.npmjs.org/nanoid/-/nanoid-3.3.11.tgz",
+      "integrity": "sha512-N8SpfPUnUp1bK+PMYW8qSWdl9U+wwNWI4QKxOYDy9JAro3WMX7p2OeVRF9v+347pnakNevPmiHhNmZ2HbFA76w==",
+      "dev": true,
+      "funding": [
+        {
+          "type": "github",
+          "url": "https://github.com/sponsors/ai"
+        }
+      ],
+      "license": "MIT",
+      "bin": {
+        "nanoid": "bin/nanoid.cjs"
+      },
+      "engines": {
+        "node": "^10 || ^12 || ^13.7 || ^14 || >=15.0.1"
+      }
+    },
+    "node_modules/picocolors": {
+      "version": "1.1.1",
+      "resolved": "https://registry.npmjs.org/picocolors/-/picocolors-1.1.1.tgz",
+      "integrity": "sha512-xceH2snhtb5M9liqDsmEw56le376mTZkEX/jEb/RxNFyegNul7eNslCXP9FDj/Lcu0X8KEyMceP2ntpaHrDEVA==",
+      "dev": true,
+      "license": "ISC"
+    },
+    "node_modules/picomatch": {
+      "version": "4.0.3",
+      "resolved": "https://registry.npmjs.org/picomatch/-/picomatch-4.0.3.tgz",
+      "integrity": "sha512-5gTmgEY/sqK6gFXLIsQNH19lWb4ebPDLA4SdLP7dsWkIXHWlG66oPuVvXSGFPppYZz8ZDZq0dYYrbHfBCVUb1Q==",
+      "dev": true,
+      "license": "MIT",
+      "engines": {
+        "node": ">=12"
+      },
+      "funding": {
+        "url": "https://github.com/sponsors/jonschlinkert"
+      }
+    },
+    "node_modules/postcss": {
+      "version": "8.5.8",
+      "resolved": "https://registry.npmjs.org/postcss/-/postcss-8.5.8.tgz",
+      "integrity": "sha512-OW/rX8O/jXnm82Ey1k44pObPtdblfiuWnrd8X7GJ7emImCOstunGbXUpp7HdBrFQX6rJzn3sPT397Wp5aCwCHg==",
+      "dev": true,
+      "funding": [
+        {
+          "type": "opencollective",
+          "url": "https://opencollective.com/postcss/"
+        },
+        {
+          "type": "tidelift",
+          "url": "https://tidelift.com/funding/github/npm/postcss"
+        },
+        {
+          "type": "github",
+          "url": "https://github.com/sponsors/ai"
+        }
+      ],
+      "license": "MIT",
+      "dependencies": {
+        "nanoid": "^3.3.11",
+        "picocolors": "^1.1.1",
+        "source-map-js": "^1.2.1"
+      },
+      "engines": {
+        "node": "^10 || ^12 || >=14"
+      }
+    },
+    "node_modules/rolldown": {
+      "version": "1.0.0-rc.10",
+      "resolved": "https://registry.npmjs.org/rolldown/-/rolldown-1.0.0-rc.10.tgz",
+      "integrity": "sha512-q7j6vvarRFmKpgJUT8HCAUljkgzEp4LAhPlJUvQhA5LA1SUL36s5QCysMutErzL3EbNOZOkoziSx9iZC4FddKA==",
+      "dev": true,
+      "license": "MIT",
+      "dependencies": {
+        "@oxc-project/types": "=0.120.0",
+        "@rolldown/pluginutils": "1.0.0-rc.10"
+      },
+      "bin": {
+        "rolldown": "bin/cli.mjs"
+      },
+      "engines": {
+        "node": "^20.19.0 || >=22.12.0"
+      },
+      "optionalDependencies": {
+        "@rolldown/binding-android-arm64": "1.0.0-rc.10",
+        "@rolldown/binding-darwin-arm64": "1.0.0-rc.10",
+        "@rolldown/binding-darwin-x64": "1.0.0-rc.10",
+        "@rolldown/binding-freebsd-x64": "1.0.0-rc.10",
+        "@rolldown/binding-linux-arm-gnueabihf": "1.0.0-rc.10",
+        "@rolldown/binding-linux-arm64-gnu": "1.0.0-rc.10",
+        "@rolldown/binding-linux-arm64-musl": "1.0.0-rc.10",
+        "@rolldown/binding-linux-ppc64-gnu": "1.0.0-rc.10",
+        "@rolldown/binding-linux-s390x-gnu": "1.0.0-rc.10",
+        "@rolldown/binding-linux-x64-gnu": "1.0.0-rc.10",
+        "@rolldown/binding-linux-x64-musl": "1.0.0-rc.10",
+        "@rolldown/binding-openharmony-arm64": "1.0.0-rc.10",
+        "@rolldown/binding-wasm32-wasi": "1.0.0-rc.10",
+        "@rolldown/binding-win32-arm64-msvc": "1.0.0-rc.10",
+        "@rolldown/binding-win32-x64-msvc": "1.0.0-rc.10"
+      }
+    },
+    "node_modules/source-map-js": {
+      "version": "1.2.1",
+      "resolved": "https://registry.npmjs.org/source-map-js/-/source-map-js-1.2.1.tgz",
+      "integrity": "sha512-UXWMKhLOwVKb728IUtQPXxfYU+usdybtUrK/8uGE8CQMvrhOpwvzDBwj0QhSL7MQc7vIsISBG8VQ8+IDQxpfQA==",
+      "dev": true,
+      "license": "BSD-3-Clause",
+      "engines": {
+        "node": ">=0.10.0"
+      }
+    },
+    "node_modules/tinyglobby": {
+      "version": "0.2.15",
+      "resolved": "https://registry.npmjs.org/tinyglobby/-/tinyglobby-0.2.15.tgz",
+      "integrity": "sha512-j2Zq4NyQYG5XMST4cbs02Ak8iJUdxRM0XI5QyxXuZOzKOINmWurp3smXu3y5wDcJrptwpSjgXHzIQxR0omXljQ==",
+      "dev": true,
+      "license": "MIT",
+      "dependencies": {
+        "fdir": "^6.5.0",
+        "picomatch": "^4.0.3"
+      },
+      "engines": {
+        "node": ">=12.0.0"
+      },
+      "funding": {
+        "url": "https://github.com/sponsors/SuperchupuDev"
+      }
+    },
+    "node_modules/tslib": {
+      "version": "2.8.1",
+      "resolved": "https://registry.npmjs.org/tslib/-/tslib-2.8.1.tgz",
+      "integrity": "sha512-oJFu94HQb+KVduSUQL7wnpmqnfmLsOA/nAh6b6EH0wCEoK0/mPeXU6c3wKDV83MkOuHPRHtSXKKU99IBazS/2w==",
+      "dev": true,
+      "license": "0BSD",
+      "optional": true
+    },
+    "node_modules/vite": {
+      "version": "8.0.1",
+      "resolved": "https://registry.npmjs.org/vite/-/vite-8.0.1.tgz",
+      "integrity": "sha512-wt+Z2qIhfFt85uiyRt5LPU4oVEJBXj8hZNWKeqFG4gRG/0RaRGJ7njQCwzFVjO+v4+Ipmf5CY7VdmZRAYYBPHw==",
+      "dev": true,
+      "license": "MIT",
+      "dependencies": {
+        "lightningcss": "^1.32.0",
+        "picomatch": "^4.0.3",
+        "postcss": "^8.5.8",
+        "rolldown": "1.0.0-rc.10",
+        "tinyglobby": "^0.2.15"
+      },
+      "bin": {
+        "vite": "bin/vite.js"
+      },
+      "engines": {
+        "node": "^20.19.0 || >=22.12.0"
+      },
+      "funding": {
+        "url": "https://github.com/vitejs/vite?sponsor=1"
+      },
+      "optionalDependencies": {
+        "fsevents": "~2.3.3"
+      },
+      "peerDependencies": {
+        "@types/node": "^20.19.0 || >=22.12.0",
+        "@vitejs/devtools": "^0.1.0",
+        "esbuild": "^0.27.0",
+        "jiti": ">=1.21.0",
+        "less": "^4.0.0",
+        "sass": "^1.70.0",
+        "sass-embedded": "^1.70.0",
+        "stylus": ">=0.54.8",
+        "sugarss": "^5.0.0",
+        "terser": "^5.16.0",
+        "tsx": "^4.8.1",
+        "yaml": "^2.4.2"
+      },
+      "peerDependenciesMeta": {
+        "@types/node": {
+          "optional": true
+        },
+        "@vitejs/devtools": {
+          "optional": true
+        },
+        "esbuild": {
+          "optional": true
+        },
+        "jiti": {
+          "optional": true
+        },
+        "less": {
+          "optional": true
+        },
+        "sass": {
+          "optional": true
+        },
+        "sass-embedded": {
+          "optional": true
+        },
+        "stylus": {
+          "optional": true
+        },
+        "sugarss": {
+          "optional": true
+        },
+        "terser": {
+          "optional": true
+        },
+        "tsx": {
+          "optional": true
+        },
+        "yaml": {
+          "optional": true
+        }
+      }
+    }
+  }
+}
+
+=== package.json ===
+{
+  "name": "step-by-step-animator",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview",
+    "sync:lesson-documents": "node lesson-documents/sync-lesson-documents.js"
+  },
+  "devDependencies": {
+    "vite": "^8.0.1"
+  }
+}
+
+=== sidebar-step-by-step.html ===
+<!doctype html>
+<html lang="sr">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Step By Step Animator</title>
+    <meta http-equiv="refresh" content="0; url=./?lesson=build-sidebar" />
+  </head>
+  <body>
+    <script>
+      window.location.replace('./?lesson=build-sidebar');
+    </script>
+    <p>Otvori <a href="./?lesson=build-sidebar">build-sidebar</a> lekciju.</p>
+  </body>
+</html>
 
 === vite.config.js ===
 import { defineConfig } from 'vite';
