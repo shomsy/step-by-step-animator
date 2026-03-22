@@ -43,7 +43,12 @@ animator/
     choose-theme/
       choose-theme.js
   lesson-documents/
+    build-lines-from-rule-blocks.js
+    build-lines-from-timeline-blocks.js
+    read-fenced-json-value.js
     read-lesson-metadata.js
+    read-rule-blocks.js
+    read-timeline-blocks.js
     sync-lesson-documents.js
 lessons/
   register-lessons.js
@@ -57,6 +62,8 @@ lessons/
         build_sidebar.md
         files/
           lesson.sr.md
+          html.timeline.md
+          css.rules.md
   build-top-navigation/
     build-top-navigation.lesson.js
     describe-steps.js
@@ -69,6 +76,40 @@ lessons/
         build_top_navigation.md
         files/
           lesson.sr.md
+          html.timeline.md
+          css.rules.md
+  build-callout-custom-element/
+    build-callout-custom-element.lesson.js
+    describe-steps.js
+    build-html-at-step.js
+    build-css-at-step.js
+    build-js-at-step.js
+    content/
+      assets/
+        callout-custom-element-goal.svg
+      documents/
+        build_callout_custom_element.md
+        files/
+          lesson.sr.md
+          html.timeline.md
+          css.rules.md
+          js.timeline.md
+  build-feature-callout-web-component/
+    build-feature-callout-web-component.lesson.js
+    describe-steps.js
+    build-html-at-step.js
+    build-css-at-step.js
+    build-js-at-step.js
+    content/
+      assets/
+        feature-callout-goal.svg
+      documents/
+        build_feature_callout_web_component.md
+        files/
+          lesson.sr.md
+          html.timeline.md
+          css.rules.md
+          js.timeline.md
 ```
 
 ## Naming Rules
@@ -135,10 +176,13 @@ Markdown lesson documents may live next to the lesson contract:
 
 ```txt
 content/documents/files/lesson.sr.md
+content/documents/files/html.timeline.md
+content/documents/files/css.rules.md
+content/documents/files/js.timeline.md
 ```
 
-Use markdown for lesson metadata.
-Keep step-by-step HTML/CSS builder logic explicit until a dedicated step DSL exists.
+Use markdown for lesson metadata and for the canonical HTML/CSS/JS step DSL.
+Keep `build-*-at-step.js` files thin; they should parse markdown lesson documents and return derived lines, not re-encode the whole lesson by hand.
 
 ### 4. Every other file owns one clear responsibility
 

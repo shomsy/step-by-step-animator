@@ -95,10 +95,14 @@ animator/
     choose-theme/
       choose-theme.js
   lesson-documents/
+    build-lines-from-rule-blocks.js
+    build-lines-from-timeline-blocks.js
     parse-frontmatter.js
+    read-fenced-json-value.js
     render-markdown.js
     read-lesson-metadata.js
-    read-knowledge-check-questions.js
+    read-rule-blocks.js
+    read-timeline-blocks.js
     sync-lesson-documents.js
 lessons/
   register-lessons.js
@@ -112,6 +116,8 @@ lessons/
         build_sidebar.md
         files/
           lesson.sr.md
+          html.timeline.md
+          css.rules.md
   build-feature-callout-web-component/
     build-feature-callout-web-component.lesson.js
     describe-steps.js
@@ -125,6 +131,9 @@ lessons/
         build_feature_callout_web_component.md
         files/
           lesson.sr.md
+          html.timeline.md
+          css.rules.md
+          js.timeline.md
   build-callout-custom-element/
     build-callout-custom-element.lesson.js
     describe-steps.js
@@ -138,6 +147,9 @@ lessons/
         build_callout_custom_element.md
         files/
           lesson.sr.md
+          html.timeline.md
+          css.rules.md
+          js.timeline.md
   build-top-navigation/
     build-top-navigation.lesson.js
     describe-steps.js
@@ -150,6 +162,8 @@ lessons/
         build_top_navigation.md
         files/
           lesson.sr.md
+          html.timeline.md
+          css.rules.md
 ```
 
 ### 2.2 Lesson Contract
@@ -196,6 +210,9 @@ feature-name/
     documents/
       files/
         lesson.sr.md
+        html.timeline.md
+        css.rules.md
+        js.timeline.md
 ```
 
 Ako lesson ima referentnu sliku cilja, asset ide ovde:
@@ -210,9 +227,12 @@ feature-name/
 Pravila:
 
 - `lesson.sr.md` je kanonski source za title, intro i lesson metadata
+- `html.timeline.md` je kanonski source za kumulativni HTML teaching tok
+- `css.rules.md` je kanonski source za CSS rule blokove koji rastu property po property
+- `js.timeline.md` je opcioni kanonski source za kumulativni JavaScript teaching tok
 - generated book output ide u `content/documents/<lesson_name>.md`
 - generated output se ne uređuje ručno
-- interaktivni HTML/CSS/JS step builderi i dalje ostaju strogo definisani u JS-u dok ne uvedemo poseban step markdown DSL
+- `build-html-at-step.js`, `build-css-at-step.js` i `build-js-at-step.js` ostaju tanki adapteri koji parsiraju markdown DSL i vraćaju linije za dati step
 
 ### 2.4 Runtime and Entry Rules
 
@@ -412,9 +432,12 @@ Za novu lekciju:
 4. dodaj `build-html-at-step.js`
 5. dodaj `build-css-at-step.js`
 6. kada lekcija traži JavaScript, dodaj `build-js-at-step.js`
-7. po potrebi dodaj `content/assets/feature-goal.svg`
 7. dodaj `content/documents/files/lesson.sr.md`
-8. registruj lekciju u `lessons/register-lessons.js`
+8. dodaj `content/documents/files/html.timeline.md`
+9. dodaj `content/documents/files/css.rules.md`
+10. kada lekcija traži JavaScript, dodaj `content/documents/files/js.timeline.md`
+11. po potrebi dodaj `content/assets/feature-goal.svg`
+12. registruj lekciju u `lessons/register-lessons.js`
 
 Ne kopirati player runtime iz `animator/play-lesson/`.
 Nova lekcija treba da doda samo svoj contract i svoj content.
@@ -465,7 +488,12 @@ animator/
     choose-theme/
       choose-theme.js
   lesson-documents/
+    build-lines-from-rule-blocks.js
+    build-lines-from-timeline-blocks.js
+    read-fenced-json-value.js
     read-lesson-metadata.js
+    read-rule-blocks.js
+    read-timeline-blocks.js
     sync-lesson-documents.js
 lessons/
   register-lessons.js
@@ -479,6 +507,8 @@ lessons/
         build_sidebar.md
         files/
           lesson.sr.md
+          html.timeline.md
+          css.rules.md
   build-top-navigation/
     build-top-navigation.lesson.js
     describe-steps.js
@@ -491,6 +521,40 @@ lessons/
         build_top_navigation.md
         files/
           lesson.sr.md
+          html.timeline.md
+          css.rules.md
+  build-callout-custom-element/
+    build-callout-custom-element.lesson.js
+    describe-steps.js
+    build-html-at-step.js
+    build-css-at-step.js
+    build-js-at-step.js
+    content/
+      assets/
+        callout-custom-element-goal.svg
+      documents/
+        build_callout_custom_element.md
+        files/
+          lesson.sr.md
+          html.timeline.md
+          css.rules.md
+          js.timeline.md
+  build-feature-callout-web-component/
+    build-feature-callout-web-component.lesson.js
+    describe-steps.js
+    build-html-at-step.js
+    build-css-at-step.js
+    build-js-at-step.js
+    content/
+      assets/
+        feature-callout-goal.svg
+      documents/
+        build_feature_callout_web_component.md
+        files/
+          lesson.sr.md
+          html.timeline.md
+          css.rules.md
+          js.timeline.md
 ```
 
 ## Naming Rules
@@ -557,10 +621,13 @@ Markdown lesson documents may live next to the lesson contract:
 
 ```txt
 content/documents/files/lesson.sr.md
+content/documents/files/html.timeline.md
+content/documents/files/css.rules.md
+content/documents/files/js.timeline.md
 ```
 
-Use markdown for lesson metadata.
-Keep step-by-step HTML/CSS builder logic explicit until a dedicated step DSL exists.
+Use markdown for lesson metadata and for the canonical HTML/CSS/JS step DSL.
+Keep `build-*-at-step.js` files thin; they should parse markdown lesson documents and return derived lines, not re-encode the whole lesson by hand.
 
 ### 4. Every other file owns one clear responsibility
 
@@ -723,6 +790,9 @@ lessons/
       documents/
         files/
           lesson.sr.md
+          html.timeline.md
+          css.rules.md
+          js.timeline.md
 ```
 
 ## 3. Šta svaki fajl radi
@@ -744,12 +814,14 @@ lessons/
 
 `build-html-at-step.js`
 
+- ostaje tanak adapter preko `html.timeline.md`
 - vraća kompletan kumulativni HTML za dati step
 - ne vraća diff
 - preview se hrani direktno iz ovog output-a
 
 `build-css-at-step.js`
 
+- ostaje tanak adapter preko `css.rules.md`
 - vraća kompletan kumulativni CSS za dati step
 - ne vraća diff
 - CSS ide property po property
@@ -757,6 +829,7 @@ lessons/
 `build-js-at-step.js`
 
 - koristiš ga samo kada lekcija zaista ima JavaScript fajl
+- ostaje tanak adapter preko `js.timeline.md`
 - vraća kompletan kumulativni JS za dati step
 - ne vraća diff
 - JS mora da raste akciju po akciju i da ostane izvršiv na svakom koraku
@@ -764,6 +837,21 @@ lessons/
 `content/documents/files/lesson.sr.md`
 
 - drži title, intro i metadata
+
+`content/documents/files/html.timeline.md`
+
+- drži HTML timeline blokove u fenced `json` formatu
+- svaki blok kaže od kog stepa postoji i u koji slot se ubacuje
+
+`content/documents/files/css.rules.md`
+
+- drži CSS rule blokove u fenced `json` formatu
+- svaki blok kaže koji selector otvaramo i koje property linije se vide po step-u
+
+`content/documents/files/js.timeline.md`
+
+- drži opcioni JavaScript timeline u fenced `json` formatu
+- koristi se samo kada lekcija zaista ima JS panel i live izvršavanje
 
 `content/assets/feature-goal.svg`
 
@@ -900,6 +988,72 @@ jsFileName: component.js
 Kratak uvod u lekciju.
 ```
 
+`html.timeline.md`:
+
+````md
+# HTML Timeline
+
+```json
+[
+  {
+    "from": "empty_shell",
+    "target": "root",
+    "lines": [
+      "<div class=\"app-shell\">",
+      "  @@slot:app-shell-content@@",
+      "</div>"
+    ]
+  }
+]
+```
+````
+
+`css.rules.md`:
+
+````md
+# CSS Rule Blocks
+
+```json
+[
+  {
+    "header": ".app-shell {",
+    "showFrom": "empty_shell",
+    "entries": [
+      { "from": "shell_outline", "untilBefore": "shell_summary", "line": "outline: 1px dashed #94a3b8;" }
+    ]
+  }
+]
+```
+````
+
+`js.timeline.md`:
+
+````md
+# JS Timeline
+
+```json
+[
+  {
+    "from": "class_declaration",
+    "target": "root",
+    "lines": [
+      "class ExampleElement extends HTMLElement {",
+      "}",
+      "",
+      "@@slot:after-class@@"
+    ]
+  }
+]
+```
+````
+
+Pravila za DSL:
+
+- koristi jedan fenced `json` blok po dokumentu
+- `html.timeline.md` i `js.timeline.md` koriste `target` slot marker-e
+- `css.rules.md` koristi `header`, opcioni `showFrom` i `entries`
+- markdown DSL dokumenti su kanonski source step sadržaja; JS builder fajlovi ne smeju da dupliraju isti sadržaj ručno
+
 ## 6a. Goal image contract
 
 Ako lesson ima referentni vizuelni cilj, taj deo ostaje u lesson JS contract-u jer je asset tehnički import.
@@ -940,6 +1094,10 @@ Repo contract:
   - `build-html-at-step.js`
   - `build-css-at-step.js`
   - `build-js-at-step.js` kada lekcija traži JavaScript
+  - `content/documents/files/lesson.sr.md`
+  - `content/documents/files/html.timeline.md`
+  - `content/documents/files/css.rules.md`
+  - `content/documents/files/js.timeline.md` kada lekcija traži JavaScript
   - `content/assets/[feature-name]-goal.svg` kada postoji referentna slika
   - `content/documents/files/lesson.sr.md`
 
@@ -968,6 +1126,7 @@ Authoring pravila:
 - ne koristi generic nazive kao utils, helpers, common, service
 - ne lepi gotov stylesheet odjednom
 - ne lepi gotov HTML odjednom
+- builder JS fajlovi treba da ostanu tanki adapteri, ne novi ručni monoliti
 
 Isporuči output spreman za ovaj repo.
 ```
@@ -1025,6 +1184,12 @@ Ovaj fajl je kanonska lista za arhitekturu i sledeće veće korake ovog repoa.
 - `Status`: `DONE`
 - `Šta fali`: ništa
 - `Napomena`: `build-sidebar` sada koristi `content/documents/files/lesson.sr.md`, uz generisani `content/documents/build_sidebar.md`.
+
+### 4b. Uvedi markdown DSL za HTML/CSS/JS lesson sadržaj
+
+- `Status`: `DONE`
+- `Šta fali`: ništa
+- `Napomena`: Shipped lekcije sada koriste `html.timeline.md`, `css.rules.md` i opcioni `js.timeline.md` kao kanonski source za step-by-step code growth, dok `build-*-at-step.js` ostaju tanki adapteri.
 
 ## Follow-Up Work
 
@@ -1093,6 +1258,102 @@ export function selectLessonFromLocation({ ownerLocation }) {
   return findLesson(selectedLessonId) || findLesson(defaultLessonId);
 }
 
+=== animator/lesson-documents/build-lines-from-rule-blocks.js ===
+function readStepBoundary(stepReference, stepNumberById) {
+  if (typeof stepReference === 'number') {
+    return stepReference;
+  }
+
+  if (!stepReference) {
+    return Number.POSITIVE_INFINITY;
+  }
+
+  return stepNumberById[stepReference] ?? Number.POSITIVE_INFINITY;
+}
+
+function appendVisibleRuleBlock(lines, ruleBlock, stepNumber, stepNumberById) {
+  const activeEntries = ruleBlock.entries.filter(entry =>
+    stepNumber >= readStepBoundary(entry.from, stepNumberById) &&
+    (entry.untilBefore === undefined || stepNumber < readStepBoundary(entry.untilBefore, stepNumberById))
+  );
+
+  if (!activeEntries.length && stepNumber < readStepBoundary(ruleBlock.showFrom, stepNumberById)) {
+    return;
+  }
+
+  if (lines.length) {
+    lines.push('');
+  }
+
+  if (Array.isArray(ruleBlock.header)) {
+    ruleBlock.header.forEach(headerLine => lines.push(headerLine));
+  } else {
+    lines.push(ruleBlock.header);
+  }
+
+  activeEntries.forEach(entry => {
+    lines.push(`  ${entry.line}`);
+  });
+
+  lines.push('}');
+}
+
+export function buildLinesFromRuleBlocks({ ruleBlocks, stepNumberById, stepNumber }) {
+  const lines = [];
+
+  ruleBlocks.forEach(ruleBlock => {
+    appendVisibleRuleBlock(lines, ruleBlock, stepNumber, stepNumberById);
+  });
+
+  return lines;
+}
+
+=== animator/lesson-documents/build-lines-from-timeline-blocks.js ===
+const ROOT_SLOT = 'root';
+
+function readStepBoundary(stepReference, stepNumberById) {
+  if (typeof stepReference === 'number') {
+    return stepReference;
+  }
+
+  if (!stepReference) {
+    return Number.POSITIVE_INFINITY;
+  }
+
+  return stepNumberById[stepReference] ?? Number.POSITIVE_INFINITY;
+}
+
+function createSlotMarker(slotName) {
+  return `@@slot:${slotName}@@`;
+}
+
+function isSlotMarker(line) {
+  return /^@@slot:[a-zA-Z0-9_-]+@@$/.test(line.trim());
+}
+
+function insertTimelineBlock(lines, timelineBlock) {
+  const slotMarker = createSlotMarker(timelineBlock.target);
+  const slotIndex = lines.findIndex(line => line.trim() === slotMarker);
+
+  if (slotIndex === -1) {
+    throw new Error(`Missing target slot "${timelineBlock.target}" while composing timeline lines.`);
+  }
+
+  lines.splice(slotIndex, 0, ...timelineBlock.lines);
+}
+
+export function buildLinesFromTimelineBlocks({ timelineBlocks, stepNumberById, stepNumber }) {
+  const lines = [createSlotMarker(ROOT_SLOT)];
+
+  timelineBlocks.forEach(timelineBlock => {
+    if (stepNumber >= readStepBoundary(timelineBlock.from, stepNumberById)) {
+      insertTimelineBlock(lines, timelineBlock);
+    }
+  });
+
+  return lines.filter(line => !isSlotMarker(line));
+}
+
 === animator/lesson-documents/parse-frontmatter.js ===
 export function parseFrontmatter(markdown) {
   if (!markdown) {
@@ -1150,6 +1411,22 @@ export function parseFrontmatter(markdown) {
   };
 }
 
+=== animator/lesson-documents/read-fenced-json-value.js ===
+export function readFencedJsonValue(markdown) {
+  const source = String(markdown || '').trim();
+  const fencedJsonMatch = source.match(/```json\s*([\s\S]*?)```/i);
+
+  if (!fencedJsonMatch) {
+    throw new Error('Expected one fenced ```json``` block in markdown document.');
+  }
+
+  try {
+    return JSON.parse(fencedJsonMatch[1].trim());
+  } catch (error) {
+    throw new Error(`Failed to parse fenced JSON block: ${error.message}`);
+  }
+}
+
 === animator/lesson-documents/read-lesson-metadata.js ===
 import { parseFrontmatter } from './parse-frontmatter.js';
 import { renderMarkdown } from './render-markdown.js';
@@ -1176,6 +1453,90 @@ export function readLessonMetadata(markdown, defaults = {}) {
     cssFileName: attributes.cssFileName || defaults.cssFileName || 'style.css',
     jsFileName: attributes.jsFileName || defaults.jsFileName || ''
   };
+}
+
+=== animator/lesson-documents/read-rule-blocks.js ===
+import { readFencedJsonValue } from './read-fenced-json-value.js';
+
+function isValidHeader(header) {
+  return typeof header === 'string' || (
+    Array.isArray(header) &&
+    header.length > 0 &&
+    header.every(line => typeof line === 'string')
+  );
+}
+
+function normalizeRuleBlock(ruleBlock) {
+  if (!ruleBlock || typeof ruleBlock !== 'object') {
+    throw new Error('Each CSS rule block must be an object.');
+  }
+
+  if (!isValidHeader(ruleBlock.header)) {
+    throw new Error('Each CSS rule block must define a string header or an array of string header lines.');
+  }
+
+  if (!Array.isArray(ruleBlock.entries)) {
+    throw new Error('Each CSS rule block must define an entries array.');
+  }
+
+  return {
+    header: ruleBlock.header,
+    showFrom: ruleBlock.showFrom,
+    entries: ruleBlock.entries.map(entry => {
+      if (!entry || typeof entry !== 'object' || typeof entry.line !== 'string') {
+        throw new Error('Each CSS rule entry must be an object with a string line.');
+      }
+
+      return {
+        from: entry.from,
+        untilBefore: entry.untilBefore,
+        line: entry.line
+      };
+    })
+  };
+}
+
+export function readRuleBlocks(markdown) {
+  const parsedValue = readFencedJsonValue(markdown);
+
+  if (!Array.isArray(parsedValue)) {
+    throw new Error('CSS rules markdown must contain a JSON array of rule blocks.');
+  }
+
+  return parsedValue.map(normalizeRuleBlock);
+}
+
+=== animator/lesson-documents/read-timeline-blocks.js ===
+import { readFencedJsonValue } from './read-fenced-json-value.js';
+
+function normalizeTimelineBlock(timelineBlock) {
+  if (!timelineBlock || typeof timelineBlock !== 'object') {
+    throw new Error('Each timeline block must be an object.');
+  }
+
+  if (typeof timelineBlock.target !== 'string' || !timelineBlock.target.trim()) {
+    throw new Error('Each timeline block must define a non-empty target slot.');
+  }
+
+  if (!Array.isArray(timelineBlock.lines) || timelineBlock.lines.some(line => typeof line !== 'string')) {
+    throw new Error('Each timeline block must define a lines array of strings.');
+  }
+
+  return {
+    from: timelineBlock.from,
+    target: timelineBlock.target.trim(),
+    lines: timelineBlock.lines
+  };
+}
+
+export function readTimelineBlocks(markdown) {
+  const parsedValue = readFencedJsonValue(markdown);
+
+  if (!Array.isArray(parsedValue)) {
+    throw new Error('Timeline markdown must contain a JSON array of timeline blocks.');
+  }
+
+  return parsedValue.map(normalizeTimelineBlock);
 }
 
 === animator/lesson-documents/render-markdown.js ===
@@ -3892,179 +4253,51 @@ export const buildCalloutCustomElementLesson = {
 };
 
 === lessons/build-callout-custom-element/build-css-at-step.js ===
+import cssRulesDocument from './content/documents/files/css.rules.md?raw';
+import { buildLinesFromRuleBlocks } from '../../animator/lesson-documents/build-lines-from-rule-blocks.js';
+import { readRuleBlocks } from '../../animator/lesson-documents/read-rule-blocks.js';
 import { stepNumberById } from './describe-steps.js';
 
-function readStepBoundary(stepReference) {
-  if (typeof stepReference === 'number') {
-    return stepReference;
-  }
-
-  if (!stepReference) {
-    return Number.POSITIVE_INFINITY;
-  }
-
-  return stepNumberById[stepReference] ?? Number.POSITIVE_INFINITY;
-}
-
-function appendVisibleCssRuleBlock(lines, header, entries, stepNumber, showFrom = Number.POSITIVE_INFINITY) {
-  const activeEntries = entries.filter(entry =>
-    stepNumber >= readStepBoundary(entry.from) &&
-    (entry.untilBefore === undefined || stepNumber < readStepBoundary(entry.untilBefore))
-  );
-
-  if (!activeEntries.length && stepNumber < readStepBoundary(showFrom)) {
-    return;
-  }
-
-  if (lines.length) {
-    lines.push('');
-  }
-
-  lines.push(header);
-
-  activeEntries.forEach(entry => {
-    lines.push(`  ${entry.line}`);
-  });
-
-  lines.push('}');
-}
+const cssRuleBlocks = readRuleBlocks(cssRulesDocument);
 
 export function buildCssAtStep(stepNumber) {
-  const lines = [];
-
-  appendVisibleCssRuleBlock(lines, '.app-shell {', [
-    { from: 'shell_outline', untilBefore: 'shell_summary', line: 'outline: 1px dashed #94a3b8;' },
-    { from: 'shell_padding', line: 'padding: 40px;' },
-    { from: 'shell_display', line: 'display: grid;' },
-    { from: 'shell_place_items', line: 'place-items: center;' },
-    { from: 'shell_min_height', line: 'min-height: 100vh;' },
-    { from: 'shell_background', line: 'background: linear-gradient(180deg, #e2e8f0, #cbd5e1);' },
-    { from: 'shell_summary', line: '/* helper outline removed in final .app-shell summary */' }
-  ], stepNumber, 'empty_shell');
-
-  appendVisibleCssRuleBlock(lines, 'callout-card {', [
-    { from: 'host_outline', untilBefore: 'host_summary', line: 'outline: 1px solid #f97316;' },
-    { from: 'host_display', line: 'display: block;' },
-    { from: 'host_width', line: 'width: min(100%, 420px);' },
-    { from: 'host_summary', line: '/* helper outline removed in final callout-card host summary */' }
-  ], stepNumber, 'component_html');
-
-  appendVisibleCssRuleBlock(lines, 'callout-card .card {', [
-    { from: 'card_outline', untilBefore: 'card_summary', line: 'outline: 1px dashed #38bdf8;' },
-    { from: 'card_display', line: 'display: grid;' },
-    { from: 'card_gap', line: 'gap: 16px;' },
-    { from: 'card_padding', line: 'padding: 24px;' },
-    { from: 'card_radius', line: 'border-radius: 28px;' },
-    { from: 'card_border', line: 'border: 1px solid rgba(148,163,184,0.24);' },
-    { from: 'card_background', line: 'background: linear-gradient(180deg, rgba(15,23,42,0.98), rgba(15,23,42,0.92));' },
-    { from: 'card_shadow', line: 'box-shadow: 0 26px 60px rgba(15,23,42,0.24);' },
-    { from: 'card_summary', line: '/* helper outline removed in final .card summary */' }
-  ], stepNumber);
-
-  appendVisibleCssRuleBlock(lines, 'callout-card .eyebrow {', [
-    { from: 'eyebrow_outline', untilBefore: 'eyebrow_summary', line: 'outline: 1px dotted #facc15;' },
-    { from: 'eyebrow_display', line: 'display: inline-flex;' },
-    { from: 'eyebrow_padding', line: 'padding: 8px 12px;' },
-    { from: 'eyebrow_radius', line: 'border-radius: 999px;' },
-    { from: 'eyebrow_background', line: 'background: rgba(56,189,248,0.14);' },
-    { from: 'eyebrow_color', line: 'color: #38bdf8;' },
-    { from: 'eyebrow_font_size', line: 'font-size: 12px;' },
-    { from: 'eyebrow_font_weight', line: 'font-weight: 700;' },
-    { from: 'eyebrow_summary', line: '/* helper outline removed in final .eyebrow summary */' }
-  ], stepNumber);
-
-  appendVisibleCssRuleBlock(lines, 'callout-card .title {', [
-    { from: 'title_font_size', line: 'font-size: 28px;' },
-    { from: 'title_font_weight', line: 'font-weight: 800;' }
-  ], stepNumber);
-
-  appendVisibleCssRuleBlock(lines, 'callout-card .summary {', [
-    { from: 'summary_margin', line: 'margin: 0;' },
-    { from: 'summary_color', line: 'color: #cbd5e1;' },
-    { from: 'summary_line_height', line: 'line-height: 1.65;' }
-  ], stepNumber);
-
-  appendVisibleCssRuleBlock(lines, 'callout-card .cta {', [
-    { from: 'cta_outline', untilBefore: 'cta_summary', line: 'outline: 1px dashed #34d399;' },
-    { from: 'cta_padding', line: 'padding: 12px 16px;' },
-    { from: 'cta_border', line: 'border: 0;' },
-    { from: 'cta_radius', line: 'border-radius: 999px;' },
-    { from: 'cta_background', line: 'background: linear-gradient(135deg, #38bdf8, #2563eb);' },
-    { from: 'cta_color', line: 'color: #ffffff;' },
-    { from: 'cta_font_weight', line: 'font-weight: 700;' },
-    { from: 'cta_summary', line: '/* helper outline removed in final .cta summary */' }
-  ], stepNumber);
-
-  return lines;
+  return buildLinesFromRuleBlocks({
+    ruleBlocks: cssRuleBlocks,
+    stepNumberById,
+    stepNumber
+  });
 }
 
 === lessons/build-callout-custom-element/build-html-at-step.js ===
+import htmlTimelineDocument from './content/documents/files/html.timeline.md?raw';
+import { buildLinesFromTimelineBlocks } from '../../animator/lesson-documents/build-lines-from-timeline-blocks.js';
+import { readTimelineBlocks } from '../../animator/lesson-documents/read-timeline-blocks.js';
 import { stepNumberById } from './describe-steps.js';
 
+const htmlTimelineBlocks = readTimelineBlocks(htmlTimelineDocument);
+
 export function buildHtmlAtStep(stepNumber) {
-  const lines = ['<div class="app-shell">'];
-
-  if (stepNumber >= stepNumberById.component_html) {
-    lines.push(
-      '  <callout-card',
-      '    title="Custom element od nule"',
-      '    cta-label="Nastavi dalje"',
-      '  ></callout-card>'
-    );
-  }
-
-  lines.push('</div>');
-  return lines;
+  return buildLinesFromTimelineBlocks({
+    timelineBlocks: htmlTimelineBlocks,
+    stepNumberById,
+    stepNumber
+  });
 }
 
 === lessons/build-callout-custom-element/build-js-at-step.js ===
+import jsTimelineDocument from './content/documents/files/js.timeline.md?raw';
+import { buildLinesFromTimelineBlocks } from '../../animator/lesson-documents/build-lines-from-timeline-blocks.js';
+import { readTimelineBlocks } from '../../animator/lesson-documents/read-timeline-blocks.js';
 import { stepNumberById } from './describe-steps.js';
 
-function hasStep(stepNumber, stepReference) {
-  return stepNumber >= (stepNumberById[stepReference] ?? Number.POSITIVE_INFINITY);
-}
+const jsTimelineBlocks = readTimelineBlocks(jsTimelineDocument);
 
 export function buildJsAtStep(stepNumber) {
-  const lines = [];
-
-  if (hasStep(stepNumber, 'class_declaration')) {
-    lines.push('class CalloutCard extends HTMLElement {');
-
-    if (hasStep(stepNumber, 'connected_callback')) {
-      lines.push('  connectedCallback() {');
-
-      if (hasStep(stepNumber, 'read_title_attribute')) {
-        lines.push("    const title = this.getAttribute('title') || 'Naslov komponente';");
-      }
-
-      if (hasStep(stepNumber, 'read_cta_attribute')) {
-        lines.push("    const ctaLabel = this.getAttribute('cta-label') || 'Saznaj više';");
-      }
-
-      if (hasStep(stepNumber, 'render_inner_html')) {
-        lines.push(
-          '    this.innerHTML = `',
-          '      <article class="card">',
-          '        <span class="eyebrow">Custom element</span>',
-          '        <strong class="title">${title}</strong>',
-          '        <p class="summary">Light DOM verzija nam prvo objašnjava registraciju, atribut API i render bez shadow DOM sloja.</p>',
-          '        <button class="cta" type="button">${ctaLabel}</button>',
-          '      </article>',
-          '    `;'
-        );
-      }
-
-      lines.push('  }');
-    }
-
-    lines.push('}');
-  }
-
-  if (hasStep(stepNumber, 'define_element')) {
-    lines.push('', "customElements.define('callout-card', CalloutCard);");
-  }
-
-  return lines;
+  return buildLinesFromTimelineBlocks({
+    timelineBlocks: jsTimelineBlocks,
+    stepNumberById,
+    stepNumber
+  });
 }
 
 === lessons/build-callout-custom-element/content/assets/callout-custom-element-goal.svg ===
@@ -4104,6 +4337,183 @@ export function buildJsAtStep(stepNumber) {
 # build-callout-custom-element
 
 Prva Web Components lekcija namerno kreće bez shadow DOM-a. Tako prvo vidiš samu osnovu platforme: custom tag sa crticom, registraciju preko `customElements.define`, atribute kao spoljašnji API i prvi render kroz `connectedCallback()`. Tek posle toga prelazimo na shadow DOM, template i slotove.
+
+=== lessons/build-callout-custom-element/content/documents/files/css.rules.md ===
+# CSS Rule Blocks
+
+```json
+[
+  {
+    "header": ".app-shell {",
+    "showFrom": "empty_shell",
+    "entries": [
+      { "from": "shell_outline", "untilBefore": "shell_summary", "line": "outline: 1px dashed #94a3b8;" },
+      { "from": "shell_padding", "line": "padding: 40px;" },
+      { "from": "shell_display", "line": "display: grid;" },
+      { "from": "shell_place_items", "line": "place-items: center;" },
+      { "from": "shell_min_height", "line": "min-height: 100vh;" },
+      { "from": "shell_background", "line": "background: linear-gradient(180deg, #e2e8f0, #cbd5e1);" },
+      { "from": "shell_summary", "line": "/* helper outline removed in final .app-shell summary */" }
+    ]
+  },
+  {
+    "header": "callout-card {",
+    "showFrom": "component_html",
+    "entries": [
+      { "from": "host_outline", "untilBefore": "host_summary", "line": "outline: 1px solid #f97316;" },
+      { "from": "host_display", "line": "display: block;" },
+      { "from": "host_width", "line": "width: min(100%, 420px);" },
+      { "from": "host_summary", "line": "/* helper outline removed in final callout-card host summary */" }
+    ]
+  },
+  {
+    "header": "callout-card .card {",
+    "entries": [
+      { "from": "card_outline", "untilBefore": "card_summary", "line": "outline: 1px dashed #38bdf8;" },
+      { "from": "card_display", "line": "display: grid;" },
+      { "from": "card_gap", "line": "gap: 16px;" },
+      { "from": "card_padding", "line": "padding: 24px;" },
+      { "from": "card_radius", "line": "border-radius: 28px;" },
+      { "from": "card_border", "line": "border: 1px solid rgba(148,163,184,0.24);" },
+      { "from": "card_background", "line": "background: linear-gradient(180deg, rgba(15,23,42,0.98), rgba(15,23,42,0.92));" },
+      { "from": "card_shadow", "line": "box-shadow: 0 26px 60px rgba(15,23,42,0.24);" },
+      { "from": "card_summary", "line": "/* helper outline removed in final .card summary */" }
+    ]
+  },
+  {
+    "header": "callout-card .eyebrow {",
+    "entries": [
+      { "from": "eyebrow_outline", "untilBefore": "eyebrow_summary", "line": "outline: 1px dotted #facc15;" },
+      { "from": "eyebrow_display", "line": "display: inline-flex;" },
+      { "from": "eyebrow_padding", "line": "padding: 8px 12px;" },
+      { "from": "eyebrow_radius", "line": "border-radius: 999px;" },
+      { "from": "eyebrow_background", "line": "background: rgba(56,189,248,0.14);" },
+      { "from": "eyebrow_color", "line": "color: #38bdf8;" },
+      { "from": "eyebrow_font_size", "line": "font-size: 12px;" },
+      { "from": "eyebrow_font_weight", "line": "font-weight: 700;" },
+      { "from": "eyebrow_summary", "line": "/* helper outline removed in final .eyebrow summary */" }
+    ]
+  },
+  {
+    "header": "callout-card .title {",
+    "entries": [
+      { "from": "title_font_size", "line": "font-size: 28px;" },
+      { "from": "title_font_weight", "line": "font-weight: 800;" }
+    ]
+  },
+  {
+    "header": "callout-card .summary {",
+    "entries": [
+      { "from": "summary_margin", "line": "margin: 0;" },
+      { "from": "summary_color", "line": "color: #cbd5e1;" },
+      { "from": "summary_line_height", "line": "line-height: 1.65;" }
+    ]
+  },
+  {
+    "header": "callout-card .cta {",
+    "entries": [
+      { "from": "cta_outline", "untilBefore": "cta_summary", "line": "outline: 1px dashed #34d399;" },
+      { "from": "cta_padding", "line": "padding: 12px 16px;" },
+      { "from": "cta_border", "line": "border: 0;" },
+      { "from": "cta_radius", "line": "border-radius: 999px;" },
+      { "from": "cta_background", "line": "background: linear-gradient(135deg, #38bdf8, #2563eb);" },
+      { "from": "cta_color", "line": "color: #ffffff;" },
+      { "from": "cta_font_weight", "line": "font-weight: 700;" },
+      { "from": "cta_summary", "line": "/* helper outline removed in final .cta summary */" }
+    ]
+  }
+]
+```
+
+=== lessons/build-callout-custom-element/content/documents/files/html.timeline.md ===
+# HTML Timeline
+
+```json
+[
+  {
+    "from": "empty_shell",
+    "target": "root",
+    "lines": [
+      "<div class=\"app-shell\">",
+      "  @@slot:app-shell-content@@",
+      "</div>"
+    ]
+  },
+  {
+    "from": "component_html",
+    "target": "app-shell-content",
+    "lines": [
+      "  <callout-card",
+      "    title=\"Custom element od nule\"",
+      "    cta-label=\"Nastavi dalje\"",
+      "  ></callout-card>"
+    ]
+  }
+]
+```
+
+=== lessons/build-callout-custom-element/content/documents/files/js.timeline.md ===
+# JS Timeline
+
+```json
+[
+  {
+    "from": "class_declaration",
+    "target": "root",
+    "lines": [
+      "class CalloutCard extends HTMLElement {",
+      "  @@slot:class-body@@",
+      "}",
+      "",
+      "@@slot:after-class@@"
+    ]
+  },
+  {
+    "from": "connected_callback",
+    "target": "class-body",
+    "lines": [
+      "  connectedCallback() {",
+      "    @@slot:connected-body@@",
+      "  }"
+    ]
+  },
+  {
+    "from": "read_title_attribute",
+    "target": "connected-body",
+    "lines": [
+      "    const title = this.getAttribute('title') || 'Naslov komponente';"
+    ]
+  },
+  {
+    "from": "read_cta_attribute",
+    "target": "connected-body",
+    "lines": [
+      "    const ctaLabel = this.getAttribute('cta-label') || 'Saznaj više';"
+    ]
+  },
+  {
+    "from": "render_inner_html",
+    "target": "connected-body",
+    "lines": [
+      "    this.innerHTML = `",
+      "      <article class=\"card\">",
+      "        <span class=\"eyebrow\">Custom element</span>",
+      "        <strong class=\"title\">${title}</strong>",
+      "        <p class=\"summary\">Light DOM verzija nam prvo objašnjava registraciju, atribut API i render bez shadow DOM sloja.</p>",
+      "        <button class=\"cta\" type=\"button\">${ctaLabel}</button>",
+      "      </article>",
+      "    `;"
+    ]
+  },
+  {
+    "from": "define_element",
+    "target": "after-class",
+    "lines": [
+      "customElements.define('callout-card', CalloutCard);"
+    ]
+  }
+]
+```
 
 === lessons/build-callout-custom-element/content/documents/files/lesson.sr.md ===
 ---
@@ -4313,68 +4723,19 @@ export const stepNumberById = Object.fromEntries(
 );
 
 === lessons/build-feature-callout-web-component/build-css-at-step.js ===
+import cssRulesDocument from './content/documents/files/css.rules.md?raw';
+import { buildLinesFromRuleBlocks } from '../../animator/lesson-documents/build-lines-from-rule-blocks.js';
+import { readRuleBlocks } from '../../animator/lesson-documents/read-rule-blocks.js';
 import { stepNumberById } from './describe-steps.js';
 
-function readStepBoundary(stepReference) {
-  if (typeof stepReference === 'number') {
-    return stepReference;
-  }
-
-  if (!stepReference) {
-    return Number.POSITIVE_INFINITY;
-  }
-
-  return stepNumberById[stepReference] ?? Number.POSITIVE_INFINITY;
-}
-
-function appendVisibleCssRuleBlock(lines, header, entries, stepNumber, showFrom = Number.POSITIVE_INFINITY) {
-  const activeEntries = entries.filter(entry =>
-    stepNumber >= readStepBoundary(entry.from) &&
-    (entry.untilBefore === undefined || stepNumber < readStepBoundary(entry.untilBefore))
-  );
-
-  if (!activeEntries.length && stepNumber < readStepBoundary(showFrom)) {
-    return;
-  }
-
-  if (lines.length) {
-    lines.push('');
-  }
-
-  lines.push(header);
-
-  activeEntries.forEach(entry => {
-    lines.push(`  ${entry.line}`);
-  });
-
-  lines.push('}');
-}
+const cssRuleBlocks = readRuleBlocks(cssRulesDocument);
 
 export function buildCssAtStep(stepNumber) {
-  const lines = [];
-
-  appendVisibleCssRuleBlock(lines, '.app-shell {', [
-    { from: 'shell_outline', untilBefore: 'shell_summary', line: 'outline: 1px dashed #94a3b8;' },
-    { from: 'shell_padding', line: 'padding: 40px;' },
-    { from: 'shell_display', line: 'display: grid;' },
-    { from: 'shell_place_items', line: 'place-items: center;' },
-    { from: 'shell_min_height', line: 'min-height: 100vh;' },
-    { from: 'shell_background', line: 'background: linear-gradient(180deg, #e2e8f0, #cbd5e1);' },
-    { from: 'shell_summary', line: '/* helper outline removed in final .app-shell summary */' }
-  ], stepNumber, 'empty_shell');
-
-  appendVisibleCssRuleBlock(lines, 'feature-callout {', [
-    { from: 'host_outline', untilBefore: 'host_summary', line: 'outline: 1px solid #f97316;' },
-    { from: 'host_display', line: 'display: block;' },
-    { from: 'host_width', line: 'width: min(100%, 420px);' },
-    { from: 'host_surface_token', line: '--callout-surface: #0f172a;' },
-    { from: 'host_border_token', line: '--callout-border: rgba(148,163,184,0.24);' },
-    { from: 'host_accent_token', line: '--callout-accent: #38bdf8;' },
-    { from: 'host_text_token', line: '--callout-text: #e2e8f0;' },
-    { from: 'host_summary', line: '/* helper outline removed in final feature-callout host summary */' }
-  ], stepNumber, 'component_html');
-
-  return lines;
+  return buildLinesFromRuleBlocks({
+    ruleBlocks: cssRuleBlocks,
+    stepNumberById,
+    stepNumber
+  });
 }
 
 === lessons/build-feature-callout-web-component/build-feature-callout-web-component.lesson.js ===
@@ -4417,222 +4778,35 @@ export const buildFeatureCalloutWebComponentLesson = {
 };
 
 === lessons/build-feature-callout-web-component/build-html-at-step.js ===
+import htmlTimelineDocument from './content/documents/files/html.timeline.md?raw';
+import { buildLinesFromTimelineBlocks } from '../../animator/lesson-documents/build-lines-from-timeline-blocks.js';
+import { readTimelineBlocks } from '../../animator/lesson-documents/read-timeline-blocks.js';
 import { stepNumberById } from './describe-steps.js';
 
+const htmlTimelineBlocks = readTimelineBlocks(htmlTimelineDocument);
+
 export function buildHtmlAtStep(stepNumber) {
-  const lines = ['<div class="app-shell">'];
-
-  if (stepNumber >= stepNumberById.component_html) {
-    lines.push(
-      '  <feature-callout',
-      '    title="Web Components u praksi"',
-      '    cta-label="Otvori lekciju"',
-      '  >'
-    );
-
-    if (stepNumber >= stepNumberById.eyebrow_slot_html) {
-      lines.push('    <span slot="eyebrow">Vanilla JS</span>');
-    }
-
-    if (stepNumber >= stepNumberById.summary_text_html) {
-      lines.push('    Gradiš custom element, shadow DOM i slot projekciju bez framework-a.');
-    }
-
-    lines.push('  </feature-callout>');
-  }
-
-  lines.push('</div>');
-  return lines;
+  return buildLinesFromTimelineBlocks({
+    timelineBlocks: htmlTimelineBlocks,
+    stepNumberById,
+    stepNumber
+  });
 }
 
 === lessons/build-feature-callout-web-component/build-js-at-step.js ===
+import jsTimelineDocument from './content/documents/files/js.timeline.md?raw';
+import { buildLinesFromTimelineBlocks } from '../../animator/lesson-documents/build-lines-from-timeline-blocks.js';
+import { readTimelineBlocks } from '../../animator/lesson-documents/read-timeline-blocks.js';
 import { stepNumberById } from './describe-steps.js';
 
-function readStepBoundary(stepReference) {
-  if (typeof stepReference === 'number') {
-    return stepReference;
-  }
-
-  if (!stepReference) {
-    return Number.POSITIVE_INFINITY;
-  }
-
-  return stepNumberById[stepReference] ?? Number.POSITIVE_INFINITY;
-}
-
-function hasStep(stepNumber, stepReference) {
-  return stepNumber >= readStepBoundary(stepReference);
-}
-
-function appendTemplateCssRuleBlock(lines, selector, entries, stepNumber, showFrom = Number.POSITIVE_INFINITY) {
-  const activeEntries = entries.filter(entry =>
-    stepNumber >= readStepBoundary(entry.from) &&
-    (entry.untilBefore === undefined || stepNumber < readStepBoundary(entry.untilBefore))
-  );
-
-  if (!activeEntries.length && stepNumber < readStepBoundary(showFrom)) {
-    return;
-  }
-
-  if (lines.at(-1) !== '  <style>') {
-    lines.push('');
-  }
-
-  lines.push(`    ${selector} {`);
-
-  activeEntries.forEach(entry => {
-    lines.push(`      ${entry.line}`);
-  });
-
-  lines.push('    }');
-}
+const jsTimelineBlocks = readTimelineBlocks(jsTimelineDocument);
 
 export function buildJsAtStep(stepNumber) {
-  const lines = [];
-
-  if (hasStep(stepNumber, 'template_declaration')) {
-    lines.push("const featureCalloutTemplate = document.createElement('template');");
-  }
-
-  if (hasStep(stepNumber, 'template_markup_open')) {
-    lines.push('', 'featureCalloutTemplate.innerHTML = `');
-
-    appendTemplateCssRuleBlock(lines, ':host', [
-      { from: 'host_font', line: "font-family: Inter, ui-sans-serif, system-ui, sans-serif;" },
-      { from: 'host_color', line: 'color: var(--callout-text, #e2e8f0);' }
-    ], stepNumber, 'template_markup_open');
-
-    appendTemplateCssRuleBlock(lines, '.card', [
-      { from: 'card_outline', untilBefore: 'card_summary', line: 'outline: 1px dashed #38bdf8;' },
-      { from: 'card_display', line: 'display: grid;' },
-      { from: 'card_gap', line: 'gap: 16px;' },
-      { from: 'card_padding', line: 'padding: 24px;' },
-      { from: 'card_radius', line: 'border-radius: 28px;' },
-      { from: 'card_border', line: 'border: 1px solid var(--callout-border, rgba(148,163,184,0.24));' },
-      { from: 'card_background', line: 'background: linear-gradient(180deg, rgba(15,23,42,0.98), rgba(15,23,42,0.92));' },
-      { from: 'card_shadow', line: 'box-shadow: 0 26px 60px rgba(15,23,42,0.24);' },
-      { from: 'card_summary', line: '/* helper outline removed in final .card summary */' }
-    ], stepNumber);
-
-    appendTemplateCssRuleBlock(lines, '.eyebrow', [
-      { from: 'eyebrow_outline', untilBefore: 'eyebrow_summary', line: 'outline: 1px dotted #facc15;' },
-      { from: 'eyebrow_display', line: 'display: inline-flex;' },
-      { from: 'eyebrow_padding', line: 'padding: 8px 12px;' },
-      { from: 'eyebrow_radius', line: 'border-radius: 999px;' },
-      { from: 'eyebrow_background', line: 'background: rgba(56,189,248,0.14);' },
-      { from: 'eyebrow_color', line: 'color: var(--callout-accent, #38bdf8);' },
-      { from: 'eyebrow_font_size', line: 'font-size: 12px;' },
-      { from: 'eyebrow_font_weight', line: 'font-weight: 700;' },
-      { from: 'eyebrow_summary', line: '/* helper outline removed in final .eyebrow summary */' }
-    ], stepNumber);
-
-    appendTemplateCssRuleBlock(lines, '.title', [
-      { from: 'title_display', line: 'display: block;' },
-      { from: 'title_font_size', line: 'font-size: 28px;' },
-      { from: 'title_font_weight', line: 'font-weight: 800;' }
-    ], stepNumber);
-
-    appendTemplateCssRuleBlock(lines, '.summary', [
-      { from: 'summary_margin', line: 'margin: 0;' },
-      { from: 'summary_color', line: 'color: #cbd5e1;' },
-      { from: 'summary_line_height', line: 'line-height: 1.65;' }
-    ], stepNumber);
-
-    appendTemplateCssRuleBlock(lines, '.cta', [
-      { from: 'cta_outline', untilBefore: 'cta_summary', line: 'outline: 1px dashed #34d399;' },
-      { from: 'cta_justify_self', line: 'justify-self: start;' },
-      { from: 'cta_padding', line: 'padding: 12px 16px;' },
-      { from: 'cta_border', line: 'border: 0;' },
-      { from: 'cta_radius', line: 'border-radius: 999px;' },
-      { from: 'cta_background', line: 'background: linear-gradient(135deg, var(--callout-accent, #38bdf8), #2563eb);' },
-      { from: 'cta_color', line: 'color: #ffffff;' },
-      { from: 'cta_font_weight', line: 'font-weight: 700;' },
-      { from: 'cta_summary', line: '/* helper outline removed in final .cta summary */' }
-    ], stepNumber);
-
-    lines.push('  </style>');
-
-    if (hasStep(stepNumber, 'card_markup')) {
-      lines.push(
-        '',
-        '  <article class="card">',
-        '    <span class="eyebrow">',
-        '      <slot name="eyebrow">Vanilla JS</slot>',
-        '    </span>',
-        '',
-        '    <strong class="title"></strong>',
-        '',
-        '    <p class="summary">',
-        '      <slot>Dodaj opis komponente kroz default slot.</slot>',
-        '    </p>',
-        '',
-        '    <button class="cta" type="button"></button>',
-        '  </article>'
-      );
-    }
-
-    lines.push('`;');
-  }
-
-  if (hasStep(stepNumber, 'class_declaration')) {
-    lines.push('', 'class FeatureCallout extends HTMLElement {');
-
-    if (hasStep(stepNumber, 'observed_attributes')) {
-      lines.push("  static observedAttributes = ['title', 'cta-label'];", '');
-    }
-
-    if (hasStep(stepNumber, 'constructor_shadow')) {
-      lines.push('  constructor() {', '    super();', "    this.attachShadow({ mode: 'open' });");
-
-      if (hasStep(stepNumber, 'constructor_clone')) {
-        lines.push('    this.shadowRoot.appendChild(featureCalloutTemplate.content.cloneNode(true));');
-      }
-
-      if (hasStep(stepNumber, 'constructor_cache_title')) {
-        lines.push("    this.titleElement = this.shadowRoot.querySelector('.title');");
-      }
-
-      if (hasStep(stepNumber, 'constructor_cache_cta')) {
-        lines.push("    this.ctaElement = this.shadowRoot.querySelector('.cta');");
-      }
-
-      lines.push('  }', '');
-    }
-
-    if (hasStep(stepNumber, 'render_declaration')) {
-      lines.push('  render() {');
-
-      if (hasStep(stepNumber, 'render_title')) {
-        lines.push("    this.titleElement.textContent = this.getAttribute('title') || 'Naslov komponente';");
-      }
-
-      if (hasStep(stepNumber, 'render_cta')) {
-        lines.push("    this.ctaElement.textContent = this.getAttribute('cta-label') || 'Saznaj više';");
-      }
-
-      lines.push('  }', '');
-    }
-
-    if (hasStep(stepNumber, 'connected_callback')) {
-      lines.push('  connectedCallback() {', '    this.render();', '  }', '');
-    }
-
-    if (hasStep(stepNumber, 'attribute_changed_callback')) {
-      lines.push('  attributeChangedCallback() {', '    this.render();', '  }', '');
-    }
-
-    if (lines.at(-1) === '') {
-      lines.pop();
-    }
-
-    lines.push('}');
-  }
-
-  if (hasStep(stepNumber, 'define_element')) {
-    lines.push('', "customElements.define('feature-callout', FeatureCallout);");
-  }
-
-  return lines;
+  return buildLinesFromTimelineBlocks({
+    timelineBlocks: jsTimelineBlocks,
+    stepNumberById,
+    stepNumber
+  });
 }
 
 === lessons/build-feature-callout-web-component/content/assets/feature-callout-goal.svg ===
@@ -4672,6 +4846,509 @@ export function buildJsAtStep(stepNumber) {
 # build-feature-callout-web-component
 
 Druga Web Components lekcija nadograđuje osnove iz prve: isti nivo komponente sada gradiš kroz template, shadow DOM, slotove i render lifecycle. Lekcija namerno ide detaljno, da jasno vidiš kada host HTML postaje pravi custom element, kako template ulazi u shadow root i kako spoljašnji CSS tokeni utiču na unutrašnji izgled komponente.
+
+=== lessons/build-feature-callout-web-component/content/documents/files/css.rules.md ===
+# CSS Rule Blocks
+
+```json
+[
+  {
+    "header": ".app-shell {",
+    "showFrom": "empty_shell",
+    "entries": [
+      { "from": "shell_outline", "untilBefore": "shell_summary", "line": "outline: 1px dashed #94a3b8;" },
+      { "from": "shell_padding", "line": "padding: 40px;" },
+      { "from": "shell_display", "line": "display: grid;" },
+      { "from": "shell_place_items", "line": "place-items: center;" },
+      { "from": "shell_min_height", "line": "min-height: 100vh;" },
+      { "from": "shell_background", "line": "background: linear-gradient(180deg, #e2e8f0, #cbd5e1);" },
+      { "from": "shell_summary", "line": "/* helper outline removed in final .app-shell summary */" }
+    ]
+  },
+  {
+    "header": "feature-callout {",
+    "showFrom": "component_html",
+    "entries": [
+      { "from": "host_outline", "untilBefore": "host_summary", "line": "outline: 1px solid #f97316;" },
+      { "from": "host_display", "line": "display: block;" },
+      { "from": "host_width", "line": "width: min(100%, 420px);" },
+      { "from": "host_surface_token", "line": "--callout-surface: #0f172a;" },
+      { "from": "host_border_token", "line": "--callout-border: rgba(148,163,184,0.24);" },
+      { "from": "host_accent_token", "line": "--callout-accent: #38bdf8;" },
+      { "from": "host_text_token", "line": "--callout-text: #e2e8f0;" },
+      { "from": "host_summary", "line": "/* helper outline removed in final feature-callout host summary */" }
+    ]
+  }
+]
+```
+
+=== lessons/build-feature-callout-web-component/content/documents/files/html.timeline.md ===
+# HTML Timeline
+
+```json
+[
+  {
+    "from": "empty_shell",
+    "target": "root",
+    "lines": [
+      "<div class=\"app-shell\">",
+      "  @@slot:app-shell-content@@",
+      "</div>"
+    ]
+  },
+  {
+    "from": "component_html",
+    "target": "app-shell-content",
+    "lines": [
+      "  <feature-callout",
+      "    title=\"Web Components u praksi\"",
+      "    cta-label=\"Otvori lekciju\"",
+      "  >",
+      "    @@slot:feature-callout-content@@",
+      "  </feature-callout>"
+    ]
+  },
+  {
+    "from": "eyebrow_slot_html",
+    "target": "feature-callout-content",
+    "lines": [
+      "    <span slot=\"eyebrow\">Vanilla JS</span>"
+    ]
+  },
+  {
+    "from": "summary_text_html",
+    "target": "feature-callout-content",
+    "lines": [
+      "    Gradiš custom element, shadow DOM i slot projekciju bez framework-a."
+    ]
+  }
+]
+```
+
+=== lessons/build-feature-callout-web-component/content/documents/files/js.timeline.md ===
+# JS Timeline
+
+```json
+[
+  {
+    "from": "template_declaration",
+    "target": "root",
+    "lines": [
+      "const featureCalloutTemplate = document.createElement('template');",
+      "@@slot:after-template-declaration@@"
+    ]
+  },
+  {
+    "from": "template_markup_open",
+    "target": "after-template-declaration",
+    "lines": [
+      "",
+      "featureCalloutTemplate.innerHTML = `",
+      "  <style>",
+      "    @@slot:template-style-rules@@",
+      "  </style>",
+      "  @@slot:template-markup@@",
+      "`;",
+      "@@slot:after-template-markup@@"
+    ]
+  },
+  {
+    "from": "host_font",
+    "target": "template-style-rules",
+    "lines": [
+      "    :host {",
+      "      font-family: Inter, ui-sans-serif, system-ui, sans-serif;",
+      "      @@slot:host-style-body@@",
+      "    }"
+    ]
+  },
+  {
+    "from": "host_color",
+    "target": "host-style-body",
+    "lines": [
+      "      color: var(--callout-text, #e2e8f0);"
+    ]
+  },
+  {
+    "from": "card_outline",
+    "target": "template-style-rules",
+    "lines": [
+      "",
+      "    .card {",
+      "      outline: 1px dashed #38bdf8;",
+      "      @@slot:card-style-body@@",
+      "      @@slot:card-summary-comment@@",
+      "    }"
+    ]
+  },
+  {
+    "from": "card_display",
+    "target": "card-style-body",
+    "lines": [
+      "      display: grid;"
+    ]
+  },
+  {
+    "from": "card_gap",
+    "target": "card-style-body",
+    "lines": [
+      "      gap: 16px;"
+    ]
+  },
+  {
+    "from": "card_padding",
+    "target": "card-style-body",
+    "lines": [
+      "      padding: 24px;"
+    ]
+  },
+  {
+    "from": "card_radius",
+    "target": "card-style-body",
+    "lines": [
+      "      border-radius: 28px;"
+    ]
+  },
+  {
+    "from": "card_border",
+    "target": "card-style-body",
+    "lines": [
+      "      border: 1px solid var(--callout-border, rgba(148,163,184,0.24));"
+    ]
+  },
+  {
+    "from": "card_background",
+    "target": "card-style-body",
+    "lines": [
+      "      background: linear-gradient(180deg, rgba(15,23,42,0.98), rgba(15,23,42,0.92));"
+    ]
+  },
+  {
+    "from": "card_shadow",
+    "target": "card-style-body",
+    "lines": [
+      "      box-shadow: 0 26px 60px rgba(15,23,42,0.24);"
+    ]
+  },
+  {
+    "from": "card_summary",
+    "target": "card-summary-comment",
+    "lines": [
+      "      /* helper outline removed in final .card summary */"
+    ]
+  },
+  {
+    "from": "eyebrow_outline",
+    "target": "template-style-rules",
+    "lines": [
+      "",
+      "    .eyebrow {",
+      "      outline: 1px dotted #facc15;",
+      "      @@slot:eyebrow-style-body@@",
+      "      @@slot:eyebrow-summary-comment@@",
+      "    }"
+    ]
+  },
+  {
+    "from": "eyebrow_display",
+    "target": "eyebrow-style-body",
+    "lines": [
+      "      display: inline-flex;"
+    ]
+  },
+  {
+    "from": "eyebrow_padding",
+    "target": "eyebrow-style-body",
+    "lines": [
+      "      padding: 8px 12px;"
+    ]
+  },
+  {
+    "from": "eyebrow_radius",
+    "target": "eyebrow-style-body",
+    "lines": [
+      "      border-radius: 999px;"
+    ]
+  },
+  {
+    "from": "eyebrow_background",
+    "target": "eyebrow-style-body",
+    "lines": [
+      "      background: rgba(56,189,248,0.14);"
+    ]
+  },
+  {
+    "from": "eyebrow_color",
+    "target": "eyebrow-style-body",
+    "lines": [
+      "      color: var(--callout-accent, #38bdf8);"
+    ]
+  },
+  {
+    "from": "eyebrow_font_size",
+    "target": "eyebrow-style-body",
+    "lines": [
+      "      font-size: 12px;"
+    ]
+  },
+  {
+    "from": "eyebrow_font_weight",
+    "target": "eyebrow-style-body",
+    "lines": [
+      "      font-weight: 700;"
+    ]
+  },
+  {
+    "from": "eyebrow_summary",
+    "target": "eyebrow-summary-comment",
+    "lines": [
+      "      /* helper outline removed in final .eyebrow summary */"
+    ]
+  },
+  {
+    "from": "title_display",
+    "target": "template-style-rules",
+    "lines": [
+      "",
+      "    .title {",
+      "      display: block;",
+      "      @@slot:title-style-body@@",
+      "    }"
+    ]
+  },
+  {
+    "from": "title_font_size",
+    "target": "title-style-body",
+    "lines": [
+      "      font-size: 28px;"
+    ]
+  },
+  {
+    "from": "title_font_weight",
+    "target": "title-style-body",
+    "lines": [
+      "      font-weight: 800;"
+    ]
+  },
+  {
+    "from": "summary_margin",
+    "target": "template-style-rules",
+    "lines": [
+      "",
+      "    .summary {",
+      "      margin: 0;",
+      "      @@slot:summary-style-body@@",
+      "    }"
+    ]
+  },
+  {
+    "from": "summary_color",
+    "target": "summary-style-body",
+    "lines": [
+      "      color: #cbd5e1;"
+    ]
+  },
+  {
+    "from": "summary_line_height",
+    "target": "summary-style-body",
+    "lines": [
+      "      line-height: 1.65;"
+    ]
+  },
+  {
+    "from": "cta_outline",
+    "target": "template-style-rules",
+    "lines": [
+      "",
+      "    .cta {",
+      "      outline: 1px dashed #34d399;",
+      "      @@slot:cta-style-body@@",
+      "      @@slot:cta-summary-comment@@",
+      "    }"
+    ]
+  },
+  {
+    "from": "cta_justify_self",
+    "target": "cta-style-body",
+    "lines": [
+      "      justify-self: start;"
+    ]
+  },
+  {
+    "from": "cta_padding",
+    "target": "cta-style-body",
+    "lines": [
+      "      padding: 12px 16px;"
+    ]
+  },
+  {
+    "from": "cta_border",
+    "target": "cta-style-body",
+    "lines": [
+      "      border: 0;"
+    ]
+  },
+  {
+    "from": "cta_radius",
+    "target": "cta-style-body",
+    "lines": [
+      "      border-radius: 999px;"
+    ]
+  },
+  {
+    "from": "cta_background",
+    "target": "cta-style-body",
+    "lines": [
+      "      background: linear-gradient(135deg, var(--callout-accent, #38bdf8), #2563eb);"
+    ]
+  },
+  {
+    "from": "cta_color",
+    "target": "cta-style-body",
+    "lines": [
+      "      color: #ffffff;"
+    ]
+  },
+  {
+    "from": "cta_font_weight",
+    "target": "cta-style-body",
+    "lines": [
+      "      font-weight: 700;"
+    ]
+  },
+  {
+    "from": "cta_summary",
+    "target": "cta-summary-comment",
+    "lines": [
+      "      /* helper outline removed in final .cta summary */"
+    ]
+  },
+  {
+    "from": "card_markup",
+    "target": "template-markup",
+    "lines": [
+      "",
+      "  <article class=\"card\">",
+      "    <span class=\"eyebrow\">",
+      "      <slot name=\"eyebrow\">Vanilla JS</slot>",
+      "    </span>",
+      "",
+      "    <strong class=\"title\"></strong>",
+      "",
+      "    <p class=\"summary\">",
+      "      <slot>Dodaj opis komponente kroz default slot.</slot>",
+      "    </p>",
+      "",
+      "    <button class=\"cta\" type=\"button\"></button>",
+      "  </article>"
+    ]
+  },
+  {
+    "from": "class_declaration",
+    "target": "after-template-markup",
+    "lines": [
+      "",
+      "class FeatureCallout extends HTMLElement {",
+      "  @@slot:class-head@@",
+      "  @@slot:class-body@@",
+      "}",
+      "",
+      "@@slot:after-class@@"
+    ]
+  },
+  {
+    "from": "observed_attributes",
+    "target": "class-head",
+    "lines": [
+      "  static observedAttributes = ['title', 'cta-label'];",
+      ""
+    ]
+  },
+  {
+    "from": "constructor_shadow",
+    "target": "class-body",
+    "lines": [
+      "  constructor() {",
+      "    super();",
+      "    this.attachShadow({ mode: 'open' });",
+      "    @@slot:constructor-body@@",
+      "  }",
+      ""
+    ]
+  },
+  {
+    "from": "constructor_clone",
+    "target": "constructor-body",
+    "lines": [
+      "    this.shadowRoot.appendChild(featureCalloutTemplate.content.cloneNode(true));"
+    ]
+  },
+  {
+    "from": "constructor_cache_title",
+    "target": "constructor-body",
+    "lines": [
+      "    this.titleElement = this.shadowRoot.querySelector('.title');"
+    ]
+  },
+  {
+    "from": "constructor_cache_cta",
+    "target": "constructor-body",
+    "lines": [
+      "    this.ctaElement = this.shadowRoot.querySelector('.cta');"
+    ]
+  },
+  {
+    "from": "render_declaration",
+    "target": "class-body",
+    "lines": [
+      "  render() {",
+      "    @@slot:render-body@@",
+      "  }",
+      ""
+    ]
+  },
+  {
+    "from": "render_title",
+    "target": "render-body",
+    "lines": [
+      "    this.titleElement.textContent = this.getAttribute('title') || 'Naslov komponente';"
+    ]
+  },
+  {
+    "from": "render_cta",
+    "target": "render-body",
+    "lines": [
+      "    this.ctaElement.textContent = this.getAttribute('cta-label') || 'Saznaj više';"
+    ]
+  },
+  {
+    "from": "connected_callback",
+    "target": "class-body",
+    "lines": [
+      "  connectedCallback() {",
+      "    this.render();",
+      "  }",
+      ""
+    ]
+  },
+  {
+    "from": "attribute_changed_callback",
+    "target": "class-body",
+    "lines": [
+      "  attributeChangedCallback() {",
+      "    this.render();",
+      "  }"
+    ]
+  },
+  {
+    "from": "define_element",
+    "target": "after-class",
+    "lines": [
+      "customElements.define('feature-callout', FeatureCallout);"
+    ]
+  }
+]
+```
 
 === lessons/build-feature-callout-web-component/content/documents/files/lesson.sr.md ===
 ---
@@ -4977,253 +5654,35 @@ export const stepNumberById = Object.fromEntries(
 );
 
 === lessons/build-sidebar/build-css-at-step.js ===
+import cssRulesDocument from './content/documents/files/css.rules.md?raw';
+import { buildLinesFromRuleBlocks } from '../../animator/lesson-documents/build-lines-from-rule-blocks.js';
+import { readRuleBlocks } from '../../animator/lesson-documents/read-rule-blocks.js';
 import { stepNumberById } from './describe-steps.js';
 
-function readStepBoundary(stepReference) {
-  if (typeof stepReference === 'number') {
-    return stepReference;
-  }
-
-  if (!stepReference) {
-    return Number.POSITIVE_INFINITY;
-  }
-
-  return stepNumberById[stepReference] ?? Number.POSITIVE_INFINITY;
-}
-
-function appendVisibleCssRuleBlock(lines, header, entries, stepNumber, showFrom = Number.POSITIVE_INFINITY) {
-  const activeEntries = entries.filter(entry =>
-    stepNumber >= readStepBoundary(entry.from) &&
-    (entry.untilBefore === undefined || stepNumber < readStepBoundary(entry.untilBefore))
-  );
-
-  if (!activeEntries.length && stepNumber < readStepBoundary(showFrom)) {
-    return;
-  }
-
-  if (lines.length) {
-    lines.push('');
-  }
-
-  if (Array.isArray(header)) {
-    header.forEach(line => lines.push(line));
-  } else {
-    lines.push(header);
-  }
-
-  activeEntries.forEach(entry => {
-    lines.push(`  ${entry.line}`);
-  });
-
-  lines.push('}');
-}
+const cssRuleBlocks = readRuleBlocks(cssRulesDocument);
 
 export function buildCssAtStep(stepNumber) {
-  const lines = [];
-
-  appendVisibleCssRuleBlock(lines, '.app-shell {', [
-    { from: 'shell_outline', untilBefore: 'shell_summary', line: 'outline: 1px dashed #94a3b8;' },
-    { from: 'shell_summary', line: '/* helper outline removed in final .app-shell summary */' }
-  ], stepNumber, 'empty_shell');
-
-  appendVisibleCssRuleBlock(lines, '.sidebar {', [
-    { from: 'sidebar_outline', untilBefore: 'sidebar_summary', line: 'outline: 1px solid #ff4757;' },
-    { from: 'sidebar_width', line: 'width: 280px;' },
-    { from: 'sidebar_min_height', line: 'min-height: 100vh;' },
-    { from: 'sidebar_border_right', line: 'border-right: 1px solid rgba(255,255,255,0.12);' },
-    { from: 'sidebar_background', line: 'background: #0b1020;' },
-    { from: 'sidebar_color', line: 'color: #edf2ff;' },
-    { from: 'sidebar_display_flex', line: 'display: flex;' },
-    { from: 'sidebar_flex_direction', line: 'flex-direction: column;' },
-    { from: 'sidebar_summary', line: '/* helper outline removed in final .sidebar summary */' }
-  ], stepNumber, 'sidebar_html');
-
-  appendVisibleCssRuleBlock(lines, '.sidebar-brand {', [
-    { from: 'brand_outline', untilBefore: 'brand_summary', line: 'outline: 1px solid #2ed573;' },
-    { from: 'brand_padding', line: 'padding: 24px;' },
-    { from: 'brand_margin_bottom', line: 'margin-bottom: 28px;' },
-    { from: 'brand_display', line: 'display: flex;' },
-    { from: 'brand_align_items', line: 'align-items: center;' },
-    { from: 'brand_gap', line: 'gap: 14px;' },
-    { from: 'brand_summary', line: '/* helper outline removed in final brand summary */' }
-  ], stepNumber, 'brand_html');
-
-  appendVisibleCssRuleBlock(lines, '.logo {', [
-    { from: 'logo_outline', untilBefore: 'brand_summary', line: 'outline: 1px dotted #7dd3fc;' },
-    { from: 'logo_width', line: 'width: 48px;' },
-    { from: 'logo_height', line: 'height: 48px;' },
-    { from: 'logo_display', line: 'display: grid;' },
-    { from: 'logo_place_items', line: 'place-items: center;' },
-    { from: 'logo_radius', line: 'border-radius: 12px;' },
-    { from: 'logo_font_weight', line: 'font-weight: 800;' },
-    { from: 'logo_background', line: 'background: linear-gradient(135deg, #6d73ff, #8f5cff);' },
-    { from: 'logo_color', line: 'color: white;' },
-    { from: 'logo_shadow', line: 'box-shadow: 0 12px 24px rgba(109,115,255,0.30);' },
-    { from: 'brand_summary', line: '/* logo helper outline removed in final brand summary */' }
-  ], stepNumber, 'logo_html');
-
-  appendVisibleCssRuleBlock(lines, '.brand-copy {', [
-    { from: 'brand_copy_outline', untilBefore: 'brand_summary', line: 'outline: 1px dashed #f59e0b;' },
-    { from: 'brand_summary', line: '/* brand-copy helper outline removed in final brand summary */' }
-  ], stepNumber, 'brand_copy_html');
-
-  appendVisibleCssRuleBlock(lines, '.brand-copy strong {', [
-    { from: 'brand_strong_display', line: 'display: block;' },
-    { from: 'brand_strong_font_size', line: 'font-size: 16px;' }
-  ], stepNumber);
-
-  appendVisibleCssRuleBlock(lines, '.brand-copy span {', [
-    { from: 'brand_span_display', line: 'display: block;' },
-    { from: 'brand_span_margin_top', line: 'margin-top: 4px;' },
-    { from: 'brand_span_font_size', line: 'font-size: 13px;' },
-    { from: 'brand_span_color', line: 'color: #9aa6c8;' }
-  ], stepNumber);
-
-  appendVisibleCssRuleBlock(lines, '.nav-list {', [
-    { from: 'nav_list_outline', untilBefore: 'navigation_summary', line: 'outline: 1px dashed #38bdf8;' },
-    { from: 'nav_list_padding', untilBefore: 'navigation_summary', line: 'padding: 10px 8px;' },
-    { from: 'nav_list_display', line: 'display: grid;' },
-    { from: 'nav_list_gap', line: 'gap: 10px;' },
-    { from: 'navigation_summary', line: '/* nav wrapper helper outline removed in final navigation summary */' }
-  ], stepNumber, 'nav_html');
-
-  appendVisibleCssRuleBlock(lines, '.nav-item {', [
-    { from: 'nav_item_outline', untilBefore: 'navigation_summary', line: 'outline: 1px solid #ffa502;' },
-    { from: 'nav_item_display', line: 'display: flex;' },
-    { from: 'nav_item_min_height', line: 'min-height: 52px;' },
-    { from: 'nav_item_padding', line: 'padding: 12px 16px;' },
-    { from: 'nav_item_align_items', line: 'align-items: center;' },
-    { from: 'nav_item_gap', line: 'gap: 12px;' },
-    { from: 'nav_item_radius', line: 'border-radius: 14px;' },
-    { from: 'nav_item_margin', line: 'margin: 0 8px;' },
-    { from: 'nav_item_transition', line: 'transition: all 0.4s ease;' },
-    { from: 'navigation_summary', line: '/* nav item helper outline removed in final navigation summary */' }
-  ], stepNumber, 'nav_items_html');
-
-  appendVisibleCssRuleBlock(lines, '.nav-item .icon {', [
-    { from: 'nav_icon_outline', untilBefore: 'navigation_summary', line: 'outline: 1px dotted #7dd3fc;' },
-    { from: 'nav_icon_width', line: 'width: 22px;' },
-    { from: 'nav_icon_height', line: 'height: 22px;' },
-    { from: 'nav_icon_display', line: 'display: grid;' },
-    { from: 'nav_icon_place_items', line: 'place-items: center;' },
-    { from: 'navigation_summary', line: '/* nav icon helper outline removed in final navigation summary */' }
-  ], stepNumber);
-
-  appendVisibleCssRuleBlock(lines, '.nav-item .label {', [
-    { from: 'nav_label_font_size', line: 'font-size: 15px;' },
-    { from: 'nav_label_font_weight', line: 'font-weight: 600;' }
-  ], stepNumber);
-
-  appendVisibleCssRuleBlock(lines, '.nav-item.active {', [
-    { from: 'nav_item_active_background', line: 'background: rgba(109,115,255,0.14);' },
-    { from: 'nav_item_active_color', line: 'color: white;' }
-  ], stepNumber);
-
-  appendVisibleCssRuleBlock(lines, '.nav-item:hover {', [
-    { from: 'nav_item_hover_background', line: 'background: rgba(255,255,255,0.05);' }
-  ], stepNumber);
-
-  appendVisibleCssRuleBlock(lines, '.sidebar.is-collapsed {', [
-    { from: 'collapse_width', line: 'width: 108px;' }
-  ], stepNumber);
-
-  appendVisibleCssRuleBlock(lines, [
-    '.sidebar.is-collapsed .brand-copy,',
-    '.sidebar.is-collapsed .nav-item .label {'
-  ], [
-    { from: 'hide_labels', line: 'display: none;' }
-  ], stepNumber);
-
-  appendVisibleCssRuleBlock(lines, '.sidebar-footer {', [
-    { from: 'footer_outline', untilBefore: 'footer_summary', line: 'outline: 1px dashed #c084fc;' },
-    { from: 'footer_border', line: 'border: 1px solid rgba(255,255,255,0.12);' },
-    { from: 'footer_background', line: 'background: rgba(255,255,255,0.05);' },
-    { from: 'footer_padding', line: 'padding: 16px;' },
-    { from: 'footer_radius', line: 'border-radius: 14px;' },
-    { from: 'footer_margin_top', line: 'margin-top: auto;' },
-    { from: 'footer_summary', line: '/* footer helper outline removed in final footer summary */' }
-  ], stepNumber, 'footer_html');
-
-  appendVisibleCssRuleBlock(lines, '.sidebar-footer p {', [
-    { from: 'footer_text_margin', line: 'margin: 6px 0 0;' },
-    { from: 'footer_text_color', line: 'color: #9aa6c8;' },
-    { from: 'footer_text_line_height', line: 'line-height: 1.5;' }
-  ], stepNumber);
-
-  if (stepNumber >= stepNumberById.responsive_sidebar_min_height) {
-    lines.push(
-      '',
-      '@media (max-width: 980px) {',
-      '  .sidebar {',
-      '    min-height: auto;',
-      '  }',
-      '}'
-    );
-  }
-
-  return lines;
+  return buildLinesFromRuleBlocks({
+    ruleBlocks: cssRuleBlocks,
+    stepNumberById,
+    stepNumber
+  });
 }
 
 === lessons/build-sidebar/build-html-at-step.js ===
+import htmlTimelineDocument from './content/documents/files/html.timeline.md?raw';
+import { buildLinesFromTimelineBlocks } from '../../animator/lesson-documents/build-lines-from-timeline-blocks.js';
+import { readTimelineBlocks } from '../../animator/lesson-documents/read-timeline-blocks.js';
 import { stepNumberById } from './describe-steps.js';
 
+const htmlTimelineBlocks = readTimelineBlocks(htmlTimelineDocument);
+
 export function buildHtmlAtStep(stepNumber) {
-  const lines = ['<div class="app-shell">'];
-
-  if (stepNumber >= stepNumberById.sidebar_html) {
-    lines.push('  <aside class="sidebar">');
-
-    if (stepNumber >= stepNumberById.brand_html) {
-      lines.push('    <div class="sidebar-brand">');
-
-      if (stepNumber >= stepNumberById.logo_html) {
-        lines.push('      <div class="logo">A</div>');
-      }
-
-      if (stepNumber >= stepNumberById.brand_copy_html) {
-        lines.push(
-          '      <div class="brand-copy">',
-          '        <strong>AdminPro</strong>',
-          '        <span>Dashboard</span>',
-          '      </div>'
-        );
-      }
-
-      lines.push('    </div>');
-    }
-
-    if (stepNumber >= stepNumberById.nav_html) {
-      lines.push('', '    <nav class="nav-list">');
-
-      if (stepNumber >= stepNumberById.nav_items_html) {
-        lines.push(
-          '      <a href="#" class="nav-item active"><span class="icon">⌂</span><span class="label">Overview</span></a>',
-          '      <a href="#" class="nav-item"><span class="icon">◫</span><span class="label">Analytics</span></a>',
-          '      <a href="#" class="nav-item"><span class="icon">◧</span><span class="label">Orders</span></a>',
-          '      <a href="#" class="nav-item"><span class="icon">◎</span><span class="label">Customers</span></a>',
-          '      <a href="#" class="nav-item"><span class="icon">▣</span><span class="label">Products</span></a>',
-          '      <a href="#" class="nav-item"><span class="icon">⚙</span><span class="label">Settings</span></a>'
-        );
-      }
-
-      lines.push('    </nav>');
-    }
-
-    if (stepNumber >= stepNumberById.footer_html) {
-      lines.push(
-        '',
-        '    <div class="sidebar-footer">',
-        '      <strong>Pro Tip</strong>',
-        '      <p>Sidebar nije samo lista linkova. On je layout zona sa ritmom, hijerarhijom i stanjima.</p>',
-        '    </div>'
-      );
-    }
-
-    lines.push('  </aside>');
-  }
-
-  lines.push('</div>');
-  return lines;
+  return buildLinesFromTimelineBlocks({
+    timelineBlocks: htmlTimelineBlocks,
+    stepNumberById,
+    stepNumber
+  });
 }
 
 === lessons/build-sidebar/build-sidebar.lesson.js ===
@@ -5262,6 +5721,278 @@ export const buildSidebarLesson = {
 # build-sidebar
 
 Koraci po korak gradiš sidebar od osnove do gotove navigacije. Svaki korak uključuje kod, savete i vizuelni prikaz.
+
+=== lessons/build-sidebar/content/documents/files/css.rules.md ===
+# CSS Rule Blocks
+
+```json
+[
+  {
+    "header": ".app-shell {",
+    "showFrom": "empty_shell",
+    "entries": [
+      { "from": "shell_outline", "untilBefore": "shell_summary", "line": "outline: 1px dashed #94a3b8;" },
+      { "from": "shell_summary", "line": "/* helper outline removed in final .app-shell summary */" }
+    ]
+  },
+  {
+    "header": ".sidebar {",
+    "showFrom": "sidebar_html",
+    "entries": [
+      { "from": "sidebar_outline", "untilBefore": "sidebar_summary", "line": "outline: 1px solid #ff4757;" },
+      { "from": "sidebar_width", "line": "width: 280px;" },
+      { "from": "sidebar_min_height", "line": "min-height: 100vh;" },
+      { "from": "sidebar_border_right", "line": "border-right: 1px solid rgba(255,255,255,0.12);" },
+      { "from": "sidebar_background", "line": "background: #0b1020;" },
+      { "from": "sidebar_color", "line": "color: #edf2ff;" },
+      { "from": "sidebar_display_flex", "line": "display: flex;" },
+      { "from": "sidebar_flex_direction", "line": "flex-direction: column;" },
+      { "from": "sidebar_summary", "line": "/* helper outline removed in final .sidebar summary */" }
+    ]
+  },
+  {
+    "header": ".sidebar-brand {",
+    "showFrom": "brand_html",
+    "entries": [
+      { "from": "brand_outline", "untilBefore": "brand_summary", "line": "outline: 1px solid #2ed573;" },
+      { "from": "brand_padding", "line": "padding: 24px;" },
+      { "from": "brand_margin_bottom", "line": "margin-bottom: 28px;" },
+      { "from": "brand_display", "line": "display: flex;" },
+      { "from": "brand_align_items", "line": "align-items: center;" },
+      { "from": "brand_gap", "line": "gap: 14px;" },
+      { "from": "brand_summary", "line": "/* helper outline removed in final brand summary */" }
+    ]
+  },
+  {
+    "header": ".logo {",
+    "showFrom": "logo_html",
+    "entries": [
+      { "from": "logo_outline", "untilBefore": "brand_summary", "line": "outline: 1px dotted #7dd3fc;" },
+      { "from": "logo_width", "line": "width: 48px;" },
+      { "from": "logo_height", "line": "height: 48px;" },
+      { "from": "logo_display", "line": "display: grid;" },
+      { "from": "logo_place_items", "line": "place-items: center;" },
+      { "from": "logo_radius", "line": "border-radius: 12px;" },
+      { "from": "logo_font_weight", "line": "font-weight: 800;" },
+      { "from": "logo_background", "line": "background: linear-gradient(135deg, #6d73ff, #8f5cff);" },
+      { "from": "logo_color", "line": "color: white;" },
+      { "from": "logo_shadow", "line": "box-shadow: 0 12px 24px rgba(109,115,255,0.30);" },
+      { "from": "brand_summary", "line": "/* logo helper outline removed in final brand summary */" }
+    ]
+  },
+  {
+    "header": ".brand-copy {",
+    "showFrom": "brand_copy_html",
+    "entries": [
+      { "from": "brand_copy_outline", "untilBefore": "brand_summary", "line": "outline: 1px dashed #f59e0b;" },
+      { "from": "brand_summary", "line": "/* brand-copy helper outline removed in final brand summary */" }
+    ]
+  },
+  {
+    "header": ".brand-copy strong {",
+    "entries": [
+      { "from": "brand_strong_display", "line": "display: block;" },
+      { "from": "brand_strong_font_size", "line": "font-size: 16px;" }
+    ]
+  },
+  {
+    "header": ".brand-copy span {",
+    "entries": [
+      { "from": "brand_span_display", "line": "display: block;" },
+      { "from": "brand_span_margin_top", "line": "margin-top: 4px;" },
+      { "from": "brand_span_font_size", "line": "font-size: 13px;" },
+      { "from": "brand_span_color", "line": "color: #9aa6c8;" }
+    ]
+  },
+  {
+    "header": ".nav-list {",
+    "showFrom": "nav_html",
+    "entries": [
+      { "from": "nav_list_outline", "untilBefore": "navigation_summary", "line": "outline: 1px dashed #38bdf8;" },
+      { "from": "nav_list_padding", "untilBefore": "navigation_summary", "line": "padding: 10px 8px;" },
+      { "from": "nav_list_display", "line": "display: grid;" },
+      { "from": "nav_list_gap", "line": "gap: 10px;" },
+      { "from": "navigation_summary", "line": "/* nav wrapper helper outline removed in final navigation summary */" }
+    ]
+  },
+  {
+    "header": ".nav-item {",
+    "showFrom": "nav_items_html",
+    "entries": [
+      { "from": "nav_item_outline", "untilBefore": "navigation_summary", "line": "outline: 1px solid #ffa502;" },
+      { "from": "nav_item_display", "line": "display: flex;" },
+      { "from": "nav_item_min_height", "line": "min-height: 52px;" },
+      { "from": "nav_item_padding", "line": "padding: 12px 16px;" },
+      { "from": "nav_item_align_items", "line": "align-items: center;" },
+      { "from": "nav_item_gap", "line": "gap: 12px;" },
+      { "from": "nav_item_radius", "line": "border-radius: 14px;" },
+      { "from": "nav_item_margin", "line": "margin: 0 8px;" },
+      { "from": "nav_item_transition", "line": "transition: all 0.4s ease;" },
+      { "from": "navigation_summary", "line": "/* nav item helper outline removed in final navigation summary */" }
+    ]
+  },
+  {
+    "header": ".nav-item .icon {",
+    "entries": [
+      { "from": "nav_icon_outline", "untilBefore": "navigation_summary", "line": "outline: 1px dotted #7dd3fc;" },
+      { "from": "nav_icon_width", "line": "width: 22px;" },
+      { "from": "nav_icon_height", "line": "height: 22px;" },
+      { "from": "nav_icon_display", "line": "display: grid;" },
+      { "from": "nav_icon_place_items", "line": "place-items: center;" },
+      { "from": "navigation_summary", "line": "/* nav icon helper outline removed in final navigation summary */" }
+    ]
+  },
+  {
+    "header": ".nav-item .label {",
+    "entries": [
+      { "from": "nav_label_font_size", "line": "font-size: 15px;" },
+      { "from": "nav_label_font_weight", "line": "font-weight: 600;" }
+    ]
+  },
+  {
+    "header": ".nav-item.active {",
+    "entries": [
+      { "from": "nav_item_active_background", "line": "background: rgba(109,115,255,0.14);" },
+      { "from": "nav_item_active_color", "line": "color: white;" }
+    ]
+  },
+  {
+    "header": ".nav-item:hover {",
+    "entries": [
+      { "from": "nav_item_hover_background", "line": "background: rgba(255,255,255,0.05);" }
+    ]
+  },
+  {
+    "header": ".sidebar.is-collapsed {",
+    "entries": [
+      { "from": "collapse_width", "line": "width: 108px;" }
+    ]
+  },
+  {
+    "header": [
+      ".sidebar.is-collapsed .brand-copy,",
+      ".sidebar.is-collapsed .nav-item .label {"
+    ],
+    "entries": [
+      { "from": "hide_labels", "line": "display: none;" }
+    ]
+  },
+  {
+    "header": ".sidebar-footer {",
+    "showFrom": "footer_html",
+    "entries": [
+      { "from": "footer_outline", "untilBefore": "footer_summary", "line": "outline: 1px dashed #c084fc;" },
+      { "from": "footer_border", "line": "border: 1px solid rgba(255,255,255,0.12);" },
+      { "from": "footer_background", "line": "background: rgba(255,255,255,0.05);" },
+      { "from": "footer_padding", "line": "padding: 16px;" },
+      { "from": "footer_radius", "line": "border-radius: 14px;" },
+      { "from": "footer_margin_top", "line": "margin-top: auto;" },
+      { "from": "footer_summary", "line": "/* footer helper outline removed in final footer summary */" }
+    ]
+  },
+  {
+    "header": ".sidebar-footer p {",
+    "entries": [
+      { "from": "footer_text_margin", "line": "margin: 6px 0 0;" },
+      { "from": "footer_text_color", "line": "color: #9aa6c8;" },
+      { "from": "footer_text_line_height", "line": "line-height: 1.5;" }
+    ]
+  },
+  {
+    "header": "@media (max-width: 980px) {",
+    "entries": [
+      { "from": "responsive_sidebar_min_height", "line": ".sidebar {" },
+      { "from": "responsive_sidebar_min_height", "line": "  min-height: auto;" },
+      { "from": "responsive_sidebar_min_height", "line": "}" }
+    ]
+  }
+]
+```
+
+=== lessons/build-sidebar/content/documents/files/html.timeline.md ===
+# HTML Timeline
+
+```json
+[
+  {
+    "from": "empty_shell",
+    "target": "root",
+    "lines": [
+      "<div class=\"app-shell\">",
+      "  @@slot:app-shell-content@@",
+      "</div>"
+    ]
+  },
+  {
+    "from": "sidebar_html",
+    "target": "app-shell-content",
+    "lines": [
+      "  <aside class=\"sidebar\">",
+      "    @@slot:sidebar-content@@",
+      "  </aside>"
+    ]
+  },
+  {
+    "from": "brand_html",
+    "target": "sidebar-content",
+    "lines": [
+      "    <div class=\"sidebar-brand\">",
+      "      @@slot:brand-content@@",
+      "    </div>"
+    ]
+  },
+  {
+    "from": "logo_html",
+    "target": "brand-content",
+    "lines": [
+      "      <div class=\"logo\">A</div>"
+    ]
+  },
+  {
+    "from": "brand_copy_html",
+    "target": "brand-content",
+    "lines": [
+      "      <div class=\"brand-copy\">",
+      "        <strong>AdminPro</strong>",
+      "        <span>Dashboard</span>",
+      "      </div>"
+    ]
+  },
+  {
+    "from": "nav_html",
+    "target": "sidebar-content",
+    "lines": [
+      "",
+      "    <nav class=\"nav-list\">",
+      "      @@slot:nav-content@@",
+      "    </nav>"
+    ]
+  },
+  {
+    "from": "nav_items_html",
+    "target": "nav-content",
+    "lines": [
+      "      <a href=\"#\" class=\"nav-item active\"><span class=\"icon\">⌂</span><span class=\"label\">Overview</span></a>",
+      "      <a href=\"#\" class=\"nav-item\"><span class=\"icon\">◫</span><span class=\"label\">Analytics</span></a>",
+      "      <a href=\"#\" class=\"nav-item\"><span class=\"icon\">◧</span><span class=\"label\">Orders</span></a>",
+      "      <a href=\"#\" class=\"nav-item\"><span class=\"icon\">◎</span><span class=\"label\">Customers</span></a>",
+      "      <a href=\"#\" class=\"nav-item\"><span class=\"icon\">▣</span><span class=\"label\">Products</span></a>",
+      "      <a href=\"#\" class=\"nav-item\"><span class=\"icon\">⚙</span><span class=\"label\">Settings</span></a>"
+    ]
+  },
+  {
+    "from": "footer_html",
+    "target": "sidebar-content",
+    "lines": [
+      "",
+      "    <div class=\"sidebar-footer\">",
+      "      <strong>Pro Tip</strong>",
+      "      <p>Sidebar nije samo lista linkova. On je layout zona sa ritmom, hijerarhijom i stanjima.</p>",
+      "    </div>"
+    ]
+  }
+]
+```
 
 === lessons/build-sidebar/content/documents/files/lesson.sr.md ===
 ---
@@ -5525,151 +6256,35 @@ export const stepNumberById = Object.fromEntries(
 );
 
 === lessons/build-top-navigation/build-css-at-step.js ===
+import cssRulesDocument from './content/documents/files/css.rules.md?raw';
+import { buildLinesFromRuleBlocks } from '../../animator/lesson-documents/build-lines-from-rule-blocks.js';
+import { readRuleBlocks } from '../../animator/lesson-documents/read-rule-blocks.js';
 import { stepNumberById } from './describe-steps.js';
 
-function readStepBoundary(stepReference) {
-  if (typeof stepReference === 'number') {
-    return stepReference;
-  }
-
-  if (!stepReference) {
-    return Number.POSITIVE_INFINITY;
-  }
-
-  return stepNumberById[stepReference] ?? Number.POSITIVE_INFINITY;
-}
-
-function appendVisibleCssRuleBlock(lines, header, entries, stepNumber, showFrom = Number.POSITIVE_INFINITY) {
-  const activeEntries = entries.filter(entry =>
-    stepNumber >= readStepBoundary(entry.from) &&
-    (entry.untilBefore === undefined || stepNumber < readStepBoundary(entry.untilBefore))
-  );
-
-  if (!activeEntries.length && stepNumber < readStepBoundary(showFrom)) {
-    return;
-  }
-
-  if (lines.length) {
-    lines.push('');
-  }
-
-  if (Array.isArray(header)) {
-    header.forEach(line => lines.push(line));
-  } else {
-    lines.push(header);
-  }
-
-  activeEntries.forEach(entry => {
-    lines.push(`  ${entry.line}`);
-  });
-
-  lines.push('}');
-}
+const cssRuleBlocks = readRuleBlocks(cssRulesDocument);
 
 export function buildCssAtStep(stepNumber) {
-  const lines = [];
-
-  appendVisibleCssRuleBlock(lines, '.app-shell {', [
-    { from: 'shell_outline', untilBefore: 'shell_summary', line: 'outline: 1px dashed #94a3b8;' },
-    { from: 'shell_padding', line: 'padding: 40px;' },
-    { from: 'shell_background', line: 'background: #d6e1eb;' },
-    { from: 'shell_min_height', line: 'min-height: 100vh;' },
-    { from: 'shell_summary', line: '/* helper outline removed in final .app-shell summary */' }
-  ], stepNumber, 'empty_shell');
-
-  appendVisibleCssRuleBlock(lines, '.topbar {', [
-    { from: 'topbar_outline', untilBefore: 'topbar_summary', line: 'outline: 1px solid #ff5d8f;' },
-    { from: 'topbar_padding', line: 'padding: 18px 28px;' },
-    { from: 'topbar_background', line: 'background: #25262c;' },
-    { from: 'topbar_border', line: 'border: 1px solid rgba(0,0,0,0.22);' },
-    { from: 'topbar_shadow', line: 'box-shadow: 0 12px 24px rgba(0,0,0,0.18);' },
-    { from: 'topbar_display', line: 'display: flex;' },
-    { from: 'topbar_align_items', line: 'align-items: center;' },
-    { from: 'topbar_justify_content', line: 'justify-content: space-between;' },
-    { from: 'topbar_summary', line: '/* helper outline removed in final .topbar summary */' }
-  ], stepNumber, 'topbar_html');
-
-  appendVisibleCssRuleBlock(lines, '.topbar-logo {', [
-    { from: 'logo_outline', untilBefore: 'logo_summary', line: 'outline: 1px dashed #fbbf24;' },
-    { from: 'logo_color', line: 'color: #ffffff;' },
-    { from: 'logo_font_size', line: 'font-size: 18px;' },
-    { from: 'logo_font_weight', line: 'font-weight: 800;' },
-    { from: 'logo_letter_spacing', line: 'letter-spacing: 0.04em;' },
-    { from: 'logo_text_decoration', line: 'text-decoration: none;' },
-    { from: 'logo_summary', line: '/* helper outline removed in final .topbar-logo summary */' }
-  ], stepNumber, 'logo_html');
-
-  appendVisibleCssRuleBlock(lines, '.topbar-links {', [
-    { from: 'nav_outline', untilBefore: 'navigation_summary', line: 'outline: 1px dashed #38bdf8;' },
-    { from: 'nav_display', line: 'display: flex;' },
-    { from: 'nav_gap', line: 'gap: 36px;' },
-    { from: 'nav_margin_left', line: 'margin-left: auto;' },
-    { from: 'nav_margin_right', line: 'margin-right: auto;' },
-    { from: 'navigation_summary', line: '/* helper outline removed in final .topbar-links summary */' }
-  ], stepNumber, 'nav_html');
-
-  appendVisibleCssRuleBlock(lines, '.topbar-links a {', [
-    { from: 'nav_link_outline', untilBefore: 'navigation_summary', line: 'outline: 1px dotted #fde68a;' },
-    { from: 'nav_link_color', line: 'color: #ffffff;' },
-    { from: 'nav_link_font_size', line: 'font-size: 15px;' },
-    { from: 'nav_link_text_decoration', line: 'text-decoration: none;' },
-    { from: 'nav_link_transition', line: 'transition: color 0.3s ease;' },
-    { from: 'navigation_summary', line: '/* link helper outline removed in final navigation summary */' }
-  ], stepNumber);
-
-  appendVisibleCssRuleBlock(lines, '.topbar-links a:hover {', [
-    { from: 'nav_link_hover_color', line: 'color: #cbd5e1;' }
-  ], stepNumber);
-
-  appendVisibleCssRuleBlock(lines, '.topbar-cta {', [
-    { from: 'cta_outline', untilBefore: 'cta_summary', line: 'outline: 1px dashed #11a4d3;' },
-    { from: 'cta_display', line: 'display: inline-flex;' },
-    { from: 'cta_align_items', line: 'align-items: center;' },
-    { from: 'cta_padding', line: 'padding: 12px 28px;' },
-    { from: 'cta_radius', line: 'border-radius: 999px;' },
-    { from: 'cta_background', line: 'background: #11a4d3;' },
-    { from: 'cta_color', line: 'color: #ffffff;' },
-    { from: 'cta_text_decoration', line: 'text-decoration: none;' },
-    { from: 'cta_shadow', line: 'box-shadow: 0 10px 20px rgba(17,164,211,0.28);' },
-    { from: 'cta_summary', line: '/* helper outline removed in final .topbar-cta summary */' }
-  ], stepNumber, 'cta_html');
-
-  return lines;
+  return buildLinesFromRuleBlocks({
+    ruleBlocks: cssRuleBlocks,
+    stepNumberById,
+    stepNumber
+  });
 }
 
 === lessons/build-top-navigation/build-html-at-step.js ===
+import htmlTimelineDocument from './content/documents/files/html.timeline.md?raw';
+import { buildLinesFromTimelineBlocks } from '../../animator/lesson-documents/build-lines-from-timeline-blocks.js';
+import { readTimelineBlocks } from '../../animator/lesson-documents/read-timeline-blocks.js';
 import { stepNumberById } from './describe-steps.js';
 
+const htmlTimelineBlocks = readTimelineBlocks(htmlTimelineDocument);
+
 export function buildHtmlAtStep(stepNumber) {
-  const lines = ['<div class="app-shell">'];
-
-  if (stepNumber >= stepNumberById.topbar_html) {
-    lines.push('  <header class="topbar">');
-
-    if (stepNumber >= stepNumberById.logo_html) {
-      lines.push('    <a href="#" class="topbar-logo">LOGOBAKERY</a>');
-    }
-
-    if (stepNumber >= stepNumberById.nav_html) {
-      lines.push(
-        '',
-        '    <nav class="topbar-links">',
-        '      <a href="#">Services</a>',
-        '      <a href="#">Projects</a>',
-        '      <a href="#">About</a>',
-        '    </nav>'
-      );
-    }
-
-    if (stepNumber >= stepNumberById.cta_html) {
-      lines.push('', '    <a href="#" class="topbar-cta">Contact</a>');
-    }
-
-    lines.push('  </header>');
-  }
-
-  lines.push('</div>');
-  return lines;
+  return buildLinesFromTimelineBlocks({
+    timelineBlocks: htmlTimelineBlocks,
+    stepNumberById,
+    stepNumber
+  });
 }
 
 === lessons/build-top-navigation/build-top-navigation.lesson.js ===
@@ -5791,6 +6406,151 @@ export const buildTopNavigationLesson = {
 # build-top-navigation
 
 Koraci po korak gradiš prvi navbar iz reference: logo levo, linkovi u sredini i CTA dugme desno. Druga dva rasporeda iz iste slike ostaju kao domaći zadatak.
+
+=== lessons/build-top-navigation/content/documents/files/css.rules.md ===
+# CSS Rule Blocks
+
+```json
+[
+  {
+    "header": ".app-shell {",
+    "showFrom": "empty_shell",
+    "entries": [
+      { "from": "shell_outline", "untilBefore": "shell_summary", "line": "outline: 1px dashed #94a3b8;" },
+      { "from": "shell_padding", "line": "padding: 40px;" },
+      { "from": "shell_background", "line": "background: #d6e1eb;" },
+      { "from": "shell_min_height", "line": "min-height: 100vh;" },
+      { "from": "shell_summary", "line": "/* helper outline removed in final .app-shell summary */" }
+    ]
+  },
+  {
+    "header": ".topbar {",
+    "showFrom": "topbar_html",
+    "entries": [
+      { "from": "topbar_outline", "untilBefore": "topbar_summary", "line": "outline: 1px solid #ff5d8f;" },
+      { "from": "topbar_padding", "line": "padding: 18px 28px;" },
+      { "from": "topbar_background", "line": "background: #25262c;" },
+      { "from": "topbar_border", "line": "border: 1px solid rgba(0,0,0,0.22);" },
+      { "from": "topbar_shadow", "line": "box-shadow: 0 12px 24px rgba(0,0,0,0.18);" },
+      { "from": "topbar_display", "line": "display: flex;" },
+      { "from": "topbar_align_items", "line": "align-items: center;" },
+      { "from": "topbar_justify_content", "line": "justify-content: space-between;" },
+      { "from": "topbar_summary", "line": "/* helper outline removed in final .topbar summary */" }
+    ]
+  },
+  {
+    "header": ".topbar-logo {",
+    "showFrom": "logo_html",
+    "entries": [
+      { "from": "logo_outline", "untilBefore": "logo_summary", "line": "outline: 1px dashed #fbbf24;" },
+      { "from": "logo_color", "line": "color: #ffffff;" },
+      { "from": "logo_font_size", "line": "font-size: 18px;" },
+      { "from": "logo_font_weight", "line": "font-weight: 800;" },
+      { "from": "logo_letter_spacing", "line": "letter-spacing: 0.04em;" },
+      { "from": "logo_text_decoration", "line": "text-decoration: none;" },
+      { "from": "logo_summary", "line": "/* helper outline removed in final .topbar-logo summary */" }
+    ]
+  },
+  {
+    "header": ".topbar-links {",
+    "showFrom": "nav_html",
+    "entries": [
+      { "from": "nav_outline", "untilBefore": "navigation_summary", "line": "outline: 1px dashed #38bdf8;" },
+      { "from": "nav_display", "line": "display: flex;" },
+      { "from": "nav_gap", "line": "gap: 36px;" },
+      { "from": "nav_margin_left", "line": "margin-left: auto;" },
+      { "from": "nav_margin_right", "line": "margin-right: auto;" },
+      { "from": "navigation_summary", "line": "/* helper outline removed in final .topbar-links summary */" }
+    ]
+  },
+  {
+    "header": ".topbar-links a {",
+    "entries": [
+      { "from": "nav_link_outline", "untilBefore": "navigation_summary", "line": "outline: 1px dotted #fde68a;" },
+      { "from": "nav_link_color", "line": "color: #ffffff;" },
+      { "from": "nav_link_font_size", "line": "font-size: 15px;" },
+      { "from": "nav_link_text_decoration", "line": "text-decoration: none;" },
+      { "from": "nav_link_transition", "line": "transition: color 0.3s ease;" },
+      { "from": "navigation_summary", "line": "/* link helper outline removed in final navigation summary */" }
+    ]
+  },
+  {
+    "header": ".topbar-links a:hover {",
+    "entries": [
+      { "from": "nav_link_hover_color", "line": "color: #cbd5e1;" }
+    ]
+  },
+  {
+    "header": ".topbar-cta {",
+    "showFrom": "cta_html",
+    "entries": [
+      { "from": "cta_outline", "untilBefore": "cta_summary", "line": "outline: 1px dashed #11a4d3;" },
+      { "from": "cta_display", "line": "display: inline-flex;" },
+      { "from": "cta_align_items", "line": "align-items: center;" },
+      { "from": "cta_padding", "line": "padding: 12px 28px;" },
+      { "from": "cta_radius", "line": "border-radius: 999px;" },
+      { "from": "cta_background", "line": "background: #11a4d3;" },
+      { "from": "cta_color", "line": "color: #ffffff;" },
+      { "from": "cta_text_decoration", "line": "text-decoration: none;" },
+      { "from": "cta_shadow", "line": "box-shadow: 0 10px 20px rgba(17,164,211,0.28);" },
+      { "from": "cta_summary", "line": "/* helper outline removed in final .topbar-cta summary */" }
+    ]
+  }
+]
+```
+
+=== lessons/build-top-navigation/content/documents/files/html.timeline.md ===
+# HTML Timeline
+
+```json
+[
+  {
+    "from": "empty_shell",
+    "target": "root",
+    "lines": [
+      "<div class=\"app-shell\">",
+      "  @@slot:app-shell-content@@",
+      "</div>"
+    ]
+  },
+  {
+    "from": "topbar_html",
+    "target": "app-shell-content",
+    "lines": [
+      "  <header class=\"topbar\">",
+      "    @@slot:topbar-content@@",
+      "  </header>"
+    ]
+  },
+  {
+    "from": "logo_html",
+    "target": "topbar-content",
+    "lines": [
+      "    <a href=\"#\" class=\"topbar-logo\">LOGOBAKERY</a>"
+    ]
+  },
+  {
+    "from": "nav_html",
+    "target": "topbar-content",
+    "lines": [
+      "",
+      "    <nav class=\"topbar-links\">",
+      "      <a href=\"#\">Services</a>",
+      "      <a href=\"#\">Projects</a>",
+      "      <a href=\"#\">About</a>",
+      "    </nav>"
+    ]
+  },
+  {
+    "from": "cta_html",
+    "target": "topbar-content",
+    "lines": [
+      "",
+      "    <a href=\"#\" class=\"topbar-cta\">Contact</a>"
+    ]
+  }
+]
+```
 
 === lessons/build-top-navigation/content/documents/files/lesson.sr.md ===
 ---

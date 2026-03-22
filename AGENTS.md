@@ -87,10 +87,14 @@ animator/
     choose-theme/
       choose-theme.js
   lesson-documents/
+    build-lines-from-rule-blocks.js
+    build-lines-from-timeline-blocks.js
     parse-frontmatter.js
+    read-fenced-json-value.js
     render-markdown.js
     read-lesson-metadata.js
-    read-knowledge-check-questions.js
+    read-rule-blocks.js
+    read-timeline-blocks.js
     sync-lesson-documents.js
 lessons/
   register-lessons.js
@@ -104,6 +108,8 @@ lessons/
         build_sidebar.md
         files/
           lesson.sr.md
+          html.timeline.md
+          css.rules.md
   build-feature-callout-web-component/
     build-feature-callout-web-component.lesson.js
     describe-steps.js
@@ -117,6 +123,9 @@ lessons/
         build_feature_callout_web_component.md
         files/
           lesson.sr.md
+          html.timeline.md
+          css.rules.md
+          js.timeline.md
   build-callout-custom-element/
     build-callout-custom-element.lesson.js
     describe-steps.js
@@ -130,6 +139,9 @@ lessons/
         build_callout_custom_element.md
         files/
           lesson.sr.md
+          html.timeline.md
+          css.rules.md
+          js.timeline.md
   build-top-navigation/
     build-top-navigation.lesson.js
     describe-steps.js
@@ -142,6 +154,8 @@ lessons/
         build_top_navigation.md
         files/
           lesson.sr.md
+          html.timeline.md
+          css.rules.md
 ```
 
 ### 2.2 Lesson Contract
@@ -188,6 +202,9 @@ feature-name/
     documents/
       files/
         lesson.sr.md
+        html.timeline.md
+        css.rules.md
+        js.timeline.md
 ```
 
 Ako lesson ima referentnu sliku cilja, asset ide ovde:
@@ -202,9 +219,12 @@ feature-name/
 Pravila:
 
 - `lesson.sr.md` je kanonski source za title, intro i lesson metadata
+- `html.timeline.md` je kanonski source za kumulativni HTML teaching tok
+- `css.rules.md` je kanonski source za CSS rule blokove koji rastu property po property
+- `js.timeline.md` je opcioni kanonski source za kumulativni JavaScript teaching tok
 - generated book output ide u `content/documents/<lesson_name>.md`
 - generated output se ne uređuje ručno
-- interaktivni HTML/CSS/JS step builderi i dalje ostaju strogo definisani u JS-u dok ne uvedemo poseban step markdown DSL
+- `build-html-at-step.js`, `build-css-at-step.js` i `build-js-at-step.js` ostaju tanki adapteri koji parsiraju markdown DSL i vraćaju linije za dati step
 
 ### 2.4 Runtime and Entry Rules
 
@@ -404,9 +424,12 @@ Za novu lekciju:
 4. dodaj `build-html-at-step.js`
 5. dodaj `build-css-at-step.js`
 6. kada lekcija traži JavaScript, dodaj `build-js-at-step.js`
-7. po potrebi dodaj `content/assets/feature-goal.svg`
 7. dodaj `content/documents/files/lesson.sr.md`
-8. registruj lekciju u `lessons/register-lessons.js`
+8. dodaj `content/documents/files/html.timeline.md`
+9. dodaj `content/documents/files/css.rules.md`
+10. kada lekcija traži JavaScript, dodaj `content/documents/files/js.timeline.md`
+11. po potrebi dodaj `content/assets/feature-goal.svg`
+12. registruj lekciju u `lessons/register-lessons.js`
 
 Ne kopirati player runtime iz `animator/play-lesson/`.
 Nova lekcija treba da doda samo svoj contract i svoj content.

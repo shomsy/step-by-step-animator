@@ -1,27 +1,14 @@
+import htmlTimelineDocument from './content/documents/files/html.timeline.md?raw';
+import { buildLinesFromTimelineBlocks } from '../../animator/lesson-documents/build-lines-from-timeline-blocks.js';
+import { readTimelineBlocks } from '../../animator/lesson-documents/read-timeline-blocks.js';
 import { stepNumberById } from './describe-steps.js';
 
+const htmlTimelineBlocks = readTimelineBlocks(htmlTimelineDocument);
+
 export function buildHtmlAtStep(stepNumber) {
-  const lines = ['<div class="app-shell">'];
-
-  if (stepNumber >= stepNumberById.component_html) {
-    lines.push(
-      '  <feature-callout',
-      '    title="Web Components u praksi"',
-      '    cta-label="Otvori lekciju"',
-      '  >'
-    );
-
-    if (stepNumber >= stepNumberById.eyebrow_slot_html) {
-      lines.push('    <span slot="eyebrow">Vanilla JS</span>');
-    }
-
-    if (stepNumber >= stepNumberById.summary_text_html) {
-      lines.push('    Gradiš custom element, shadow DOM i slot projekciju bez framework-a.');
-    }
-
-    lines.push('  </feature-callout>');
-  }
-
-  lines.push('</div>');
-  return lines;
+  return buildLinesFromTimelineBlocks({
+    timelineBlocks: htmlTimelineBlocks,
+    stepNumberById,
+    stepNumber
+  });
 }

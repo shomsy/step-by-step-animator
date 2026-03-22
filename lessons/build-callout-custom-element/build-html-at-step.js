@@ -1,17 +1,14 @@
+import htmlTimelineDocument from './content/documents/files/html.timeline.md?raw';
+import { buildLinesFromTimelineBlocks } from '../../animator/lesson-documents/build-lines-from-timeline-blocks.js';
+import { readTimelineBlocks } from '../../animator/lesson-documents/read-timeline-blocks.js';
 import { stepNumberById } from './describe-steps.js';
 
+const htmlTimelineBlocks = readTimelineBlocks(htmlTimelineDocument);
+
 export function buildHtmlAtStep(stepNumber) {
-  const lines = ['<div class="app-shell">'];
-
-  if (stepNumber >= stepNumberById.component_html) {
-    lines.push(
-      '  <callout-card',
-      '    title="Custom element od nule"',
-      '    cta-label="Nastavi dalje"',
-      '  ></callout-card>'
-    );
-  }
-
-  lines.push('</div>');
-  return lines;
+  return buildLinesFromTimelineBlocks({
+    timelineBlocks: htmlTimelineBlocks,
+    stepNumberById,
+    stepNumber
+  });
 }

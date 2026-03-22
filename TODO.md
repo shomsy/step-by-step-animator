@@ -40,6 +40,12 @@ Ovaj fajl je kanonska lista za arhitekturu i sledeće veće korake ovog repoa.
 - `Šta fali`: ništa
 - `Napomena`: `build-sidebar` sada koristi `content/documents/files/lesson.sr.md`, uz generisani `content/documents/build_sidebar.md`.
 
+### 4b. Uvedi markdown DSL za HTML/CSS/JS lesson sadržaj
+
+- `Status`: `DONE`
+- `Šta fali`: ništa
+- `Napomena`: Shipped lekcije sada koriste `html.timeline.md`, `css.rules.md` i opcioni `js.timeline.md` kao kanonski source za step-by-step code growth, dok `build-*-at-step.js` ostaju tanki adapteri.
+
 ## Follow-Up Work
 
 ### 5. Dodaj drugu lekciju da potvrdi engine shape

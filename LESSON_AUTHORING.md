@@ -41,6 +41,9 @@ lessons/
       documents/
         files/
           lesson.sr.md
+          html.timeline.md
+          css.rules.md
+          js.timeline.md
 ```
 
 ## 3. Šta svaki fajl radi
@@ -62,12 +65,14 @@ lessons/
 
 `build-html-at-step.js`
 
+- ostaje tanak adapter preko `html.timeline.md`
 - vraća kompletan kumulativni HTML za dati step
 - ne vraća diff
 - preview se hrani direktno iz ovog output-a
 
 `build-css-at-step.js`
 
+- ostaje tanak adapter preko `css.rules.md`
 - vraća kompletan kumulativni CSS za dati step
 - ne vraća diff
 - CSS ide property po property
@@ -75,6 +80,7 @@ lessons/
 `build-js-at-step.js`
 
 - koristiš ga samo kada lekcija zaista ima JavaScript fajl
+- ostaje tanak adapter preko `js.timeline.md`
 - vraća kompletan kumulativni JS za dati step
 - ne vraća diff
 - JS mora da raste akciju po akciju i da ostane izvršiv na svakom koraku
@@ -82,6 +88,21 @@ lessons/
 `content/documents/files/lesson.sr.md`
 
 - drži title, intro i metadata
+
+`content/documents/files/html.timeline.md`
+
+- drži HTML timeline blokove u fenced `json` formatu
+- svaki blok kaže od kog stepa postoji i u koji slot se ubacuje
+
+`content/documents/files/css.rules.md`
+
+- drži CSS rule blokove u fenced `json` formatu
+- svaki blok kaže koji selector otvaramo i koje property linije se vide po step-u
+
+`content/documents/files/js.timeline.md`
+
+- drži opcioni JavaScript timeline u fenced `json` formatu
+- koristi se samo kada lekcija zaista ima JS panel i live izvršavanje
 
 `content/assets/feature-goal.svg`
 
@@ -218,6 +239,72 @@ jsFileName: component.js
 Kratak uvod u lekciju.
 ```
 
+`html.timeline.md`:
+
+````md
+# HTML Timeline
+
+```json
+[
+  {
+    "from": "empty_shell",
+    "target": "root",
+    "lines": [
+      "<div class=\"app-shell\">",
+      "  @@slot:app-shell-content@@",
+      "</div>"
+    ]
+  }
+]
+```
+````
+
+`css.rules.md`:
+
+````md
+# CSS Rule Blocks
+
+```json
+[
+  {
+    "header": ".app-shell {",
+    "showFrom": "empty_shell",
+    "entries": [
+      { "from": "shell_outline", "untilBefore": "shell_summary", "line": "outline: 1px dashed #94a3b8;" }
+    ]
+  }
+]
+```
+````
+
+`js.timeline.md`:
+
+````md
+# JS Timeline
+
+```json
+[
+  {
+    "from": "class_declaration",
+    "target": "root",
+    "lines": [
+      "class ExampleElement extends HTMLElement {",
+      "}",
+      "",
+      "@@slot:after-class@@"
+    ]
+  }
+]
+```
+````
+
+Pravila za DSL:
+
+- koristi jedan fenced `json` blok po dokumentu
+- `html.timeline.md` i `js.timeline.md` koriste `target` slot marker-e
+- `css.rules.md` koristi `header`, opcioni `showFrom` i `entries`
+- markdown DSL dokumenti su kanonski source step sadržaja; JS builder fajlovi ne smeju da dupliraju isti sadržaj ručno
+
 ## 6a. Goal image contract
 
 Ako lesson ima referentni vizuelni cilj, taj deo ostaje u lesson JS contract-u jer je asset tehnički import.
@@ -258,6 +345,10 @@ Repo contract:
   - `build-html-at-step.js`
   - `build-css-at-step.js`
   - `build-js-at-step.js` kada lekcija traži JavaScript
+  - `content/documents/files/lesson.sr.md`
+  - `content/documents/files/html.timeline.md`
+  - `content/documents/files/css.rules.md`
+  - `content/documents/files/js.timeline.md` kada lekcija traži JavaScript
   - `content/assets/[feature-name]-goal.svg` kada postoji referentna slika
   - `content/documents/files/lesson.sr.md`
 
@@ -286,6 +377,7 @@ Authoring pravila:
 - ne koristi generic nazive kao utils, helpers, common, service
 - ne lepi gotov stylesheet odjednom
 - ne lepi gotov HTML odjednom
+- builder JS fajlovi treba da ostanu tanki adapteri, ne novi ručni monoliti
 
 Isporuči output spreman za ovaj repo.
 ```
