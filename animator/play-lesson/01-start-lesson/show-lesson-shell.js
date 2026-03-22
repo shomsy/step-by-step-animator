@@ -34,6 +34,8 @@ function showLessonGoal({ lessonParts, lesson }) {
 }
 
 export function showLessonShell({ ownerDocument, lessonParts, lesson }) {
+  const hasJavaScriptFile = typeof lesson.buildJsAtStep === 'function';
+
   lessonParts.lessonHeading.textContent = lesson.lessonTitle;
 
   if (lesson.lessonIntroHtml) {
@@ -45,6 +47,16 @@ export function showLessonShell({ ownerDocument, lessonParts, lesson }) {
   lessonParts.previewAddress.textContent = lesson.previewAddress;
   lessonParts.htmlFileLabel.textContent = lesson.htmlFileName;
   lessonParts.cssFileLabel.textContent = lesson.cssFileName;
+  lessonParts.jsPane.hidden = !hasJavaScriptFile;
+  lessonParts.liveEditorBody.dataset.paneCount = hasJavaScriptFile ? '3' : '2';
+
+  if (hasJavaScriptFile) {
+    lessonParts.jsFileLabel.textContent = lesson.jsFileName || 'component.js';
+  } else {
+    lessonParts.jsFileLabel.textContent = 'component.js';
+    lessonParts.jsCodePane.innerHTML = '';
+  }
+
   lessonParts.livePreviewFrame.title = lesson.previewTitle;
   showLessonGoal({ lessonParts, lesson });
   ownerDocument.title = `Step By Step Animator · ${lesson.lessonTitle}`;

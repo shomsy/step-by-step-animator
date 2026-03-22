@@ -53,10 +53,14 @@ export function findLessonParts(ownerDocument) {
     savedStepList: readRequiredElement(ownerDocument, 'bookmarkList'),
     savedStepEmptyState: readRequiredElement(ownerDocument, 'bookmarkEmpty'),
     savedStepSummary: readRequiredElement(ownerDocument, 'bookmarkSummary'),
+    liveEditorBody: readRequiredElement(ownerDocument, 'liveEditorBody'),
     htmlCodePane: readRequiredElement(ownerDocument, 'liveHtmlPane'),
     cssCodePane: readRequiredElement(ownerDocument, 'liveCssPane'),
+    jsPane: readRequiredElement(ownerDocument, 'jsPane'),
+    jsCodePane: readRequiredElement(ownerDocument, 'liveJsPane'),
     htmlFileLabel: readRequiredElement(ownerDocument, 'htmlFileLabel'),
     cssFileLabel: readRequiredElement(ownerDocument, 'cssFileLabel'),
+    jsFileLabel: readRequiredElement(ownerDocument, 'jsFileLabel'),
     currentStepBadge: readRequiredElement(ownerDocument, 'liveStepBadge'),
     lessonPanelButtons: [...ownerDocument.querySelectorAll('.tab-btn')]
   };

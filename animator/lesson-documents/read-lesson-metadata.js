@@ -20,6 +20,7 @@ export function readLessonMetadata(markdown, defaults = {}) {
     previewAddress: attributes.previewAddress || defaults.previewAddress || '',
     previewTitle: attributes.previewTitle || defaults.previewTitle || '',
     htmlFileName: attributes.htmlFileName || defaults.htmlFileName || 'index.html',
-    cssFileName: attributes.cssFileName || defaults.cssFileName || 'style.css'
+    cssFileName: attributes.cssFileName || defaults.cssFileName || 'style.css',
+    jsFileName: attributes.jsFileName || defaults.jsFileName || ''
   };
 }

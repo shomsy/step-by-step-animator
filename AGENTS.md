@@ -6,7 +6,7 @@ Ovaj fajl je kanonski operativni ugovor za rad nad ovim repo-om.
 
 Ovaj repo je `Step By Step Animator`.
 
-To je lesson engine za interaktivne HTML/CSS lekcije koje treba da izgledaju kao da gledaš programera preko share screen-a.
+To je lesson engine za interaktivne HTML/CSS/JS lekcije koje treba da izgledaju kao da gledaš programera preko share screen-a.
 
 Engine je generičan.
 
@@ -14,12 +14,15 @@ Trenutno isporučene lekcije su:
 
 - `build-sidebar`
 - `build-top-navigation`
+- `build-callout-custom-element`
+- `build-feature-callout-web-component`
 
 Svaka nova lekcija mora da koristi isti shell i isti teaching model:
 
 - HTML ide element po element
 - CSS ide property po property
-- preview prikazuje tačno isti kumulativni HTML/CSS koji je trenutno napisan
+- kada lekcija to traži, JS ide akciju po akciju
+- preview prikazuje tačno isti kumulativni HTML/CSS/JS koji je trenutno napisan
 - promene moraju da budu jasne, predvidive i lake za verbalno objašnjavanje
 
 Ovo nije showcase.
@@ -107,6 +110,34 @@ lessons/
         files/
           lesson.sr.md
           quiz.sr.md
+  build-feature-callout-web-component/
+    build-feature-callout-web-component.lesson.js
+    describe-steps.js
+    build-html-at-step.js
+    build-css-at-step.js
+    build-js-at-step.js
+    content/
+      assets/
+        feature-callout-goal.svg
+      documents/
+        build_feature_callout_web_component.md
+        files/
+          lesson.sr.md
+          quiz.sr.md
+  build-callout-custom-element/
+    build-callout-custom-element.lesson.js
+    describe-steps.js
+    build-html-at-step.js
+    build-css-at-step.js
+    build-js-at-step.js
+    content/
+      assets/
+        callout-custom-element-goal.svg
+      documents/
+        build_callout_custom_element.md
+        files/
+          lesson.sr.md
+          quiz.sr.md
   build-top-navigation/
     build-top-navigation.lesson.js
     describe-steps.js
@@ -139,9 +170,11 @@ Taj file mora da vrati kompletan lesson contract:
 - `previewTitle`
 - `htmlFileName`
 - `cssFileName`
+- `jsFileName` kada lekcija zaista ima JavaScript fajl
 - `steps`
 - `buildHtmlAtStep`
 - `buildCssAtStep`
+- `buildJsAtStep` kada lekcija traži živi JavaScript u preview-u
 - `knowledgeCheckQuestions`
 
 Opciona lesson shell polja kada želiš da pokažeš vizuelni cilj i homework:
@@ -183,7 +216,7 @@ Pravila:
 - `quiz.sr.md` je kanonski source za knowledge check pitanja
 - generated book output ide u `content/documents/<lesson_name>.md`
 - generated output se ne uređuje ručno
-- interaktivni HTML/CSS step builderi i dalje ostaju strogo definisani u JS-u dok ne uvedemo poseban step markdown DSL
+- interaktivni HTML/CSS/JS step builderi i dalje ostaju strogo definisani u JS-u dok ne uvedemo poseban step markdown DSL
 
 ### 2.4 Runtime and Entry Rules
 
@@ -260,7 +293,7 @@ Ne numerisati responsibility fajlove.
 
 ### 2.8 Preview Integrity Rules
 
-Desni preview mora da bude stvarni render istog kumulativnog HTML/CSS koda koji middle panel prikazuje.
+Desni preview mora da bude stvarni render istog kumulativnog HTML/CSS/JS koda koji middle panel prikazuje.
 
 To znači:
 
@@ -269,6 +302,7 @@ To znači:
 - preview mora da se hrani iz istih builder funkcija koje hrani lesson contract
 - HTML preview mora da pokaže sirov browser rezultat kada CSS još nije dodat
 - CSS preview mora da utiče samo onoliko koliko je trenutno napisano
+- JS preview mora da izvršava tačno isti kumulativni JavaScript koji middle panel trenutno prikazuje
 
 ### 2.8a Teaching Visibility Rules
 
@@ -331,7 +365,8 @@ Srednji panel:
 
 - prikazuje HTML fajl
 - prikazuje CSS fajl
-- oba prikaza su kumulativna
+- kada lekcija to traži, prikazuje i JS fajl
+- svi prikazi su kumulativni
 - postojeće linije su muted
 - novo dodate linije su naglašene
 - kada je aktivan CSS korak, HTML deo za isti element mora da bude žuto istaknut
@@ -340,9 +375,9 @@ Desni panel:
 
 - zauzima ceo viewer panel
 - imitira browser
-- renderuje stvarni kumulativni HTML/CSS output
+- renderuje stvarni kumulativni HTML/CSS/JS output
 
-### 3.2 Current Shipped Lesson
+### 3.2 Current Shipped Lessons
 
 `build-sidebar` je referentna lekcija za engine.
 
@@ -359,6 +394,19 @@ Za nju i dalje važe posebna teaching pravila:
 - helper linije i pomoćni borderi ostaju dok se ne završi cela vizuelna celina
 - outline helperi ostaju do završnog rezime koraka za dati element ili celinu, pa se tek tada uklanjaju
 
+`build-callout-custom-element` otvara Web Components put:
+
+- host tag sa crticom
+- registraciju kroz `customElements.define`
+- atribut API
+- prvi render kroz light DOM
+
+`build-feature-callout-web-component` je Web Components nastavak:
+
+- treći, opcioni JS fajl u middle panelu
+- stvarni live preview koji izvršava isti kumulativni JavaScript
+- Web Components teaching tok kroz custom element, shadow DOM, slot i lifecycle
+
 ### 3.3 How To Add A New Lesson
 
 Za novu lekciju:
@@ -368,7 +416,8 @@ Za novu lekciju:
 3. dodaj `describe-steps.js`
 4. dodaj `build-html-at-step.js`
 5. dodaj `build-css-at-step.js`
-6. po potrebi dodaj `content/assets/feature-goal.svg`
+6. kada lekcija traži JavaScript, dodaj `build-js-at-step.js`
+7. po potrebi dodaj `content/assets/feature-goal.svg`
 7. dodaj `content/documents/files/lesson.sr.md`
 8. dodaj `content/documents/files/quiz.sr.md`
 9. registruj lekciju u `lessons/register-lessons.js`

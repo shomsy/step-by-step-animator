@@ -10,7 +10,8 @@ Lekcija mora da se ponaša kao da gledaš programera preko share screen-a:
 
 - HTML se dodaje element po element
 - CSS se dodaje property po property
-- preview prikazuje tačno isti kumulativni HTML/CSS koji je trenutno napisan
+- kada lekcija to traži, JavaScript se dodaje akciju po akciju
+- preview prikazuje tačno isti kumulativni HTML/CSS/JS koji je trenutno napisan
 - svaka promena mora da bude vizuelno jasna i verbalno objašnjiva
 
 Ako sadržaj ne može da se razbije na takve male, čitljive korake, još nije spreman za ovu vrstu animacije.
@@ -33,6 +34,7 @@ lessons/
     describe-steps.js
     build-html-at-step.js
     build-css-at-step.js
+    build-js-at-step.js
     content/
       assets/
         feature-goal.svg
@@ -50,6 +52,7 @@ lessons/
 - povezuje markdown metadata
 - povezuje step script
 - povezuje HTML/CSS builder funkcije
+- kada lekcija to traži, povezuje i JS builder funkciju
 - povezuje knowledge check pitanja
 - opciono povezuje referentnu sliku cilja i homework napomene za shell
 
@@ -70,6 +73,13 @@ lessons/
 - vraća kompletan kumulativni CSS za dati step
 - ne vraća diff
 - CSS ide property po property
+
+`build-js-at-step.js`
+
+- koristiš ga samo kada lekcija zaista ima JavaScript fajl
+- vraća kompletan kumulativni JS za dati step
+- ne vraća diff
+- JS mora da raste akciju po akciju i da ostane izvršiv na svakom koraku
 
 `content/documents/files/lesson.sr.md`
 
@@ -171,6 +181,7 @@ To znači:
 - nema ručno režirane scene
 - nema CSS-a koji nije došao iz `build-css-at-step.js`
 - nema HTML-a koji nije došao iz `build-html-at-step.js`
+- kada lekcija ima JS, nema JavaScript-a koji nije došao iz `build-js-at-step.js`
 
 ## 5. Kako razložiti sadržaj u steps
 
@@ -207,6 +218,7 @@ previewAddress: browser://feature-preview
 previewTitle: Live feature preview
 htmlFileName: index.html
 cssFileName: style.css
+jsFileName: component.js
 ---
 
 Kratak uvod u lekciju.
@@ -262,6 +274,7 @@ Repo contract:
   - `describe-steps.js`
   - `build-html-at-step.js`
   - `build-css-at-step.js`
+  - `build-js-at-step.js` kada lekcija traži JavaScript
   - `content/assets/[feature-name]-goal.svg` kada postoji referentna slika
   - `content/documents/files/lesson.sr.md`
   - `content/documents/files/quiz.sr.md`
@@ -269,7 +282,8 @@ Repo contract:
 Animaciona pravila:
 - HTML ide element po element
 - CSS ide property po property
-- preview mora da bude hranjen iz istog kumulativnog HTML/CSS output-a
+- kada lekcija traži JavaScript, dodaj ga akciju po akciju i drži ga izvršivim na svakom koraku
+- preview mora da bude hranjen iz istog kumulativnog HTML/CSS/JS output-a
 - kreni od neutralnog početka, najčešće `<div class="app-shell">`
 - ne ubacuj filler sadržaj koji lekcija ne objašnjava
 - uvodi helper bordere ili outlin-e rano ako element bez njih nije dovoljno vidljiv

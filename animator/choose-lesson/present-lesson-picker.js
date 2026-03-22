@@ -7,10 +7,12 @@ export function presentLessonPicker({
 }) {
   lessonPicker.innerHTML = '';
 
-  lessons.forEach(lesson => {
+  lessons.forEach((lesson, index) => {
     const option = ownerWindow.document.createElement('option');
+    const lessonOrder = String(index + 1).padStart(2, '0');
+
     option.value = lesson.lessonId;
-    option.textContent = lesson.lessonTitle;
+    option.textContent = `${lessonOrder} · ${lesson.lessonTitle}`;
     lessonPicker.append(option);
   });
 

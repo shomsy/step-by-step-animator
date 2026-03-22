@@ -14,7 +14,7 @@ Ovaj fajl je kanonski operativni ugovor za rad nad ovim repo-om.
 
 Ovaj repo je `Step By Step Animator`.
 
-To je lesson engine za interaktivne HTML/CSS lekcije koje treba da izgledaju kao da gledaš programera preko share screen-a.
+To je lesson engine za interaktivne HTML/CSS/JS lekcije koje treba da izgledaju kao da gledaš programera preko share screen-a.
 
 Engine je generičan.
 
@@ -22,12 +22,15 @@ Trenutno isporučene lekcije su:
 
 - `build-sidebar`
 - `build-top-navigation`
+- `build-callout-custom-element`
+- `build-feature-callout-web-component`
 
 Svaka nova lekcija mora da koristi isti shell i isti teaching model:
 
 - HTML ide element po element
 - CSS ide property po property
-- preview prikazuje tačno isti kumulativni HTML/CSS koji je trenutno napisan
+- kada lekcija to traži, JS ide akciju po akciju
+- preview prikazuje tačno isti kumulativni HTML/CSS/JS koji je trenutno napisan
 - promene moraju da budu jasne, predvidive i lake za verbalno objašnjavanje
 
 Ovo nije showcase.
@@ -115,6 +118,34 @@ lessons/
         files/
           lesson.sr.md
           quiz.sr.md
+  build-feature-callout-web-component/
+    build-feature-callout-web-component.lesson.js
+    describe-steps.js
+    build-html-at-step.js
+    build-css-at-step.js
+    build-js-at-step.js
+    content/
+      assets/
+        feature-callout-goal.svg
+      documents/
+        build_feature_callout_web_component.md
+        files/
+          lesson.sr.md
+          quiz.sr.md
+  build-callout-custom-element/
+    build-callout-custom-element.lesson.js
+    describe-steps.js
+    build-html-at-step.js
+    build-css-at-step.js
+    build-js-at-step.js
+    content/
+      assets/
+        callout-custom-element-goal.svg
+      documents/
+        build_callout_custom_element.md
+        files/
+          lesson.sr.md
+          quiz.sr.md
   build-top-navigation/
     build-top-navigation.lesson.js
     describe-steps.js
@@ -147,9 +178,11 @@ Taj file mora da vrati kompletan lesson contract:
 - `previewTitle`
 - `htmlFileName`
 - `cssFileName`
+- `jsFileName` kada lekcija zaista ima JavaScript fajl
 - `steps`
 - `buildHtmlAtStep`
 - `buildCssAtStep`
+- `buildJsAtStep` kada lekcija traži živi JavaScript u preview-u
 - `knowledgeCheckQuestions`
 
 Opciona lesson shell polja kada želiš da pokažeš vizuelni cilj i homework:
@@ -191,7 +224,7 @@ Pravila:
 - `quiz.sr.md` je kanonski source za knowledge check pitanja
 - generated book output ide u `content/documents/<lesson_name>.md`
 - generated output se ne uređuje ručno
-- interaktivni HTML/CSS step builderi i dalje ostaju strogo definisani u JS-u dok ne uvedemo poseban step markdown DSL
+- interaktivni HTML/CSS/JS step builderi i dalje ostaju strogo definisani u JS-u dok ne uvedemo poseban step markdown DSL
 
 ### 2.4 Runtime and Entry Rules
 
@@ -268,7 +301,7 @@ Ne numerisati responsibility fajlove.
 
 ### 2.8 Preview Integrity Rules
 
-Desni preview mora da bude stvarni render istog kumulativnog HTML/CSS koda koji middle panel prikazuje.
+Desni preview mora da bude stvarni render istog kumulativnog HTML/CSS/JS koda koji middle panel prikazuje.
 
 To znači:
 
@@ -277,6 +310,7 @@ To znači:
 - preview mora da se hrani iz istih builder funkcija koje hrani lesson contract
 - HTML preview mora da pokaže sirov browser rezultat kada CSS još nije dodat
 - CSS preview mora da utiče samo onoliko koliko je trenutno napisano
+- JS preview mora da izvršava tačno isti kumulativni JavaScript koji middle panel trenutno prikazuje
 
 ### 2.8a Teaching Visibility Rules
 
@@ -339,7 +373,8 @@ Srednji panel:
 
 - prikazuje HTML fajl
 - prikazuje CSS fajl
-- oba prikaza su kumulativna
+- kada lekcija to traži, prikazuje i JS fajl
+- svi prikazi su kumulativni
 - postojeće linije su muted
 - novo dodate linije su naglašene
 - kada je aktivan CSS korak, HTML deo za isti element mora da bude žuto istaknut
@@ -348,9 +383,9 @@ Desni panel:
 
 - zauzima ceo viewer panel
 - imitira browser
-- renderuje stvarni kumulativni HTML/CSS output
+- renderuje stvarni kumulativni HTML/CSS/JS output
 
-### 3.2 Current Shipped Lesson
+### 3.2 Current Shipped Lessons
 
 `build-sidebar` je referentna lekcija za engine.
 
@@ -367,6 +402,19 @@ Za nju i dalje važe posebna teaching pravila:
 - helper linije i pomoćni borderi ostaju dok se ne završi cela vizuelna celina
 - outline helperi ostaju do završnog rezime koraka za dati element ili celinu, pa se tek tada uklanjaju
 
+`build-callout-custom-element` otvara Web Components put:
+
+- host tag sa crticom
+- registraciju kroz `customElements.define`
+- atribut API
+- prvi render kroz light DOM
+
+`build-feature-callout-web-component` je Web Components nastavak:
+
+- treći, opcioni JS fajl u middle panelu
+- stvarni live preview koji izvršava isti kumulativni JavaScript
+- Web Components teaching tok kroz custom element, shadow DOM, slot i lifecycle
+
 ### 3.3 How To Add A New Lesson
 
 Za novu lekciju:
@@ -376,7 +424,8 @@ Za novu lekciju:
 3. dodaj `describe-steps.js`
 4. dodaj `build-html-at-step.js`
 5. dodaj `build-css-at-step.js`
-6. po potrebi dodaj `content/assets/feature-goal.svg`
+6. kada lekcija traži JavaScript, dodaj `build-js-at-step.js`
+7. po potrebi dodaj `content/assets/feature-goal.svg`
 7. dodaj `content/documents/files/lesson.sr.md`
 8. dodaj `content/documents/files/quiz.sr.md`
 9. registruj lekciju u `lessons/register-lessons.js`
@@ -664,7 +713,8 @@ Lekcija mora da se ponaša kao da gledaš programera preko share screen-a:
 
 - HTML se dodaje element po element
 - CSS se dodaje property po property
-- preview prikazuje tačno isti kumulativni HTML/CSS koji je trenutno napisan
+- kada lekcija to traži, JavaScript se dodaje akciju po akciju
+- preview prikazuje tačno isti kumulativni HTML/CSS/JS koji je trenutno napisan
 - svaka promena mora da bude vizuelno jasna i verbalno objašnjiva
 
 Ako sadržaj ne može da se razbije na takve male, čitljive korake, još nije spreman za ovu vrstu animacije.
@@ -687,6 +737,7 @@ lessons/
     describe-steps.js
     build-html-at-step.js
     build-css-at-step.js
+    build-js-at-step.js
     content/
       assets/
         feature-goal.svg
@@ -704,6 +755,7 @@ lessons/
 - povezuje markdown metadata
 - povezuje step script
 - povezuje HTML/CSS builder funkcije
+- kada lekcija to traži, povezuje i JS builder funkciju
 - povezuje knowledge check pitanja
 - opciono povezuje referentnu sliku cilja i homework napomene za shell
 
@@ -724,6 +776,13 @@ lessons/
 - vraća kompletan kumulativni CSS za dati step
 - ne vraća diff
 - CSS ide property po property
+
+`build-js-at-step.js`
+
+- koristiš ga samo kada lekcija zaista ima JavaScript fajl
+- vraća kompletan kumulativni JS za dati step
+- ne vraća diff
+- JS mora da raste akciju po akciju i da ostane izvršiv na svakom koraku
 
 `content/documents/files/lesson.sr.md`
 
@@ -825,6 +884,7 @@ To znači:
 - nema ručno režirane scene
 - nema CSS-a koji nije došao iz `build-css-at-step.js`
 - nema HTML-a koji nije došao iz `build-html-at-step.js`
+- kada lekcija ima JS, nema JavaScript-a koji nije došao iz `build-js-at-step.js`
 
 ## 5. Kako razložiti sadržaj u steps
 
@@ -861,6 +921,7 @@ previewAddress: browser://feature-preview
 previewTitle: Live feature preview
 htmlFileName: index.html
 cssFileName: style.css
+jsFileName: component.js
 ---
 
 Kratak uvod u lekciju.
@@ -916,6 +977,7 @@ Repo contract:
   - `describe-steps.js`
   - `build-html-at-step.js`
   - `build-css-at-step.js`
+  - `build-js-at-step.js` kada lekcija traži JavaScript
   - `content/assets/[feature-name]-goal.svg` kada postoji referentna slika
   - `content/documents/files/lesson.sr.md`
   - `content/documents/files/quiz.sr.md`
@@ -923,7 +985,8 @@ Repo contract:
 Animaciona pravila:
 - HTML ide element po element
 - CSS ide property po property
-- preview mora da bude hranjen iz istog kumulativnog HTML/CSS output-a
+- kada lekcija traži JavaScript, dodaj ga akciju po akciju i drži ga izvršivim na svakom koraku
+- preview mora da bude hranjen iz istog kumulativnog HTML/CSS/JS output-a
 - kreni od neutralnog početka, najčešće `<div class="app-shell">`
 - ne ubacuj filler sadržaj koji lekcija ne objašnjava
 - uvodi helper bordere ili outlin-e rano ako element bez njih nije dovoljno vidljiv
@@ -1040,10 +1103,12 @@ export function presentLessonPicker({
 }) {
   lessonPicker.innerHTML = '';
 
-  lessons.forEach(lesson => {
+  lessons.forEach((lesson, index) => {
     const option = ownerWindow.document.createElement('option');
+    const lessonOrder = String(index + 1).padStart(2, '0');
+
     option.value = lesson.lessonId;
-    option.textContent = lesson.lessonTitle;
+    option.textContent = `${lessonOrder} · ${lesson.lessonTitle}`;
     lessonPicker.append(option);
   });
 
@@ -1214,7 +1279,8 @@ export function readLessonMetadata(markdown, defaults = {}) {
     previewAddress: attributes.previewAddress || defaults.previewAddress || '',
     previewTitle: attributes.previewTitle || defaults.previewTitle || '',
     htmlFileName: attributes.htmlFileName || defaults.htmlFileName || 'index.html',
-    cssFileName: attributes.cssFileName || defaults.cssFileName || 'style.css'
+    cssFileName: attributes.cssFileName || defaults.cssFileName || 'style.css',
+    jsFileName: attributes.jsFileName || defaults.jsFileName || ''
   };
 }
 
@@ -1563,10 +1629,14 @@ export function findLessonParts(ownerDocument) {
     savedStepList: readRequiredElement(ownerDocument, 'bookmarkList'),
     savedStepEmptyState: readRequiredElement(ownerDocument, 'bookmarkEmpty'),
     savedStepSummary: readRequiredElement(ownerDocument, 'bookmarkSummary'),
+    liveEditorBody: readRequiredElement(ownerDocument, 'liveEditorBody'),
     htmlCodePane: readRequiredElement(ownerDocument, 'liveHtmlPane'),
     cssCodePane: readRequiredElement(ownerDocument, 'liveCssPane'),
+    jsPane: readRequiredElement(ownerDocument, 'jsPane'),
+    jsCodePane: readRequiredElement(ownerDocument, 'liveJsPane'),
     htmlFileLabel: readRequiredElement(ownerDocument, 'htmlFileLabel'),
     cssFileLabel: readRequiredElement(ownerDocument, 'cssFileLabel'),
+    jsFileLabel: readRequiredElement(ownerDocument, 'jsFileLabel'),
     currentStepBadge: readRequiredElement(ownerDocument, 'liveStepBadge'),
     lessonPanelButtons: [...ownerDocument.querySelectorAll('.tab-btn')]
   };
@@ -1609,6 +1679,8 @@ function showLessonGoal({ lessonParts, lesson }) {
 }
 
 export function showLessonShell({ ownerDocument, lessonParts, lesson }) {
+  const hasJavaScriptFile = typeof lesson.buildJsAtStep === 'function';
+
   lessonParts.lessonHeading.textContent = lesson.lessonTitle;
 
   if (lesson.lessonIntroHtml) {
@@ -1620,6 +1692,16 @@ export function showLessonShell({ ownerDocument, lessonParts, lesson }) {
   lessonParts.previewAddress.textContent = lesson.previewAddress;
   lessonParts.htmlFileLabel.textContent = lesson.htmlFileName;
   lessonParts.cssFileLabel.textContent = lesson.cssFileName;
+  lessonParts.jsPane.hidden = !hasJavaScriptFile;
+  lessonParts.liveEditorBody.dataset.paneCount = hasJavaScriptFile ? '3' : '2';
+
+  if (hasJavaScriptFile) {
+    lessonParts.jsFileLabel.textContent = lesson.jsFileName || 'component.js';
+  } else {
+    lessonParts.jsFileLabel.textContent = 'component.js';
+    lessonParts.jsCodePane.innerHTML = '';
+  }
+
   lessonParts.livePreviewFrame.title = lesson.previewTitle;
   showLessonGoal({ lessonParts, lesson });
   ownerDocument.title = `Step By Step Animator · ${lesson.lessonTitle}`;
@@ -1812,6 +1894,11 @@ function isFocusedHtmlLine(lineText, focusHtmlNeedles) {
 }
 
 function showCodePane(container, buildLinesAtStep, currentStepNumber, paneType = 'html', focusHtmlNeedles = []) {
+  if (typeof buildLinesAtStep !== 'function') {
+    container.innerHTML = '';
+    return;
+  }
+
   let lineNumber = 0;
   let revealOrder = 0;
   const currentLines = buildLinesAtStep(currentStepNumber);
@@ -1822,7 +1909,7 @@ function showCodePane(container, buildLinesAtStep, currentStepNumber, paneType =
     lineNumber += 1;
     const lineMarkup = entry.isEmptyLine ? '&nbsp;' : escapeCodeText(entry.lineText);
     const lineKind = paneType === 'css' ? describeCssLineRole(entry.lineText) : 'plain';
-    const shouldStaggerReveal = paneType === 'css' && entry.isNewLine && !entry.isEmptyLine;
+    const shouldStaggerReveal = (paneType === 'css' || paneType === 'js') && entry.isNewLine && !entry.isEmptyLine;
     const inlineStyle = shouldStaggerReveal ? ` style="--reveal-order:${revealOrder};"` : '';
     const isFocusedTarget = paneType === 'html' && isFocusedHtmlLine(entry.lineText, focusHtmlNeedles);
 
@@ -1844,22 +1931,29 @@ export function showGrowingCode({
   step,
   currentStepNumber,
   buildHtmlAtStep,
-  buildCssAtStep
+  buildCssAtStep,
+  buildJsAtStep
 }) {
   const focusHtmlNeedles = Array.isArray(step.focusHtmlNeedles) ? step.focusHtmlNeedles : [];
 
   showCodePane(lessonParts.htmlCodePane, buildHtmlAtStep, currentStepNumber, 'html', focusHtmlNeedles);
   showCodePane(lessonParts.cssCodePane, buildCssAtStep, currentStepNumber, 'css');
+  showCodePane(lessonParts.jsCodePane, buildJsAtStep, currentStepNumber, 'js');
   lessonParts.currentStepBadge.textContent = `Prizor ${currentStepNumber + 1}`;
   scrollToAddedLine(lessonParts.htmlCodePane);
   scrollToAddedLine(lessonParts.cssCodePane);
+  scrollToAddedLine(lessonParts.jsCodePane);
 }
 
 === animator/play-lesson/04-watch-preview/show-current-preview.js ===
 function composeLivePreviewDocument(lesson, currentStepNumber) {
   const htmlMarkup = lesson.buildHtmlAtStep(currentStepNumber).join('\n');
   const cssMarkup = lesson.buildCssAtStep(currentStepNumber).join('\n');
+  const jsMarkup = typeof lesson.buildJsAtStep === 'function'
+    ? lesson.buildJsAtStep(currentStepNumber).join('\n')
+    : '';
   const cssBlock = cssMarkup ? `<style>${cssMarkup}</style>` : '';
+  const jsBlock = jsMarkup ? `<script>${jsMarkup}<\/script>` : '';
 
   return `<!DOCTYPE html>
 <html lang="${lesson.documentLanguage || 'sr'}">
@@ -1870,6 +1964,7 @@ function composeLivePreviewDocument(lesson, currentStepNumber) {
   </head>
   <body>
 ${htmlMarkup}
+    ${jsBlock}
   </body>
 </html>`;
 }
@@ -2094,12 +2189,23 @@ export function downloadLessonFiles({ lesson }) {
   const finalStep = lesson.steps.length - 1;
   const htmlCode = lesson.buildHtmlAtStep(finalStep).join('\n');
   const cssCode = lesson.buildCssAtStep(finalStep).join('\n');
+  const jsCode = typeof lesson.buildJsAtStep === 'function'
+    ? lesson.buildJsAtStep(finalStep).join('\n')
+    : '';
 
   triggerFileDownload(lesson.htmlFileName, 'text/html', htmlCode);
 
   window.setTimeout(() => {
     triggerFileDownload(lesson.cssFileName, 'text/css', cssCode);
   }, 500);
+
+  if (!jsCode) {
+    return;
+  }
+
+  window.setTimeout(() => {
+    triggerFileDownload(lesson.jsFileName || 'component.js', 'text/javascript', jsCode);
+  }, 1000);
 }
 
 === animator/play-lesson/choose-theme/choose-theme.js ===
@@ -2588,6 +2694,10 @@ body { padding: 24px; }
   grid-template-rows: minmax(0, 1fr) minmax(0, 1fr);
 }
 
+.live-editor-body[data-pane-count="3"] {
+  grid-template-rows: minmax(0, 1fr) minmax(0, 1fr) minmax(0, 1fr);
+}
+
 .live-pane {
   min-height: 0;
   display: flex;
@@ -2661,7 +2771,8 @@ body { padding: 24px; }
   opacity: 1;
 }
 
-.live-line[data-pane="css"].is-added {
+.live-line[data-pane="css"].is-added,
+.live-line[data-pane="js"].is-added {
   opacity: 0;
   transform: translateY(8px);
   animation: liveLineReveal 0.42s ease forwards;
@@ -3520,6 +3631,7 @@ button:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
   .left-panel, .live-editor-panel, .viewer { position: relative; top: 0; }
   .live-editor-panel { height: auto; }
   .live-editor-body { grid-template-rows: 360px 360px; }
+  .live-editor-body[data-pane-count="3"] { grid-template-rows: 280px 280px 280px; }
   .viewer {
     height: auto;
     min-height: auto;
@@ -3537,6 +3649,7 @@ button:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
   }
   .live-editor-head { padding: 16px; flex-direction: column; align-items: flex-start; }
   .live-editor-body { grid-template-rows: 320px 320px; }
+  .live-editor-body[data-pane-count="3"] { grid-template-rows: 240px 240px 240px; }
   .live-pane-head { flex-direction: column; align-items: flex-start; }
   .live-preview-head {
     grid-template-columns: 1fr;
@@ -3767,7 +3880,8 @@ export function playLesson({ ownerDocument, ownerLocation, ownerWindow, lesson, 
       step,
       currentStepNumber: lessonProgress.currentStepNumber,
       buildHtmlAtStep: lesson.buildHtmlAtStep,
-      buildCssAtStep: lesson.buildCssAtStep
+      buildCssAtStep: lesson.buildCssAtStep,
+      buildJsAtStep: lesson.buildJsAtStep
     });
 
     savedSteps.showSavedStepList(lessonProgress.currentStepNumber);
@@ -3974,7 +4088,7 @@ export function writeSavedStepNumbers({ lessonId, savedStepNumbers }) {
       </p>
 
       <div class="lesson-picker">
-        <label class="lesson-picker-label" for="lessonPicker">Aktivna lekcija</label>
+        <label class="lesson-picker-label" for="lessonPicker">Aktivna lekcija · redosled učenja</label>
         <select class="lesson-picker-select" id="lessonPicker"></select>
       </div>
 
@@ -4082,12 +4196,12 @@ export function writeSavedStepNumbers({ lessonId, savedStepNumbers }) {
       <div class="live-editor-head">
         <div class="live-editor-copy">
           <h2>Ekran editora</h2>
-          <p>Kumulativni fajlovi se popunjavaju liniju po liniju, kao da gledaš live tutorijal preko share screen-a.</p>
+          <p>Kumulativni HTML, CSS i po potrebi JS fajlovi popunjavaju se liniju po liniju, kao da gledaš live tutorijal preko share screen-a.</p>
         </div>
         <span class="live-editor-step" id="liveStepBadge">Prizor 1</span>
       </div>
 
-      <div class="live-editor-body">
+      <div class="live-editor-body" id="liveEditorBody" data-pane-count="2">
         <div class="live-pane">
           <div class="live-pane-head">
             <span id="htmlFileLabel">index.html</span>
@@ -4102,6 +4216,14 @@ export function writeSavedStepNumbers({ lessonId, savedStepNumbers }) {
             <span>Staro muted, novo property istaknuto</span>
           </div>
           <div class="live-code-scroll" id="liveCssPane"></div>
+        </div>
+
+        <div class="live-pane" id="jsPane" hidden>
+          <div class="live-pane-head">
+            <span id="jsFileLabel">component.js</span>
+            <span>Novo ponašanje istaknuto liniju po liniju</span>
+          </div>
+          <div class="live-code-scroll" id="liveJsPane"></div>
         </div>
       </div>
     </section>
@@ -4133,6 +4255,1306 @@ export function writeSavedStepNumbers({ lessonId, savedStepNumbers }) {
   <script type="module" src="/main.js"></script>
 </body>
 </html>
+
+=== lessons/build-callout-custom-element/build-callout-custom-element.lesson.js ===
+import { buildCssAtStep } from './build-css-at-step.js';
+import { buildHtmlAtStep } from './build-html-at-step.js';
+import { buildJsAtStep } from './build-js-at-step.js';
+import { lessonSteps } from './describe-steps.js';
+import lessonDocument from './content/documents/files/lesson.sr.md?raw';
+import knowledgeCheckDocument from './content/documents/files/quiz.sr.md?raw';
+import goalImage from './content/assets/callout-custom-element-goal.svg';
+import { readKnowledgeCheckQuestions } from '../../animator/lesson-documents/read-knowledge-check-questions.js';
+import { readLessonMetadata } from '../../animator/lesson-documents/read-lesson-metadata.js';
+
+const lessonMetadata = readLessonMetadata(lessonDocument, {
+  lessonTitle: 'Web Components 1/2 · Light DOM custom element',
+  lessonIntro: 'Prva Web Components lekcija objašnjava host tag, registraciju, atribute i prvi render kroz light DOM, bez shadow DOM sloja.',
+  previewAddress: 'browser://build-callout-custom-element-preview',
+  previewTitle: 'Live custom element preview',
+  htmlFileName: 'index.html',
+  cssFileName: 'style.css',
+  jsFileName: 'callout-card.js'
+});
+
+const knowledgeCheckQuestions = readKnowledgeCheckQuestions(knowledgeCheckDocument);
+
+export const buildCalloutCustomElementLesson = {
+  lessonId: 'build-callout-custom-element',
+  lessonTitle: lessonMetadata.lessonTitle,
+  lessonIntro: lessonMetadata.lessonIntro,
+  lessonIntroHtml: lessonMetadata.lessonIntroHtml,
+  previewAddress: lessonMetadata.previewAddress,
+  previewTitle: lessonMetadata.previewTitle,
+  htmlFileName: lessonMetadata.htmlFileName,
+  cssFileName: lessonMetadata.cssFileName,
+  jsFileName: lessonMetadata.jsFileName,
+  goalTitle: 'Šta gradimo u ovoj lekciji',
+  goalImageSrc: goalImage,
+  goalImageAlt: 'Referentna slika tamnog callout card custom elementa na svetloj pozadini, sa malim badge-om, naslovom, opisom i CTA dugmetom.',
+  goalImageCaption: 'Ovo je prvi korak Web Components puta: isti problem rešavamo kroz light DOM custom element, da bi host, atributi i registracija ostali potpuno transparentni.',
+  steps: lessonSteps,
+  buildHtmlAtStep,
+  buildCssAtStep,
+  buildJsAtStep,
+  knowledgeCheckQuestions
+};
+
+=== lessons/build-callout-custom-element/build-css-at-step.js ===
+import { stepNumberById } from './describe-steps.js';
+
+function readStepBoundary(stepReference) {
+  if (typeof stepReference === 'number') {
+    return stepReference;
+  }
+
+  if (!stepReference) {
+    return Number.POSITIVE_INFINITY;
+  }
+
+  return stepNumberById[stepReference] ?? Number.POSITIVE_INFINITY;
+}
+
+function appendVisibleCssRuleBlock(lines, header, entries, stepNumber, showFrom = Number.POSITIVE_INFINITY) {
+  const activeEntries = entries.filter(entry =>
+    stepNumber >= readStepBoundary(entry.from) &&
+    (entry.untilBefore === undefined || stepNumber < readStepBoundary(entry.untilBefore))
+  );
+
+  if (!activeEntries.length && stepNumber < readStepBoundary(showFrom)) {
+    return;
+  }
+
+  if (lines.length) {
+    lines.push('');
+  }
+
+  lines.push(header);
+
+  activeEntries.forEach(entry => {
+    lines.push(`  ${entry.line}`);
+  });
+
+  lines.push('}');
+}
+
+export function buildCssAtStep(stepNumber) {
+  const lines = [];
+
+  appendVisibleCssRuleBlock(lines, '.app-shell {', [
+    { from: 'shell_outline', untilBefore: 'shell_summary', line: 'outline: 1px dashed #94a3b8;' },
+    { from: 'shell_padding', line: 'padding: 40px;' },
+    { from: 'shell_display', line: 'display: grid;' },
+    { from: 'shell_place_items', line: 'place-items: center;' },
+    { from: 'shell_min_height', line: 'min-height: 100vh;' },
+    { from: 'shell_background', line: 'background: linear-gradient(180deg, #e2e8f0, #cbd5e1);' },
+    { from: 'shell_summary', line: '/* helper outline removed in final .app-shell summary */' }
+  ], stepNumber, 'empty_shell');
+
+  appendVisibleCssRuleBlock(lines, 'callout-card {', [
+    { from: 'host_outline', untilBefore: 'host_summary', line: 'outline: 1px solid #f97316;' },
+    { from: 'host_display', line: 'display: block;' },
+    { from: 'host_width', line: 'width: min(100%, 420px);' },
+    { from: 'host_summary', line: '/* helper outline removed in final callout-card host summary */' }
+  ], stepNumber, 'component_html');
+
+  appendVisibleCssRuleBlock(lines, 'callout-card .card {', [
+    { from: 'card_outline', untilBefore: 'card_summary', line: 'outline: 1px dashed #38bdf8;' },
+    { from: 'card_display', line: 'display: grid;' },
+    { from: 'card_gap', line: 'gap: 16px;' },
+    { from: 'card_padding', line: 'padding: 24px;' },
+    { from: 'card_radius', line: 'border-radius: 28px;' },
+    { from: 'card_border', line: 'border: 1px solid rgba(148,163,184,0.24);' },
+    { from: 'card_background', line: 'background: linear-gradient(180deg, rgba(15,23,42,0.98), rgba(15,23,42,0.92));' },
+    { from: 'card_shadow', line: 'box-shadow: 0 26px 60px rgba(15,23,42,0.24);' },
+    { from: 'card_summary', line: '/* helper outline removed in final .card summary */' }
+  ], stepNumber);
+
+  appendVisibleCssRuleBlock(lines, 'callout-card .eyebrow {', [
+    { from: 'eyebrow_outline', untilBefore: 'eyebrow_summary', line: 'outline: 1px dotted #facc15;' },
+    { from: 'eyebrow_display', line: 'display: inline-flex;' },
+    { from: 'eyebrow_padding', line: 'padding: 8px 12px;' },
+    { from: 'eyebrow_radius', line: 'border-radius: 999px;' },
+    { from: 'eyebrow_background', line: 'background: rgba(56,189,248,0.14);' },
+    { from: 'eyebrow_color', line: 'color: #38bdf8;' },
+    { from: 'eyebrow_font_size', line: 'font-size: 12px;' },
+    { from: 'eyebrow_font_weight', line: 'font-weight: 700;' },
+    { from: 'eyebrow_summary', line: '/* helper outline removed in final .eyebrow summary */' }
+  ], stepNumber);
+
+  appendVisibleCssRuleBlock(lines, 'callout-card .title {', [
+    { from: 'title_font_size', line: 'font-size: 28px;' },
+    { from: 'title_font_weight', line: 'font-weight: 800;' }
+  ], stepNumber);
+
+  appendVisibleCssRuleBlock(lines, 'callout-card .summary {', [
+    { from: 'summary_margin', line: 'margin: 0;' },
+    { from: 'summary_color', line: 'color: #cbd5e1;' },
+    { from: 'summary_line_height', line: 'line-height: 1.65;' }
+  ], stepNumber);
+
+  appendVisibleCssRuleBlock(lines, 'callout-card .cta {', [
+    { from: 'cta_outline', untilBefore: 'cta_summary', line: 'outline: 1px dashed #34d399;' },
+    { from: 'cta_padding', line: 'padding: 12px 16px;' },
+    { from: 'cta_border', line: 'border: 0;' },
+    { from: 'cta_radius', line: 'border-radius: 999px;' },
+    { from: 'cta_background', line: 'background: linear-gradient(135deg, #38bdf8, #2563eb);' },
+    { from: 'cta_color', line: 'color: #ffffff;' },
+    { from: 'cta_font_weight', line: 'font-weight: 700;' },
+    { from: 'cta_summary', line: '/* helper outline removed in final .cta summary */' }
+  ], stepNumber);
+
+  return lines;
+}
+
+=== lessons/build-callout-custom-element/build-html-at-step.js ===
+import { stepNumberById } from './describe-steps.js';
+
+export function buildHtmlAtStep(stepNumber) {
+  const lines = ['<div class="app-shell">'];
+
+  if (stepNumber >= stepNumberById.component_html) {
+    lines.push(
+      '  <callout-card',
+      '    title="Custom element od nule"',
+      '    cta-label="Nastavi dalje"',
+      '  ></callout-card>'
+    );
+  }
+
+  lines.push('</div>');
+  return lines;
+}
+
+=== lessons/build-callout-custom-element/build-js-at-step.js ===
+import { stepNumberById } from './describe-steps.js';
+
+function hasStep(stepNumber, stepReference) {
+  return stepNumber >= (stepNumberById[stepReference] ?? Number.POSITIVE_INFINITY);
+}
+
+export function buildJsAtStep(stepNumber) {
+  const lines = [];
+
+  if (hasStep(stepNumber, 'class_declaration')) {
+    lines.push('class CalloutCard extends HTMLElement {');
+
+    if (hasStep(stepNumber, 'connected_callback')) {
+      lines.push('  connectedCallback() {');
+
+      if (hasStep(stepNumber, 'read_title_attribute')) {
+        lines.push("    const title = this.getAttribute('title') || 'Naslov komponente';");
+      }
+
+      if (hasStep(stepNumber, 'read_cta_attribute')) {
+        lines.push("    const ctaLabel = this.getAttribute('cta-label') || 'Saznaj više';");
+      }
+
+      if (hasStep(stepNumber, 'render_inner_html')) {
+        lines.push(
+          '    this.innerHTML = `',
+          '      <article class="card">',
+          '        <span class="eyebrow">Custom element</span>',
+          '        <strong class="title">${title}</strong>',
+          '        <p class="summary">Light DOM verzija nam prvo objašnjava registraciju, atribut API i render bez shadow DOM sloja.</p>',
+          '        <button class="cta" type="button">${ctaLabel}</button>',
+          '      </article>',
+          '    `;'
+        );
+      }
+
+      lines.push('  }');
+    }
+
+    lines.push('}');
+  }
+
+  if (hasStep(stepNumber, 'define_element')) {
+    lines.push('', "customElements.define('callout-card', CalloutCard);");
+  }
+
+  return lines;
+}
+
+=== lessons/build-callout-custom-element/content/assets/callout-custom-element-goal.svg ===
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 760" role="img" aria-labelledby="title desc">
+  <title id="title">Callout custom element goal</title>
+  <desc id="desc">Svetla pozadina sa tamnim callout card-om u sredini. Card ima badge Custom Element, veliki naslov, opis i CTA dugme.</desc>
+  <defs>
+    <linearGradient id="bg" x1="0" x2="0" y1="0" y2="1">
+      <stop offset="0%" stop-color="#e2e8f0"/>
+      <stop offset="100%" stop-color="#cbd5e1"/>
+    </linearGradient>
+    <linearGradient id="cta" x1="0" x2="1" y1="0" y2="1">
+      <stop offset="0%" stop-color="#38bdf8"/>
+      <stop offset="100%" stop-color="#2563eb"/>
+    </linearGradient>
+    <filter id="shadow" x="-20%" y="-20%" width="140%" height="160%">
+      <feDropShadow dx="0" dy="26" stdDeviation="28" flood-color="#0f172a" flood-opacity="0.18"/>
+    </filter>
+  </defs>
+  <rect width="1200" height="760" fill="url(#bg)"/>
+  <g transform="translate(360 168)" filter="url(#shadow)">
+    <rect width="480" height="420" rx="34" fill="#0f172a"/>
+    <rect x="32" y="34" width="148" height="38" rx="19" fill="rgba(56,189,248,0.16)"/>
+    <text x="106" y="58" fill="#38bdf8" font-family="Inter, Arial, sans-serif" font-size="14" font-weight="700" text-anchor="middle" letter-spacing="1.2">CUSTOM ELEMENT</text>
+    <text x="32" y="138" fill="#f8fafc" font-family="Inter, Arial, sans-serif" font-size="42" font-weight="800">Custom element</text>
+    <text x="32" y="186" fill="#f8fafc" font-family="Inter, Arial, sans-serif" font-size="42" font-weight="800">od nule</text>
+    <text x="32" y="246" fill="#cbd5e1" font-family="Inter, Arial, sans-serif" font-size="22">Host tag, atributi i prvi render</text>
+    <text x="32" y="280" fill="#cbd5e1" font-family="Inter, Arial, sans-serif" font-size="22">bez shadow DOM sloja.</text>
+    <rect x="32" y="336" width="146" height="52" rx="26" fill="url(#cta)"/>
+    <text x="105" y="368" fill="#ffffff" font-family="Inter, Arial, sans-serif" font-size="18" font-weight="700" text-anchor="middle">Nastavi dalje</text>
+  </g>
+</svg>
+
+=== lessons/build-callout-custom-element/content/documents/build_callout_custom_element.md ===
+<!-- Generated from the same markdown sources used by the web lesson. -->
+
+# build-callout-custom-element
+
+Prva Web Components lekcija namerno kreće bez shadow DOM-a. Tako prvo vidiš samu osnovu platforme: custom tag sa crticom, registraciju preko `customElements.define`, atribute kao spoljašnji API i prvi render kroz `connectedCallback()`. Tek posle toga prelazimo na shadow DOM, template i slotove.
+
+## Quiz
+
+## Question 1
+? Koja je glavna ideja ove prve Web Components lekcije?
+- [ ] Da odmah sakrijemo sve iza shadow DOM-a
+- [x] Da prvo razjasnimo host tag, registraciju i atribute kroz light DOM
+- [ ] Da izbegnemo JavaScript potpuno
+- [ ] Da radimo samo CSS
+! Light DOM uvodna lekcija ostavlja sve vidljivim da bi custom element osnove bile potpuno jasne.
+
+## Question 2
+? Šta radi `customElements.define('callout-card', CalloutCard)`?
+- [ ] Briše host element iz DOM-a
+- [x] Registruje custom element i govori browseru koju klasu koristi za dati tag
+- [ ] Menja CSS temu stranice
+- [ ] Dodaje shadow DOM automatski
+! `customElements.define()` povezuje custom tag ime i klasu, pa browser zna kako da upgrade-uje taj element.
+
+## Question 3
+? Zašto u ovoj lekciji čitamo `title` i `cta-label` atribute sa host elementa?
+- [ ] Da bismo izbegli HTML
+- [x] Da atributi postanu jednostavan spoljašnji API komponente
+- [ ] Da bismo sakrili CSS
+- [ ] Da bismo uklonili render
+! Atributi su najjednostavniji prvi API za custom element: lako ih pišeš u HTML-u i lako ih čitaš u klasi.
+
+## Question 4
+? Zašto koristimo `connectedCallback()` za prvi render?
+- [ ] Zato što custom element tada još nije u DOM-u
+- [x] Zato što je to prirodan lifecycle trenutak kada je element povezan sa dokumentom
+- [ ] Zato što jedino tamo CSS radi
+- [ ] Zato što je to zamena za `template`
+! `connectedCallback()` je zgodna ulazna tačka za prvi render čim browser ubaci element u dokument.
+
+## Question 5
+? Šta ćemo sledeće dodati u drugoj Web Components lekciji?
+- [ ] jQuery plugin sistem
+- [ ] server-side rendering
+- [x] shadow DOM, template i slotove
+- [ ] CSS framework
+! Druga lekcija gradi isti nivo komponente, ali uvodi pravu Web Components dubinu kroz shadow DOM, template i slot projekciju.
+
+=== lessons/build-callout-custom-element/content/documents/files/lesson.sr.md ===
+---
+title: Web Components 1/2 · Light DOM custom element
+previewAddress: browser://build-callout-custom-element-preview
+previewTitle: Live custom element preview
+htmlFileName: index.html
+cssFileName: style.css
+jsFileName: callout-card.js
+---
+
+Prva Web Components lekcija namerno kreće bez shadow DOM-a. Tako prvo vidiš samu osnovu platforme: custom tag sa crticom, registraciju preko `customElements.define`, atribute kao spoljašnji API i prvi render kroz `connectedCallback()`. Tek posle toga prelazimo na shadow DOM, template i slotove.
+
+=== lessons/build-callout-custom-element/content/documents/files/quiz.sr.md ===
+## Question 1
+? Koja je glavna ideja ove prve Web Components lekcije?
+- [ ] Da odmah sakrijemo sve iza shadow DOM-a
+- [x] Da prvo razjasnimo host tag, registraciju i atribute kroz light DOM
+- [ ] Da izbegnemo JavaScript potpuno
+- [ ] Da radimo samo CSS
+! Light DOM uvodna lekcija ostavlja sve vidljivim da bi custom element osnove bile potpuno jasne.
+
+## Question 2
+? Šta radi `customElements.define('callout-card', CalloutCard)`?
+- [ ] Briše host element iz DOM-a
+- [x] Registruje custom element i govori browseru koju klasu koristi za dati tag
+- [ ] Menja CSS temu stranice
+- [ ] Dodaje shadow DOM automatski
+! `customElements.define()` povezuje custom tag ime i klasu, pa browser zna kako da upgrade-uje taj element.
+
+## Question 3
+? Zašto u ovoj lekciji čitamo `title` i `cta-label` atribute sa host elementa?
+- [ ] Da bismo izbegli HTML
+- [x] Da atributi postanu jednostavan spoljašnji API komponente
+- [ ] Da bismo sakrili CSS
+- [ ] Da bismo uklonili render
+! Atributi su najjednostavniji prvi API za custom element: lako ih pišeš u HTML-u i lako ih čitaš u klasi.
+
+## Question 4
+? Zašto koristimo `connectedCallback()` za prvi render?
+- [ ] Zato što custom element tada još nije u DOM-u
+- [x] Zato što je to prirodan lifecycle trenutak kada je element povezan sa dokumentom
+- [ ] Zato što jedino tamo CSS radi
+- [ ] Zato što je to zamena za `template`
+! `connectedCallback()` je zgodna ulazna tačka za prvi render čim browser ubaci element u dokument.
+
+## Question 5
+? Šta ćemo sledeće dodati u drugoj Web Components lekciji?
+- [ ] jQuery plugin sistem
+- [ ] server-side rendering
+- [x] shadow DOM, template i slotove
+- [ ] CSS framework
+! Druga lekcija gradi isti nivo komponente, ali uvodi pravu Web Components dubinu kroz shadow DOM, template i slot projekciju.
+
+=== lessons/build-callout-custom-element/describe-steps.js ===
+const focusHtmlNeedlesBySelector = {
+  '.app-shell': ['<div class="app-shell">'],
+  'callout-card': ['<callout-card'],
+  'callout-card .card': ['<callout-card'],
+  'callout-card .eyebrow': ['<callout-card'],
+  'callout-card .title': ['<callout-card'],
+  'callout-card .summary': ['<callout-card'],
+  'callout-card .cta': ['<callout-card']
+};
+
+function readFocusHtmlNeedles(selector) {
+  return focusHtmlNeedlesBySelector[selector] || [];
+}
+
+function describeHtmlElementStep(id, title, desc, tag, proTip, focusHtmlNeedles = []) {
+  return { id, title, desc, tag, proTip, focusHtmlNeedles };
+}
+
+function describeCssPropertyStep(id, selector, property, value, desc = '', proTip = '') {
+  const cssLine = `${property}: ${value};`;
+
+  return {
+    id,
+    title: `CSS: ${selector} / ${property}`,
+    desc: desc || `Dodajemo \`${cssLine}\` u \`${selector}\` i širimo stylesheet jedan property po korak.`,
+    tag: `css:${id.replace(/_/g, '-')}`,
+    proTip: proTip || 'U light DOM custom element lekciji globalni CSS direktno stilizuje markup koji komponenta renderuje kroz JavaScript.',
+    focusHtmlNeedles: readFocusHtmlNeedles(selector)
+  };
+}
+
+function describeJsFlowStep(id, title, desc, proTip, focusHtmlNeedles = readFocusHtmlNeedles('callout-card')) {
+  return {
+    id,
+    title,
+    desc,
+    tag: `js:${id.replace(/_/g, '-')}`,
+    proTip,
+    focusHtmlNeedles
+  };
+}
+
+function describeSummaryStep(id, title, desc, proTip, focusHtmlNeedles = readFocusHtmlNeedles('callout-card')) {
+  return {
+    id,
+    title,
+    desc,
+    tag: `summary:${id.replace(/_/g, '-')}`,
+    proTip,
+    focusHtmlNeedles
+  };
+}
+
+function describeFinishedStep(id, title, desc, proTip) {
+  return { id, title, desc, tag: 'success', proTip };
+}
+
+const cssSteps = [
+  ['shell_outline', '.app-shell', 'outline', '1px dashed #94a3b8', 'Dodajemo helper outline za `.app-shell` i zadržavamo ga do završnog shell rezimea.', 'App shell ostaje stalni teaching okvir kroz celu lekciju.'],
+  ['shell_padding', '.app-shell', 'padding', '40px', 'Padding daje komponenti prostor da se vidi kao zaseban teaching target.'],
+  ['shell_display', '.app-shell', 'display', 'grid', 'Grid je dovoljan da centriramo jedan card use case.'],
+  ['shell_place_items', '.app-shell', 'place-items', 'center', 'Centar čuva fokus na komponenti koju gradimo.'],
+  ['shell_min_height', '.app-shell', 'min-height', '100vh', 'Puna visina stabilizuje preview scenu.'],
+  ['shell_background', '.app-shell', 'background', 'linear-gradient(180deg, #e2e8f0, #cbd5e1)', 'Svetla pozadina daje kontrast tamnom callout card-u.'],
+  ['host_outline', 'callout-card', 'outline', '1px solid #f97316', 'Dodajemo helper outline za host element i držimo ga do završnog host rezimea.', 'Pre rendera, host je jedino što browser zaista vidi i zato mora da ostane jasan.'],
+  ['host_display', 'callout-card', 'display', 'block', 'Host pretvaramo u block da dobije pravi footprint.'],
+  ['host_width', 'callout-card', 'width', 'min(100%, 420px)', 'Širinu zaključavamo rano da card kasnije uleti u stabilan okvir.'],
+  ['card_outline', 'callout-card .card', 'outline', '1px dashed #38bdf8', 'Kada komponenta renderuje light DOM markup, glavni `.card` dobija helper outline do završnog card rezimea.', 'Glavni card outline ostaje dok ceo light DOM blok ne postane jasan.'],
+  ['card_display', 'callout-card .card', 'display', 'grid', 'Card raspored uvodimo grid-om jer imamo vertikalnu stack strukturu.'],
+  ['card_gap', 'callout-card .card', 'gap', '16px', 'Gap odvaja badge, naslov, opis i CTA.'],
+  ['card_padding', 'callout-card .card', 'padding', '24px', 'Padding pravi card footprint unutar host elementa.'],
+  ['card_radius', 'callout-card .card', 'border-radius', '28px', 'Zaobljenje daje card-u mekšu siluetu.'],
+  ['card_border', 'callout-card .card', 'border', '1px solid rgba(148,163,184,0.24)', 'Tanka border linija odvaja card od pozadine.'],
+  ['card_background', 'callout-card .card', 'background', 'linear-gradient(180deg, rgba(15,23,42,0.98), rgba(15,23,42,0.92))', 'Tamna pozadina zatvara glavni vizuelni blok.'],
+  ['card_shadow', 'callout-card .card', 'box-shadow', '0 26px 60px rgba(15,23,42,0.24)', 'Shadow daje card-u dubinu i separaciju.'],
+  ['eyebrow_outline', 'callout-card .eyebrow', 'outline', '1px dotted #facc15', 'Badge dobija helper outline i zadržava ga do eyebrow rezimea.', 'Mali elementi traže poseban outline da bi ostali čitljivi tokom objašnjenja.'],
+  ['eyebrow_display', 'callout-card .eyebrow', 'display', 'inline-flex', 'Badge ostaje kompaktan i prati svoj sadržaj.'],
+  ['eyebrow_padding', 'callout-card .eyebrow', 'padding', '8px 12px', 'Padding daje badge-u njegov pill footprint.'],
+  ['eyebrow_radius', 'callout-card .eyebrow', 'border-radius', '999px', 'Veliki radius zatvara badge u kapsulu.'],
+  ['eyebrow_background', 'callout-card .eyebrow', 'background', 'rgba(56,189,248,0.14)', 'Blaga pozadina daje badge-u površinu bez agresivnosti.'],
+  ['eyebrow_color', 'callout-card .eyebrow', 'color', '#38bdf8', 'Accent boja badge signalizira kategoriju.'],
+  ['eyebrow_font_size', 'callout-card .eyebrow', 'font-size', '12px', 'Badge ostaje mali i sekundaran.'],
+  ['eyebrow_font_weight', 'callout-card .eyebrow', 'font-weight', '700', 'Jača težina fonta čini labelu jasnom.'],
+  ['title_font_size', 'callout-card .title', 'font-size', '28px', 'Naslov dobija dominantnu veličinu unutar card-a.'],
+  ['title_font_weight', 'callout-card .title', 'font-weight', '800', 'Pojačavamo naslov da odmah nosi hijerarhiju.'],
+  ['summary_margin', 'callout-card .summary', 'margin', '0', 'Brišemo default paragraf margin da spacing bude pod kontrolom.'],
+  ['summary_color', 'callout-card .summary', 'color', '#cbd5e1', 'Opis dobija prigušenu, ali čitljivu boju.'],
+  ['summary_line_height', 'callout-card .summary', 'line-height', '1.65', 'Veći line-height otvara tekst za lakše čitanje.'],
+  ['cta_outline', 'callout-card .cta', 'outline', '1px dashed #34d399', 'CTA dobija helper outline i zadržava ga do završnog CTA rezimea.', 'CTA outline ostaje dok poslednja interaktivna zona ne bude potpuno objašnjena.'],
+  ['cta_padding', 'callout-card .cta', 'padding', '12px 16px', 'Padding daje dugmetu njegovu klik zonu.'],
+  ['cta_border', 'callout-card .cta', 'border', '0', 'Uklanjamo podrazumevanu border liniju dugmeta.'],
+  ['cta_radius', 'callout-card .cta', 'border-radius', '999px', 'Pil oblik čini CTA konzistentnim sa badge oblikom.'],
+  ['cta_background', 'callout-card .cta', 'background', 'linear-gradient(135deg, #38bdf8, #2563eb)', 'Gradijent daje CTA-u energiju i fokus.'],
+  ['cta_color', 'callout-card .cta', 'color', '#ffffff', 'Beli tekst pravi jasan kontrast preko dugmeta.'],
+  ['cta_font_weight', 'callout-card .cta', 'font-weight', '700', 'Jači font zatvara CTA kao jasan action element.']
+];
+
+export const lessonSteps = [
+  describeHtmlElementStep(
+    'empty_shell',
+    'Start: Empty App Shell',
+    'Počinjemo od praznog `.app-shell` prostora. Ova prva Web Components lekcija objašnjava custom element osnove bez shadow DOM-a.',
+    'html:app-shell',
+    'Prvo naučimo host element i render flow, pa tek onda prelazimo na shadow DOM lekciju.',
+    ['<div class="app-shell">']
+  ),
+  describeHtmlElementStep(
+    'component_html',
+    'HTML: callout-card Host',
+    'Dodajemo `<callout-card>` host sa `title` i `cta-label` atributima. Browser ga za sada vidi samo kao nepoznati custom tag koji čeka registraciju.',
+    'html:callout-card',
+    'Naziv custom elementa mora da sadrži crticu. To je prvi uslov da ga kasnije registruješ.',
+    ['<callout-card']
+  ),
+  ...cssSteps.map(config => describeCssPropertyStep(...config)),
+  describeJsFlowStep(
+    'class_declaration',
+    'JS: Class Extends HTMLElement',
+    'Otvaramo `class CalloutCard extends HTMLElement` i time zadajemo ponašanje budućem custom elementu.',
+    'Custom element je DOM element sa tvojom klasom, ne neka posebna magija van platforme.'
+  ),
+  describeJsFlowStep(
+    'connected_callback',
+    'JS: connectedCallback',
+    'Dodajemo `connectedCallback()`, jer je to najjednostavniji lifecycle hook za prvi render čim element uđe u DOM.',
+    'Za uvodnu lekciju connectedCallback je najpraktičnija ulazna tačka pre nego što uvedemo složeniji render tok.'
+  ),
+  describeJsFlowStep(
+    'read_title_attribute',
+    'JS: Čitamo title Atribut',
+    'U lifecycle metodi čitamo `title` atribut sa host elementa. Time host HTML postaje spoljašnji API komponente.',
+    'Atributi su najjednostavniji prvi API za custom element koji ne traži framework ni dodatni state.'
+  ),
+  describeJsFlowStep(
+    'read_cta_attribute',
+    'JS: Čitamo cta-label Atribut',
+    'Na isti način čitamo i `cta-label`, kako bi i tekst CTA dugmeta dolazio iz host HTML-a.',
+    'Ako dva podatka dolaze spolja, drži ih u istom, lako čitljivom toku.'
+  ),
+  describeJsFlowStep(
+    'render_inner_html',
+    'JS: Renderujemo Light DOM Markup',
+    'Kroz `this.innerHTML` ubacujemo card markup direktno u host element. To je najdirektniji put da vidiš kako custom element može da generiše sopstveni light DOM.',
+    'Ova lekcija namerno ostaje bez shadow DOM-a, da bi render mehanika i globalni CSS bili potpuno transparentni.'
+  ),
+  describeJsFlowStep(
+    'define_element',
+    'JS: Registrujemo callout-card',
+    'Pozivamo `customElements.define(\'callout-card\', CalloutCard)`. Od tog trenutka browser zna kako da upgrade-uje svaki `<callout-card>` u stvarnu komponentu.',
+    'Registracija je trenutak kada nepoznati tag postaje živi custom element.'
+  ),
+  describeSummaryStep(
+    'card_summary',
+    'Rezime: .card',
+    'Rezimiramo glavni `.card` blok i uklanjamo njegov helper outline tek sada, kada su host, render i glavni vizuelni sloj zajedno jasni.',
+    'Outline ostaje dok markup i stil ne počnu da pričaju istu priču.'
+  ),
+  describeSummaryStep(
+    'eyebrow_summary',
+    'Rezime: .eyebrow',
+    'Rezimiramo eyebrow badge i tek sada uklanjamo njegov helper outline, jer je cela tekstualna hijerarhija card-a završena.',
+    'Mali badge outline služi orijentaciji dok se ne slože i forma i boja i tipografija.'
+  ),
+  describeSummaryStep(
+    'cta_summary',
+    'Rezime: .cta',
+    'Rezime za CTA dugme: helper outline više nije potreban, jer završni stil i render već jasno pokazuju njegovu ulogu.',
+    'Outline služi učenju; kad je CTA jasan, može da nestane.'
+  ),
+  describeSummaryStep(
+    'host_summary',
+    'Rezime: callout-card host',
+    'Završni host rezime: uklanjamo host outline tek sada, kada su i atribut API i render flow potpuno jasni.',
+    'Host outline ostaje dok ne objasnimo i HTML API i JavaScript registraciju.'
+  ),
+  describeSummaryStep(
+    'shell_summary',
+    'Rezime: .app-shell',
+    'Tek sada uklanjamo helper outline sa `.app-shell`, jer je cela uvodna custom element lekcija kompletna.',
+    'App shell outline ostaje sve vreme kao teaching okvir i nestaje tek na kraju lekcije.',
+    ['<div class="app-shell">']
+  ),
+  describeFinishedStep(
+    'done',
+    'Done: Light DOM Custom Element',
+    'Prva Web Components lekcija je gotova. Sad razumeš host tag, registraciju, atribute i render kroz light DOM. Sledeći prirodan korak je shadow DOM lekcija.',
+    'Najbolji nastavak je lekcija 2/2, gde isti problem rešavamo kroz template, shadow DOM i slotove.'
+  )
+];
+
+export const stepNumberById = Object.fromEntries(
+  lessonSteps.map((step, index) => [step.id, index])
+);
+
+=== lessons/build-feature-callout-web-component/build-css-at-step.js ===
+import { stepNumberById } from './describe-steps.js';
+
+function readStepBoundary(stepReference) {
+  if (typeof stepReference === 'number') {
+    return stepReference;
+  }
+
+  if (!stepReference) {
+    return Number.POSITIVE_INFINITY;
+  }
+
+  return stepNumberById[stepReference] ?? Number.POSITIVE_INFINITY;
+}
+
+function appendVisibleCssRuleBlock(lines, header, entries, stepNumber, showFrom = Number.POSITIVE_INFINITY) {
+  const activeEntries = entries.filter(entry =>
+    stepNumber >= readStepBoundary(entry.from) &&
+    (entry.untilBefore === undefined || stepNumber < readStepBoundary(entry.untilBefore))
+  );
+
+  if (!activeEntries.length && stepNumber < readStepBoundary(showFrom)) {
+    return;
+  }
+
+  if (lines.length) {
+    lines.push('');
+  }
+
+  lines.push(header);
+
+  activeEntries.forEach(entry => {
+    lines.push(`  ${entry.line}`);
+  });
+
+  lines.push('}');
+}
+
+export function buildCssAtStep(stepNumber) {
+  const lines = [];
+
+  appendVisibleCssRuleBlock(lines, '.app-shell {', [
+    { from: 'shell_outline', untilBefore: 'shell_summary', line: 'outline: 1px dashed #94a3b8;' },
+    { from: 'shell_padding', line: 'padding: 40px;' },
+    { from: 'shell_display', line: 'display: grid;' },
+    { from: 'shell_place_items', line: 'place-items: center;' },
+    { from: 'shell_min_height', line: 'min-height: 100vh;' },
+    { from: 'shell_background', line: 'background: linear-gradient(180deg, #e2e8f0, #cbd5e1);' },
+    { from: 'shell_summary', line: '/* helper outline removed in final .app-shell summary */' }
+  ], stepNumber, 'empty_shell');
+
+  appendVisibleCssRuleBlock(lines, 'feature-callout {', [
+    { from: 'host_outline', untilBefore: 'host_summary', line: 'outline: 1px solid #f97316;' },
+    { from: 'host_display', line: 'display: block;' },
+    { from: 'host_width', line: 'width: min(100%, 420px);' },
+    { from: 'host_surface_token', line: '--callout-surface: #0f172a;' },
+    { from: 'host_border_token', line: '--callout-border: rgba(148,163,184,0.24);' },
+    { from: 'host_accent_token', line: '--callout-accent: #38bdf8;' },
+    { from: 'host_text_token', line: '--callout-text: #e2e8f0;' },
+    { from: 'host_summary', line: '/* helper outline removed in final feature-callout host summary */' }
+  ], stepNumber, 'component_html');
+
+  return lines;
+}
+
+=== lessons/build-feature-callout-web-component/build-feature-callout-web-component.lesson.js ===
+import { buildCssAtStep } from './build-css-at-step.js';
+import { buildHtmlAtStep } from './build-html-at-step.js';
+import { buildJsAtStep } from './build-js-at-step.js';
+import { lessonSteps } from './describe-steps.js';
+import lessonDocument from './content/documents/files/lesson.sr.md?raw';
+import knowledgeCheckDocument from './content/documents/files/quiz.sr.md?raw';
+import goalImage from './content/assets/feature-callout-goal.svg';
+import { readKnowledgeCheckQuestions } from '../../animator/lesson-documents/read-knowledge-check-questions.js';
+import { readLessonMetadata } from '../../animator/lesson-documents/read-lesson-metadata.js';
+
+const lessonMetadata = readLessonMetadata(lessonDocument, {
+  lessonTitle: 'Web Components 2/2 · Shadow DOM feature callout',
+  lessonIntro: 'Druga Web Components lekcija nadograđuje osnove: isti nivo komponente sada gradiš kroz template, shadow DOM, slotove i render lifecycle.',
+  previewAddress: 'browser://build-feature-callout-web-component-preview',
+  previewTitle: 'Live Web Component preview',
+  htmlFileName: 'index.html',
+  cssFileName: 'style.css',
+  jsFileName: 'feature-callout.js'
+});
+
+const knowledgeCheckQuestions = readKnowledgeCheckQuestions(knowledgeCheckDocument);
+
+export const buildFeatureCalloutWebComponentLesson = {
+  lessonId: 'build-feature-callout-web-component',
+  lessonTitle: lessonMetadata.lessonTitle,
+  lessonIntro: lessonMetadata.lessonIntro,
+  lessonIntroHtml: lessonMetadata.lessonIntroHtml,
+  previewAddress: lessonMetadata.previewAddress,
+  previewTitle: lessonMetadata.previewTitle,
+  htmlFileName: lessonMetadata.htmlFileName,
+  cssFileName: lessonMetadata.cssFileName,
+  jsFileName: lessonMetadata.jsFileName,
+  goalTitle: 'Šta gradimo u ovoj lekciji',
+  goalImageSrc: goalImage,
+  goalImageAlt: 'Referentna slika tamnog feature callout card Web Component-a na svetloj pozadini, sa badge oznakom, velikim naslovom, opisom i CTA dugmetom.',
+  goalImageCaption: 'Ovo je drugi Web Components korak: host HTML ostaje mali, a prava komponenta se sada sklapa iz template-a, shadow DOM-a i slotova.',
+  steps: lessonSteps,
+  buildHtmlAtStep,
+  buildCssAtStep,
+  buildJsAtStep,
+  knowledgeCheckQuestions
+};
+
+=== lessons/build-feature-callout-web-component/build-html-at-step.js ===
+import { stepNumberById } from './describe-steps.js';
+
+export function buildHtmlAtStep(stepNumber) {
+  const lines = ['<div class="app-shell">'];
+
+  if (stepNumber >= stepNumberById.component_html) {
+    lines.push(
+      '  <feature-callout',
+      '    title="Web Components u praksi"',
+      '    cta-label="Otvori lekciju"',
+      '  >'
+    );
+
+    if (stepNumber >= stepNumberById.eyebrow_slot_html) {
+      lines.push('    <span slot="eyebrow">Vanilla JS</span>');
+    }
+
+    if (stepNumber >= stepNumberById.summary_text_html) {
+      lines.push('    Gradiš custom element, shadow DOM i slot projekciju bez framework-a.');
+    }
+
+    lines.push('  </feature-callout>');
+  }
+
+  lines.push('</div>');
+  return lines;
+}
+
+=== lessons/build-feature-callout-web-component/build-js-at-step.js ===
+import { stepNumberById } from './describe-steps.js';
+
+function readStepBoundary(stepReference) {
+  if (typeof stepReference === 'number') {
+    return stepReference;
+  }
+
+  if (!stepReference) {
+    return Number.POSITIVE_INFINITY;
+  }
+
+  return stepNumberById[stepReference] ?? Number.POSITIVE_INFINITY;
+}
+
+function hasStep(stepNumber, stepReference) {
+  return stepNumber >= readStepBoundary(stepReference);
+}
+
+function appendTemplateCssRuleBlock(lines, selector, entries, stepNumber, showFrom = Number.POSITIVE_INFINITY) {
+  const activeEntries = entries.filter(entry =>
+    stepNumber >= readStepBoundary(entry.from) &&
+    (entry.untilBefore === undefined || stepNumber < readStepBoundary(entry.untilBefore))
+  );
+
+  if (!activeEntries.length && stepNumber < readStepBoundary(showFrom)) {
+    return;
+  }
+
+  if (lines.at(-1) !== '  <style>') {
+    lines.push('');
+  }
+
+  lines.push(`    ${selector} {`);
+
+  activeEntries.forEach(entry => {
+    lines.push(`      ${entry.line}`);
+  });
+
+  lines.push('    }');
+}
+
+export function buildJsAtStep(stepNumber) {
+  const lines = [];
+
+  if (hasStep(stepNumber, 'template_declaration')) {
+    lines.push("const featureCalloutTemplate = document.createElement('template');");
+  }
+
+  if (hasStep(stepNumber, 'template_markup_open')) {
+    lines.push('', 'featureCalloutTemplate.innerHTML = `');
+
+    appendTemplateCssRuleBlock(lines, ':host', [
+      { from: 'host_font', line: "font-family: Inter, ui-sans-serif, system-ui, sans-serif;" },
+      { from: 'host_color', line: 'color: var(--callout-text, #e2e8f0);' }
+    ], stepNumber, 'template_markup_open');
+
+    appendTemplateCssRuleBlock(lines, '.card', [
+      { from: 'card_outline', untilBefore: 'card_summary', line: 'outline: 1px dashed #38bdf8;' },
+      { from: 'card_display', line: 'display: grid;' },
+      { from: 'card_gap', line: 'gap: 16px;' },
+      { from: 'card_padding', line: 'padding: 24px;' },
+      { from: 'card_radius', line: 'border-radius: 28px;' },
+      { from: 'card_border', line: 'border: 1px solid var(--callout-border, rgba(148,163,184,0.24));' },
+      { from: 'card_background', line: 'background: linear-gradient(180deg, rgba(15,23,42,0.98), rgba(15,23,42,0.92));' },
+      { from: 'card_shadow', line: 'box-shadow: 0 26px 60px rgba(15,23,42,0.24);' },
+      { from: 'card_summary', line: '/* helper outline removed in final .card summary */' }
+    ], stepNumber);
+
+    appendTemplateCssRuleBlock(lines, '.eyebrow', [
+      { from: 'eyebrow_outline', untilBefore: 'eyebrow_summary', line: 'outline: 1px dotted #facc15;' },
+      { from: 'eyebrow_display', line: 'display: inline-flex;' },
+      { from: 'eyebrow_padding', line: 'padding: 8px 12px;' },
+      { from: 'eyebrow_radius', line: 'border-radius: 999px;' },
+      { from: 'eyebrow_background', line: 'background: rgba(56,189,248,0.14);' },
+      { from: 'eyebrow_color', line: 'color: var(--callout-accent, #38bdf8);' },
+      { from: 'eyebrow_font_size', line: 'font-size: 12px;' },
+      { from: 'eyebrow_font_weight', line: 'font-weight: 700;' },
+      { from: 'eyebrow_summary', line: '/* helper outline removed in final .eyebrow summary */' }
+    ], stepNumber);
+
+    appendTemplateCssRuleBlock(lines, '.title', [
+      { from: 'title_display', line: 'display: block;' },
+      { from: 'title_font_size', line: 'font-size: 28px;' },
+      { from: 'title_font_weight', line: 'font-weight: 800;' }
+    ], stepNumber);
+
+    appendTemplateCssRuleBlock(lines, '.summary', [
+      { from: 'summary_margin', line: 'margin: 0;' },
+      { from: 'summary_color', line: 'color: #cbd5e1;' },
+      { from: 'summary_line_height', line: 'line-height: 1.65;' }
+    ], stepNumber);
+
+    appendTemplateCssRuleBlock(lines, '.cta', [
+      { from: 'cta_outline', untilBefore: 'cta_summary', line: 'outline: 1px dashed #34d399;' },
+      { from: 'cta_justify_self', line: 'justify-self: start;' },
+      { from: 'cta_padding', line: 'padding: 12px 16px;' },
+      { from: 'cta_border', line: 'border: 0;' },
+      { from: 'cta_radius', line: 'border-radius: 999px;' },
+      { from: 'cta_background', line: 'background: linear-gradient(135deg, var(--callout-accent, #38bdf8), #2563eb);' },
+      { from: 'cta_color', line: 'color: #ffffff;' },
+      { from: 'cta_font_weight', line: 'font-weight: 700;' },
+      { from: 'cta_summary', line: '/* helper outline removed in final .cta summary */' }
+    ], stepNumber);
+
+    lines.push('  </style>');
+
+    if (hasStep(stepNumber, 'card_markup')) {
+      lines.push(
+        '',
+        '  <article class="card">',
+        '    <span class="eyebrow">',
+        '      <slot name="eyebrow">Vanilla JS</slot>',
+        '    </span>',
+        '',
+        '    <strong class="title"></strong>',
+        '',
+        '    <p class="summary">',
+        '      <slot>Dodaj opis komponente kroz default slot.</slot>',
+        '    </p>',
+        '',
+        '    <button class="cta" type="button"></button>',
+        '  </article>'
+      );
+    }
+
+    lines.push('`;');
+  }
+
+  if (hasStep(stepNumber, 'class_declaration')) {
+    lines.push('', 'class FeatureCallout extends HTMLElement {');
+
+    if (hasStep(stepNumber, 'observed_attributes')) {
+      lines.push("  static observedAttributes = ['title', 'cta-label'];", '');
+    }
+
+    if (hasStep(stepNumber, 'constructor_shadow')) {
+      lines.push('  constructor() {', '    super();', "    this.attachShadow({ mode: 'open' });");
+
+      if (hasStep(stepNumber, 'constructor_clone')) {
+        lines.push('    this.shadowRoot.appendChild(featureCalloutTemplate.content.cloneNode(true));');
+      }
+
+      if (hasStep(stepNumber, 'constructor_cache_title')) {
+        lines.push("    this.titleElement = this.shadowRoot.querySelector('.title');");
+      }
+
+      if (hasStep(stepNumber, 'constructor_cache_cta')) {
+        lines.push("    this.ctaElement = this.shadowRoot.querySelector('.cta');");
+      }
+
+      lines.push('  }', '');
+    }
+
+    if (hasStep(stepNumber, 'render_declaration')) {
+      lines.push('  render() {');
+
+      if (hasStep(stepNumber, 'render_title')) {
+        lines.push("    this.titleElement.textContent = this.getAttribute('title') || 'Naslov komponente';");
+      }
+
+      if (hasStep(stepNumber, 'render_cta')) {
+        lines.push("    this.ctaElement.textContent = this.getAttribute('cta-label') || 'Saznaj više';");
+      }
+
+      lines.push('  }', '');
+    }
+
+    if (hasStep(stepNumber, 'connected_callback')) {
+      lines.push('  connectedCallback() {', '    this.render();', '  }', '');
+    }
+
+    if (hasStep(stepNumber, 'attribute_changed_callback')) {
+      lines.push('  attributeChangedCallback() {', '    this.render();', '  }', '');
+    }
+
+    if (lines.at(-1) === '') {
+      lines.pop();
+    }
+
+    lines.push('}');
+  }
+
+  if (hasStep(stepNumber, 'define_element')) {
+    lines.push('', "customElements.define('feature-callout', FeatureCallout);");
+  }
+
+  return lines;
+}
+
+=== lessons/build-feature-callout-web-component/content/assets/feature-callout-goal.svg ===
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 760" role="img" aria-labelledby="title desc">
+  <title id="title">Feature callout Web Component goal</title>
+  <desc id="desc">Svetla pozadina sa tamnim card komponentom u sredini. Card ima badge Vanilla JS, veliki naslov, opis i plavo CTA dugme.</desc>
+  <defs>
+    <linearGradient id="bg" x1="0" x2="0" y1="0" y2="1">
+      <stop offset="0%" stop-color="#e2e8f0"/>
+      <stop offset="100%" stop-color="#cbd5e1"/>
+    </linearGradient>
+    <linearGradient id="cta" x1="0" x2="1" y1="0" y2="1">
+      <stop offset="0%" stop-color="#38bdf8"/>
+      <stop offset="100%" stop-color="#2563eb"/>
+    </linearGradient>
+    <filter id="shadow" x="-20%" y="-20%" width="140%" height="160%">
+      <feDropShadow dx="0" dy="26" stdDeviation="28" flood-color="#0f172a" flood-opacity="0.18"/>
+    </filter>
+  </defs>
+  <rect width="1200" height="760" fill="url(#bg)"/>
+  <g transform="translate(360 168)" filter="url(#shadow)">
+    <rect width="480" height="420" rx="34" fill="#0f172a"/>
+    <rect x="32" y="34" width="118" height="38" rx="19" fill="rgba(56,189,248,0.16)"/>
+    <text x="91" y="58" fill="#38bdf8" font-family="Inter, Arial, sans-serif" font-size="14" font-weight="700" text-anchor="middle" letter-spacing="1.2">VANILLA JS</text>
+    <text x="32" y="138" fill="#f8fafc" font-family="Inter, Arial, sans-serif" font-size="42" font-weight="800">Web Components</text>
+    <text x="32" y="186" fill="#f8fafc" font-family="Inter, Arial, sans-serif" font-size="42" font-weight="800">u praksi</text>
+    <text x="32" y="246" fill="#cbd5e1" font-family="Inter, Arial, sans-serif" font-size="22">Gradiš custom element, shadow DOM</text>
+    <text x="32" y="280" fill="#cbd5e1" font-family="Inter, Arial, sans-serif" font-size="22">i slot projekciju bez framework-a.</text>
+    <rect x="32" y="336" width="156" height="52" rx="26" fill="url(#cta)"/>
+    <text x="110" y="368" fill="#ffffff" font-family="Inter, Arial, sans-serif" font-size="18" font-weight="700" text-anchor="middle">Otvori lekciju</text>
+  </g>
+</svg>
+
+=== lessons/build-feature-callout-web-component/content/documents/build_feature_callout_web_component.md ===
+<!-- Generated from the same markdown sources used by the web lesson. -->
+
+# build-feature-callout-web-component
+
+Druga Web Components lekcija nadograđuje osnove iz prve: isti nivo komponente sada gradiš kroz template, shadow DOM, slotove i render lifecycle. Lekcija namerno ide detaljno, da jasno vidiš kada host HTML postaje pravi custom element, kako template ulazi u shadow root i kako spoljašnji CSS tokeni utiču na unutrašnji izgled komponente.
+
+## Quiz
+
+## Question 1
+? Koje pravilo mora da poštuje naziv autonomous custom elementa?
+- [ ] Mora da počinje velikim slovom
+- [x] Mora da sadrži crticu
+- [ ] Mora da se završava sa `-component`
+- [ ] Mora da bude jedno slovo
+! Custom element ime mora da sadrži crticu, npr. `feature-callout`, da bi browser znao da nije standardan HTML tag.
+
+## Question 2
+? Šta nam daje `document.createElement('template')` u ovoj lekciji?
+- [ ] Automatski CSS reset
+- [x] Inertan markup i stil koji možemo da kloniramo u svakoj instanci
+- [ ] Novi window objekat
+- [ ] Zamenu za `customElements.define`
+! `template` čuva inertan sadržaj koji kasnije kloniramo u shadow DOM svake instance komponente.
+
+## Question 3
+? Zašto host elementu spolja postavljamo CSS custom properties kao `--callout-accent`?
+- [ ] Da bismo izbegli JavaScript potpuno
+- [x] Da bismo theme-ovali unutrašnji shadow DOM preko `var(...)`
+- [ ] Da bismo izbrisali slot sadržaj
+- [ ] Da bismo registrovali novi custom element
+! CSS custom properties prelaze kroz shadow DOM granicu i zato su dobar kanal za spoljašnje theme-ovanje komponente.
+
+## Question 4
+? Čemu služi `connectedCallback()` u ovoj lekciji?
+- [ ] Da zabrani render
+- [x] Da pokrene prvi render kada je element povezan sa DOM-om
+- [ ] Da kreira template umesto konstruktora
+- [ ] Da doda novu HTML stranicu
+! `connectedCallback()` je lifecycle tačka u kojoj pokrećemo prvi render, jer je element tada zaista u dokumentu.
+
+## Question 5
+? Kada `attributeChangedCallback()` ima smisla?
+- [ ] Samo kada komponenta nema shadow DOM
+- [ ] Samo kada ne koristimo slotove
+- [x] Kada želimo da komponenta reaguje na promene posmatranih atributa i posle prvog mount-a
+- [ ] Kada CSS više nije potreban
+! Ako komponenta treba da ostane živa i posle inicijalnog rendera, `attributeChangedCallback()` je prirodno mesto da reaguje na promene atributa.
+
+=== lessons/build-feature-callout-web-component/content/documents/files/lesson.sr.md ===
+---
+title: Web Components 2/2 · Shadow DOM feature callout
+previewAddress: browser://build-feature-callout-web-component-preview
+previewTitle: Live Web Component preview
+htmlFileName: index.html
+cssFileName: style.css
+jsFileName: feature-callout.js
+---
+
+Druga Web Components lekcija nadograđuje osnove iz prve: isti nivo komponente sada gradiš kroz template, shadow DOM, slotove i render lifecycle. Lekcija namerno ide detaljno, da jasno vidiš kada host HTML postaje pravi custom element, kako template ulazi u shadow root i kako spoljašnji CSS tokeni utiču na unutrašnji izgled komponente.
+
+=== lessons/build-feature-callout-web-component/content/documents/files/quiz.sr.md ===
+## Question 1
+? Koje pravilo mora da poštuje naziv autonomous custom elementa?
+- [ ] Mora da počinje velikim slovom
+- [x] Mora da sadrži crticu
+- [ ] Mora da se završava sa `-component`
+- [ ] Mora da bude jedno slovo
+! Custom element ime mora da sadrži crticu, npr. `feature-callout`, da bi browser znao da nije standardan HTML tag.
+
+## Question 2
+? Šta nam daje `document.createElement('template')` u ovoj lekciji?
+- [ ] Automatski CSS reset
+- [x] Inertan markup i stil koji možemo da kloniramo u svakoj instanci
+- [ ] Novi window objekat
+- [ ] Zamenu za `customElements.define`
+! `template` čuva inertan sadržaj koji kasnije kloniramo u shadow DOM svake instance komponente.
+
+## Question 3
+? Zašto host elementu spolja postavljamo CSS custom properties kao `--callout-accent`?
+- [ ] Da bismo izbegli JavaScript potpuno
+- [x] Da bismo theme-ovali unutrašnji shadow DOM preko `var(...)`
+- [ ] Da bismo izbrisali slot sadržaj
+- [ ] Da bismo registrovali novi custom element
+! CSS custom properties prelaze kroz shadow DOM granicu i zato su dobar kanal za spoljašnje theme-ovanje komponente.
+
+## Question 4
+? Čemu služi `connectedCallback()` u ovoj lekciji?
+- [ ] Da zabrani render
+- [x] Da pokrene prvi render kada je element povezan sa DOM-om
+- [ ] Da kreira template umesto konstruktora
+- [ ] Da doda novu HTML stranicu
+! `connectedCallback()` je lifecycle tačka u kojoj pokrećemo prvi render, jer je element tada zaista u dokumentu.
+
+## Question 5
+? Kada `attributeChangedCallback()` ima smisla?
+- [ ] Samo kada komponenta nema shadow DOM
+- [ ] Samo kada ne koristimo slotove
+- [x] Kada želimo da komponenta reaguje na promene posmatranih atributa i posle prvog mount-a
+- [ ] Kada CSS više nije potreban
+! Ako komponenta treba da ostane živa i posle inicijalnog rendera, `attributeChangedCallback()` je prirodno mesto da reaguje na promene atributa.
+
+=== lessons/build-feature-callout-web-component/describe-steps.js ===
+const focusHtmlNeedlesBySelector = {
+  '.app-shell': ['<div class="app-shell">'],
+  'feature-callout': ['<feature-callout', 'slot="eyebrow"'],
+  ':host': ['<feature-callout', 'slot="eyebrow"'],
+  '.card': ['<feature-callout', 'slot="eyebrow"'],
+  '.eyebrow': ['slot="eyebrow"', '<feature-callout'],
+  '.title': ['<feature-callout'],
+  '.summary': ['<feature-callout'],
+  '.cta': ['<feature-callout']
+};
+
+function readFocusHtmlNeedles(selector) {
+  return focusHtmlNeedlesBySelector[selector] || [];
+}
+
+function describeHtmlElementStep(id, title, desc, tag, proTip, focusHtmlNeedles = []) {
+  return { id, title, desc, tag, proTip, focusHtmlNeedles };
+}
+
+function describeCssPropertyStep(id, selector, property, value, desc = '', proTip = '') {
+  const cssLine = `${property}: ${value};`;
+
+  return {
+    id,
+    title: `CSS: ${selector} / ${property}`,
+    desc: desc || `Dodajemo \`${cssLine}\` u \`${selector}\` i širimo stylesheet jedan property po korak.`,
+    tag: `css:${id.replace(/_/g, '-')}`,
+    proTip: proTip || 'Spoljašnji CSS ovde ne stilizuje samo shell, već i theme tokene koje će Web Component povući iz host elementa.',
+    focusHtmlNeedles: readFocusHtmlNeedles(selector)
+  };
+}
+
+function describeJsTemplateStyleStep(id, selector, property, value, desc = '', proTip = '') {
+  const cssLine = `${property}: ${value};`;
+
+  return {
+    id,
+    title: `JS: template / ${selector} / ${property}`,
+    desc: desc || `U template string dodajemo \`${cssLine}\` za \`${selector}\`, pa se i shadow DOM stil širi liniju po liniju.`,
+    tag: `js-style:${id.replace(/_/g, '-')}`,
+    proTip: proTip || 'Kod Web Components lekcije i stilovi unutar shadow DOM-a moraju da rastu postepeno, ne kao gotov paket.',
+    focusHtmlNeedles: readFocusHtmlNeedles(selector)
+  };
+}
+
+function describeJsFlowStep(id, title, desc, proTip, focusHtmlNeedles = readFocusHtmlNeedles('feature-callout')) {
+  return {
+    id,
+    title,
+    desc,
+    tag: `js:${id.replace(/_/g, '-')}`,
+    proTip,
+    focusHtmlNeedles
+  };
+}
+
+function describeSummaryStep(id, title, desc, proTip, focusHtmlNeedles = readFocusHtmlNeedles('feature-callout')) {
+  return {
+    id,
+    title,
+    desc,
+    tag: `summary:${id.replace(/_/g, '-')}`,
+    proTip,
+    focusHtmlNeedles
+  };
+}
+
+function describeFinishedStep(id, title, desc, proTip) {
+  return { id, title, desc, tag: 'success', proTip };
+}
+
+const shellCssSteps = [
+  ['shell_outline', '.app-shell', 'outline', '1px dashed #94a3b8', 'Dodajemo tanak helper outline za `.app-shell` i zadržavamo ga kroz celu lekciju, sve do završnog shell rezimea.', 'App shell ostaje stalni okvir cele demonstracije dok ne završimo ceo tutorijal.'],
+  ['shell_padding', '.app-shell', 'padding', '40px', 'Dodajemo padding da komponenta dobije vazduh čim se pojavi u preview-u.'],
+  ['shell_display', '.app-shell', 'display', 'grid', 'Grid je jednostavan način da centralno postavimo jedan teaching target.'],
+  ['shell_place_items', '.app-shell', 'place-items', 'center', 'Centar zadržava fokus korisnika na jednoj komponenti.'],
+  ['shell_min_height', '.app-shell', 'min-height', '100vh', 'Puna visina drži scenu stabilnom kroz celu lekciju.'],
+  ['shell_background', '.app-shell', 'background', 'linear-gradient(180deg, #e2e8f0, #cbd5e1)', 'Svetla pozadina daje kontrast tamnoj komponenti koju gradimo.'],
+  ['host_outline', 'feature-callout', 'outline', '1px solid #f97316', 'Dodajemo tanak helper outline za host element i držimo ga do završnog host rezimea.', 'Pre registracije custom elementa host je glavni teaching target i zato ostaje jasno obeležen.'],
+  ['host_display', 'feature-callout', 'display', 'block', 'Host pretvaramo u block da zauzme svoj red i dobije realan footprint.'],
+  ['host_width', 'feature-callout', 'width', 'min(100%, 420px)', 'Širinu zaključavamo rano da card skeleton ne šeta po sceni.'],
+  ['host_surface_token', 'feature-callout', '--callout-surface', '#0f172a', 'Spolja uvodimo surface token koji shadow DOM kasnije povlači kroz `var(...)`.'],
+  ['host_border_token', 'feature-callout', '--callout-border', 'rgba(148,163,184,0.24)', 'Border token služi da spolja theme-ujemo ivicu komponente.'],
+  ['host_accent_token', 'feature-callout', '--callout-accent', '#38bdf8', 'Accent token će obojiti badge i CTA unutar shadow DOM-a.'],
+  ['host_text_token', 'feature-callout', '--callout-text', '#e2e8f0', 'Text token daje konzistentnu boju celom Web Component sadržaju.']
+];
+
+const templateStyleSteps = [
+  ['host_font', ':host', 'font-family', 'Inter, ui-sans-serif, system-ui, sans-serif', 'Počinje unutrašnji template CSS: host dobija isti font kao ostatak scene.'],
+  ['host_color', ':host', 'color', 'var(--callout-text, #e2e8f0)', 'Host odmah koristi spoljašnji text token, pa vidiš kako custom property prolazi kroz granicu shadow DOM-a.'],
+  ['card_outline', '.card', 'outline', '1px dashed #38bdf8', 'Dodajemo helper outline za glavni card blok i držimo ga do završnog card rezimea.', 'Glavni card outline ostaje dok ne završimo celu unutrašnju celinu.'],
+  ['card_display', '.card', 'display', 'grid', 'Card raspored uvodimo grid-om jer imamo vertikalnu stack strukturu.'],
+  ['card_gap', '.card', 'gap', '16px', 'Gap odvaja badge, naslov, opis i CTA.'],
+  ['card_padding', '.card', 'padding', '24px', 'Padding pravi pravi card footprint unutar shadow DOM-a.'],
+  ['card_radius', '.card', 'border-radius', '28px', 'Zaobljenje daje modernu card siluetu.'],
+  ['card_border', '.card', 'border', '1px solid var(--callout-border, rgba(148,163,184,0.24))', 'Ivica koristi host token, pa spoljašnji CSS zaista utiče na unutrašnji card.'],
+  ['card_background', '.card', 'background', 'linear-gradient(180deg, rgba(15,23,42,0.98), rgba(15,23,42,0.92))', 'Tamna pozadina zatvara card kao jasnu, samostalnu celinu.'],
+  ['card_shadow', '.card', 'box-shadow', '0 26px 60px rgba(15,23,42,0.24)', 'Shadow daje card-u odvajanje od pozadine i završava osnovni volume.'],
+  ['eyebrow_outline', '.eyebrow', 'outline', '1px dotted #facc15', 'Dodajemo helper outline za eyebrow badge i držimo ga do završnog eyebrow rezimea.', 'Badge je mali element i zato mu outline posebno pomaže tokom objašnjenja.'],
+  ['eyebrow_display', '.eyebrow', 'display', 'inline-flex', 'Badge ostaje kompakatan i prirodno prati svoj sadržaj.'],
+  ['eyebrow_padding', '.eyebrow', 'padding', '8px 12px', 'Padding daje badge-u jasan pill footprint.'],
+  ['eyebrow_radius', '.eyebrow', 'border-radius', '999px', 'Veliki radius zatvara badge u kapsulu.'],
+  ['eyebrow_background', '.eyebrow', 'background', 'rgba(56,189,248,0.14)', 'Poluprovidna pozadina pravi nežan badge signal.'],
+  ['eyebrow_color', '.eyebrow', 'color', 'var(--callout-accent, #38bdf8)', 'Boju badge-a takođe vežemo za host accent token.'],
+  ['eyebrow_font_size', '.eyebrow', 'font-size', '12px', 'Manji font čini badge sekundarnim, ali čitljivim.'],
+  ['eyebrow_font_weight', '.eyebrow', 'font-weight', '700', 'Težina fonta čini badge labelu kompaktnom i jasnom.'],
+  ['title_display', '.title', 'display', 'block', 'Naslovu dajemo sopstveni red da ne deli liniju sa drugim delovima.'],
+  ['title_font_size', '.title', 'font-size', '28px', 'Naslov dobija dominantnu veličinu card komponente.'],
+  ['title_font_weight', '.title', 'font-weight', '800', 'Pojačavamo naslov da odmah nosi hijerarhiju.'],
+  ['summary_margin', '.summary', 'margin', '0', 'Brišemo podrazumevani paragraf margin da spacing kontrolišemo iz card gap-a.'],
+  ['summary_color', '.summary', 'color', '#cbd5e1', 'Opis dobija prigušenu, ali čitljivu boju.'],
+  ['summary_line_height', '.summary', 'line-height', '1.65', 'Line-height otvara tekst i čini ga lakšim za čitanje.'],
+  ['cta_outline', '.cta', 'outline', '1px dashed #34d399', 'Dodajemo helper outline za CTA i držimo ga do završnog CTA rezimea.', 'CTA outline ostaje dok ne zaključimo poslednju interaktivnu zonu.'],
+  ['cta_justify_self', '.cta', 'justify-self', 'start', 'CTA ostaje uz levu ivicu card sadržaja umesto da se rasteže.'],
+  ['cta_padding', '.cta', 'padding', '12px 16px', 'Padding daje dugmetu njegovu klik zonu.'],
+  ['cta_border', '.cta', 'border', '0', 'Uklanjamo podrazumevanu border liniju dugmeta.'],
+  ['cta_radius', '.cta', 'border-radius', '999px', 'Pil radius drži CTA vizuelno bliskim badge logici.'],
+  ['cta_background', '.cta', 'background', 'linear-gradient(135deg, var(--callout-accent, #38bdf8), #2563eb)', 'CTA koristi accent token u gradijentu i zato živi iz istog theme vocabulary-ja.'],
+  ['cta_color', '.cta', 'color', '#ffffff', 'Beli tekst drži jasan kontrast preko gradijenta.'],
+  ['cta_font_weight', '.cta', 'font-weight', '700', 'Težina fonta zatvara CTA kao jasan action element.']
+];
+
+export const lessonSteps = [
+  describeHtmlElementStep(
+    'empty_shell',
+    'Start: Empty App Shell',
+    'Počinjemo od praznog `.app-shell` prostora. Goal slika iznad pokazuje finalni Web Component koji tek treba da oživi kroz HTML, CSS i vanilla JavaScript.',
+    'html:app-shell',
+    'Neutralan početak odvaja postojeći page shell od komponente koju tek gradimo.',
+    ['<div class="app-shell">']
+  ),
+  describeHtmlElementStep(
+    'component_html',
+    'HTML: Feature Callout Host',
+    'Dodajemo `<feature-callout>` host sa `title` i `cta-label` atributima. Još nije registrovan, ali browser već vidi custom tag i njegov sirovi sadržaj.',
+    'html:feature-callout',
+    'Naziv custom elementa mora da sadrži crticu. To je osnovno pravilo registracije custom elementa.',
+    ['<feature-callout']
+  ),
+  describeHtmlElementStep(
+    'eyebrow_slot_html',
+    'HTML: Named Slot Content',
+    'U host ubacujemo `<span slot="eyebrow">Vanilla JS</span>`. To je light DOM sadržaj koji će kasnije upasti u named slot unutar shadow DOM-a.',
+    'html:slot-eyebrow',
+    'Named slot je najjednostavniji način da spolja projiciraš mali, ciljani deo sadržaja u komponentu.',
+    ['slot="eyebrow"', '<feature-callout']
+  ),
+  describeHtmlElementStep(
+    'summary_text_html',
+    'HTML: Default Slot Text',
+    'Dodajemo opisni tekst kao default slot sadržaj. Pre registracije komponente vidiš ga kao običan sadržaj custom taga; posle registracije odlazi u `<slot>` unutar template-a.',
+    'html:default-slot',
+    'Ovo je važan momenat: light DOM i shadow DOM nisu ista stvar, ali mogu da sarađuju kroz slot projekciju.',
+    ['<feature-callout', 'slot="eyebrow"']
+  ),
+  ...shellCssSteps.map(config => describeCssPropertyStep(...config)),
+  describeJsFlowStep(
+    'template_declaration',
+    'JS: Kreiramo Template',
+    'Počinjemo sa `document.createElement(\'template\')`. Template nam daje inertan komad DOM-a koji možemo bezbedno da kloniramo u svakoj instanci komponente.',
+    'Template je prirodan temelj kada želiš da isti shadow DOM markup i stilovi budu dostupni za svaku novu instancu komponente.'
+  ),
+  describeJsFlowStep(
+    'template_markup_open',
+    'JS: Otvaramo Template String',
+    'Dodajemo `template.innerHTML = \\`` i od tog trenutka gradimo ceo shadow DOM sadržaj iz jednog kontrolisanog izvora.',
+    'Engine i ovde mora da ostane pošten: template string raste postepeno, ne uleće gotov.'
+  ),
+  ...templateStyleSteps.map(config => describeJsTemplateStyleStep(...config)),
+  describeJsFlowStep(
+    'card_markup',
+    'JS: Dodajemo Shadow DOM Markup',
+    'Sada ubacujemo unutrašnji markup: card wrapper, named slot za eyebrow, naslov, paragraf sa default slotom i CTA dugme.',
+    'Tek kada template ima i stil i markup, ima smisla da ga kloniramo u shadow root.'
+  ),
+  describeJsFlowStep(
+    'class_declaration',
+    'JS: Class Extends HTMLElement',
+    'Otvaramo `class FeatureCallout extends HTMLElement`. Time browseru kažemo da naš custom element ima sopstveno ponašanje.',
+    'Custom element je i dalje običan DOM element, samo sa tvojom klasom i tvojim lifecycle ponašanjem.'
+  ),
+  describeJsFlowStep(
+    'constructor_shadow',
+    'JS: constructor + attachShadow',
+    'U konstruktoru pozivamo `super()` i odmah otvaramo `this.attachShadow({ mode: \'open\' })` da komponenta dobije sopstveni shadow root.',
+    'Shadow root je granica komponente: unutrašnji markup i stilovi žive iza nje.'
+  ),
+  describeJsFlowStep(
+    'constructor_clone',
+    'JS: Kloniramo Template',
+    'Dodajemo `appendChild(template.content.cloneNode(true))`, pa svaka instanca komponente dobija isti početni shadow DOM skeleton.',
+    'Kloniranje template-a je najčistiji način da jednu definiciju koristiš u više instanci.'
+  ),
+  describeJsFlowStep(
+    'constructor_cache_title',
+    'JS: Keširamo Title Element',
+    'U konstruktoru čuvamo referencu na `.title` element, da ga kasnije ne tražimo iznova pri svakom renderu.',
+    'Mali cache DOM referenci drži render jasan i predvidiv.'
+  ),
+  describeJsFlowStep(
+    'constructor_cache_cta',
+    'JS: Keširamo CTA Element',
+    'Na isti način čuvamo referencu na `.cta`, jer će tekst dugmeta stizati iz atributa host elementa.',
+    'Render treba da govori šta menja, ne da svaki put iznova objašnjava kako traži iste čvorove.'
+  ),
+  describeJsFlowStep(
+    'define_element',
+    'JS: Registrujemo Custom Element',
+    'Pozivamo `customElements.define(\'feature-callout\', FeatureCallout)`. Od ovog trenutka browser zna kako da upgrade-uje `<feature-callout>` u pravu komponentu.',
+    'Registracija je trenutak kada custom tag prestaje da bude samo nepoznati HTML i postaje aktivna komponenta.'
+  ),
+  describeJsFlowStep(
+    'render_declaration',
+    'JS: Uvodimo render()',
+    'Dodajemo `render()` metodu kao jedno mesto gde atributi host elementa prelaze u konkretan UI tekst unutar shadow DOM-a.',
+    'Jedan render ulaz čini komponentu lakšom za kasnije promene i objašnjenja.'
+  ),
+  describeJsFlowStep(
+    'render_title',
+    'JS: render() Popunjava Title',
+    'U `render()` čitamo `title` atribut i upisujemo ga u `.title` element. Time host atribut postaje stvaran UI sadržaj u komponenti.',
+    'Atributi su spoljašnji API komponente; render je mesto gde taj API dobija vizuelni rezultat.'
+  ),
+  describeJsFlowStep(
+    'render_cta',
+    'JS: render() Popunjava CTA',
+    'Na isti način `cta-label` atribut pretvaramo u tekst CTA dugmeta.',
+    'Kad dve stvari rade istu vrstu posla, drži ih u istom render toku.'
+  ),
+  describeJsFlowStep(
+    'connected_callback',
+    'JS: connectedCallback Pokreće Prvi Render',
+    'Dodajemo `connectedCallback()` i u njemu pozivamo `this.render()`, pa komponenta dobija sadržaj čim uđe u DOM.',
+    'Prvi render je prirodno vezati za trenutak kada je element stvarno povezan sa dokumentom.'
+  ),
+  describeJsFlowStep(
+    'observed_attributes',
+    'JS: observedAttributes',
+    'Dodajemo `static observedAttributes = [\'title\', \'cta-label\']`, pa browser zna koje promene atributa treba da javi komponenti.',
+    'Ako komponenta treba da reaguje na promenu atributa, prvo mora eksplicitno da kaže koje atribute prati.'
+  ),
+  describeJsFlowStep(
+    'attribute_changed_callback',
+    'JS: attributeChangedCallback',
+    'Dodajemo `attributeChangedCallback()` i ponovo pozivamo `this.render()`. Tako komponenta ostaje sinhronizovana i kada se atributi promene posle prvog mount-a.',
+    'Ovo je važna razlika između statičnog HTML snimka i stvarne, žive komponente.'
+  ),
+  describeSummaryStep(
+    'card_summary',
+    'Rezime: .card unutar template-a',
+    'Rezimiramo glavni card blok i tek sada uklanjamo njegov helper outline, jer je unutrašnja struktura komponente već potpuno jasna.',
+    'Helper outline za glavni card ostaje dok i markup i stil i ponašanje ne budu dovoljno čitljivi.'
+  ),
+  describeSummaryStep(
+    'eyebrow_summary',
+    'Rezime: .eyebrow unutar template-a',
+    'Rezimiramo eyebrow badge i uklanjamo njegov helper outline tek sada, kada slot projekcija i badge stil rade zajedno.',
+    'Slot je ovde važan deo lekcije, pa helper outline ostaje dok named slot ne postane jasan.'
+  ),
+  describeSummaryStep(
+    'cta_summary',
+    'Rezime: .cta unutar template-a',
+    'Rezime za CTA dugme: helper outline više nije potreban, jer završni stil i render već jasno pokazuju njegovu ulogu.',
+    'Outline služi učenju; kad je element potpuno objašnjen, može da nestane.'
+  ),
+  describeSummaryStep(
+    'host_summary',
+    'Rezime: feature-callout host',
+    'Završni host rezime: spoljašnji outline host elementa više nije potreban, jer su API atributi i theme tokeni sada jasni.',
+    'Host outline ostaje dok ne pokažemo i spoljašnji API i unutrašnju implementaciju komponente.'
+  ),
+  describeSummaryStep(
+    'shell_summary',
+    'Rezime: .app-shell',
+    'Tek sada uklanjamo helper outline sa `.app-shell`, jer je cela Web Components lekcija kompletna i okvir više nije potreban.',
+    'App shell outline ostaje sve vreme kao teaching okvir i nestaje tek na samom kraju lekcije.',
+    ['<div class="app-shell">']
+  ),
+  describeFinishedStep(
+    'done',
+    'Done: Feature Callout Web Component',
+    'Lekcija je završena: od praznog shell-a stigli smo do pravog custom elementa sa host atributima, slotovima, shadow DOM-om i render lifecycle-om.',
+    'Sledeći logičan korak je da napraviš drugu komponentu sa više slotova ili da uvedeš `part` i `exportparts` kao napredniji nivo.'
+  )
+];
+
+export const stepNumberById = Object.fromEntries(
+  lessonSteps.map((step, index) => [step.id, index])
+);
 
 === lessons/build-sidebar/build-css-at-step.js ===
 import { stepNumberById } from './describe-steps.js';
@@ -5314,10 +6736,17 @@ export const stepNumberById = Object.fromEntries(
 );
 
 === lessons/register-lessons.js ===
+import { buildCalloutCustomElementLesson } from './build-callout-custom-element/build-callout-custom-element.lesson.js';
 import { buildSidebarLesson } from './build-sidebar/build-sidebar.lesson.js';
+import { buildFeatureCalloutWebComponentLesson } from './build-feature-callout-web-component/build-feature-callout-web-component.lesson.js';
 import { buildTopNavigationLesson } from './build-top-navigation/build-top-navigation.lesson.js';
 
-export const registeredLessons = [buildSidebarLesson, buildTopNavigationLesson];
+export const registeredLessons = [
+  buildSidebarLesson,
+  buildTopNavigationLesson,
+  buildCalloutCustomElementLesson,
+  buildFeatureCalloutWebComponentLesson
+];
 
 const lessonsById = new Map(registeredLessons.map(lesson => [lesson.lessonId, lesson]));
 

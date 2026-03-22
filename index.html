@@ -57,7 +57,7 @@
       </p>
 
       <div class="lesson-picker">
-        <label class="lesson-picker-label" for="lessonPicker">Aktivna lekcija</label>
+        <label class="lesson-picker-label" for="lessonPicker">Aktivna lekcija · redosled učenja</label>
         <select class="lesson-picker-select" id="lessonPicker"></select>
       </div>
 
@@ -165,12 +165,12 @@
       <div class="live-editor-head">
         <div class="live-editor-copy">
           <h2>Ekran editora</h2>
-          <p>Kumulativni fajlovi se popunjavaju liniju po liniju, kao da gledaš live tutorijal preko share screen-a.</p>
+          <p>Kumulativni HTML, CSS i po potrebi JS fajlovi popunjavaju se liniju po liniju, kao da gledaš live tutorijal preko share screen-a.</p>
         </div>
         <span class="live-editor-step" id="liveStepBadge">Prizor 1</span>
       </div>
 
-      <div class="live-editor-body">
+      <div class="live-editor-body" id="liveEditorBody" data-pane-count="2">
         <div class="live-pane">
           <div class="live-pane-head">
             <span id="htmlFileLabel">index.html</span>
@@ -185,6 +185,14 @@
             <span>Staro muted, novo property istaknuto</span>
           </div>
           <div class="live-code-scroll" id="liveCssPane"></div>
+        </div>
+
+        <div class="live-pane" id="jsPane" hidden>
+          <div class="live-pane-head">
+            <span id="jsFileLabel">component.js</span>
+            <span>Novo ponašanje istaknuto liniju po liniju</span>
+          </div>
+          <div class="live-code-scroll" id="liveJsPane"></div>
         </div>
       </div>
     </section>

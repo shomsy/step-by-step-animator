@@ -12,6 +12,11 @@ function isFocusedHtmlLine(lineText, focusHtmlNeedles) {
 }
 
 function showCodePane(container, buildLinesAtStep, currentStepNumber, paneType = 'html', focusHtmlNeedles = []) {
+  if (typeof buildLinesAtStep !== 'function') {
+    container.innerHTML = '';
+    return;
+  }
+
   let lineNumber = 0;
   let revealOrder = 0;
   const currentLines = buildLinesAtStep(currentStepNumber);
@@ -22,7 +27,7 @@ function showCodePane(container, buildLinesAtStep, currentStepNumber, paneType =
     lineNumber += 1;
     const lineMarkup = entry.isEmptyLine ? '&nbsp;' : escapeCodeText(entry.lineText);
     const lineKind = paneType === 'css' ? describeCssLineRole(entry.lineText) : 'plain';
-    const shouldStaggerReveal = paneType === 'css' && entry.isNewLine && !entry.isEmptyLine;
+    const shouldStaggerReveal = (paneType === 'css' || paneType === 'js') && entry.isNewLine && !entry.isEmptyLine;
     const inlineStyle = shouldStaggerReveal ? ` style="--reveal-order:${revealOrder};"` : '';
     const isFocusedTarget = paneType === 'html' && isFocusedHtmlLine(entry.lineText, focusHtmlNeedles);
 
@@ -44,13 +49,16 @@ export function showGrowingCode({
   step,
   currentStepNumber,
   buildHtmlAtStep,
-  buildCssAtStep
+  buildCssAtStep,
+  buildJsAtStep
 }) {
   const focusHtmlNeedles = Array.isArray(step.focusHtmlNeedles) ? step.focusHtmlNeedles : [];
 
   showCodePane(lessonParts.htmlCodePane, buildHtmlAtStep, currentStepNumber, 'html', focusHtmlNeedles);
   showCodePane(lessonParts.cssCodePane, buildCssAtStep, currentStepNumber, 'css');
+  showCodePane(lessonParts.jsCodePane, buildJsAtStep, currentStepNumber, 'js');
   lessonParts.currentStepBadge.textContent = `Prizor ${currentStepNumber + 1}`;
   scrollToAddedLine(lessonParts.htmlCodePane);
   scrollToAddedLine(lessonParts.cssCodePane);
+  scrollToAddedLine(lessonParts.jsCodePane);
 }
