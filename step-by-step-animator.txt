@@ -93,7 +93,12 @@ teach-lessons/
     describe-steps.js
     build-html-at-step.js
     build-css-at-step.js
-    list-knowledge-check-questions.js
+    content/
+      documents/
+        build_sidebar.md
+        files/
+          lesson.sr.md
+          quiz.sr.md
 ```
 
 ### 2.2 Lesson Contract
@@ -120,7 +125,28 @@ Taj file mora da vrati kompletan lesson contract:
 
 Ne uvoditi paralelne lesson shape-ove.
 
-### 2.3 Runtime and Entry Rules
+### 2.3 Lesson Documents
+
+Lekcija može da ima markdown source dokumente unutar:
+
+```txt
+feature-name/
+  content/
+    documents/
+      files/
+        lesson.sr.md
+        quiz.sr.md
+```
+
+Pravila:
+
+- `lesson.sr.md` je kanonski source za title, intro i lesson metadata
+- `quiz.sr.md` je kanonski source za knowledge check pitanja
+- generated book output ide u `content/documents/<lesson_name>.md`
+- generated output se ne uređuje ručno
+- interaktivni HTML/CSS step builderi i dalje ostaju strogo definisani u JS-u dok ne uvedemo poseban step markdown DSL
+
+### 2.4 Runtime and Entry Rules
 
 - nema `src/` foldera
 - `main.js` je root entry
@@ -129,7 +155,7 @@ Ne uvoditi paralelne lesson shape-ove.
 - build ide kroz Vite
 - kanonski engine entry ostaje `teach-lessons/teach-lesson/teach-lesson.pipeline.js`
 
-### 2.4 Naming Rules
+### 2.5 Naming Rules
 
 Koristi ovaj filter pre svakog novog imena:
 
@@ -154,7 +180,7 @@ Zabranjeni glagoli:
 - `manage`
 - `doStuff`
 
-### 2.5 Vocabulary Rules
+### 2.6 Vocabulary Rules
 
 U ovom repo-u glagoli imaju zaključano značenje:
 
@@ -169,7 +195,7 @@ U ovom repo-u glagoli imaju zaključano značenje:
 
 Ne uvoditi novu sinonimsku generaciju ako postojeći glagol već pokriva odgovornost.
 
-### 2.6 Numbering Rules
+### 2.7 Numbering Rules
 
 Brojevi se koriste samo na flow folderima kada redosled zaista nosi značenje u product story-ju.
 
@@ -190,7 +216,7 @@ Pomoćni tokovi ostaju bez brojeva:
 
 Ne numerisati responsibility fajlove.
 
-### 2.7 Preview Integrity Rules
+### 2.8 Preview Integrity Rules
 
 Desni preview mora da bude stvarni render istog kumulativnog HTML/CSS koda koji middle panel prikazuje.
 
@@ -202,19 +228,20 @@ To znači:
 - HTML preview mora da pokaže sirov browser rezultat kada CSS još nije dodat
 - CSS preview mora da utiče samo onoliko koliko je trenutno napisano
 
-### 2.8 Verification Rules
+### 2.9 Verification Rules
 
 Posle svake veće izmene obavezno pokreni:
 
 ```bash
 find teach-lessons -name '*.js' -print0 | xargs -0 -n1 node --check && node --check main.js
+npm run sync:lesson-documents
 npm run build
 ./merge-files.sh .
 ```
 
 Ako menjaš dokumentaciju ili flow tree, osveži i merge dump.
 
-### 2.9 Delivery Discipline
+### 2.10 Delivery Discipline
 
 Na kraju svakog većeg završenog rada obavezna je završna disciplina iz root-a repoa.
 
@@ -279,8 +306,9 @@ Za novu lekciju:
 3. dodaj `describe-steps.js`
 4. dodaj `build-html-at-step.js`
 5. dodaj `build-css-at-step.js`
-6. dodaj `list-knowledge-check-questions.js`
-7. registruj lekciju u `teach-lessons/list-lessons.js`
+6. dodaj `content/documents/files/lesson.sr.md`
+7. dodaj `content/documents/files/quiz.sr.md`
+8. registruj lekciju u `teach-lessons/list-lessons.js`
 
 Ne kopirati shell iz `teach-lesson/`.
 Nova lekcija treba da doda samo svoj contract i svoj content.
@@ -333,7 +361,12 @@ teach-lessons/
     describe-steps.js
     build-html-at-step.js
     build-css-at-step.js
-    list-knowledge-check-questions.js
+    content/
+      documents/
+        build_sidebar.md
+        files/
+          lesson.sr.md
+          quiz.sr.md
 ```
 
 ## Naming Rules
@@ -394,6 +427,16 @@ If the feature is a concrete lesson contract, use:
 ```txt
 feature-name.lesson.js
 ```
+
+Markdown lesson documents may live next to the lesson contract:
+
+```txt
+content/documents/files/lesson.sr.md
+content/documents/files/quiz.sr.md
+```
+
+Use markdown for lesson metadata and question content.
+Keep step-by-step HTML/CSS builder logic explicit until a dedicated step DSL exists.
 
 ### 4. Every other file owns one clear responsibility
 
@@ -545,6 +588,12 @@ Ovaj fajl je kanonska lista za arhitekturu i sledeće veće korake ovog repoa.
 - `Status`: `DONE`
 - `Šta fali`: ništa
 - `Napomena`: Svaka nova lekcija treba da doda root `feature-name.lesson.js` i da se registruje u `teach-lessons/list-lessons.js`.
+
+### 4a. Uvedi markdown source za lesson metadata i quiz
+
+- `Status`: `DONE`
+- `Šta fali`: ništa
+- `Napomena`: `build-sidebar` sada koristi `content/documents/files/lesson.sr.md` i `quiz.sr.md`, uz generisani `content/documents/build_sidebar.md`.
 
 ## Follow-Up Work
 
@@ -1718,7 +1767,8 @@ fi
   "scripts": {
     "dev": "vite",
     "build": "vite build",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "sync:lesson-documents": "node teach-lessons/read-lesson-documents/sync-lesson-documents.js"
   },
   "devDependencies": {
     "vite": "^8.0.1"
@@ -1989,21 +2039,137 @@ export function buildHtmlAtStep(stepNumber) {
 import { buildCssAtStep } from './build-css-at-step.js';
 import { buildHtmlAtStep } from './build-html-at-step.js';
 import { lessonSteps } from './describe-steps.js';
-import { knowledgeCheckQuestions } from './list-knowledge-check-questions.js';
+import lessonDocument from './content/documents/files/lesson.sr.md?raw';
+import knowledgeCheckDocument from './content/documents/files/quiz.sr.md?raw';
+import { readKnowledgeCheckQuestions } from '../read-lesson-documents/read-knowledge-check-questions.js';
+import { readLessonMetadata } from '../read-lesson-documents/read-lesson-metadata.js';
 
-export const buildSidebarLesson = {
-  lessonId: 'build-sidebar',
+const lessonMetadata = readLessonMetadata(lessonDocument, {
   lessonTitle: 'Kako se pravi moderan sidebar',
   lessonIntro: 'Koraci po korak gradiš sidebar od osnove do gotove navigacije. Svaki korak uključuje kod, savete i vizuelni prikaz.',
   previewAddress: 'browser://build-sidebar-preview',
   previewTitle: 'Live build sidebar preview',
   htmlFileName: 'index.html',
-  cssFileName: 'style.css',
+  cssFileName: 'style.css'
+});
+
+const knowledgeCheckQuestions = readKnowledgeCheckQuestions(knowledgeCheckDocument);
+
+export const buildSidebarLesson = {
+  lessonId: 'build-sidebar',
+  lessonTitle: lessonMetadata.lessonTitle,
+  lessonIntro: lessonMetadata.lessonIntro,
+  lessonIntroHtml: lessonMetadata.lessonIntroHtml,
+  previewAddress: lessonMetadata.previewAddress,
+  previewTitle: lessonMetadata.previewTitle,
+  htmlFileName: lessonMetadata.htmlFileName,
+  cssFileName: lessonMetadata.cssFileName,
   steps: lessonSteps,
   buildHtmlAtStep,
   buildCssAtStep,
   knowledgeCheckQuestions
 };
+
+=== teach-lessons/build-sidebar/content/documents/build_sidebar.md ===
+<!-- Generated from the same markdown sources used by the web lesson. -->
+
+# build-sidebar
+
+Koraci po korak gradiš sidebar od osnove do gotove navigacije. Svaki korak uključuje kod, savete i vizuelni prikaz.
+
+## Quiz
+
+## Question 1
+? Koji HTML tag se koristi za bočnu navigaciju?
+- [ ] `<div>`
+- [x] `<aside>`
+- [ ] `<sidebar>`
+- [ ] `<nav>`
+! `aside` je prirodan semantički izbor za bočnu navigacionu zonu.
+
+## Question 2
+? Šta znači `100vh` u CSS-u?
+- [ ] 100% širine
+- [x] 100% visine viewporta
+- [ ] 100 piksela
+- [ ] Fiksno 100
+! `vh` meri procenat visine viewporta, pa `100vh` znači puna visina ekrana.
+
+## Question 3
+? Koja vrednost `border-radius`-a daje pun krug?
+- [ ] `0px`
+- [x] `50%`
+- [ ] `100%`
+- [ ] `360deg`
+! Kada je element kvadrat, `50%` radius zatvara ga u krug.
+
+## Question 4
+? Šta koristimo za razmak između grid item-a?
+- [ ] `margin`
+- [ ] `padding`
+- [x] `gap`
+- [ ] `spacing`
+! `gap` je najčistiji način da zadaš razmak između elemenata u grid i flex rasporedu.
+
+## Question 5
+? Koji property omogućava glatke animacije između stanja?
+- [ ] `animation`
+- [x] `transition`
+- [ ] `transform`
+- [ ] `motion`
+! `transition` je pravi izbor kada želiš da promene stanja budu glatke.
+
+=== teach-lessons/build-sidebar/content/documents/files/lesson.sr.md ===
+---
+title: Kako se pravi moderan sidebar
+previewAddress: browser://build-sidebar-preview
+previewTitle: Live build sidebar preview
+htmlFileName: index.html
+cssFileName: style.css
+---
+
+Koraci po korak gradiš sidebar od osnove do gotove navigacije. Svaki korak uključuje kod, savete i vizuelni prikaz.
+
+=== teach-lessons/build-sidebar/content/documents/files/quiz.sr.md ===
+## Question 1
+? Koji HTML tag se koristi za bočnu navigaciju?
+- [ ] `<div>`
+- [x] `<aside>`
+- [ ] `<sidebar>`
+- [ ] `<nav>`
+! `aside` je prirodan semantički izbor za bočnu navigacionu zonu.
+
+## Question 2
+? Šta znači `100vh` u CSS-u?
+- [ ] 100% širine
+- [x] 100% visine viewporta
+- [ ] 100 piksela
+- [ ] Fiksno 100
+! `vh` meri procenat visine viewporta, pa `100vh` znači puna visina ekrana.
+
+## Question 3
+? Koja vrednost `border-radius`-a daje pun krug?
+- [ ] `0px`
+- [x] `50%`
+- [ ] `100%`
+- [ ] `360deg`
+! Kada je element kvadrat, `50%` radius zatvara ga u krug.
+
+## Question 4
+? Šta koristimo za razmak između grid item-a?
+- [ ] `margin`
+- [ ] `padding`
+- [x] `gap`
+- [ ] `spacing`
+! `gap` je najčistiji način da zadaš razmak između elemenata u grid i flex rasporedu.
+
+## Question 5
+? Koji property omogućava glatke animacije između stanja?
+- [ ] `animation`
+- [x] `transition`
+- [ ] `transform`
+- [ ] `motion`
+! `transition` je pravi izbor kada želiš da promene stanja budu glatke.
 
 === teach-lessons/build-sidebar/describe-steps.js ===
 function describeHtmlElementStep(id, title, desc, tag, proTip, _sidebarScene) {
@@ -2121,35 +2287,6 @@ export const stepNumberById = Object.fromEntries(
   lessonSteps.map((step, index) => [step.id, index])
 );
 
-=== teach-lessons/build-sidebar/list-knowledge-check-questions.js ===
-export const knowledgeCheckQuestions = [
-  {
-    question: 'Koji HTML tag se koristi za bočnu navigaciju?',
-    options: ['<div>', '<aside>', '<sidebar>', '<nav>'],
-    correct: 1
-  },
-  {
-    question: 'Šta znači "100vh" u CSS-u?',
-    options: ['100% širine', '100% visine viewporta', '100 piksela', 'Fiksno 100'],
-    correct: 1
-  },
-  {
-    question: 'Koja vrednost border-radiusa daje pun krug?',
-    options: ['0px', '50%', '100%', '360deg'],
-    correct: 1
-  },
-  {
-    question: 'Šta koristimo za razmak između grid item-a?',
-    options: ['margin', 'padding', 'gap', 'spacing'],
-    correct: 2
-  },
-  {
-    question: 'Koji property omogućava glatke animacije?',
-    options: ['animation', 'transition', 'transform', 'motion'],
-    correct: 1
-  }
-];
-
 === teach-lessons/find-selected-lesson.js ===
 export function findSelectedLesson({ ownerLocation, lessons }) {
   const selectedLessonId = new URL(ownerLocation.href).searchParams.get('lesson');
@@ -2164,6 +2301,437 @@ import { buildSidebarLesson } from './build-sidebar/build-sidebar.lesson.js';
 export function listLessons() {
   return [buildSidebarLesson];
 }
+
+=== teach-lessons/read-lesson-documents/parse-frontmatter.js ===
+export function parseFrontmatter(markdown) {
+  if (!markdown) {
+    return { attributes: {}, body: '' };
+  }
+
+  const source = String(markdown).trim();
+
+  if (!source.startsWith('---\n')) {
+    return { attributes: {}, body: source };
+  }
+
+  const match = source.match(/^---\n([\s\S]*?)\n---(?:\n|$)/);
+
+  if (!match) {
+    return { attributes: {}, body: source };
+  }
+
+  const attributes = {};
+  let activeKey = null;
+
+  match[1].split('\n').forEach(line => {
+    const trimmedLine = line.trim();
+
+    if (!trimmedLine) {
+      return;
+    }
+
+    const keyMatch = trimmedLine.match(/^([a-zA-Z0-9_-]+):\s*(.*)$/);
+
+    if (keyMatch) {
+      const [, key, rawValue] = keyMatch;
+
+      if (rawValue) {
+        attributes[key] = rawValue.trim();
+        activeKey = null;
+        return;
+      }
+
+      attributes[key] = [];
+      activeKey = key;
+      return;
+    }
+
+    const itemMatch = trimmedLine.match(/^-\s+(.+)$/);
+
+    if (itemMatch && activeKey && Array.isArray(attributes[activeKey])) {
+      attributes[activeKey].push(itemMatch[1].trim());
+    }
+  });
+
+  return {
+    attributes,
+    body: source.slice(match[0].length).trim()
+  };
+}
+
+=== teach-lessons/read-lesson-documents/read-knowledge-check-questions.js ===
+export function readKnowledgeCheckQuestions(markdown) {
+  if (!markdown) {
+    return [];
+  }
+
+  const questions = [];
+  let activeQuestion = null;
+
+  String(markdown).split('\n').forEach(line => {
+    const trimmedLine = line.trim();
+
+    if (!trimmedLine) {
+      return;
+    }
+
+    if (trimmedLine.startsWith('## ')) {
+      if (activeQuestion) {
+        questions.push(activeQuestion);
+      }
+
+      activeQuestion = {
+        question: '',
+        options: [],
+        correct: -1
+      };
+      return;
+    }
+
+    if (!activeQuestion) {
+      return;
+    }
+
+    if (trimmedLine.startsWith('? ')) {
+      activeQuestion.question = trimmedLine.slice(2).trim();
+      return;
+    }
+
+    const optionMatch = trimmedLine.match(/^-\s+\[(x| )\]\s+(.+)$/i);
+
+    if (optionMatch) {
+      const [, marker, label] = optionMatch;
+
+      if (marker.toLowerCase() === 'x') {
+        activeQuestion.correct = activeQuestion.options.length;
+      }
+
+      activeQuestion.options.push(label.trim());
+      return;
+    }
+
+    if (trimmedLine.startsWith('! ')) {
+      activeQuestion.explanation = trimmedLine.slice(2).trim();
+    }
+  });
+
+  if (activeQuestion) {
+    questions.push(activeQuestion);
+  }
+
+  return questions.filter(question =>
+    question.question &&
+    question.options.length > 0 &&
+    question.correct >= 0
+  );
+}
+
+=== teach-lessons/read-lesson-documents/read-lesson-metadata.js ===
+import { parseFrontmatter } from './parse-frontmatter.js';
+import { renderMarkdown } from './render-markdown.js';
+
+function readIntroText(markdownBody) {
+  return String(markdownBody || '')
+    .split('\n')
+    .map(line => line.trim())
+    .filter(Boolean)
+    .join(' ')
+    .trim();
+}
+
+export function readLessonMetadata(markdown, defaults = {}) {
+  const { attributes, body } = parseFrontmatter(markdown);
+
+  return {
+    lessonTitle: attributes.title || defaults.lessonTitle || '',
+    lessonIntro: readIntroText(body) || defaults.lessonIntro || '',
+    lessonIntroHtml: renderMarkdown(body) || '',
+    previewAddress: attributes.previewAddress || defaults.previewAddress || '',
+    previewTitle: attributes.previewTitle || defaults.previewTitle || '',
+    htmlFileName: attributes.htmlFileName || defaults.htmlFileName || 'index.html',
+    cssFileName: attributes.cssFileName || defaults.cssFileName || 'style.css'
+  };
+}
+
+=== teach-lessons/read-lesson-documents/render-markdown.js ===
+function escapeHtml(text) {
+  return String(text)
+    .replaceAll('&', '&amp;')
+    .replaceAll('<', '&lt;')
+    .replaceAll('>', '&gt;');
+}
+
+function escapeAttribute(text) {
+  return escapeHtml(text)
+    .replaceAll('"', '&quot;')
+    .replaceAll("'", '&#39;');
+}
+
+function stripMarkdownSyntax(text) {
+  return String(text)
+    .replace(/!\[([^\]]*)\]\(([^)]+)\)/g, '$1')
+    .replace(/\[([^\]]+)\]\(([^)]+)\)/g, '$1')
+    .replace(/[*_`~]/g, '')
+    .trim();
+}
+
+function createHeadingId(text, usedHeadingIds) {
+  const baseId = stripMarkdownSyntax(text)
+    .normalize('NFKD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '') || 'section';
+
+  const seenCount = usedHeadingIds.get(baseId) || 0;
+  usedHeadingIds.set(baseId, seenCount + 1);
+
+  return seenCount ? `${baseId}-${seenCount + 1}` : baseId;
+}
+
+function renderInlineMarkdown(text) {
+  return text
+    .replace(/!\[([^\]]*)\]\(([^)]+)\)/g, (_, alt, src) => `<img class="lesson-markdown-image" src="${escapeAttribute(src)}" alt="${escapeAttribute(alt)}">`)
+    .replace(/\[([^\]]+)\]\(([^)]+)\)/g, (_, label, href) => {
+      const safeHref = escapeAttribute(href);
+
+      if (String(href).startsWith('#')) {
+        return `<a href="${safeHref}">${label}</a>`;
+      }
+
+      return `<a href="${safeHref}" target="_blank" rel="noreferrer">${label}</a>`;
+    })
+    .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
+    .replace(/\*(.+?)\*/g, '<em>$1</em>')
+    .replace(/`(.+?)`/g, '<code>$1</code>');
+}
+
+function flushParagraph(buffer, htmlParts) {
+  if (!buffer.length) {
+    return;
+  }
+
+  htmlParts.push(`<p>${renderInlineMarkdown(buffer.join(' '))}</p>`);
+  buffer.length = 0;
+}
+
+function flushList(listState, htmlParts) {
+  if (!listState.items.length) {
+    return;
+  }
+
+  const tagName = listState.type === 'ordered' ? 'ol' : 'ul';
+  htmlParts.push(`<${tagName}>${listState.items.map(item => `<li>${renderInlineMarkdown(item)}</li>`).join('')}</${tagName}>`);
+  listState.type = null;
+  listState.items = [];
+}
+
+function renderCodeBlock(code, language) {
+  const normalizedLanguage = (language || '').trim();
+  const languageClass = normalizedLanguage ? ` class="language-${escapeHtml(normalizedLanguage)}"` : '';
+
+  return `<pre class="lesson-code-block"><code${languageClass}>${escapeHtml(code)}</code></pre>`;
+}
+
+export function renderMarkdown(markdown) {
+  if (!markdown) {
+    return '';
+  }
+
+  const trimmedMarkdown = String(markdown).trim();
+
+  if (!trimmedMarkdown) {
+    return '';
+  }
+
+  const htmlParts = [];
+  const paragraphBuffer = [];
+  const listState = { type: null, items: [] };
+  const usedHeadingIds = new Map();
+  let inCodeBlock = false;
+  let codeFenceLanguage = '';
+  let codeBuffer = [];
+
+  trimmedMarkdown.split('\n').forEach(line => {
+    const trimmedLine = line.trim();
+
+    if (trimmedLine.startsWith('```')) {
+      flushParagraph(paragraphBuffer, htmlParts);
+      flushList(listState, htmlParts);
+
+      if (!inCodeBlock) {
+        inCodeBlock = true;
+        codeFenceLanguage = trimmedLine.slice(3).trim();
+        codeBuffer = [];
+        return;
+      }
+
+      htmlParts.push(renderCodeBlock(codeBuffer.join('\n'), codeFenceLanguage));
+      inCodeBlock = false;
+      codeFenceLanguage = '';
+      codeBuffer = [];
+      return;
+    }
+
+    if (inCodeBlock) {
+      codeBuffer.push(line);
+      return;
+    }
+
+    if (!trimmedLine) {
+      flushParagraph(paragraphBuffer, htmlParts);
+      flushList(listState, htmlParts);
+      return;
+    }
+
+    if (/^---+$/.test(trimmedLine)) {
+      flushParagraph(paragraphBuffer, htmlParts);
+      flushList(listState, htmlParts);
+      htmlParts.push('<hr>');
+      return;
+    }
+
+    if (trimmedLine.startsWith('# ')) {
+      flushParagraph(paragraphBuffer, htmlParts);
+      flushList(listState, htmlParts);
+      const headingText = trimmedLine.slice(2).trim();
+      const headingId = createHeadingId(headingText, usedHeadingIds);
+      htmlParts.push(`<h1 id="${escapeAttribute(headingId)}">${renderInlineMarkdown(headingText)}</h1>`);
+      return;
+    }
+
+    if (trimmedLine.startsWith('## ')) {
+      flushParagraph(paragraphBuffer, htmlParts);
+      flushList(listState, htmlParts);
+      const headingText = trimmedLine.slice(3).trim();
+      const headingId = createHeadingId(headingText, usedHeadingIds);
+      htmlParts.push(`<h2 id="${escapeAttribute(headingId)}">${renderInlineMarkdown(headingText)}</h2>`);
+      return;
+    }
+
+    if (trimmedLine.startsWith('### ')) {
+      flushParagraph(paragraphBuffer, htmlParts);
+      flushList(listState, htmlParts);
+      const headingText = trimmedLine.slice(4).trim();
+      const headingId = createHeadingId(headingText, usedHeadingIds);
+      htmlParts.push(`<h3 id="${escapeAttribute(headingId)}">${renderInlineMarkdown(headingText)}</h3>`);
+      return;
+    }
+
+    if (trimmedLine.startsWith('#### ')) {
+      flushParagraph(paragraphBuffer, htmlParts);
+      flushList(listState, htmlParts);
+      const headingText = trimmedLine.slice(5).trim();
+      const headingId = createHeadingId(headingText, usedHeadingIds);
+      htmlParts.push(`<h4 id="${escapeAttribute(headingId)}">${renderInlineMarkdown(headingText)}</h4>`);
+      return;
+    }
+
+    if (/^[-*]\s+/.test(trimmedLine)) {
+      flushParagraph(paragraphBuffer, htmlParts);
+
+      if (listState.type && listState.type !== 'unordered') {
+        flushList(listState, htmlParts);
+      }
+
+      listState.type = 'unordered';
+      listState.items.push(trimmedLine.replace(/^[-*]\s+/, ''));
+      return;
+    }
+
+    if (/^\d+\.\s+/.test(trimmedLine)) {
+      flushParagraph(paragraphBuffer, htmlParts);
+
+      if (listState.type && listState.type !== 'ordered') {
+        flushList(listState, htmlParts);
+      }
+
+      listState.type = 'ordered';
+      listState.items.push(trimmedLine.replace(/^\d+\.\s+/, ''));
+      return;
+    }
+
+    if (/^>\s+/.test(trimmedLine)) {
+      flushParagraph(paragraphBuffer, htmlParts);
+      flushList(listState, htmlParts);
+      htmlParts.push(`<blockquote>${renderInlineMarkdown(trimmedLine.replace(/^>\s+/, ''))}</blockquote>`);
+      return;
+    }
+
+    paragraphBuffer.push(trimmedLine);
+  });
+
+  flushParagraph(paragraphBuffer, htmlParts);
+  flushList(listState, htmlParts);
+
+  return htmlParts.join('\n');
+}
+
+=== teach-lessons/read-lesson-documents/sync-lesson-documents.js ===
+import fs from 'node:fs';
+import path from 'node:path';
+import { fileURLToPath } from 'node:url';
+
+const currentDir = path.dirname(fileURLToPath(import.meta.url));
+const lessonsRoot = path.resolve(currentDir, '..');
+
+function collectLessonDocumentFolders() {
+  return fs.readdirSync(lessonsRoot, { withFileTypes: true })
+    .filter(entry => entry.isDirectory() && entry.name !== 'teach-lesson' && entry.name !== 'read-lesson-documents')
+    .map(entry => path.join(lessonsRoot, entry.name, 'content', 'documents', 'files'))
+    .filter(documentsFolder => fs.existsSync(documentsFolder));
+}
+
+function readDocumentPart(documentsFolder, fileName) {
+  const documentPath = path.join(documentsFolder, fileName);
+
+  if (!fs.existsSync(documentPath)) {
+    return '';
+  }
+
+  return fs.readFileSync(documentPath, 'utf8').trim();
+}
+
+function stripFrontmatter(markdown) {
+  const source = String(markdown || '').trim();
+
+  if (!source.startsWith('---\n')) {
+    return source;
+  }
+
+  const match = source.match(/^---\n([\s\S]*?)\n---(?:\n|$)/);
+
+  if (!match) {
+    return source;
+  }
+
+  return source.slice(match[0].length).trim();
+}
+
+function buildLessonBook(documentsFolder) {
+  const lessonFolder = path.basename(path.resolve(documentsFolder, '../../..'));
+  const lessonPart = stripFrontmatter(readDocumentPart(documentsFolder, 'lesson.sr.md'));
+  const quizPart = readDocumentPart(documentsFolder, 'quiz.sr.md');
+
+  const parts = [
+    '<!-- Generated from the same markdown sources used by the web lesson. -->',
+    `# ${lessonFolder}`,
+    lessonPart,
+    quizPart ? '## Quiz\n\n' + quizPart : ''
+  ].filter(Boolean);
+
+  const outputFolder = path.resolve(documentsFolder, '..');
+  const outputFile = path.join(outputFolder, `${lessonFolder.replace(/-/g, '_')}.md`);
+
+  fs.writeFileSync(outputFile, parts.join('\n\n') + '\n');
+  return outputFile;
+}
+
+const generatedFiles = collectLessonDocumentFolders().map(buildLessonBook);
+
+generatedFiles.forEach(filePath => {
+  console.log(`Generated: ${path.relative(process.cwd(), filePath)}`);
+});
 
 === teach-lessons/teach-lesson/01-start-lesson/create-lesson-progress.js ===
 export function createLessonProgress() {
@@ -2234,7 +2802,13 @@ export function findLessonParts(ownerDocument) {
 === teach-lessons/teach-lesson/01-start-lesson/show-lesson-shell.js ===
 export function showLessonShell({ ownerDocument, lessonParts, lesson }) {
   lessonParts.lessonHeading.textContent = lesson.lessonTitle;
-  lessonParts.lessonIntro.textContent = lesson.lessonIntro;
+
+  if (lesson.lessonIntroHtml) {
+    lessonParts.lessonIntro.innerHTML = lesson.lessonIntroHtml;
+  } else {
+    lessonParts.lessonIntro.textContent = lesson.lessonIntro;
+  }
+
   lessonParts.previewAddress.textContent = lesson.previewAddress;
   lessonParts.htmlFileLabel.textContent = lesson.htmlFileName;
   lessonParts.cssFileLabel.textContent = lesson.cssFileName;
