@@ -1,0 +1,261 @@
+# Lesson Authoring
+
+Ovaj fajl je praktični ugovor za pretvaranje sadržaja u animiranu `Step By Step Animator` lekciju.
+
+## 1. Suština
+
+Lekcija nije običan tekst i nije statičan tutorial.
+
+Lekcija mora da se ponaša kao da gledaš programera preko share screen-a:
+
+- HTML se dodaje element po element
+- CSS se dodaje property po property
+- preview prikazuje tačno isti kumulativni HTML/CSS koji je trenutno napisan
+- svaka promena mora da bude vizuelno jasna i verbalno objašnjiva
+
+Ako sadržaj ne može da se razbije na takve male, čitljive korake, još nije spreman za ovu vrstu animacije.
+
+## 2. Gde ide nova lekcija
+
+Svaka nova lekcija ide u svoj folder pod:
+
+```txt
+lessons/
+  feature-name/
+```
+
+Minimalni shape:
+
+```txt
+lessons/
+  feature-name/
+    feature-name.lesson.js
+    describe-steps.js
+    build-html-at-step.js
+    build-css-at-step.js
+    content/
+      documents/
+        files/
+          lesson.sr.md
+          quiz.sr.md
+```
+
+## 3. Šta svaki fajl radi
+
+`feature-name.lesson.js`
+
+- sastavlja lesson contract
+- povezuje markdown metadata
+- povezuje step script
+- povezuje HTML/CSS builder funkcije
+- povezuje knowledge check pitanja
+
+`describe-steps.js`
+
+- opisuje ceo teaching tok
+- svaki step mora da ima jasan naslov, opis, tag i pro tip
+- HTML step i CSS step moraju da budu odvojeni i precizni
+
+`build-html-at-step.js`
+
+- vraća kompletan kumulativni HTML za dati step
+- ne vraća diff
+- preview se hrani direktno iz ovog output-a
+
+`build-css-at-step.js`
+
+- vraća kompletan kumulativni CSS za dati step
+- ne vraća diff
+- CSS ide property po property
+
+`content/documents/files/lesson.sr.md`
+
+- drži title, intro i metadata
+
+`content/documents/files/quiz.sr.md`
+
+- drži knowledge check pitanja
+
+## 4. Pravila za animirani lesson flow
+
+### 4.1 Početak
+
+Ako lekcija gradi komponentu, kreni od najmanjeg neutralnog početka.
+
+Za layout ili komponentu to je najčešće:
+
+```html
+<div class="app-shell">
+```
+
+Nemoj rano ubacivati filler sadržaj koji lekcija ne objašnjava.
+
+### 4.2 HTML pravila
+
+HTML piši element po element.
+
+Dobro:
+
+1. dodaj root wrapper
+2. dodaj glavni semantic element
+3. dodaj child zonu
+4. dodaj child element
+5. dodaj labelu ili copy
+
+Loše:
+
+- ubaciti ceo gotov DOM odjednom
+- preskočiti međukorake koje preview treba da pokaže
+
+### 4.3 CSS pravila
+
+CSS piši property po property.
+
+Dobro:
+
+1. dodaj privremeni helper border ili outline da element odmah postane vidljiv
+2. dodaj veličinu ili spacing
+3. dodaj raspored
+4. dodaj boje i polish
+5. ukloni helper border kada se završi cela vizuelna celina
+
+Loše:
+
+- nalepiti ceo selector blok odjednom
+- dodati polish pre nego što je footprint elementa jasan
+
+### 4.4 Helper stilovi
+
+Kad je neka celina tek u izgradnji, helper linije su obavezne ako pomažu orijentaciji.
+
+Pravila:
+
+- helper outline ili border uvodi se rano
+- svaki pod-element iste celine može imati svoju helper boju
+- helper stilovi ostaju aktivni dok se ne završi cela vizuelna celina
+- kada celina bude gotova, eksplicitno ukloni helper stilove
+
+Step opis mora to i da kaže:
+
+- kada uvodiš helper stil: `Dodajemo privremeni pomoćni border radi lakšeg snalaženja, kasnije ćemo ga ukloniti.`
+- kada ga uklanjaš: `Uklanjamo privremeni pomoćni border, više nam ne treba.`
+
+### 4.5 Preview integritet
+
+Preview mora da bude stvarni rezultat istog koda koji se vidi u editor panelu.
+
+To znači:
+
+- nema posebnog fake preview DOM-a
+- nema ručno režirane scene
+- nema CSS-a koji nije došao iz `build-css-at-step.js`
+- nema HTML-a koji nije došao iz `build-html-at-step.js`
+
+## 5. Kako razložiti sadržaj u steps
+
+Pre nego što pišeš fajlove, sadržaj razloži ovim redom:
+
+1. Koji je konačni HTML?
+2. Koje su glavne vizuelne celine?
+3. Kojim redom korisnik treba da ih vidi da bi razumeo građenje?
+4. Koji je najmanji HTML korak koji još uvek ima smisla?
+5. Koji je najmanji CSS property korak koji pravi vidljivu ili logičku promenu?
+
+Najčešći dobar redosled je:
+
+1. root shell
+2. glavni semantic wrapper
+3. prva velika celina
+4. child elementi te celine
+5. helper stilovi za orijentaciju
+6. layout property-i
+7. spacing
+8. colors / typography
+9. interaction states
+10. responsive pravila
+11. done
+
+## 6. Markdown contract
+
+`lesson.sr.md`:
+
+```md
+---
+title: Naslov lekcije
+previewAddress: browser://feature-preview
+previewTitle: Live feature preview
+htmlFileName: index.html
+cssFileName: style.css
+---
+
+Kratak uvod u lekciju.
+```
+
+`quiz.sr.md`:
+
+```md
+## Question 1
+? Pitanje
+- [ ] Pogrešan odgovor
+- [x] Tačan odgovor
+- [ ] Pogrešan odgovor
+! Kratko objašnjenje zašto je to tačno.
+```
+
+## 7. Šta da kažeš AI-u
+
+Ako želiš da AI pretvori sadržaj u lekciju, daj mu i cilj UI-ja i stroga pravila animacije.
+
+Koristi ovaj template:
+
+```txt
+Pretvori ovo u Step By Step Animator lekciju.
+
+Cilj lekcije:
+- Napraviti [naziv komponente ili layouta]
+- Krajnji rezultat treba da izgleda kao [kratak opis]
+
+Repo contract:
+- root split je `animator/` i `lessons/`
+- novu lekciju dodaj pod `lessons/[feature-name]/`
+- napravi:
+  - `[feature-name].lesson.js`
+  - `describe-steps.js`
+  - `build-html-at-step.js`
+  - `build-css-at-step.js`
+  - `content/documents/files/lesson.sr.md`
+  - `content/documents/files/quiz.sr.md`
+
+Animaciona pravila:
+- HTML ide element po element
+- CSS ide property po property
+- preview mora da bude hranjen iz istog kumulativnog HTML/CSS output-a
+- kreni od neutralnog početka, najčešće `<div class="app-shell">`
+- ne ubacuj filler sadržaj koji lekcija ne objašnjava
+- uvodi helper bordere ili outlin-e rano ako element bez njih nije dovoljno vidljiv
+- helper stilovi ostaju dok se ne završi cela vizuelna celina
+- kada uvodiš helper stil, step opis mora da kaže da je privremen
+- kada uklanjaš helper stil, step opis mora da kaže da ga uklanjaš jer više nije potreban
+- svaka CSS promena mora da bude ili vizuelno jasna ili logički neophodna u tom trenutku
+
+Authoring pravila:
+- folder kaže use case
+- file kaže jednu odgovornost
+- function kaže tačnu akciju
+- ne koristi generic nazive kao utils, helpers, common, service
+- ne lepi gotov stylesheet odjednom
+- ne lepi gotov HTML odjednom
+
+Isporuči output spreman za ovaj repo.
+```
+
+## 8. Kratki filter pre svakog novog stepa
+
+Pre nego što zadržiš step, proveri:
+
+- Da li ovaj step pravi jednu jasnu promenu?
+- Da li preview može jasno da pokaže tu promenu?
+- Da li bih mogao glasom da objasnim baš ovaj step bez skakanja?
+- Da li je ovo prirodan sledeći korak za čoveka koji uči?
+
+Ako odgovor nije `da`, step treba razbiti ili pomeriti.

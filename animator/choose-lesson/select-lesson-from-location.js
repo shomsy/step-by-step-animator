@@ -1,4 +1,4 @@
-import { findLesson, getDefaultLessonId } from '../lessons/register-lessons.js';
+import { findLesson, getDefaultLessonId } from '../../lessons/register-lessons.js';
 
 export function selectLessonFromLocation({ ownerLocation }) {
   const selectedLessonId = new URL(ownerLocation.href).searchParams.get('lesson');

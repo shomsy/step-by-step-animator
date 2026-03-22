@@ -1,6 +1,9 @@
 # Architecture
 
-This repo follows a business-first screaming architecture.
+This repo follows a business-first screaming architecture with two top-level areas:
+
+- `animator/` for technical runtime and document tooling
+- `lessons/` for business lesson slices
 
 ## Shape
 
@@ -14,21 +17,9 @@ Read the tree in this order:
 Current example:
 
 ```txt
-lessons/
-  register-lessons.js
-  build-sidebar/
-    build-sidebar.lesson.js
-    describe-steps.js
-    build-html-at-step.js
-    build-css-at-step.js
-    content/
-      documents/
-        build_sidebar.md
-        files/
-          lesson.sr.md
-          quiz.sr.md
-lesson-player/
-  select-lesson-from-location.js
+animator/
+  choose-lesson/
+    select-lesson-from-location.js
   play-lesson/
     play-lesson.pipeline.js
     lesson-player.css
@@ -52,10 +43,23 @@ lesson-player/
       choose-theme.js
     06-download-lesson-files/
       download-lesson-files.js
-lesson-documents/
-  read-lesson-metadata.js
-  read-knowledge-check-questions.js
-  sync-lesson-documents.js
+  lesson-documents/
+    read-lesson-metadata.js
+    read-knowledge-check-questions.js
+    sync-lesson-documents.js
+lessons/
+  register-lessons.js
+  build-sidebar/
+    build-sidebar.lesson.js
+    describe-steps.js
+    build-html-at-step.js
+    build-css-at-step.js
+    content/
+      documents/
+        build_sidebar.md
+        files/
+          lesson.sr.md
+          quiz.sr.md
 ```
 
 ## Naming Rules
@@ -67,6 +71,7 @@ Use a folder name that tells what the product is doing.
 Good:
 
 ```txt
+animator/
 lessons/
 sell-subscriptions/
 review-progress/
@@ -240,3 +245,7 @@ Do not introduce these unless there is a very strong reason:
 Use this sentence as the filter before every new file:
 
 > If the folder does not say the flow, the file does not say the responsibility, or the function does not say the exact action, the name is not good enough.
+
+## Lesson Authoring
+
+How a lesson becomes animated is documented in [LESSON_AUTHORING.md](/home/shomsy/projects/step-by-step-animator/LESSON_AUTHORING.md).

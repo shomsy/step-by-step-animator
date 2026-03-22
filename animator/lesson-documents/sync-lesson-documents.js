@@ -3,7 +3,7 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const currentDir = path.dirname(fileURLToPath(import.meta.url));
-const lessonsRoot = path.resolve(currentDir, '../lessons');
+const lessonsRoot = path.resolve(currentDir, '../../lessons');
 
 function collectLessonDocumentFolders() {
   return fs.readdirSync(lessonsRoot, { withFileTypes: true })

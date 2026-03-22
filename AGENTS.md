@@ -38,24 +38,17 @@ Tree čitaš ovim redom:
 3. file responsibility
 4. function action
 
+Root je namerno podeljen na dve celine:
+
+- `animator/` je tehnički runtime, shell, playback i document tooling
+- `lessons/` su business lesson slice-ovi i njihov sadržaj
+
 Aktuelni kanonski shape:
 
 ```txt
-lessons/
-  register-lessons.js
-  build-sidebar/
-    build-sidebar.lesson.js
-    describe-steps.js
-    build-html-at-step.js
-    build-css-at-step.js
-    content/
-      documents/
-        build_sidebar.md
-        files/
-          lesson.sr.md
-          quiz.sr.md
-lesson-player/
-  select-lesson-from-location.js
+animator/
+  choose-lesson/
+    select-lesson-from-location.js
   play-lesson/
     play-lesson.pipeline.js
     lesson-player.css
@@ -93,12 +86,25 @@ lesson-player/
       remember-saved-steps.js
     choose-theme/
       choose-theme.js
-lesson-documents/
-  parse-frontmatter.js
-  render-markdown.js
-  read-lesson-metadata.js
-  read-knowledge-check-questions.js
-  sync-lesson-documents.js
+  lesson-documents/
+    parse-frontmatter.js
+    render-markdown.js
+    read-lesson-metadata.js
+    read-knowledge-check-questions.js
+    sync-lesson-documents.js
+lessons/
+  register-lessons.js
+  build-sidebar/
+    build-sidebar.lesson.js
+    describe-steps.js
+    build-html-at-step.js
+    build-css-at-step.js
+    content/
+      documents/
+        build_sidebar.md
+        files/
+          lesson.sr.md
+          quiz.sr.md
 ```
 
 ### 2.2 Lesson Contract
@@ -153,10 +159,10 @@ Pravila:
 - `index.html` je generičan lesson shell
 - `sidebar-step-by-step.html` je kompatibilni alias za `build-sidebar`
 - build ide kroz Vite
+- repo je podeljen na `animator/` i `lessons/`
 - business lekcije žive pod `lessons/`
-- tehnički player runtime živi pod `lesson-player/`
-- markdown parsing i sync tooling žive pod `lesson-documents/`
-- kanonski player entry ostaje `lesson-player/play-lesson/play-lesson.pipeline.js`
+- tehnički player runtime i markdown tooling žive pod `animator/`
+- kanonski player entry ostaje `animator/play-lesson/play-lesson.pipeline.js`
 
 ### 2.5 Naming Rules
 
@@ -236,7 +242,7 @@ To znači:
 Posle svake veće izmene obavezno pokreni:
 
 ```bash
-find lessons lesson-player lesson-documents -name '*.js' -print0 | xargs -0 -n1 node --check && node --check main.js
+find animator lessons -name '*.js' -print0 | xargs -0 -n1 node --check && node --check main.js
 npm run sync:lesson-documents
 npm run build
 ./merge-files.sh .
@@ -258,6 +264,8 @@ To znači:
 Ne završavaj ozbiljan implementation pass bez ovog zatvaranja, osim ako korisnik eksplicitno traži da se ne commituje ili ne pushuje.
 
 ## 3. Feature Contract
+
+Za pravljenje novih animiranih lekcija i AI prompt šablon pogledaj [LESSON_AUTHORING.md](/home/shomsy/projects/step-by-step-animator/LESSON_AUTHORING.md).
 
 ### 3.1 Lesson Layout
 
@@ -313,5 +321,5 @@ Za novu lekciju:
 7. dodaj `content/documents/files/quiz.sr.md`
 8. registruj lekciju u `lessons/register-lessons.js`
 
-Ne kopirati player runtime iz `lesson-player/play-lesson/`.
+Ne kopirati player runtime iz `animator/play-lesson/`.
 Nova lekcija treba da doda samo svoj contract i svoj content.

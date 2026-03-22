@@ -14,13 +14,13 @@ Ovaj fajl je kanonska lista za arhitekturu i sledeće veće korake ovog repoa.
 
 - `Status`: `DONE`
 - `Šta fali`: ništa
-- `Napomena`: Business lekcije sada žive u `lessons/`, generičan player runtime u `lesson-player/play-lesson/`, a `build-sidebar` je sveden na lesson contract.
+- `Napomena`: Root je sada podeljen na dve jasne celine: `animator/` za tehnički runtime i tooling, i `lessons/` za business lesson slice-ove. `build-sidebar` je sveden na čist lesson contract.
 
 ### 2. Zadrži jedan kanonski engine entry
 
 - `Status`: `DONE`
 - `Šta fali`: ništa
-- `Napomena`: Glavni player tok ostaje u `lesson-player/play-lesson/play-lesson.pipeline.js` i nema konkurentske monolitne implementacije.
+- `Napomena`: Glavni player tok ostaje u `animator/play-lesson/play-lesson.pipeline.js` i nema konkurentske monolitne implementacije.
 
 ### 3. Premesti concrete lesson sadržaj van shell-a
 
@@ -60,7 +60,7 @@ Ovaj fajl je kanonska lista za arhitekturu i sledeće veće korake ovog repoa.
 
 - `Status`: `DONE`
 - `Šta fali`: ništa
-- `Napomena`: Posle svake veće izmene pokrenuti `find lessons lesson-player lesson-documents -name '*.js' -print0 | xargs -0 -n1 node --check && node --check main.js`, zatim `npm run build`.
+- `Napomena`: Posle svake veće izmene pokrenuti `find animator lessons -name '*.js' -print0 | xargs -0 -n1 node --check && node --check main.js`, zatim `npm run build`.
 
 ### 8. Osveži merge dump posle svakog većeg pass-a
 

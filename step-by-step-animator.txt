@@ -45,24 +45,17 @@ Tree čitaš ovim redom:
 3. file responsibility
 4. function action
 
+Root je namerno podeljen na dve celine:
+
+- `animator/` je tehnički runtime, shell, playback i document tooling
+- `lessons/` su business lesson slice-ovi i njihov sadržaj
+
 Aktuelni kanonski shape:
 
 ```txt
-lessons/
-  register-lessons.js
-  build-sidebar/
-    build-sidebar.lesson.js
-    describe-steps.js
-    build-html-at-step.js
-    build-css-at-step.js
-    content/
-      documents/
-        build_sidebar.md
-        files/
-          lesson.sr.md
-          quiz.sr.md
-lesson-player/
-  select-lesson-from-location.js
+animator/
+  choose-lesson/
+    select-lesson-from-location.js
   play-lesson/
     play-lesson.pipeline.js
     lesson-player.css
@@ -100,12 +93,25 @@ lesson-player/
       remember-saved-steps.js
     choose-theme/
       choose-theme.js
-lesson-documents/
-  parse-frontmatter.js
-  render-markdown.js
-  read-lesson-metadata.js
-  read-knowledge-check-questions.js
-  sync-lesson-documents.js
+  lesson-documents/
+    parse-frontmatter.js
+    render-markdown.js
+    read-lesson-metadata.js
+    read-knowledge-check-questions.js
+    sync-lesson-documents.js
+lessons/
+  register-lessons.js
+  build-sidebar/
+    build-sidebar.lesson.js
+    describe-steps.js
+    build-html-at-step.js
+    build-css-at-step.js
+    content/
+      documents/
+        build_sidebar.md
+        files/
+          lesson.sr.md
+          quiz.sr.md
 ```
 
 ### 2.2 Lesson Contract
@@ -160,10 +166,10 @@ Pravila:
 - `index.html` je generičan lesson shell
 - `sidebar-step-by-step.html` je kompatibilni alias za `build-sidebar`
 - build ide kroz Vite
+- repo je podeljen na `animator/` i `lessons/`
 - business lekcije žive pod `lessons/`
-- tehnički player runtime živi pod `lesson-player/`
-- markdown parsing i sync tooling žive pod `lesson-documents/`
-- kanonski player entry ostaje `lesson-player/play-lesson/play-lesson.pipeline.js`
+- tehnički player runtime i markdown tooling žive pod `animator/`
+- kanonski player entry ostaje `animator/play-lesson/play-lesson.pipeline.js`
 
 ### 2.5 Naming Rules
 
@@ -243,7 +249,7 @@ To znači:
 Posle svake veće izmene obavezno pokreni:
 
 ```bash
-find lessons lesson-player lesson-documents -name '*.js' -print0 | xargs -0 -n1 node --check && node --check main.js
+find animator lessons -name '*.js' -print0 | xargs -0 -n1 node --check && node --check main.js
 npm run sync:lesson-documents
 npm run build
 ./merge-files.sh .
@@ -265,6 +271,8 @@ To znači:
 Ne završavaj ozbiljan implementation pass bez ovog zatvaranja, osim ako korisnik eksplicitno traži da se ne commituje ili ne pushuje.
 
 ## 3. Feature Contract
+
+Za pravljenje novih animiranih lekcija i AI prompt šablon pogledaj [LESSON_AUTHORING.md](/home/shomsy/projects/step-by-step-animator/LESSON_AUTHORING.md).
 
 ### 3.1 Lesson Layout
 
@@ -320,13 +328,16 @@ Za novu lekciju:
 7. dodaj `content/documents/files/quiz.sr.md`
 8. registruj lekciju u `lessons/register-lessons.js`
 
-Ne kopirati player runtime iz `lesson-player/play-lesson/`.
+Ne kopirati player runtime iz `animator/play-lesson/`.
 Nova lekcija treba da doda samo svoj contract i svoj content.
 
 === ARCHITECTURE.md ===
 # Architecture
 
-This repo follows a business-first screaming architecture.
+This repo follows a business-first screaming architecture with two top-level areas:
+
+- `animator/` for technical runtime and document tooling
+- `lessons/` for business lesson slices
 
 ## Shape
 
@@ -340,21 +351,9 @@ Read the tree in this order:
 Current example:
 
 ```txt
-lessons/
-  register-lessons.js
-  build-sidebar/
-    build-sidebar.lesson.js
-    describe-steps.js
-    build-html-at-step.js
-    build-css-at-step.js
-    content/
-      documents/
-        build_sidebar.md
-        files/
-          lesson.sr.md
-          quiz.sr.md
-lesson-player/
-  select-lesson-from-location.js
+animator/
+  choose-lesson/
+    select-lesson-from-location.js
   play-lesson/
     play-lesson.pipeline.js
     lesson-player.css
@@ -378,10 +377,23 @@ lesson-player/
       choose-theme.js
     06-download-lesson-files/
       download-lesson-files.js
-lesson-documents/
-  read-lesson-metadata.js
-  read-knowledge-check-questions.js
-  sync-lesson-documents.js
+  lesson-documents/
+    read-lesson-metadata.js
+    read-knowledge-check-questions.js
+    sync-lesson-documents.js
+lessons/
+  register-lessons.js
+  build-sidebar/
+    build-sidebar.lesson.js
+    describe-steps.js
+    build-html-at-step.js
+    build-css-at-step.js
+    content/
+      documents/
+        build_sidebar.md
+        files/
+          lesson.sr.md
+          quiz.sr.md
 ```
 
 ## Naming Rules
@@ -393,6 +405,7 @@ Use a folder name that tells what the product is doing.
 Good:
 
 ```txt
+animator/
 lessons/
 sell-subscriptions/
 review-progress/
@@ -567,6 +580,273 @@ Use this sentence as the filter before every new file:
 
 > If the folder does not say the flow, the file does not say the responsibility, or the function does not say the exact action, the name is not good enough.
 
+## Lesson Authoring
+
+How a lesson becomes animated is documented in [LESSON_AUTHORING.md](/home/shomsy/projects/step-by-step-animator/LESSON_AUTHORING.md).
+
+=== LESSON_AUTHORING.md ===
+# Lesson Authoring
+
+Ovaj fajl je praktični ugovor za pretvaranje sadržaja u animiranu `Step By Step Animator` lekciju.
+
+## 1. Suština
+
+Lekcija nije običan tekst i nije statičan tutorial.
+
+Lekcija mora da se ponaša kao da gledaš programera preko share screen-a:
+
+- HTML se dodaje element po element
+- CSS se dodaje property po property
+- preview prikazuje tačno isti kumulativni HTML/CSS koji je trenutno napisan
+- svaka promena mora da bude vizuelno jasna i verbalno objašnjiva
+
+Ako sadržaj ne može da se razbije na takve male, čitljive korake, još nije spreman za ovu vrstu animacije.
+
+## 2. Gde ide nova lekcija
+
+Svaka nova lekcija ide u svoj folder pod:
+
+```txt
+lessons/
+  feature-name/
+```
+
+Minimalni shape:
+
+```txt
+lessons/
+  feature-name/
+    feature-name.lesson.js
+    describe-steps.js
+    build-html-at-step.js
+    build-css-at-step.js
+    content/
+      documents/
+        files/
+          lesson.sr.md
+          quiz.sr.md
+```
+
+## 3. Šta svaki fajl radi
+
+`feature-name.lesson.js`
+
+- sastavlja lesson contract
+- povezuje markdown metadata
+- povezuje step script
+- povezuje HTML/CSS builder funkcije
+- povezuje knowledge check pitanja
+
+`describe-steps.js`
+
+- opisuje ceo teaching tok
+- svaki step mora da ima jasan naslov, opis, tag i pro tip
+- HTML step i CSS step moraju da budu odvojeni i precizni
+
+`build-html-at-step.js`
+
+- vraća kompletan kumulativni HTML za dati step
+- ne vraća diff
+- preview se hrani direktno iz ovog output-a
+
+`build-css-at-step.js`
+
+- vraća kompletan kumulativni CSS za dati step
+- ne vraća diff
+- CSS ide property po property
+
+`content/documents/files/lesson.sr.md`
+
+- drži title, intro i metadata
+
+`content/documents/files/quiz.sr.md`
+
+- drži knowledge check pitanja
+
+## 4. Pravila za animirani lesson flow
+
+### 4.1 Početak
+
+Ako lekcija gradi komponentu, kreni od najmanjeg neutralnog početka.
+
+Za layout ili komponentu to je najčešće:
+
+```html
+<div class="app-shell">
+```
+
+Nemoj rano ubacivati filler sadržaj koji lekcija ne objašnjava.
+
+### 4.2 HTML pravila
+
+HTML piši element po element.
+
+Dobro:
+
+1. dodaj root wrapper
+2. dodaj glavni semantic element
+3. dodaj child zonu
+4. dodaj child element
+5. dodaj labelu ili copy
+
+Loše:
+
+- ubaciti ceo gotov DOM odjednom
+- preskočiti međukorake koje preview treba da pokaže
+
+### 4.3 CSS pravila
+
+CSS piši property po property.
+
+Dobro:
+
+1. dodaj privremeni helper border ili outline da element odmah postane vidljiv
+2. dodaj veličinu ili spacing
+3. dodaj raspored
+4. dodaj boje i polish
+5. ukloni helper border kada se završi cela vizuelna celina
+
+Loše:
+
+- nalepiti ceo selector blok odjednom
+- dodati polish pre nego što je footprint elementa jasan
+
+### 4.4 Helper stilovi
+
+Kad je neka celina tek u izgradnji, helper linije su obavezne ako pomažu orijentaciji.
+
+Pravila:
+
+- helper outline ili border uvodi se rano
+- svaki pod-element iste celine može imati svoju helper boju
+- helper stilovi ostaju aktivni dok se ne završi cela vizuelna celina
+- kada celina bude gotova, eksplicitno ukloni helper stilove
+
+Step opis mora to i da kaže:
+
+- kada uvodiš helper stil: `Dodajemo privremeni pomoćni border radi lakšeg snalaženja, kasnije ćemo ga ukloniti.`
+- kada ga uklanjaš: `Uklanjamo privremeni pomoćni border, više nam ne treba.`
+
+### 4.5 Preview integritet
+
+Preview mora da bude stvarni rezultat istog koda koji se vidi u editor panelu.
+
+To znači:
+
+- nema posebnog fake preview DOM-a
+- nema ručno režirane scene
+- nema CSS-a koji nije došao iz `build-css-at-step.js`
+- nema HTML-a koji nije došao iz `build-html-at-step.js`
+
+## 5. Kako razložiti sadržaj u steps
+
+Pre nego što pišeš fajlove, sadržaj razloži ovim redom:
+
+1. Koji je konačni HTML?
+2. Koje su glavne vizuelne celine?
+3. Kojim redom korisnik treba da ih vidi da bi razumeo građenje?
+4. Koji je najmanji HTML korak koji još uvek ima smisla?
+5. Koji je najmanji CSS property korak koji pravi vidljivu ili logičku promenu?
+
+Najčešći dobar redosled je:
+
+1. root shell
+2. glavni semantic wrapper
+3. prva velika celina
+4. child elementi te celine
+5. helper stilovi za orijentaciju
+6. layout property-i
+7. spacing
+8. colors / typography
+9. interaction states
+10. responsive pravila
+11. done
+
+## 6. Markdown contract
+
+`lesson.sr.md`:
+
+```md
+---
+title: Naslov lekcije
+previewAddress: browser://feature-preview
+previewTitle: Live feature preview
+htmlFileName: index.html
+cssFileName: style.css
+---
+
+Kratak uvod u lekciju.
+```
+
+`quiz.sr.md`:
+
+```md
+## Question 1
+? Pitanje
+- [ ] Pogrešan odgovor
+- [x] Tačan odgovor
+- [ ] Pogrešan odgovor
+! Kratko objašnjenje zašto je to tačno.
+```
+
+## 7. Šta da kažeš AI-u
+
+Ako želiš da AI pretvori sadržaj u lekciju, daj mu i cilj UI-ja i stroga pravila animacije.
+
+Koristi ovaj template:
+
+```txt
+Pretvori ovo u Step By Step Animator lekciju.
+
+Cilj lekcije:
+- Napraviti [naziv komponente ili layouta]
+- Krajnji rezultat treba da izgleda kao [kratak opis]
+
+Repo contract:
+- root split je `animator/` i `lessons/`
+- novu lekciju dodaj pod `lessons/[feature-name]/`
+- napravi:
+  - `[feature-name].lesson.js`
+  - `describe-steps.js`
+  - `build-html-at-step.js`
+  - `build-css-at-step.js`
+  - `content/documents/files/lesson.sr.md`
+  - `content/documents/files/quiz.sr.md`
+
+Animaciona pravila:
+- HTML ide element po element
+- CSS ide property po property
+- preview mora da bude hranjen iz istog kumulativnog HTML/CSS output-a
+- kreni od neutralnog početka, najčešće `<div class="app-shell">`
+- ne ubacuj filler sadržaj koji lekcija ne objašnjava
+- uvodi helper bordere ili outlin-e rano ako element bez njih nije dovoljno vidljiv
+- helper stilovi ostaju dok se ne završi cela vizuelna celina
+- kada uvodiš helper stil, step opis mora da kaže da je privremen
+- kada uklanjaš helper stil, step opis mora da kaže da ga uklanjaš jer više nije potreban
+- svaka CSS promena mora da bude ili vizuelno jasna ili logički neophodna u tom trenutku
+
+Authoring pravila:
+- folder kaže use case
+- file kaže jednu odgovornost
+- function kaže tačnu akciju
+- ne koristi generic nazive kao utils, helpers, common, service
+- ne lepi gotov stylesheet odjednom
+- ne lepi gotov HTML odjednom
+
+Isporuči output spreman za ovaj repo.
+```
+
+## 8. Kratki filter pre svakog novog stepa
+
+Pre nego što zadržiš step, proveri:
+
+- Da li ovaj step pravi jednu jasnu promenu?
+- Da li preview može jasno da pokaže tu promenu?
+- Da li bih mogao glasom da objasnim baš ovaj step bez skakanja?
+- Da li je ovo prirodan sledeći korak za čoveka koji uči?
+
+Ako odgovor nije `da`, step treba razbiti ili pomeriti.
+
 === TODO.md ===
 # TODO
 
@@ -584,13 +864,13 @@ Ovaj fajl je kanonska lista za arhitekturu i sledeće veće korake ovog repoa.
 
 - `Status`: `DONE`
 - `Šta fali`: ništa
-- `Napomena`: Business lekcije sada žive u `lessons/`, generičan player runtime u `lesson-player/play-lesson/`, a `build-sidebar` je sveden na lesson contract.
+- `Napomena`: Root je sada podeljen na dve jasne celine: `animator/` za tehnički runtime i tooling, i `lessons/` za business lesson slice-ove. `build-sidebar` je sveden na čist lesson contract.
 
 ### 2. Zadrži jedan kanonski engine entry
 
 - `Status`: `DONE`
 - `Šta fali`: ništa
-- `Napomena`: Glavni player tok ostaje u `lesson-player/play-lesson/play-lesson.pipeline.js` i nema konkurentske monolitne implementacije.
+- `Napomena`: Glavni player tok ostaje u `animator/play-lesson/play-lesson.pipeline.js` i nema konkurentske monolitne implementacije.
 
 ### 3. Premesti concrete lesson sadržaj van shell-a
 
@@ -630,7 +910,7 @@ Ovaj fajl je kanonska lista za arhitekturu i sledeće veće korake ovog repoa.
 
 - `Status`: `DONE`
 - `Šta fali`: ništa
-- `Napomena`: Posle svake veće izmene pokrenuti `find lessons lesson-player lesson-documents -name '*.js' -print0 | xargs -0 -n1 node --check && node --check main.js`, zatim `npm run build`.
+- `Napomena`: Posle svake veće izmene pokrenuti `find animator lessons -name '*.js' -print0 | xargs -0 -n1 node --check && node --check main.js`, zatim `npm run build`.
 
 ### 8. Osveži merge dump posle svakog većeg pass-a
 
@@ -638,209 +918,17 @@ Ovaj fajl je kanonska lista za arhitekturu i sledeće veće korake ovog repoa.
 - `Šta fali`: ništa
 - `Napomena`: `./merge-files.sh .` ostaje obavezni završni korak posle većih rename, split ili doc pass-ova.
 
-=== index.html ===
-<!DOCTYPE html>
-<html lang="sr" data-theme="dark">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Step By Step Animator</title>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
-</head>
-<body>
-  <!-- Header Controls -->
-  <div class="header-controls">
-    <button class="control-btn" id="searchBtn" title="Pretraži (Ctrl+K)">
-      <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
-    </button>
-    <button class="control-btn" id="quizBtn" title="Kviz znanja">
-      <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"/></svg>
-    </button>
-    <button class="control-btn" id="themeBtn" title="Promeni temu">
-      <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"/></svg>
-    </button>
-    <button class="control-btn" id="downloadBtn" title="Preuzmi fajlove">
-      <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
-    </button>
-  </div>
+=== animator/choose-lesson/select-lesson-from-location.js ===
+import { findLesson, getDefaultLessonId } from '../../lessons/register-lessons.js';
 
-  <!-- Search Modal -->
-  <div class="modal-overlay" id="searchModal">
-    <div class="modal">
-      <div class="modal-header">
-        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
-        <input type="text" class="modal-search" id="searchInput" placeholder="Pretraži korake...">
-      </div>
-      <div class="modal-body" id="searchResults"></div>
-    </div>
-  </div>
+export function selectLessonFromLocation({ ownerLocation }) {
+  const selectedLessonId = new URL(ownerLocation.href).searchParams.get('lesson');
+  const defaultLessonId = getDefaultLessonId();
 
-  <!-- Quiz Modal -->
-  <div class="modal-overlay quiz-modal" id="quizModal">
-    <div class="modal">
-      <div class="modal-header">
-        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"/></svg>
-        <span style="font-weight:600;">Provera znanja</span>
-      </div>
-      <div id="quizContent"></div>
-    </div>
-  </div>
+  return findLesson(selectedLessonId) || findLesson(defaultLessonId);
+}
 
-  <div class="page">
-    <section class="panel left-panel">
-      <div class="eyebrow">
-        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
-        Interaktivna lekcija
-      </div>
-      <h1 id="lessonHeading">Step By Step Animator</h1>
-      <p class="intro" id="lessonIntro">
-        Koraci po korak pratiš kako se kod i preview grade u realnom vremenu. Aktivna lekcija popunjava ovaj viewer svojim sadržajem.
-      </p>
-
-      <div class="tabs">
-        <button class="tab-btn active" data-tab="steps">
-          <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg>
-          Koraci
-        </button>
-        <button class="tab-btn" data-tab="bookmarks">
-          <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z"/></svg>
-          <span id="bookmarkCount">0</span>
-        </button>
-      </div>
-
-      <div class="panel-view" id="stepsPanel">
-        <div class="step-card" id="stepCard">
-          <div class="step-header">
-            <span class="step-number" id="stepNumber">Prizor 1 / 21</span>
-            <button class="step-bookmark" id="bookmarkBtn" title="Sačuvaj korak">
-              <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z"/></svg>
-            </button>
-          </div>
-          <h2 class="step-title" id="stepTitle"></h2>
-          <p class="step-desc" id="stepDesc"></p>
-          <div class="pro-tip" id="proTip">
-            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
-            <p id="proTipText"></p>
-          </div>
-          <div class="step-dots" id="dots"></div>
-        </div>
-      </div>
-
-      <div class="panel-view" id="bookmarksPanel" hidden>
-        <div class="bookmarks-panel">
-          <div class="bookmarks-head">
-            <div>
-              <span class="step-number">Sačuvani koraci</span>
-              <h2>Bookmarkovi</h2>
-              <p>Vrati se direktno na bitne faze i očisti listu kad ti više ne trebaju.</p>
-            </div>
-            <span class="bookmark-summary" id="bookmarkSummary">0 sačuvano</span>
-          </div>
-          <div class="bookmark-empty" id="bookmarkEmpty">
-            <strong>Nema sačuvanih koraka</strong>
-            Klikni ikonicu bookmarka na bilo kom koraku i pojaviće se ovde kao brza prečica.
-          </div>
-          <div class="bookmark-list" id="bookmarkList" hidden></div>
-        </div>
-      </div>
-
-      <div class="progress-container">
-        <div class="progress-bar">
-          <div class="progress-bar-inner" id="progressBar"></div>
-        </div>
-        <div class="progress-info">
-          <span id="progressText">0% završeno</span>
-          <span id="timeEstimate">~2 min preostalo</span>
-        </div>
-      </div>
-
-      <div class="controls">
-        <button class="btn-secondary btn-icon" id="prevBtn" title="Prethodni">
-          <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/></svg>
-        </button>
-        <button class="btn-primary" id="nextBtn">
-          Sledeći
-          <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
-        </button>
-        <button class="btn-secondary" id="playBtn" title="Pokreni prezentaciju">
-          <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z"/></svg>
-          <span>Play</span>
-        </button>
-        <button class="btn-secondary" id="pauseBtn" title="Pauziraj prezentaciju">
-          <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 9v6m4-6v6"/></svg>
-          <span>Pause</span>
-        </button>
-        <button class="btn-ghost" id="stopBtn" title="Zaustavi i vrati na početak">
-          <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 9h6v6H9z"/></svg>
-          <span>Stop</span>
-        </button>
-      </div>
-
-      <div class="shortcuts">
-        <div class="shortcut"><span class="kbd">←</span><span class="kbd">→</span> Navigacija</div>
-        <div class="shortcut"><span class="kbd">Space</span> Play / Pause</div>
-        <div class="shortcut"><span class="kbd">Ctrl</span><span class="kbd">K</span> Pretraga</div>
-        <div class="shortcut"><span class="kbd">B</span> Bookmark</div>
-      </div>
-    </section>
-
-    <section class="panel live-editor-panel">
-      <div class="live-editor-head">
-        <div class="live-editor-copy">
-          <h2>Ekran editora</h2>
-          <p>Kumulativni fajlovi se popunjavaju liniju po liniju, kao da gledaš live tutorijal preko share screen-a.</p>
-        </div>
-        <span class="live-editor-step" id="liveStepBadge">Prizor 1</span>
-      </div>
-
-      <div class="live-editor-body">
-        <div class="live-pane">
-          <div class="live-pane-head">
-            <span id="htmlFileLabel">index.html</span>
-            <span>Postojeće muted, novo istaknuto</span>
-          </div>
-          <div class="live-code-scroll" id="liveHtmlPane"></div>
-        </div>
-
-        <div class="live-pane">
-          <div class="live-pane-head">
-            <span id="cssFileLabel">style.css</span>
-            <span>Staro muted, novo property istaknuto</span>
-          </div>
-          <div class="live-code-scroll" id="liveCssPane"></div>
-        </div>
-      </div>
-    </section>
-
-    <section class="panel viewer">
-      <div class="stage" id="stage">
-        <div class="live-preview-shell">
-          <div class="live-preview-head">
-            <div class="live-preview-controls" aria-hidden="true">
-              <span class="live-preview-dot live-preview-dot-close"></span>
-              <span class="live-preview-dot live-preview-dot-minimize"></span>
-              <span class="live-preview-dot live-preview-dot-expand"></span>
-            </div>
-            <div class="live-preview-address">
-              <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 11c1.657 0 3-1.343 3-3S13.657 5 12 5 9 6.343 9 8s1.343 3 3 3zm0 0v8m-4-4h8"/></svg>
-              <span id="previewAddress">browser://live-lesson-preview</span>
-            </div>
-            <span class="tag accent" id="tagText">
-              <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4"/></svg>
-              lesson:ready
-            </span>
-          </div>
-          <iframe class="live-preview-frame" id="livePreviewFrame" title="Live lesson preview"></iframe>
-        </div>
-      </div>
-    </section>
-  </div>
-
-  <script type="module" src="/main.js"></script>
-</body>
-</html>
-
-=== lesson-documents/parse-frontmatter.js ===
+=== animator/lesson-documents/parse-frontmatter.js ===
 export function parseFrontmatter(markdown) {
   if (!markdown) {
     return { attributes: {}, body: '' };
@@ -897,7 +985,7 @@ export function parseFrontmatter(markdown) {
   };
 }
 
-=== lesson-documents/read-knowledge-check-questions.js ===
+=== animator/lesson-documents/read-knowledge-check-questions.js ===
 export function readKnowledgeCheckQuestions(markdown) {
   if (!markdown) {
     return [];
@@ -964,7 +1052,7 @@ export function readKnowledgeCheckQuestions(markdown) {
   );
 }
 
-=== lesson-documents/read-lesson-metadata.js ===
+=== animator/lesson-documents/read-lesson-metadata.js ===
 import { parseFrontmatter } from './parse-frontmatter.js';
 import { renderMarkdown } from './render-markdown.js';
 
@@ -991,7 +1079,7 @@ export function readLessonMetadata(markdown, defaults = {}) {
   };
 }
 
-=== lesson-documents/render-markdown.js ===
+=== animator/lesson-documents/render-markdown.js ===
 function escapeHtml(text) {
   return String(text)
     .replaceAll('&', '&amp;')
@@ -1205,13 +1293,13 @@ export function renderMarkdown(markdown) {
   return htmlParts.join('\n');
 }
 
-=== lesson-documents/sync-lesson-documents.js ===
+=== animator/lesson-documents/sync-lesson-documents.js ===
 import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const currentDir = path.dirname(fileURLToPath(import.meta.url));
-const lessonsRoot = path.resolve(currentDir, '../lessons');
+const lessonsRoot = path.resolve(currentDir, '../../lessons');
 
 function collectLessonDocumentFolders() {
   return fs.readdirSync(lessonsRoot, { withFileTypes: true })
@@ -1271,7 +1359,7 @@ generatedFiles.forEach(filePath => {
   console.log(`Generated: ${path.relative(process.cwd(), filePath)}`);
 });
 
-=== lesson-player/play-lesson/01-start-lesson/create-lesson-progress.js ===
+=== animator/play-lesson/01-start-lesson/create-lesson-progress.js ===
 export function createLessonProgress() {
   return {
     currentStepNumber: 0,
@@ -1280,7 +1368,7 @@ export function createLessonProgress() {
   };
 }
 
-=== lesson-player/play-lesson/01-start-lesson/find-lesson-parts.js ===
+=== animator/play-lesson/01-start-lesson/find-lesson-parts.js ===
 function readRequiredElement(ownerDocument, id) {
   const element = ownerDocument.getElementById(id);
 
@@ -1337,7 +1425,7 @@ export function findLessonParts(ownerDocument) {
   };
 }
 
-=== lesson-player/play-lesson/01-start-lesson/show-lesson-shell.js ===
+=== animator/play-lesson/01-start-lesson/show-lesson-shell.js ===
 export function showLessonShell({ ownerDocument, lessonParts, lesson }) {
   lessonParts.lessonHeading.textContent = lesson.lessonTitle;
 
@@ -1354,7 +1442,7 @@ export function showLessonShell({ ownerDocument, lessonParts, lesson }) {
   ownerDocument.title = `Step By Step Animator · ${lesson.lessonTitle}`;
 }
 
-=== lesson-player/play-lesson/02-follow-lesson/listen-for-lesson-keys.js ===
+=== animator/play-lesson/02-follow-lesson/listen-for-lesson-keys.js ===
 function isTypingSurface(target) {
   return target instanceof HTMLElement && (
     target.matches('input, textarea, select') ||
@@ -1405,7 +1493,7 @@ export function listenForLessonKeys({
   });
 }
 
-=== lesson-player/play-lesson/02-follow-lesson/show-active-lesson-panel.js ===
+=== animator/play-lesson/02-follow-lesson/show-active-lesson-panel.js ===
 export function showActiveLessonPanel(lessonParts, activePanel) {
   lessonParts.stepPanel.hidden = activePanel !== 'steps';
   lessonParts.savedStepsPanel.hidden = activePanel !== 'bookmarks';
@@ -1415,7 +1503,7 @@ export function showActiveLessonPanel(lessonParts, activePanel) {
   });
 }
 
-=== lesson-player/play-lesson/02-follow-lesson/show-current-step.js ===
+=== animator/play-lesson/02-follow-lesson/show-current-step.js ===
 function composeStepTagMarkup(tag) {
   return `<svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4"/></svg> ${tag}`;
 }
@@ -1436,7 +1524,7 @@ export function showCurrentStep({ lessonParts, step, currentStepNumber, totalSte
   lessonParts.nextButton.disabled = currentStepNumber === totalSteps - 1;
 }
 
-=== lesson-player/play-lesson/02-follow-lesson/show-step-timeline.js ===
+=== animator/play-lesson/02-follow-lesson/show-step-timeline.js ===
 export function showStepTimeline({
   lessonParts,
   steps,
@@ -1461,7 +1549,7 @@ export function showStepTimeline({
   });
 }
 
-=== lesson-player/play-lesson/03-watch-code/compare-code-lines.js ===
+=== animator/play-lesson/03-watch-code/compare-code-lines.js ===
 export function compareCodeLines(currentLines, previousLines) {
   let previousLineIndex = 0;
 
@@ -1482,7 +1570,7 @@ export function compareCodeLines(currentLines, previousLines) {
   });
 }
 
-=== lesson-player/play-lesson/03-watch-code/describe-css-line-role.js ===
+=== animator/play-lesson/03-watch-code/describe-css-line-role.js ===
 export function describeCssLineRole(lineText) {
   const trimmedLine = lineText.trim();
 
@@ -1505,7 +1593,7 @@ export function describeCssLineRole(lineText) {
   return 'plain';
 }
 
-=== lesson-player/play-lesson/03-watch-code/escape-code-text.js ===
+=== animator/play-lesson/03-watch-code/escape-code-text.js ===
 export function escapeCodeText(value) {
   return value
     .replace(/&/g, '&amp;')
@@ -1513,7 +1601,7 @@ export function escapeCodeText(value) {
     .replace(/>/g, '&gt;');
 }
 
-=== lesson-player/play-lesson/03-watch-code/scroll-to-added-line.js ===
+=== animator/play-lesson/03-watch-code/scroll-to-added-line.js ===
 export function scrollToAddedLine(container) {
   const addedLine = container.querySelector('[data-added="true"]');
 
@@ -1526,7 +1614,7 @@ export function scrollToAddedLine(container) {
   });
 }
 
-=== lesson-player/play-lesson/03-watch-code/show-growing-code.js ===
+=== animator/play-lesson/03-watch-code/show-growing-code.js ===
 import { compareCodeLines } from './compare-code-lines.js';
 import { describeCssLineRole } from './describe-css-line-role.js';
 import { escapeCodeText } from './escape-code-text.js';
@@ -1572,7 +1660,7 @@ export function showGrowingCode({
   scrollToAddedLine(lessonParts.cssCodePane);
 }
 
-=== lesson-player/play-lesson/04-watch-preview/show-current-preview.js ===
+=== animator/play-lesson/04-watch-preview/show-current-preview.js ===
 function composeLivePreviewDocument(lesson, currentStepNumber) {
   const htmlMarkup = lesson.buildHtmlAtStep(currentStepNumber).join('\n');
   const cssMarkup = lesson.buildCssAtStep(currentStepNumber).join('\n');
@@ -1605,7 +1693,7 @@ export function showCurrentPreview({
   lessonParts.livePreviewFrame.srcdoc = livePreviewDocument;
 }
 
-=== lesson-player/play-lesson/05-check-understanding/create-knowledge-check-progress.js ===
+=== animator/play-lesson/05-check-understanding/create-knowledge-check-progress.js ===
 export function createKnowledgeCheckProgress() {
   return {
     currentQuestionNumber: 0,
@@ -1613,7 +1701,7 @@ export function createKnowledgeCheckProgress() {
   };
 }
 
-=== lesson-player/play-lesson/05-check-understanding/present-knowledge-check.js ===
+=== animator/play-lesson/05-check-understanding/present-knowledge-check.js ===
 import { createKnowledgeCheckProgress } from './create-knowledge-check-progress.js';
 import { showKnowledgeCheckQuestion } from './show-knowledge-check-question.js';
 import { showKnowledgeCheckScore } from './show-knowledge-check-score.js';
@@ -1744,7 +1832,7 @@ export function presentKnowledgeCheck({ lessonParts, knowledgeCheckQuestions }) 
   };
 }
 
-=== lesson-player/play-lesson/05-check-understanding/show-knowledge-check-question.js ===
+=== animator/play-lesson/05-check-understanding/show-knowledge-check-question.js ===
 import { escapeInlineText } from '../escape-inline-text.js';
 
 export function showKnowledgeCheckQuestion({
@@ -1771,7 +1859,7 @@ export function showKnowledgeCheckQuestion({
   `;
 }
 
-=== lesson-player/play-lesson/05-check-understanding/show-knowledge-check-score.js ===
+=== animator/play-lesson/05-check-understanding/show-knowledge-check-score.js ===
 export function showKnowledgeCheckScore({
   lessonParts,
   correctAnswerCount,
@@ -1792,7 +1880,7 @@ export function showKnowledgeCheckScore({
   `;
 }
 
-=== lesson-player/play-lesson/06-download-lesson-files/download-lesson-files.js ===
+=== animator/play-lesson/06-download-lesson-files/download-lesson-files.js ===
 function triggerFileDownload(fileName, mimeType, fileContent) {
   const blob = new Blob([fileContent], { type: mimeType });
   const downloadLink = document.createElement('a');
@@ -1819,7 +1907,7 @@ export function downloadLessonFiles({ lesson }) {
   }, 500);
 }
 
-=== lesson-player/play-lesson/choose-theme/choose-theme.js ===
+=== animator/play-lesson/choose-theme/choose-theme.js ===
 const THEME_STORAGE_KEY = 'stepByStepAnimatorTheme';
 
 function showThemeButtonIcon(themeButton, theme) {
@@ -1859,7 +1947,7 @@ export function chooseTheme({ rootElement, themeButton }) {
   };
 }
 
-=== lesson-player/play-lesson/escape-inline-text.js ===
+=== animator/play-lesson/escape-inline-text.js ===
 export function escapeInlineText(value) {
   return String(value)
     .replace(/&/g, '&amp;')
@@ -1869,7 +1957,7 @@ export function escapeInlineText(value) {
     .replace(/'/g, '&#39;');
 }
 
-=== lesson-player/play-lesson/find-step/present-step-finder.js ===
+=== animator/play-lesson/find-step/present-step-finder.js ===
 import { escapeInlineText } from '../escape-inline-text.js';
 
 export function presentStepFinder({ lessonParts, steps, goToStepNumber }) {
@@ -1937,7 +2025,7 @@ export function presentStepFinder({ lessonParts, steps, goToStepNumber }) {
   };
 }
 
-=== lesson-player/play-lesson/lesson-player.css ===
+=== animator/play-lesson/lesson-player.css ===
 :root {
   /* Dark Theme (Default) */
   --bg: #0b1020;
@@ -3128,7 +3216,7 @@ button:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
   .shortcuts { display: none; }
 }
 
-=== lesson-player/play-lesson/play-lesson.pipeline.js ===
+=== animator/play-lesson/play-lesson.pipeline.js ===
 import { createLessonProgress } from './01-start-lesson/create-lesson-progress.js';
 import { findLessonParts } from './01-start-lesson/find-lesson-parts.js';
 import { showLessonShell } from './01-start-lesson/show-lesson-shell.js';
@@ -3343,7 +3431,7 @@ export function playLesson({ ownerDocument, lesson }) {
   }
 }
 
-=== lesson-player/play-lesson/save-step/read-saved-step-numbers.js ===
+=== animator/play-lesson/save-step/read-saved-step-numbers.js ===
 function composeSavedStepStorageKey(lessonId) {
   return `stepByStepAnimator:${lessonId}:savedSteps`;
 }
@@ -3365,7 +3453,7 @@ export function readSavedStepNumbers({ lessonId, totalSteps }) {
   }
 }
 
-=== lesson-player/play-lesson/save-step/remember-saved-steps.js ===
+=== animator/play-lesson/save-step/remember-saved-steps.js ===
 import { readSavedStepNumbers } from './read-saved-step-numbers.js';
 import { showSavedStepList } from './show-saved-step-list.js';
 import { writeSavedStepNumbers } from './write-saved-step-numbers.js';
@@ -3434,7 +3522,7 @@ export function rememberSavedSteps({
   };
 }
 
-=== lesson-player/play-lesson/save-step/show-saved-step-list.js ===
+=== animator/play-lesson/save-step/show-saved-step-list.js ===
 import { escapeInlineText } from '../escape-inline-text.js';
 
 export function showSavedStepList({
@@ -3472,7 +3560,7 @@ export function showSavedStepList({
   `).join('');
 }
 
-=== lesson-player/play-lesson/save-step/write-saved-step-numbers.js ===
+=== animator/play-lesson/save-step/write-saved-step-numbers.js ===
 function composeSavedStepStorageKey(lessonId) {
   return `stepByStepAnimator:${lessonId}:savedSteps`;
 }
@@ -3481,15 +3569,207 @@ export function writeSavedStepNumbers({ lessonId, savedStepNumbers }) {
   localStorage.setItem(composeSavedStepStorageKey(lessonId), JSON.stringify(savedStepNumbers));
 }
 
-=== lesson-player/select-lesson-from-location.js ===
-import { findLesson, getDefaultLessonId } from '../lessons/register-lessons.js';
+=== index.html ===
+<!DOCTYPE html>
+<html lang="sr" data-theme="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Step By Step Animator</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+</head>
+<body>
+  <!-- Header Controls -->
+  <div class="header-controls">
+    <button class="control-btn" id="searchBtn" title="Pretraži (Ctrl+K)">
+      <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+    </button>
+    <button class="control-btn" id="quizBtn" title="Kviz znanja">
+      <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"/></svg>
+    </button>
+    <button class="control-btn" id="themeBtn" title="Promeni temu">
+      <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"/></svg>
+    </button>
+    <button class="control-btn" id="downloadBtn" title="Preuzmi fajlove">
+      <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
+    </button>
+  </div>
 
-export function selectLessonFromLocation({ ownerLocation }) {
-  const selectedLessonId = new URL(ownerLocation.href).searchParams.get('lesson');
-  const defaultLessonId = getDefaultLessonId();
+  <!-- Search Modal -->
+  <div class="modal-overlay" id="searchModal">
+    <div class="modal">
+      <div class="modal-header">
+        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+        <input type="text" class="modal-search" id="searchInput" placeholder="Pretraži korake...">
+      </div>
+      <div class="modal-body" id="searchResults"></div>
+    </div>
+  </div>
 
-  return findLesson(selectedLessonId) || findLesson(defaultLessonId);
-}
+  <!-- Quiz Modal -->
+  <div class="modal-overlay quiz-modal" id="quizModal">
+    <div class="modal">
+      <div class="modal-header">
+        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"/></svg>
+        <span style="font-weight:600;">Provera znanja</span>
+      </div>
+      <div id="quizContent"></div>
+    </div>
+  </div>
+
+  <div class="page">
+    <section class="panel left-panel">
+      <div class="eyebrow">
+        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+        Interaktivna lekcija
+      </div>
+      <h1 id="lessonHeading">Step By Step Animator</h1>
+      <p class="intro" id="lessonIntro">
+        Koraci po korak pratiš kako se kod i preview grade u realnom vremenu. Aktivna lekcija popunjava ovaj viewer svojim sadržajem.
+      </p>
+
+      <div class="tabs">
+        <button class="tab-btn active" data-tab="steps">
+          <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg>
+          Koraci
+        </button>
+        <button class="tab-btn" data-tab="bookmarks">
+          <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z"/></svg>
+          <span id="bookmarkCount">0</span>
+        </button>
+      </div>
+
+      <div class="panel-view" id="stepsPanel">
+        <div class="step-card" id="stepCard">
+          <div class="step-header">
+            <span class="step-number" id="stepNumber">Prizor 1 / 21</span>
+            <button class="step-bookmark" id="bookmarkBtn" title="Sačuvaj korak">
+              <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z"/></svg>
+            </button>
+          </div>
+          <h2 class="step-title" id="stepTitle"></h2>
+          <p class="step-desc" id="stepDesc"></p>
+          <div class="pro-tip" id="proTip">
+            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+            <p id="proTipText"></p>
+          </div>
+          <div class="step-dots" id="dots"></div>
+        </div>
+      </div>
+
+      <div class="panel-view" id="bookmarksPanel" hidden>
+        <div class="bookmarks-panel">
+          <div class="bookmarks-head">
+            <div>
+              <span class="step-number">Sačuvani koraci</span>
+              <h2>Bookmarkovi</h2>
+              <p>Vrati se direktno na bitne faze i očisti listu kad ti više ne trebaju.</p>
+            </div>
+            <span class="bookmark-summary" id="bookmarkSummary">0 sačuvano</span>
+          </div>
+          <div class="bookmark-empty" id="bookmarkEmpty">
+            <strong>Nema sačuvanih koraka</strong>
+            Klikni ikonicu bookmarka na bilo kom koraku i pojaviće se ovde kao brza prečica.
+          </div>
+          <div class="bookmark-list" id="bookmarkList" hidden></div>
+        </div>
+      </div>
+
+      <div class="progress-container">
+        <div class="progress-bar">
+          <div class="progress-bar-inner" id="progressBar"></div>
+        </div>
+        <div class="progress-info">
+          <span id="progressText">0% završeno</span>
+          <span id="timeEstimate">~2 min preostalo</span>
+        </div>
+      </div>
+
+      <div class="controls">
+        <button class="btn-secondary btn-icon" id="prevBtn" title="Prethodni">
+          <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/></svg>
+        </button>
+        <button class="btn-primary" id="nextBtn">
+          Sledeći
+          <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+        </button>
+        <button class="btn-secondary" id="playBtn" title="Pokreni prezentaciju">
+          <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z"/></svg>
+          <span>Play</span>
+        </button>
+        <button class="btn-secondary" id="pauseBtn" title="Pauziraj prezentaciju">
+          <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 9v6m4-6v6"/></svg>
+          <span>Pause</span>
+        </button>
+        <button class="btn-ghost" id="stopBtn" title="Zaustavi i vrati na početak">
+          <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 9h6v6H9z"/></svg>
+          <span>Stop</span>
+        </button>
+      </div>
+
+      <div class="shortcuts">
+        <div class="shortcut"><span class="kbd">←</span><span class="kbd">→</span> Navigacija</div>
+        <div class="shortcut"><span class="kbd">Space</span> Play / Pause</div>
+        <div class="shortcut"><span class="kbd">Ctrl</span><span class="kbd">K</span> Pretraga</div>
+        <div class="shortcut"><span class="kbd">B</span> Bookmark</div>
+      </div>
+    </section>
+
+    <section class="panel live-editor-panel">
+      <div class="live-editor-head">
+        <div class="live-editor-copy">
+          <h2>Ekran editora</h2>
+          <p>Kumulativni fajlovi se popunjavaju liniju po liniju, kao da gledaš live tutorijal preko share screen-a.</p>
+        </div>
+        <span class="live-editor-step" id="liveStepBadge">Prizor 1</span>
+      </div>
+
+      <div class="live-editor-body">
+        <div class="live-pane">
+          <div class="live-pane-head">
+            <span id="htmlFileLabel">index.html</span>
+            <span>Postojeće muted, novo istaknuto</span>
+          </div>
+          <div class="live-code-scroll" id="liveHtmlPane"></div>
+        </div>
+
+        <div class="live-pane">
+          <div class="live-pane-head">
+            <span id="cssFileLabel">style.css</span>
+            <span>Staro muted, novo property istaknuto</span>
+          </div>
+          <div class="live-code-scroll" id="liveCssPane"></div>
+        </div>
+      </div>
+    </section>
+
+    <section class="panel viewer">
+      <div class="stage" id="stage">
+        <div class="live-preview-shell">
+          <div class="live-preview-head">
+            <div class="live-preview-controls" aria-hidden="true">
+              <span class="live-preview-dot live-preview-dot-close"></span>
+              <span class="live-preview-dot live-preview-dot-minimize"></span>
+              <span class="live-preview-dot live-preview-dot-expand"></span>
+            </div>
+            <div class="live-preview-address">
+              <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 11c1.657 0 3-1.343 3-3S13.657 5 12 5 9 6.343 9 8s1.343 3 3 3zm0 0v8m-4-4h8"/></svg>
+              <span id="previewAddress">browser://live-lesson-preview</span>
+            </div>
+            <span class="tag accent" id="tagText">
+              <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4"/></svg>
+              lesson:ready
+            </span>
+          </div>
+          <iframe class="live-preview-frame" id="livePreviewFrame" title="Live lesson preview"></iframe>
+        </div>
+      </div>
+    </section>
+  </div>
+
+  <script type="module" src="/main.js"></script>
+</body>
+</html>
 
 === lessons/build-sidebar/build-css-at-step.js ===
 import { stepNumberById } from './describe-steps.js';
@@ -3740,8 +4020,8 @@ import { buildHtmlAtStep } from './build-html-at-step.js';
 import { lessonSteps } from './describe-steps.js';
 import lessonDocument from './content/documents/files/lesson.sr.md?raw';
 import knowledgeCheckDocument from './content/documents/files/quiz.sr.md?raw';
-import { readKnowledgeCheckQuestions } from '../../lesson-documents/read-knowledge-check-questions.js';
-import { readLessonMetadata } from '../../lesson-documents/read-lesson-metadata.js';
+import { readKnowledgeCheckQuestions } from '../../animator/lesson-documents/read-knowledge-check-questions.js';
+import { readLessonMetadata } from '../../animator/lesson-documents/read-lesson-metadata.js';
 
 const lessonMetadata = readLessonMetadata(lessonDocument, {
   lessonTitle: 'Kako se pravi moderan sidebar',
@@ -4002,9 +4282,9 @@ export function getDefaultLessonId() {
 }
 
 === main.js ===
-import './lesson-player/play-lesson/lesson-player.css';
-import { selectLessonFromLocation } from './lesson-player/select-lesson-from-location.js';
-import { playLesson } from './lesson-player/play-lesson/play-lesson.pipeline.js';
+import './animator/play-lesson/lesson-player.css';
+import { selectLessonFromLocation } from './animator/choose-lesson/select-lesson-from-location.js';
+import { playLesson } from './animator/play-lesson/play-lesson.pipeline.js';
 
 const selectedLesson = selectLessonFromLocation({
   ownerLocation: window.location
@@ -4942,7 +5222,7 @@ fi
     "dev": "vite",
     "build": "vite build",
     "preview": "vite preview",
-    "sync:lesson-documents": "node lesson-documents/sync-lesson-documents.js"
+    "sync:lesson-documents": "node animator/lesson-documents/sync-lesson-documents.js"
   },
   "devDependencies": {
     "vite": "^8.0.1"

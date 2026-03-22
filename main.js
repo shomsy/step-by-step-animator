@@ -1,6 +1,6 @@
-import './lesson-player/play-lesson/lesson-player.css';
-import { selectLessonFromLocation } from './lesson-player/select-lesson-from-location.js';
-import { playLesson } from './lesson-player/play-lesson/play-lesson.pipeline.js';
+import './animator/play-lesson/lesson-player.css';
+import { selectLessonFromLocation } from './animator/choose-lesson/select-lesson-from-location.js';
+import { playLesson } from './animator/play-lesson/play-lesson.pipeline.js';
 
 const selectedLesson = selectLessonFromLocation({
   ownerLocation: window.location
