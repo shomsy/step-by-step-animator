@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="sr" data-theme="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Step By Step Animator</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+</head>
+<body>
+  <!-- Header Controls -->
+  <div class="header-controls">
+    <button class="control-btn" id="searchBtn" title="Pretraži (Ctrl+K)">
+      <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+    </button>
+    <button class="control-btn" id="quizBtn" title="Kviz znanja">
+      <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"/></svg>
+    </button>
+    <button class="control-btn" id="themeBtn" title="Promeni temu">
+      <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"/></svg>
+    </button>
+    <button class="control-btn" id="downloadBtn" title="Preuzmi fajlove">
+      <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
+    </button>
+  </div>
+
+  <!-- Search Modal -->
+  <div class="modal-overlay" id="searchModal">
+    <div class="modal">
+      <div class="modal-header">
+        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+        <input type="text" class="modal-search" id="searchInput" placeholder="Pretraži korake...">
+      </div>
+      <div class="modal-body" id="searchResults"></div>
+    </div>
+  </div>
+
+  <!-- Quiz Modal -->
+  <div class="modal-overlay quiz-modal" id="quizModal">
+    <div class="modal">
+      <div class="modal-header">
+        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"/></svg>
+        <span style="font-weight:600;">Provera znanja</span>
+      </div>
+      <div id="quizContent"></div>
+    </div>
+  </div>
+
+  <div class="page">
+    <section class="panel left-panel">
+      <div class="eyebrow">
+        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+        Interaktivna lekcija
+      </div>
+      <h1>Kako se pravi moderan sidebar</h1>
+      <p class="intro">
+        Koraci po korak gradiš sidebar od osnove do gotove navigacije. Svaki korak uključuje kod, savete i vizuelni prikaz.
+      </p>
+
+      <div class="tabs">
+        <button class="tab-btn active" data-tab="steps">
+          <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg>
+          Koraci
+        </button>
+        <button class="tab-btn" data-tab="bookmarks">
+          <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z"/></svg>
+          <span id="bookmarkCount">0</span>
+        </button>
+      </div>
+
+      <div class="panel-view" id="stepsPanel">
+        <div class="step-card" id="stepCard">
+          <div class="step-header">
+            <span class="step-number" id="stepNumber">Prizor 1 / 21</span>
+            <button class="step-bookmark" id="bookmarkBtn" title="Sačuvaj korak">
+              <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z"/></svg>
+            </button>
+          </div>
+          <h2 class="step-title" id="stepTitle"></h2>
+          <p class="step-desc" id="stepDesc"></p>
+          <div class="pro-tip" id="proTip">
+            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+            <p id="proTipText"></p>
+          </div>
+          <div class="step-dots" id="dots"></div>
+        </div>
+      </div>
+
+      <div class="panel-view" id="bookmarksPanel" hidden>
+        <div class="bookmarks-panel">
+          <div class="bookmarks-head">
+            <div>
+              <span class="step-number">Sačuvani koraci</span>
+              <h2>Bookmarkovi</h2>
+              <p>Vrati se direktno na bitne faze i očisti listu kad ti više ne trebaju.</p>
+            </div>
+            <span class="bookmark-summary" id="bookmarkSummary">0 sačuvano</span>
+          </div>
+          <div class="bookmark-empty" id="bookmarkEmpty">
+            <strong>Nema sačuvanih koraka</strong>
+            Klikni ikonicu bookmarka na bilo kom koraku i pojaviće se ovde kao brza prečica.
+          </div>
+          <div class="bookmark-list" id="bookmarkList" hidden></div>
+        </div>
+      </div>
+
+      <div class="progress-container">
+        <div class="progress-bar">
+          <div class="progress-bar-inner" id="progressBar"></div>
+        </div>
+        <div class="progress-info">
+          <span id="progressText">0% završeno</span>
+          <span id="timeEstimate">~2 min preostalo</span>
+        </div>
+      </div>
+
+      <div class="controls">
+        <button class="btn-secondary btn-icon" id="prevBtn" title="Prethodni">
+          <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/></svg>
+        </button>
+        <button class="btn-primary" id="nextBtn">
+          Sledeći
+          <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+        </button>
+        <button class="btn-secondary" id="playBtn" title="Pokreni prezentaciju">
+          <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z"/></svg>
+          <span>Play</span>
+        </button>
+        <button class="btn-secondary" id="pauseBtn" title="Pauziraj prezentaciju">
+          <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 9v6m4-6v6"/></svg>
+          <span>Pause</span>
+        </button>
+        <button class="btn-ghost" id="stopBtn" title="Zaustavi i vrati na početak">
+          <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 9h6v6H9z"/></svg>
+          <span>Stop</span>
+        </button>
+      </div>
+
+      <div class="shortcuts">
+        <div class="shortcut"><span class="kbd">←</span><span class="kbd">→</span> Navigacija</div>
+        <div class="shortcut"><span class="kbd">Space</span> Play / Pause</div>
+        <div class="shortcut"><span class="kbd">Ctrl</span><span class="kbd">K</span> Pretraga</div>
+        <div class="shortcut"><span class="kbd">B</span> Bookmark</div>
+      </div>
+    </section>
+
+    <section class="panel live-editor-panel">
+      <div class="live-editor-head">
+        <div class="live-editor-copy">
+          <h2>Ekran editora</h2>
+          <p>Kumulativni fajlovi se popunjavaju liniju po liniju, kao da gledaš live tutorijal preko share screen-a.</p>
+        </div>
+        <span class="live-editor-step" id="liveStepBadge">Prizor 1</span>
+      </div>
+
+      <div class="live-editor-body">
+        <div class="live-pane">
+          <div class="live-pane-head">
+            <span>index.html</span>
+            <span>Postojeće muted, novo istaknuto</span>
+          </div>
+          <div class="live-code-scroll" id="liveHtmlPane"></div>
+        </div>
+
+        <div class="live-pane">
+          <div class="live-pane-head">
+            <span>style.css</span>
+            <span>Staro muted, novo property istaknuto</span>
+          </div>
+          <div class="live-code-scroll" id="liveCssPane"></div>
+        </div>
+      </div>
+    </section>
+
+    <section class="panel viewer">
+      <div class="stage" id="stage">
+        <div class="live-preview-shell">
+          <div class="live-preview-head">
+            <div class="live-preview-controls" aria-hidden="true">
+              <span class="live-preview-dot live-preview-dot-close"></span>
+              <span class="live-preview-dot live-preview-dot-minimize"></span>
+              <span class="live-preview-dot live-preview-dot-expand"></span>
+            </div>
+            <div class="live-preview-address">
+              <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 11c1.657 0 3-1.343 3-3S13.657 5 12 5 9 6.343 9 8s1.343 3 3 3zm0 0v8m-4-4h8"/></svg>
+              <span>browser://live-sidebar-preview</span>
+            </div>
+            <span class="tag accent" id="tagText">
+              <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4"/></svg>
+              html:aside
+            </span>
+          </div>
+          <iframe class="live-preview-frame" id="livePreviewFrame" title="Live sidebar preview"></iframe>
+        </div>
+      </div>
+    </section>
+  </div>
+
+  <script type="module" src="/main.js"></script>
+</body>
+</html>
