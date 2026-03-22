@@ -1801,7 +1801,15 @@ import { describeCssLineRole } from './describe-css-line-role.js';
 import { escapeCodeText } from './escape-code-text.js';
 import { scrollToAddedLine } from './scroll-to-added-line.js';
 
-function showCodePane(container, buildLinesAtStep, currentStepNumber, paneType = 'html') {
+function isFocusedHtmlLine(lineText, focusHtmlNeedles) {
+  if (!focusHtmlNeedles.length) {
+    return false;
+  }
+
+  return focusHtmlNeedles.some(needle => lineText.includes(needle));
+}
+
+function showCodePane(container, buildLinesAtStep, currentStepNumber, paneType = 'html', focusHtmlNeedles = []) {
   let lineNumber = 0;
   let revealOrder = 0;
   const currentLines = buildLinesAtStep(currentStepNumber);
@@ -1814,13 +1822,14 @@ function showCodePane(container, buildLinesAtStep, currentStepNumber, paneType =
     const lineKind = paneType === 'css' ? describeCssLineRole(entry.lineText) : 'plain';
     const shouldStaggerReveal = paneType === 'css' && entry.isNewLine && !entry.isEmptyLine;
     const inlineStyle = shouldStaggerReveal ? ` style="--reveal-order:${revealOrder};"` : '';
+    const isFocusedTarget = paneType === 'html' && isFocusedHtmlLine(entry.lineText, focusHtmlNeedles);
 
     if (shouldStaggerReveal) {
       revealOrder += 1;
     }
 
     return `
-      <div class="live-line${entry.isNewLine ? ' is-added' : ''}${entry.isEmptyLine ? ' is-empty' : ''}${paneType === 'css' ? ` is-css-${lineKind}` : ''}" data-pane="${paneType}"${entry.isNewLine ? ' data-added="true"' : ''}${inlineStyle}>
+      <div class="live-line${entry.isNewLine ? ' is-added' : ''}${entry.isEmptyLine ? ' is-empty' : ''}${isFocusedTarget ? ' is-focus-target' : ''}${paneType === 'css' ? ` is-css-${lineKind}` : ''}" data-pane="${paneType}"${entry.isNewLine ? ' data-added="true"' : ''}${inlineStyle}>
         <span class="live-line-number">${String(lineNumber).padStart(2, '0')}</span>
         <span class="live-line-code">${lineMarkup}</span>
       </div>
@@ -1830,11 +1839,14 @@ function showCodePane(container, buildLinesAtStep, currentStepNumber, paneType =
 
 export function showGrowingCode({
   lessonParts,
+  step,
   currentStepNumber,
   buildHtmlAtStep,
   buildCssAtStep
 }) {
-  showCodePane(lessonParts.htmlCodePane, buildHtmlAtStep, currentStepNumber, 'html');
+  const focusHtmlNeedles = Array.isArray(step.focusHtmlNeedles) ? step.focusHtmlNeedles : [];
+
+  showCodePane(lessonParts.htmlCodePane, buildHtmlAtStep, currentStepNumber, 'html', focusHtmlNeedles);
   showCodePane(lessonParts.cssCodePane, buildCssAtStep, currentStepNumber, 'css');
   lessonParts.currentStepBadge.textContent = `Prizor ${currentStepNumber + 1}`;
   scrollToAddedLine(lessonParts.htmlCodePane);
@@ -2698,6 +2710,48 @@ body { padding: 24px; }
 
 .live-line.is-added + .live-line:not(.is-added) {
   opacity: 0.62;
+}
+
+.live-line.is-focus-target {
+  opacity: 1;
+  background:
+    linear-gradient(90deg, rgba(250, 204, 21, 0.26), rgba(250, 204, 21, 0.08) 65%, transparent);
+  box-shadow: inset 3px 0 0 rgba(250, 204, 21, 0.88);
+}
+
+.live-line.is-focus-target .live-line-number {
+  color: #facc15;
+}
+
+.live-line.is-focus-target .live-line-code {
+  color: #fff6bf;
+  font-weight: 700;
+  text-shadow: 0 0 14px rgba(250, 204, 21, 0.14);
+}
+
+.live-line.is-focus-target.is-added {
+  background:
+    linear-gradient(90deg, rgba(250, 204, 21, 0.34), rgba(250, 204, 21, 0.12) 65%, transparent);
+  box-shadow: inset 3px 0 0 rgba(250, 204, 21, 0.94);
+}
+
+.live-line.is-focus-target.is-added .live-line-number {
+  color: #fde68a;
+}
+
+[data-theme="light"] .live-line.is-focus-target {
+  background:
+    linear-gradient(90deg, rgba(245, 158, 11, 0.22), rgba(245, 158, 11, 0.08) 65%, transparent);
+  box-shadow: inset 3px 0 0 rgba(217, 119, 6, 0.85);
+}
+
+[data-theme="light"] .live-line.is-focus-target .live-line-number {
+  color: #b45309;
+}
+
+[data-theme="light"] .live-line.is-focus-target .live-line-code {
+  color: #7c2d12;
+  text-shadow: none;
 }
 
 .live-line.is-empty .live-line-code {
@@ -3708,6 +3762,7 @@ export function playLesson({ ownerDocument, ownerLocation, ownerWindow, lesson, 
 
     showGrowingCode({
       lessonParts,
+      step,
       currentStepNumber: lessonProgress.currentStepNumber,
       buildHtmlAtStep: lesson.buildHtmlAtStep,
       buildCssAtStep: lesson.buildCssAtStep
@@ -4123,30 +4178,29 @@ export function buildCssAtStep(stepNumber) {
   const lines = [];
 
   appendVisibleCssRuleBlock(lines, '.sidebar {', [
-    { from: 'sidebar_outline', untilBefore: 'sidebar_background', line: '/* privremeni pomoćni border radi lakšeg snalaženja; uklanjamo ga kasnije */' },
-    { from: 'sidebar_outline', untilBefore: 'sidebar_background', line: 'outline: 2px solid #ff4757;' },
+    { from: 'sidebar_outline', untilBefore: 'sidebar_summary', line: 'outline: 1px solid #ff4757;' },
     { from: 'sidebar_width', line: 'width: 280px;' },
     { from: 'sidebar_min_height', line: 'min-height: 100vh;' },
     { from: 'sidebar_border_right', line: 'border-right: 1px solid rgba(255,255,255,0.12);' },
     { from: 'sidebar_background', line: 'background: #0b1020;' },
     { from: 'sidebar_color', line: 'color: #edf2ff;' },
     { from: 'sidebar_display_flex', line: 'display: flex;' },
-    { from: 'sidebar_flex_direction', line: 'flex-direction: column;' }
+    { from: 'sidebar_flex_direction', line: 'flex-direction: column;' },
+    { from: 'sidebar_summary', line: '/* helper outline removed in final .sidebar summary */' }
   ], stepNumber, 'sidebar_html');
 
   appendVisibleCssRuleBlock(lines, '.sidebar-brand {', [
-    { from: 'brand_outline', untilBefore: 'nav_html', line: '/* helper boja za wrapper; držimo je dok ne završimo celu brand celinu */' },
-    { from: 'brand_outline', untilBefore: 'nav_html', line: 'outline: 2px solid #2ed573;' },
+    { from: 'brand_outline', untilBefore: 'brand_summary', line: 'outline: 1px solid #2ed573;' },
     { from: 'brand_padding', line: 'padding: 24px;' },
     { from: 'brand_margin_bottom', line: 'margin-bottom: 28px;' },
     { from: 'brand_display', line: 'display: flex;' },
     { from: 'brand_align_items', line: 'align-items: center;' },
     { from: 'brand_gap', line: 'gap: 14px;' },
+    { from: 'brand_summary', line: '/* helper outline removed in final brand summary */' }
   ], stepNumber, 'brand_html');
 
   appendVisibleCssRuleBlock(lines, '.logo {', [
-    { from: 'logo_outline', untilBefore: 'nav_html', line: '/* helper boja za logo; držimo je dok ne završimo celu brand celinu */' },
-    { from: 'logo_outline', untilBefore: 'nav_html', line: 'outline: 2px dotted #7dd3fc;' },
+    { from: 'logo_outline', untilBefore: 'brand_summary', line: 'outline: 1px dotted #7dd3fc;' },
     { from: 'logo_width', line: 'width: 48px;' },
     { from: 'logo_height', line: 'height: 48px;' },
     { from: 'logo_display', line: 'display: grid;' },
@@ -4155,12 +4209,13 @@ export function buildCssAtStep(stepNumber) {
     { from: 'logo_font_weight', line: 'font-weight: 800;' },
     { from: 'logo_background', line: 'background: linear-gradient(135deg, #6d73ff, #8f5cff);' },
     { from: 'logo_color', line: 'color: white;' },
-    { from: 'logo_shadow', line: 'box-shadow: 0 12px 24px rgba(109,115,255,0.30);' }
+    { from: 'logo_shadow', line: 'box-shadow: 0 12px 24px rgba(109,115,255,0.30);' },
+    { from: 'brand_summary', line: '/* logo helper outline removed in final brand summary */' }
   ], stepNumber, 'logo_html');
 
   appendVisibleCssRuleBlock(lines, '.brand-copy {', [
-    { from: 'brand_copy_outline', untilBefore: 'nav_html', line: '/* helper boja za brand-copy; držimo je dok ne završimo celu brand celinu */' },
-    { from: 'brand_copy_outline', untilBefore: 'nav_html', line: 'outline: 1px dashed #f59e0b;' }
+    { from: 'brand_copy_outline', untilBefore: 'brand_summary', line: 'outline: 1px dashed #f59e0b;' },
+    { from: 'brand_summary', line: '/* brand-copy helper outline removed in final brand summary */' }
   ], stepNumber, 'brand_copy_html');
 
   appendVisibleCssRuleBlock(lines, '.brand-copy strong {', [
@@ -4176,16 +4231,15 @@ export function buildCssAtStep(stepNumber) {
   ], stepNumber);
 
   appendVisibleCssRuleBlock(lines, '.nav-list {', [
-    { from: 'nav_list_outline', untilBefore: 'footer_html', line: '/* helper boja za nav wrapper; držimo je dok ne završimo celu navigacionu celinu */' },
-    { from: 'nav_list_outline', untilBefore: 'footer_html', line: 'outline: 1px dashed #38bdf8;' },
-    { from: 'nav_list_padding', untilBefore: 'footer_html', line: 'padding: 10px 8px;' },
+    { from: 'nav_list_outline', untilBefore: 'navigation_summary', line: 'outline: 1px dashed #38bdf8;' },
+    { from: 'nav_list_padding', untilBefore: 'navigation_summary', line: 'padding: 10px 8px;' },
     { from: 'nav_list_display', line: 'display: grid;' },
-    { from: 'nav_list_gap', line: 'gap: 10px;' }
+    { from: 'nav_list_gap', line: 'gap: 10px;' },
+    { from: 'navigation_summary', line: '/* nav wrapper helper outline removed in final navigation summary */' }
   ], stepNumber, 'nav_html');
 
   appendVisibleCssRuleBlock(lines, '.nav-item {', [
-    { from: 'nav_item_outline', untilBefore: 'footer_html', line: '/* helper boja za nav item; držimo je dok ne završimo celu navigacionu celinu */' },
-    { from: 'nav_item_outline', untilBefore: 'footer_html', line: 'outline: 1px solid #ffa502;' },
+    { from: 'nav_item_outline', untilBefore: 'navigation_summary', line: 'outline: 1px solid #ffa502;' },
     { from: 'nav_item_display', line: 'display: flex;' },
     { from: 'nav_item_min_height', line: 'min-height: 52px;' },
     { from: 'nav_item_padding', line: 'padding: 12px 16px;' },
@@ -4193,16 +4247,17 @@ export function buildCssAtStep(stepNumber) {
     { from: 'nav_item_gap', line: 'gap: 12px;' },
     { from: 'nav_item_radius', line: 'border-radius: 14px;' },
     { from: 'nav_item_margin', line: 'margin: 0 8px;' },
-    { from: 'nav_item_transition', line: 'transition: all 0.4s ease;' }
+    { from: 'nav_item_transition', line: 'transition: all 0.4s ease;' },
+    { from: 'navigation_summary', line: '/* nav item helper outline removed in final navigation summary */' }
   ], stepNumber, 'nav_items_html');
 
   appendVisibleCssRuleBlock(lines, '.nav-item .icon {', [
-    { from: 'nav_icon_outline', untilBefore: 'footer_html', line: '/* helper boja za icon; držimo je dok ne završimo celu navigacionu celinu */' },
-    { from: 'nav_icon_outline', untilBefore: 'footer_html', line: 'outline: 1px dotted #7dd3fc;' },
+    { from: 'nav_icon_outline', untilBefore: 'navigation_summary', line: 'outline: 1px dotted #7dd3fc;' },
     { from: 'nav_icon_width', line: 'width: 22px;' },
     { from: 'nav_icon_height', line: 'height: 22px;' },
     { from: 'nav_icon_display', line: 'display: grid;' },
-    { from: 'nav_icon_place_items', line: 'place-items: center;' }
+    { from: 'nav_icon_place_items', line: 'place-items: center;' },
+    { from: 'navigation_summary', line: '/* nav icon helper outline removed in final navigation summary */' }
   ], stepNumber);
 
   appendVisibleCssRuleBlock(lines, '.nav-item .label {', [
@@ -4231,11 +4286,13 @@ export function buildCssAtStep(stepNumber) {
   ], stepNumber);
 
   appendVisibleCssRuleBlock(lines, '.sidebar-footer {', [
+    { from: 'footer_outline', untilBefore: 'footer_summary', line: 'outline: 1px dashed #c084fc;' },
     { from: 'footer_border', line: 'border: 1px solid rgba(255,255,255,0.12);' },
     { from: 'footer_background', line: 'background: rgba(255,255,255,0.05);' },
     { from: 'footer_padding', line: 'padding: 16px;' },
     { from: 'footer_radius', line: 'border-radius: 14px;' },
-    { from: 'footer_margin_top', line: 'margin-top: auto;' }
+    { from: 'footer_margin_top', line: 'margin-top: auto;' },
+    { from: 'footer_summary', line: '/* footer helper outline removed in final footer summary */' }
   ], stepNumber, 'footer_html');
 
   appendVisibleCssRuleBlock(lines, '.sidebar-footer p {', [
@@ -4457,11 +4514,35 @@ Koraci po korak gradiš sidebar od osnove do gotove navigacije. Svaki korak uklj
 ! `transition` je pravi izbor kada želiš da promene stanja budu glatke.
 
 === lessons/build-sidebar/describe-steps.js ===
-function describeHtmlElementStep(id, title, desc, tag, proTip, _sidebarScene) {
-  return { id, title, desc, tag, proTip };
+const focusHtmlNeedlesBySelector = {
+  '.app-shell': ['<div class="app-shell">'],
+  '.sidebar': ['class="sidebar"'],
+  '.sidebar-brand': ['class="sidebar-brand"'],
+  '.logo': ['class="logo"'],
+  '.brand-copy': ['class="brand-copy"'],
+  '.brand-copy strong': ['<strong>'],
+  '.brand-copy span': ['<span>'],
+  '.nav-list': ['class="nav-list"'],
+  '.nav-item': ['class="nav-item'],
+  '.nav-item .icon': ['class="icon"'],
+  '.nav-item .label': ['class="label"'],
+  '.nav-item.active': ['class="nav-item active"'],
+  '.nav-item:hover': ['class="nav-item'],
+  '.sidebar.is-collapsed': ['class="sidebar"'],
+  '.sidebar.is-collapsed .brand-copy, .sidebar.is-collapsed .nav-item .label': ['class="brand-copy"', 'class="label"'],
+  '.sidebar-footer': ['class="sidebar-footer"'],
+  '.sidebar-footer p': ['<p>Sidebar nije samo lista linkova.']
+};
+
+function readFocusHtmlNeedles(selector) {
+  return focusHtmlNeedlesBySelector[selector] || [];
 }
 
-function describeCssPropertyStep(id, selector, property, value, _sidebarScene, desc = '', proTip = '') {
+function describeHtmlElementStep(id, title, desc, tag, proTip, focusHtmlNeedles = []) {
+  return { id, title, desc, tag, proTip, focusHtmlNeedles };
+}
+
+function describeCssPropertyStep(id, selector, property, value, desc = '', proTip = '') {
   const cssLine = `${property}: ${value};`;
 
   return {
@@ -4469,103 +4550,205 @@ function describeCssPropertyStep(id, selector, property, value, _sidebarScene, d
     title: `CSS: ${selector} / ${property}`,
     desc: desc || `Dodajemo \`${cssLine}\` u \`${selector}\` i širimo stylesheet jedan property po korak.`,
     tag: `css:${id.replace(/_/g, '-')}`,
-    proTip: proTip || 'Jedan property po korak čini promenu jasnom i lakom za praćenje u prikazu sidebara.'
+    proTip: proTip || 'Jedan property po korak čini promenu jasnom i lakom za praćenje u prikazu sidebara.',
+    focusHtmlNeedles: readFocusHtmlNeedles(selector)
   };
 }
 
-function describeFinishedStep(id, title, desc, proTip, _sidebarScene) {
+function describeCssSummaryStep(id, title, desc, proTip, focusHtmlNeedles = []) {
+  return {
+    id,
+    title,
+    desc,
+    tag: `summary:${id.replace(/_/g, '-')}`,
+    proTip,
+    focusHtmlNeedles
+  };
+}
+
+function describeFinishedStep(id, title, desc, proTip) {
   return { id, title, desc, tag: 'success', proTip };
 }
 
 export const lessonSteps = [
-  describeHtmlElementStep('empty_shell', 'Start: Empty App Shell', 'Počinjemo od praznog `.app-shell` prostora. Sidebar tek dodajemo kao prvi pravi element.', 'html:app-shell', 'Neutralan početak jasno odvaja ono što je postojalo od onoga što tek gradimo.', 0),
-  describeHtmlElementStep('sidebar_html', 'HTML: Sidebar Shell', 'Ubacujemo osnovni `<aside class="sidebar">` blok kao koren cele komponente.', 'html:aside', 'Semantički HTML ti odmah daje bolju strukturu i čitljiviji DOM.', 1),
+  describeHtmlElementStep(
+    'empty_shell',
+    'Start: Empty App Shell',
+    'Počinjemo od praznog `.app-shell` prostora. Sidebar tek dodajemo kao prvi pravi element.',
+    'html:app-shell',
+    'Neutralan početak jasno odvaja ono što je postojalo od onoga što tek gradimo.',
+    ['<div class="app-shell">']
+  ),
+  describeHtmlElementStep(
+    'sidebar_html',
+    'HTML: Sidebar Shell',
+    'Ubacujemo osnovni `<aside class="sidebar">` blok kao koren cele komponente.',
+    'html:aside',
+    'Semantički HTML ti odmah daje bolju strukturu i čitljiviji DOM.',
+    ['class="sidebar"']
+  ),
   ...[
-    ['sidebar_outline', '.sidebar', 'outline', '2px solid #ff4757', 2, 'Dodajemo privremeni pomoćni border radi lakšeg snalaženja, da prazni sidebar odmah dobije jasnu granicu u preview-u. Kasnije ćemo ga ukloniti.', 'Outline je odličan za debug jer ne menja layout.'],
-    ['sidebar_width', '.sidebar', 'width', '280px', 3, 'Kad granica postoji, zaključavamo širinu sidebara da dobije jasan footprint.'],
-    ['sidebar_min_height', '.sidebar', 'min-height', '100vh', 4, 'Dajemo sidebaru punu visinu da box postane čitljiv i bez sadržaja.'],
-    ['sidebar_border_right', '.sidebar', 'border-right', '1px solid rgba(255,255,255,0.12)', 5, 'Tanka desna linija odvaja sidebar od ostatka layouta.'],
-    ['sidebar_background', '.sidebar', 'background', '#0b1020', 5, 'Dodajemo tamnu pozadinu da sidebar dobije svoj vizuelni identitet i uklanjamo privremeni pomoćni border, više nam ne treba.'],
-    ['sidebar_color', '.sidebar', 'color', '#edf2ff', 5, 'Osnovnu boju teksta postavljamo rano da nasledi ceo sadržaj.']
+    ['sidebar_outline', '.sidebar', 'outline', '1px solid #ff4757', 'Dodajemo tanak helper outline da footprint sidebara ostane jasan kroz ceo lesson tok. Skidamo ga tek u završnom rezime koraku za `.sidebar`.', 'Outline ostaje aktivan dok ne završimo rezime za ovaj element.'],
+    ['sidebar_width', '.sidebar', 'width', '280px', 'Kad granica postoji, zaključavamo širinu sidebara da dobije jasan footprint.'],
+    ['sidebar_min_height', '.sidebar', 'min-height', '100vh', 'Dajemo sidebaru punu visinu da box postane čitljiv i bez sadržaja.'],
+    ['sidebar_border_right', '.sidebar', 'border-right', '1px solid rgba(255,255,255,0.12)', 'Tanka desna linija odvaja sidebar od ostatka layouta.'],
+    ['sidebar_background', '.sidebar', 'background', '#0b1020', 'Dodajemo tamnu pozadinu da sidebar dobije svoj vizuelni identitet, ali outline namerno ostaje do rezime koraka za `.sidebar`.'],
+    ['sidebar_color', '.sidebar', 'color', '#edf2ff', 'Osnovnu boju teksta postavljamo rano da nasledi ceo sadržaj.']
   ].map(config => describeCssPropertyStep(...config)),
-  describeHtmlElementStep('brand_html', 'HTML: Brand Wrapper', 'Dodajemo `.sidebar-brand` kao zonu za logo i naziv proizvoda. Od ovog trenutka pomoćne linije za sve delove branda držimo dok ne završimo celu brand celinu.', 'html:brand', 'Izdvoj brand deo od navigacije da bi hijerarhija odmah bila jasna.', 7),
+  describeHtmlElementStep(
+    'brand_html',
+    'HTML: Brand Wrapper',
+    'Dodajemo `.sidebar-brand` kao zonu za logo i naziv proizvoda. Svi brand elementi zadržavaju svoje outline helpere do završnog brand rezimea.',
+    'html:brand',
+    'Izdvoj brand deo od navigacije da bi hijerarhija odmah bila jasna.',
+    ['class="sidebar-brand"']
+  ),
   ...[
-    ['brand_outline', '.sidebar-brand', 'outline', '2px solid #2ed573', 8, 'Dodajemo privremeni pomoćni border radi lakšeg snalaženja, da odmah vidiš footprint brand zone. Držimo ga dok ne završimo celu `.sidebar-brand` celinu, pa ćemo ga tek tada ukloniti.', 'Svaki deo iste celine može da dobije svoju boju helper linije dok ta celina traje.'],
-    ['brand_padding', '.sidebar-brand', 'padding', '24px', 8, 'Unutrašnji padding daje brand zoni vazduh.'],
-    ['brand_margin_bottom', '.sidebar-brand', 'margin-bottom', '28px', 8, 'Odvajamo brand blok od navigacije ispod njega.'],
-    ['brand_display', '.sidebar-brand', 'display', 'flex', 8, 'Prebacujemo brand zonu u flex da logo i tekst mogu da stoje u istom redu.'],
-    ['brand_align_items', '.sidebar-brand', 'align-items', 'center', 8, 'Vertikalno poravnanje centrira logo i tekst.'],
-    ['brand_gap', '.sidebar-brand', 'gap', '14px', 8, 'Gap određuje koliko prostora stoji između logotipa i teksta.']
+    ['brand_outline', '.sidebar-brand', 'outline', '1px solid #2ed573', 'Dodajemo tanak helper outline za `.sidebar-brand` i držimo ga do završnog rezime koraka za brand celinu.', 'Svaki deo iste celine može da dobije svoju boju helper linije dok ta celina traje.'],
+    ['brand_padding', '.sidebar-brand', 'padding', '24px', 'Unutrašnji padding daje brand zoni vazduh.'],
+    ['brand_margin_bottom', '.sidebar-brand', 'margin-bottom', '28px', 'Odvajamo brand blok od navigacije ispod njega.'],
+    ['brand_display', '.sidebar-brand', 'display', 'flex', 'Prebacujemo brand zonu u flex da logo i tekst mogu da stoje u istom redu.'],
+    ['brand_align_items', '.sidebar-brand', 'align-items', 'center', 'Vertikalno poravnanje centrira logo i tekst.'],
+    ['brand_gap', '.sidebar-brand', 'gap', '14px', 'Gap određuje koliko prostora stoji između logotipa i teksta.']
   ].map(config => describeCssPropertyStep(...config)),
-  describeHtmlElementStep('logo_html', 'HTML: Logo Element', 'Ubacujemo `.logo` element sa slovom `A` kao placeholder identitetom.', 'html:logo', 'Počni od jednostavnog placeholder loga pa tek onda doteruj stil.', 9),
+  describeHtmlElementStep(
+    'logo_html',
+    'HTML: Logo Element',
+    'Ubacujemo `.logo` element sa slovom `A` kao placeholder identitetom.',
+    'html:logo',
+    'Počni od jednostavnog placeholder loga pa tek onda doteruj stil.',
+    ['class="logo"']
+  ),
   ...[
-    ['logo_outline', '.logo', 'outline', '2px dotted #7dd3fc', 10, 'Dodajemo privremeni pomoćni border radi lakšeg snalaženja, da footprint logotipa bude jasan i bez pozadine. Držimo ga dok ne završimo celu `.sidebar-brand` celinu, pa ga tek tada uklanjamo.', 'Logo zadržava svoju helper boju sve dok radimo ceo brand blok.'],
-    ['logo_width', '.logo', 'width', '48px', 10, 'Prvo zaključavamo širinu logotipa.'],
-    ['logo_height', '.logo', 'height', '48px', 10, 'Visina prati širinu da bismo dobili kvadratnu osnovu.'],
-    ['logo_display', '.logo', 'display', 'grid', 10, 'Grid nam daje lak centar za jedan znak ili ikonu.'],
-    ['logo_place_items', '.logo', 'place-items', 'center', 10, 'Centriramo sadržaj logotipa u oba smera.'],
-    ['logo_radius', '.logo', 'border-radius', '12px', 10, 'Blago zaobljenje daje moderniji osećaj.'],
-    ['logo_font_weight', '.logo', 'font-weight', '800', 10, 'Pojačavamo slovo da liči na pravi brand znak.'],
-    ['logo_background', '.logo', 'background', 'linear-gradient(135deg, #6d73ff, #8f5cff)', 11, 'Gradijent dodaje energiju i daje logotipu fokus. Pomoćni border namerno ostaje dok ne zatvorimo celu brand celinu.'],
-    ['logo_color', '.logo', 'color', 'white', 11, 'Bela boja daje čist kontrast preko gradijenta.'],
-    ['logo_shadow', '.logo', 'box-shadow', '0 12px 24px rgba(109,115,255,0.30)', 11, 'Shadow dodaje depth i čini logo prisutnijim.']
+    ['logo_outline', '.logo', 'outline', '1px dotted #7dd3fc', 'Dodajemo tanak helper outline za `.logo` i držimo ga do završnog brand rezimea.', 'Logo zadržava svoju helper boju sve dok radimo brand celinu.'],
+    ['logo_width', '.logo', 'width', '48px', 'Prvo zaključavamo širinu logotipa.'],
+    ['logo_height', '.logo', 'height', '48px', 'Visina prati širinu da bismo dobili kvadratnu osnovu.'],
+    ['logo_display', '.logo', 'display', 'grid', 'Grid nam daje lak centar za jedan znak ili ikonu.'],
+    ['logo_place_items', '.logo', 'place-items', 'center', 'Centriramo sadržaj logotipa u oba smera.'],
+    ['logo_radius', '.logo', 'border-radius', '12px', 'Blago zaobljenje daje moderniji osećaj.'],
+    ['logo_font_weight', '.logo', 'font-weight', '800', 'Pojačavamo slovo da liči na pravi brand znak.'],
+    ['logo_background', '.logo', 'background', 'linear-gradient(135deg, #6d73ff, #8f5cff)', 'Gradijent dodaje energiju i daje logotipu fokus. Outline namerno ostaje do brand rezimea.'],
+    ['logo_color', '.logo', 'color', 'white', 'Bela boja daje čist kontrast preko gradijenta.'],
+    ['logo_shadow', '.logo', 'box-shadow', '0 12px 24px rgba(109,115,255,0.30)', 'Shadow dodaje depth i čini logo prisutnijim.']
   ].map(config => describeCssPropertyStep(...config)),
-  describeHtmlElementStep('brand_copy_html', 'HTML: Brand Copy', 'Dodajemo `.brand-copy` sa naslovom i podnaslovom pored logotipa. I on dobija svoju helper boju dok ne završimo celu `.sidebar-brand` celinu.', 'html:brand-copy', 'Tekstualni brand signal pomaže korisniku da zna gde se nalazi.', 12),
+  describeHtmlElementStep(
+    'brand_copy_html',
+    'HTML: Brand Copy',
+    'Dodajemo `.brand-copy` sa naslovom i podnaslovom pored logotipa. I on zadržava svoj outline do završnog brand rezimea.',
+    'html:brand-copy',
+    'Tekstualni brand signal pomaže korisniku da zna gde se nalazi.',
+    ['class="brand-copy"', '<strong>', '<span>']
+  ),
   ...[
-    ['brand_copy_outline', '.brand-copy', 'outline', '1px dashed #f59e0b', 12, 'Dodajemo privremeni pomoćni border radi lakšeg snalaženja, da tekstualni brand blok bude jasno odvojen od logotipa. Držimo ga dok ne završimo celu `.sidebar-brand` celinu.', 'Isti wrapper, različiti child elementi, različite helper boje.'],
-    ['brand_strong_display', '.brand-copy strong', 'display', 'block', 12, 'Naslov pretvaramo u blok da zauzme svoj red.'],
-    ['brand_strong_font_size', '.brand-copy strong', 'font-size', '16px', 12, 'Naslov dobija čitljiviju veličinu.'],
-    ['brand_span_display', '.brand-copy span', 'display', 'block', 12, 'Podnaslov spuštamo u novi red.'],
-    ['brand_span_margin_top', '.brand-copy span', 'margin-top', '4px', 12, 'Mali razmak odvaja podnaslov od naslova.'],
-    ['brand_span_font_size', '.brand-copy span', 'font-size', '13px', 12, 'Podnaslov pravimo suptilnijim od naslova.'],
-    ['brand_span_color', '.brand-copy span', 'color', '#9aa6c8', 12, 'Muted boja pravi jasnu tekstualnu hijerarhiju.']
+    ['brand_copy_outline', '.brand-copy', 'outline', '1px dashed #f59e0b', 'Dodajemo tanak helper outline za tekstualni brand blok i držimo ga do završnog brand rezimea.', 'Isti wrapper, različiti child elementi, različite helper boje.'],
+    ['brand_strong_display', '.brand-copy strong', 'display', 'block', 'Naslov pretvaramo u blok da zauzme svoj red.'],
+    ['brand_strong_font_size', '.brand-copy strong', 'font-size', '16px', 'Naslov dobija čitljiviju veličinu.'],
+    ['brand_span_display', '.brand-copy span', 'display', 'block', 'Podnaslov spuštamo u novi red.'],
+    ['brand_span_margin_top', '.brand-copy span', 'margin-top', '4px', 'Mali razmak odvaja podnaslov od naslova.'],
+    ['brand_span_font_size', '.brand-copy span', 'font-size', '13px', 'Podnaslov pravimo suptilnijim od naslova.'],
+    ['brand_span_color', '.brand-copy span', 'color', '#9aa6c8', 'Muted boja pravi jasnu tekstualnu hijerarhiju.']
   ].map(config => describeCssPropertyStep(...config)),
-  describeHtmlElementStep('nav_html', 'HTML: Nav Wrapper', 'Ubacujemo `<nav class="nav-list">` kao kontejner za buduće linkove. Brand celina je sada gotova, pa uklanjamo privremene pomoćne bordere sa `.sidebar-brand`, `.logo` i `.brand-copy`.', 'html:nav', 'Semantički `nav` element je prirodan izbor za navigaciju.', 13),
+  describeHtmlElementStep(
+    'nav_html',
+    'HTML: Nav Wrapper',
+    'Ubacujemo `<nav class="nav-list">` kao kontejner za buduće linkove. Navigacioni outline helperi ostaju aktivni sve do završnog navigation rezimea.',
+    'html:nav',
+    'Semantički `nav` element je prirodan izbor za navigaciju.',
+    ['class="nav-list"']
+  ),
   ...[
-    ['nav_list_outline', '.nav-list', 'outline', '1px dashed #38bdf8', 14, 'Dodajemo privremeni pomoćni border radi lakšeg snalaženja, da prazna nav zona odmah postane vidljiva. Držimo ga dok ne završimo celu navigacionu celinu.', 'Navigacija zadržava helper linije kroz sve svoje poddelove dok ne pređemo na footer.'],
-    ['nav_list_padding', '.nav-list', 'padding', '10px 8px', 14, 'Dodajemo i privremeni pomoćni padding da prazna nav zona dobije visinu i pre prvog linka. I njega držimo dok ne završimo celu navigacionu celinu.'],
-    ['nav_list_display', '.nav-list', 'display', 'grid', 14, 'Navigaciju slažemo u grid da spacing bude čist.'],
-    ['nav_list_gap', '.nav-list', 'gap', '10px', 14, 'Gap održava ravnomeran razmak između stavki.']
+    ['nav_list_outline', '.nav-list', 'outline', '1px dashed #38bdf8', 'Dodajemo tanak helper outline za praznu nav zonu i držimo ga do završnog navigation rezimea.', 'Navigacija zadržava helper linije kroz sve svoje poddelove dok ne završimo rezime za nju.'],
+    ['nav_list_padding', '.nav-list', 'padding', '10px 8px', 'Dodajemo privremeni helper padding da prazna nav zona dobije visinu pre prvog linka. I njega držimo do završnog navigation rezimea.'],
+    ['nav_list_display', '.nav-list', 'display', 'grid', 'Navigaciju slažemo u grid da spacing bude čist.'],
+    ['nav_list_gap', '.nav-list', 'gap', '10px', 'Gap održava ravnomeran razmak između stavki.']
   ].map(config => describeCssPropertyStep(...config)),
-  describeHtmlElementStep('nav_items_html', 'HTML: Nav Items', 'Dodajemo prve `.nav-item` linkove sa ikonama i labelama.', 'html:nav-item', 'Prvo ubaci markup za stavke, pa onda stilizuj svaki sloj ponaosob.', 15),
+  describeHtmlElementStep(
+    'nav_items_html',
+    'HTML: Nav Items',
+    'Dodajemo prve `.nav-item` linkove sa ikonama i labelama. I stavke i ikonice zadržavaju outline helpere do navigation rezimea.',
+    'html:nav-item',
+    'Prvo ubaci markup za stavke, pa onda stilizuj svaki sloj ponaosob.',
+    ['class="nav-item', 'class="icon"', 'class="label"']
+  ),
   ...[
-    ['nav_item_outline', '.nav-item', 'outline', '1px solid #ffa502', 15, 'Zadržavamo helper linije za celu navigaciju, a svakoj stavci dodajemo njen privremeni border radi lakšeg snalaženja. Držimo ga dok ne završimo celu navigacionu celinu.', 'Svaki deo navigacije zadržava svoju helper boju dok traje cela navigaciona celina.'],
-    ['nav_item_display', '.nav-item', 'display', 'flex', 15, 'Svaka stavka postaje flex red da ikona i tekst stanu jedan do drugog.'],
-    ['nav_item_min_height', '.nav-item', 'min-height', '52px', 15, 'Klik zona dobija pristojnu visinu.'],
-    ['nav_item_padding', '.nav-item', 'padding', '12px 16px', 15, 'Padding pravi realnu klik zonu i diše bolje od golog teksta.'],
-    ['nav_item_align_items', '.nav-item', 'align-items', 'center', 15, 'Vertikalno centriramo sadržaj svake stavke.'],
-    ['nav_item_gap', '.nav-item', 'gap', '12px', 15, 'Gap odvaja ikonu od labele.'],
-    ['nav_icon_outline', '.nav-item .icon', 'outline', '1px dotted #7dd3fc', 15, 'Dodajemo privremeni pomoćni border i na ikonicu radi lakšeg snalaženja, da joj footprint bude jasan. Držimo ga dok ne završimo celu navigacionu celinu.'],
-    ['nav_icon_width', '.nav-item .icon', 'width', '22px', 15, 'Ikona dobija fiksnu širinu.'],
-    ['nav_icon_height', '.nav-item .icon', 'height', '22px', 15, 'Ikona dobija i fiksnu visinu radi konzistentnog kvadrata.'],
-    ['nav_icon_display', '.nav-item .icon', 'display', 'grid', 15, 'Grid olakšava centriranje sadržaja ikone.'],
-    ['nav_icon_place_items', '.nav-item .icon', 'place-items', 'center', 15, 'Ikonicu centriramo i horizontalno i vertikalno.'],
-    ['nav_label_font_size', '.nav-item .label', 'font-size', '15px', 15, 'Labela dobija čitljivu veličinu.'],
-    ['nav_label_font_weight', '.nav-item .label', 'font-weight', '600', 15, 'Blago pojačavamo labelu da zadrži hijerarhiju.'],
-    ['nav_item_radius', '.nav-item', 'border-radius', '14px', 16, 'Zaobljene ivice daju linkovima mekši, UI osećaj. Helper linije i dalje ostaju dok ne završimo celu navigacionu celinu.'],
-    ['nav_item_margin', '.nav-item', 'margin', '0 8px', 16, 'Spoljni razmak odvaja stavke od ivice sidebara.'],
-    ['nav_item_active_background', '.nav-item.active', 'background', 'rgba(109,115,255,0.14)', 17, 'Aktivna stavka dobija svoju pozadinu, ali helper linije namerno ostaju dok ne završimo celu navigacionu celinu.'],
-    ['nav_item_active_color', '.nav-item.active', 'color', 'white', 17, 'Boju aktivne stavke pojačavamo za bolji kontrast.'],
-    ['nav_item_transition', '.nav-item', 'transition', 'all 0.4s ease', 18, 'Dodajemo glatku tranziciju za hover i active stanje.'],
-    ['nav_item_hover_background', '.nav-item:hover', 'background', 'rgba(255,255,255,0.05)', 19, 'Hover feedback potvrđuje da je stavka interaktivna.'],
-    ['collapse_width', '.sidebar.is-collapsed', 'width', '108px', 20, 'Collapsed mod sužava sidebar na kompaktnu širinu.']
+    ['nav_item_outline', '.nav-item', 'outline', '1px solid #ffa502', 'Svaka stavka dobija tanak helper outline i zadržava ga do završnog navigation rezimea.', 'Svaki deo navigacije zadržava svoju helper boju dok traje cela navigaciona celina.'],
+    ['nav_item_display', '.nav-item', 'display', 'flex', 'Svaka stavka postaje flex red da ikona i tekst stanu jedan do drugog.'],
+    ['nav_item_min_height', '.nav-item', 'min-height', '52px', 'Klik zona dobija pristojnu visinu.'],
+    ['nav_item_padding', '.nav-item', 'padding', '12px 16px', 'Padding pravi realnu klik zonu i diše bolje od golog teksta.'],
+    ['nav_item_align_items', '.nav-item', 'align-items', 'center', 'Vertikalno centriramo sadržaj svake stavke.'],
+    ['nav_item_gap', '.nav-item', 'gap', '12px', 'Gap odvaja ikonu od labele.'],
+    ['nav_icon_outline', '.nav-item .icon', 'outline', '1px dotted #7dd3fc', 'Ikonica dobija svoj tanak outline i zadržava ga do završnog navigation rezimea.', 'I ikonica je teaching target i zato ostaje označena dok traje objašnjenje.'],
+    ['nav_icon_width', '.nav-item .icon', 'width', '22px', 'Ikona dobija fiksnu širinu.'],
+    ['nav_icon_height', '.nav-item .icon', 'height', '22px', 'Ikona dobija i fiksnu visinu radi konzistentnog kvadrata.'],
+    ['nav_icon_display', '.nav-item .icon', 'display', 'grid', 'Grid olakšava centriranje sadržaja ikone.'],
+    ['nav_icon_place_items', '.nav-item .icon', 'place-items', 'center', 'Ikonicu centriramo i horizontalno i vertikalno.'],
+    ['nav_label_font_size', '.nav-item .label', 'font-size', '15px', 'Labela dobija čitljivu veličinu.'],
+    ['nav_label_font_weight', '.nav-item .label', 'font-weight', '600', 'Blago pojačavamo labelu da zadrži hijerarhiju.'],
+    ['nav_item_radius', '.nav-item', 'border-radius', '14px', 'Zaobljene ivice daju linkovima mekši, UI osećaj. Outline helper i dalje ostaje do rezimea.'],
+    ['nav_item_margin', '.nav-item', 'margin', '0 8px', 'Spoljni razmak odvaja stavke od ivice sidebara.'],
+    ['nav_item_active_background', '.nav-item.active', 'background', 'rgba(109,115,255,0.14)', 'Aktivna stavka dobija svoju pozadinu, ali helper outline ostaje do navigation rezimea.'],
+    ['nav_item_active_color', '.nav-item.active', 'color', 'white', 'Boju aktivne stavke pojačavamo za bolji kontrast.'],
+    ['nav_item_transition', '.nav-item', 'transition', 'all 0.4s ease', 'Dodajemo glatku tranziciju za hover i active stanje.'],
+    ['nav_item_hover_background', '.nav-item:hover', 'background', 'rgba(255,255,255,0.05)', 'Hover feedback potvrđuje da je stavka interaktivna.'],
+    ['collapse_width', '.sidebar.is-collapsed', 'width', '108px', 'Collapsed mod sužava sidebar na kompaktnu širinu.']
   ].map(config => describeCssPropertyStep(...config)),
-  describeHtmlElementStep('footer_html', 'HTML: Sidebar Footer', 'Dodajemo `.sidebar-footer` kao završni informativni blok pri dnu sidebara. Navigaciona celina je sada gotova, pa uklanjamo privremene pomoćne bordere i paddinge sa navigacionih elemenata.', 'html:footer', 'Footer je i dalje deo sidebara, pa i njega gradimo iz istog toka.', 20),
+  describeHtmlElementStep(
+    'footer_html',
+    'HTML: Sidebar Footer',
+    'Dodajemo `.sidebar-footer` kao završni informativni blok pri dnu sidebara. Footer takođe dobija svoj outline helper koji ostaje do njegovog završnog rezimea.',
+    'html:footer',
+    'Footer je i dalje deo sidebara, pa i njega gradimo iz istog toka.',
+    ['class="sidebar-footer"', '<p>Sidebar nije samo lista linkova.']
+  ),
   ...[
-    ['sidebar_display_flex', '.sidebar', 'display', 'flex', 20, 'Sidebar pretvaramo u flex kolonu da footer može da ode na dno.'],
-    ['sidebar_flex_direction', '.sidebar', 'flex-direction', 'column', 20, 'Kolona omogućava prirodan vertikalni raspored sekcija.'],
-    ['footer_border', '.sidebar-footer', 'border', '1px solid rgba(255,255,255,0.12)', 20, 'Tanka linija razdvaja footer od pozadine.'],
-    ['footer_background', '.sidebar-footer', 'background', 'rgba(255,255,255,0.05)', 20, 'Blaga pozadina izdvaja footer bez teškog kontrasta.'],
-    ['footer_padding', '.sidebar-footer', 'padding', '16px', 20, 'Footer dobija unutrašnji spacing.'],
-    ['footer_radius', '.sidebar-footer', 'border-radius', '14px', 20, 'Zaobljenje usklađuje footer sa ostatkom UI-ja.'],
-    ['footer_margin_top', '.sidebar-footer', 'margin-top', 'auto', 20, 'Auto margin gura footer na dno kolone.'],
-    ['footer_text_margin', '.sidebar-footer p', 'margin', '6px 0 0', 20, 'Odstupamo paragraf od naslova unutar footera.'],
-    ['footer_text_color', '.sidebar-footer p', 'color', '#9aa6c8', 20, 'Muted ton čini pomoćni tekst nenametljivim.'],
-    ['footer_text_line_height', '.sidebar-footer p', 'line-height', '1.5', 20, 'Line-height daje tekstu dovoljno vazduha.'],
-    ['hide_labels', '.sidebar.is-collapsed .nav-item .label', 'display', 'none', 21, 'U collapsed modu sakrivamo tekstualne labele.', 'Collapse ne znači da gubiš strukturu, već da je svodiš na ikone.'],
-    ['responsive_sidebar_min_height', '.sidebar', 'min-height', 'auto', 21, 'Na manjim ekranima sidebar više ne mora da glumi pun viewport.']
+    ['sidebar_display_flex', '.sidebar', 'display', 'flex', 'Sidebar pretvaramo u flex kolonu da footer može da ode na dno.'],
+    ['sidebar_flex_direction', '.sidebar', 'flex-direction', 'column', 'Kolona omogućava prirodan vertikalni raspored sekcija.'],
+    ['footer_outline', '.sidebar-footer', 'outline', '1px dashed #c084fc', 'Dodajemo tanak helper outline za footer i držimo ga do završnog footer rezimea.', 'I footer dobija svoju helper boju jer je poseban teaching element.'],
+    ['footer_border', '.sidebar-footer', 'border', '1px solid rgba(255,255,255,0.12)', 'Tanka linija razdvaja footer od pozadine.'],
+    ['footer_background', '.sidebar-footer', 'background', 'rgba(255,255,255,0.05)', 'Blaga pozadina izdvaja footer bez teškog kontrasta.'],
+    ['footer_padding', '.sidebar-footer', 'padding', '16px', 'Footer dobija unutrašnji spacing.'],
+    ['footer_radius', '.sidebar-footer', 'border-radius', '14px', 'Zaobljenje usklađuje footer sa ostatkom UI-ja.'],
+    ['footer_margin_top', '.sidebar-footer', 'margin-top', 'auto', 'Auto margin gura footer na dno kolone.'],
+    ['footer_text_margin', '.sidebar-footer p', 'margin', '6px 0 0', 'Odstupamo paragraf od naslova unutar footera.'],
+    ['footer_text_color', '.sidebar-footer p', 'color', '#9aa6c8', 'Muted ton čini pomoćni tekst nenametljivim.'],
+    ['footer_text_line_height', '.sidebar-footer p', 'line-height', '1.5', 'Line-height daje tekstu dovoljno vazduha.'],
+    ['hide_labels', '.sidebar.is-collapsed .brand-copy, .sidebar.is-collapsed .nav-item .label', 'display', 'none', 'U collapsed modu sakrivamo tekstualne labele i brand copy.', 'Collapse ne znači da gubiš strukturu, već da je svodiš na ikone.'],
+    ['responsive_sidebar_min_height', '.sidebar', 'min-height', 'auto', 'Na manjim ekranima sidebar više ne mora da glumi pun viewport.']
   ].map(config => describeCssPropertyStep(...config)),
-  describeFinishedStep('done', 'Done: Sidebar', 'Tutorijal je sada potpuno detaljan: CSS ide kumulativno, property po property.', 'Kada je tok ovako sitno razbijen, promene su mnogo lakše za praćenje i u kodu i u prikazu sidebara.', 21)
+  describeCssSummaryStep(
+    'sidebar_summary',
+    'Rezime: .sidebar',
+    'Završni rezime za `.sidebar`: helper outline više nije potreban, jer je sav osnovni CSS za shell već kompletan i jasan.',
+    'Rezime korak je mesto gde helper outline odlazi i ostaje čist završni CSS za tu celinu.',
+    ['class="sidebar"']
+  ),
+  describeCssSummaryStep(
+    'brand_summary',
+    'Rezime: Brand Celina',
+    'Rezimiramo brand wrapper, logo i brand copy. Tek sada uklanjamo njihove outline helpere jer je ceo brand blok završen.',
+    'Kada više povezanih elemenata čine jednu teaching celinu, outline može da nestane tek u zajedničkom rezime koraku.',
+    ['class="sidebar-brand"', 'class="logo"', 'class="brand-copy"']
+  ),
+  describeCssSummaryStep(
+    'navigation_summary',
+    'Rezime: Navigation Celina',
+    'Rezimiramo nav zonu, stavke i ikonice. Tek sada uklanjamo outline helpere sa cele navigacione celine.',
+    'Outline helperi za navigaciju ostaju dok svi delovi navigacije ne budu kompletno objašnjeni.',
+    ['class="nav-list"', 'class="nav-item', 'class="icon"']
+  ),
+  describeCssSummaryStep(
+    'footer_summary',
+    'Rezime: Footer',
+    'Rezimiramo footer blok i uklanjamo njegov helper outline tek sada, kada je ceo footer vizuelno završen.',
+    'Outline za footer služi učenju i zato ostaje sve do poslednjeg footer rezimea.',
+    ['class="sidebar-footer"', '<p>Sidebar nije samo lista linkova.']
+  ),
+  describeFinishedStep(
+    'done',
+    'Done: Sidebar',
+    'Tutorijal je sada potpuno detaljan: CSS ide kumulativno, property po property, a outline helperi odlaze tek u rezime koracima.',
+    'Kada je tok ovako sitno razbijen, promene su mnogo lakše za praćenje i u kodu i u prikazu sidebara.'
+  )
 ];
 
 export const stepNumberById = Object.fromEntries(
@@ -4624,39 +4807,43 @@ export function buildCssAtStep(stepNumber) {
   ], stepNumber, 'empty_shell');
 
   appendVisibleCssRuleBlock(lines, '.topbar {', [
-    { from: 'topbar_outline', untilBefore: 'topbar_background', line: '/* privremeni pomoćni border radi lakšeg snalaženja; uklanjamo ga kasnije */' },
-    { from: 'topbar_outline', untilBefore: 'topbar_background', line: 'outline: 2px solid #ff5d8f;' },
+    { from: 'topbar_outline', untilBefore: 'topbar_summary', line: 'outline: 1px solid #ff5d8f;' },
     { from: 'topbar_padding', line: 'padding: 18px 28px;' },
     { from: 'topbar_background', line: 'background: #25262c;' },
     { from: 'topbar_border', line: 'border: 1px solid rgba(0,0,0,0.22);' },
     { from: 'topbar_shadow', line: 'box-shadow: 0 12px 24px rgba(0,0,0,0.18);' },
     { from: 'topbar_display', line: 'display: flex;' },
     { from: 'topbar_align_items', line: 'align-items: center;' },
-    { from: 'topbar_justify_content', line: 'justify-content: space-between;' }
+    { from: 'topbar_justify_content', line: 'justify-content: space-between;' },
+    { from: 'topbar_summary', line: '/* helper outline removed in final .topbar summary */' }
   ], stepNumber, 'topbar_html');
 
   appendVisibleCssRuleBlock(lines, '.topbar-logo {', [
+    { from: 'logo_outline', untilBefore: 'logo_summary', line: 'outline: 1px dashed #fbbf24;' },
     { from: 'logo_color', line: 'color: #ffffff;' },
     { from: 'logo_font_size', line: 'font-size: 18px;' },
     { from: 'logo_font_weight', line: 'font-weight: 800;' },
     { from: 'logo_letter_spacing', line: 'letter-spacing: 0.04em;' },
-    { from: 'logo_text_decoration', line: 'text-decoration: none;' }
+    { from: 'logo_text_decoration', line: 'text-decoration: none;' },
+    { from: 'logo_summary', line: '/* helper outline removed in final .topbar-logo summary */' }
   ], stepNumber, 'logo_html');
 
   appendVisibleCssRuleBlock(lines, '.topbar-links {', [
-    { from: 'nav_outline', untilBefore: 'cta_html', line: '/* helper linija za centralnu link zonu; držimo je dok ne završimo celu nav celinu */' },
-    { from: 'nav_outline', untilBefore: 'cta_html', line: 'outline: 1px dashed #38bdf8;' },
+    { from: 'nav_outline', untilBefore: 'navigation_summary', line: 'outline: 1px dashed #38bdf8;' },
     { from: 'nav_display', line: 'display: flex;' },
     { from: 'nav_gap', line: 'gap: 36px;' },
     { from: 'nav_margin_left', line: 'margin-left: auto;' },
-    { from: 'nav_margin_right', line: 'margin-right: auto;' }
+    { from: 'nav_margin_right', line: 'margin-right: auto;' },
+    { from: 'navigation_summary', line: '/* helper outline removed in final .topbar-links summary */' }
   ], stepNumber, 'nav_html');
 
   appendVisibleCssRuleBlock(lines, '.topbar-links a {', [
+    { from: 'nav_link_outline', untilBefore: 'navigation_summary', line: 'outline: 1px dotted #fde68a;' },
     { from: 'nav_link_color', line: 'color: #ffffff;' },
     { from: 'nav_link_font_size', line: 'font-size: 15px;' },
     { from: 'nav_link_text_decoration', line: 'text-decoration: none;' },
-    { from: 'nav_link_transition', line: 'transition: color 0.3s ease;' }
+    { from: 'nav_link_transition', line: 'transition: color 0.3s ease;' },
+    { from: 'navigation_summary', line: '/* link helper outline removed in final navigation summary */' }
   ], stepNumber);
 
   appendVisibleCssRuleBlock(lines, '.topbar-links a:hover {', [
@@ -4664,8 +4851,7 @@ export function buildCssAtStep(stepNumber) {
   ], stepNumber);
 
   appendVisibleCssRuleBlock(lines, '.topbar-cta {', [
-    { from: 'cta_outline', untilBefore: 'cta_background', line: '/* privremeni pomoćni border radi lakšeg snalaženja; uklanjamo ga kada se pojavi završna boja */' },
-    { from: 'cta_outline', untilBefore: 'cta_background', line: 'outline: 1px dashed #11a4d3;' },
+    { from: 'cta_outline', untilBefore: 'cta_summary', line: 'outline: 1px dashed #11a4d3;' },
     { from: 'cta_display', line: 'display: inline-flex;' },
     { from: 'cta_align_items', line: 'align-items: center;' },
     { from: 'cta_padding', line: 'padding: 12px 28px;' },
@@ -4673,7 +4859,8 @@ export function buildCssAtStep(stepNumber) {
     { from: 'cta_background', line: 'background: #11a4d3;' },
     { from: 'cta_color', line: 'color: #ffffff;' },
     { from: 'cta_text_decoration', line: 'text-decoration: none;' },
-    { from: 'cta_shadow', line: 'box-shadow: 0 10px 20px rgba(17,164,211,0.28);' }
+    { from: 'cta_shadow', line: 'box-shadow: 0 10px 20px rgba(17,164,211,0.28);' },
+    { from: 'cta_summary', line: '/* helper outline removed in final .topbar-cta summary */' }
   ], stepNumber, 'cta_html');
 
   return lines;
@@ -4934,8 +5121,22 @@ Koraci po korak gradiš prvi navbar iz reference: logo levo, linkovi u sredini i
 ! Veliki `border-radius`, kao `999px`, zatvara CTA u pil oblik.
 
 === lessons/build-top-navigation/describe-steps.js ===
-function describeHtmlElementStep(id, title, desc, tag, proTip) {
-  return { id, title, desc, tag, proTip };
+const focusHtmlNeedlesBySelector = {
+  '.app-shell': ['<div class="app-shell">'],
+  '.topbar': ['class="topbar"'],
+  '.topbar-logo': ['class="topbar-logo"'],
+  '.topbar-links': ['class="topbar-links"'],
+  '.topbar-links a': ['>Services</a>', '>Projects</a>', '>About</a>'],
+  '.topbar-links a:hover': ['>Services</a>', '>Projects</a>', '>About</a>'],
+  '.topbar-cta': ['class="topbar-cta"']
+};
+
+function readFocusHtmlNeedles(selector) {
+  return focusHtmlNeedlesBySelector[selector] || [];
+}
+
+function describeHtmlElementStep(id, title, desc, tag, proTip, focusHtmlNeedles = []) {
+  return { id, title, desc, tag, proTip, focusHtmlNeedles };
 }
 
 function describeCssPropertyStep(id, selector, property, value, desc = '', proTip = '') {
@@ -4946,7 +5147,19 @@ function describeCssPropertyStep(id, selector, property, value, desc = '', proTi
     title: `CSS: ${selector} / ${property}`,
     desc: desc || `Dodajemo \`${cssLine}\` u \`${selector}\` i širimo stylesheet jedan property po korak.`,
     tag: `css:${id.replace(/_/g, '-')}`,
-    proTip: proTip || 'Jedan property po korak drži promenu malom, preglednom i lakom za objašnjavanje.'
+    proTip: proTip || 'Jedan property po korak drži promenu malom, preglednom i lakom za objašnjavanje.',
+    focusHtmlNeedles: readFocusHtmlNeedles(selector)
+  };
+}
+
+function describeCssSummaryStep(id, selector, desc, proTip) {
+  return {
+    id,
+    title: `Rezime: ${selector}`,
+    desc,
+    tag: `summary:${id.replace(/_/g, '-')}`,
+    proTip,
+    focusHtmlNeedles: readFocusHtmlNeedles(selector)
   };
 }
 
@@ -4960,22 +5173,24 @@ export const lessonSteps = [
     'Start: Empty App Shell',
     'Počinjemo od praznog `.app-shell` prostora. Goal slika iznad pokazuje tri varijante, ali u ovoj lekciji gradimo samo prvu.',
     'html:app-shell',
-    'Neutralan početak jasno odvaja ono što je postojalo od onoga što tek pravimo.'
+    'Neutralan početak jasno odvaja ono što je postojalo od onoga što tek pravimo.',
+    ['<div class="app-shell">']
   ),
   describeHtmlElementStep(
     'topbar_html',
     'HTML: Topbar Shell',
     'Dodajemo `<header class="topbar">` kao glavni wrapper buduće navigacije.',
     'html:topbar',
-    'Kreni od glavnog semantic wrapper-a pa tek onda popunjavaj njegove zone.'
+    'Kreni od glavnog semantic wrapper-a pa tek onda popunjavaj njegove zone.',
+    ['class="topbar"']
   ),
   ...[
     ['shell_padding', '.app-shell', 'padding', '40px', 'Dodajemo padding oko cele scene da navbar dobije vazduh i ne stoji zalepljen za ivice preview-a.'],
     ['shell_background', '.app-shell', 'background', '#d6e1eb', 'Svetla pozadina približava preview referentnoj slici i daje kontrast tamnom navbaru.'],
     ['shell_min_height', '.app-shell', 'min-height', '100vh', 'Puna visina drži celu scenu stabilnom tokom lekcije.'],
-    ['topbar_outline', '.topbar', 'outline', '2px solid #ff5d8f', 'Dodajemo privremeni pomoćni border radi lakšeg snalaženja, da odmah vidimo footprint celog navbara. Kasnije ćemo ga ukloniti kada prava pozadina preuzme ulogu.', 'Outline je odličan debug signal jer ne menja layout.'],
+    ['topbar_outline', '.topbar', 'outline', '1px solid #ff5d8f', 'Dodajemo tanak pomoćni outline da footprint celog navbara ostane vidljiv kroz ceo tok. Skidamo ga tek u završnom rezime koraku za `.topbar`.', 'Outline ostaje aktivan dok ne završimo rezime za ovaj element.'],
     ['topbar_padding', '.topbar', 'padding', '18px 28px', 'Navbar dobija unutrašnji spacing, pa odmah izgleda kao realna UI traka.'],
-    ['topbar_background', '.topbar', 'background', '#25262c', 'Dodajemo tamnu pozadinu i uklanjamo privremeni pomoćni border, više nam ne treba.'],
+    ['topbar_background', '.topbar', 'background', '#25262c', 'Dodajemo tamnu pozadinu, ali outline namerno ostaje do završnog rezimea za `.topbar`.'],
     ['topbar_border', '.topbar', 'border', '1px solid rgba(0,0,0,0.22)', 'Tanka ivica pomaže da navbar bude čitljiv i na svetloj pozadini.'],
     ['topbar_shadow', '.topbar', 'box-shadow', '0 12px 24px rgba(0,0,0,0.18)', 'Shadow odvaja navbar od pozadine i približava ga referentnoj slici.'],
     ['topbar_display', '.topbar', 'display', 'flex', 'Flex uvodi horizontalni raspored elemenata.'],
@@ -4987,9 +5202,11 @@ export const lessonSteps = [
     'HTML: Logo Link',
     'Dodajemo logo kao klikabilni `.topbar-logo` element na levom kraju navigacije.',
     'html:logo',
-    'Logo je navigacioni landmark i zato ga uvodimo pre linkova.'
+    'Logo je navigacioni landmark i zato ga uvodimo pre linkova.',
+    ['class="topbar-logo"']
   ),
   ...[
+    ['logo_outline', '.topbar-logo', 'outline', '1px dashed #fbbf24', 'Dodajemo tanak outline za logo i držimo ga do završnog rezime koraka za `.topbar-logo`.', 'Svaki važan element dobija svoj outline i zadržava ga do svog rezimea.'],
     ['logo_color', '.topbar-logo', 'color', '#ffffff', 'Boju loga postavljamo rano da odmah ima jasan kontrast na tamnoj traci.'],
     ['logo_font_size', '.topbar-logo', 'font-size', '18px', 'Malo povećavamo logo da se odvoji od običnih linkova.'],
     ['logo_font_weight', '.topbar-logo', 'font-weight', '800', 'Težina fonta daje logo signalu identitet.'],
@@ -4999,16 +5216,18 @@ export const lessonSteps = [
   describeHtmlElementStep(
     'nav_html',
     'HTML: Navigation Links',
-    'Dodajemo `<nav class="topbar-links">` sa linkovima Services, Projects i About. Od ovog trenutka helper linije za nav držimo dok ne završimo celu middle zonu.',
+    'Dodajemo `<nav class="topbar-links">` sa linkovima Services, Projects i About. I grupa linkova i sami linkovi dobijaju helper outline koji ostaje do završnog rezimea za navigaciju.',
     'html:nav-links',
-    'Najbolje je da sve centralne linkove uvedeš kao jednu celinu, pa tek onda doteruješ spacing i tipografiju.'
+    'Najbolje je da sve centralne linkove uvedeš kao jednu celinu, pa tek onda doteruješ spacing i tipografiju.',
+    ['class="topbar-links"', '>Services</a>', '>Projects</a>', '>About</a>']
   ),
   ...[
-    ['nav_outline', '.topbar-links', 'outline', '1px dashed #38bdf8', 'Dodajemo privremeni pomoćni border radi lakšeg snalaženja, da centralna navigaciona zona odmah postane vidljiva. Držimo ga dok ne završimo celu link sekciju.', 'Helper outline čini centralnu grupu vidljivom i pre nego što dodamo CTA.'],
+    ['nav_outline', '.topbar-links', 'outline', '1px dashed #38bdf8', 'Dodajemo tanak helper outline za centralnu navigacionu zonu i držimo ga do završnog rezime koraka za link sekciju.', 'Centralna grupa ostaje obeležena dok ne završimo rezime za nju.'],
     ['nav_display', '.topbar-links', 'display', 'flex', 'Linkove slažemo u jedan red.'],
     ['nav_gap', '.topbar-links', 'gap', '36px', 'Gap daje istu vrstu razmaka kao na referentnoj slici.'],
     ['nav_margin_left', '.topbar-links', 'margin-left', 'auto', 'Navigacija se odvaja od loga i kreće ka sredini.'],
     ['nav_margin_right', '.topbar-links', 'margin-right', 'auto', 'Desni auto margin pomaže da grupa linkova ostane vizuelno centrirana.'],
+    ['nav_link_outline', '.topbar-links a', 'outline', '1px dotted #fde68a', 'Svaki navigacioni link dobija svoj tanak outline i zadržava ga do završnog rezimea za navigaciju.', 'I sama grupa i pojedinačni linkovi treba da ostanu vizuelno čitljivi dok traje objašnjenje.'],
     ['nav_link_color', '.topbar-links a', 'color', '#ffffff', 'Boja linkova prati logo i pravi konzistentan kontrast.'],
     ['nav_link_font_size', '.topbar-links a', 'font-size', '15px', 'Linkovi dobijaju čitljivu, ali nenametljivu veličinu.'],
     ['nav_link_text_decoration', '.topbar-links a', 'text-decoration', 'none', 'Čistimo default underline da linkovi izgledaju kao deo dizajna.'],
@@ -5018,21 +5237,46 @@ export const lessonSteps = [
   describeHtmlElementStep(
     'cta_html',
     'HTML: Contact CTA',
-    'Dodajemo završni `.topbar-cta` link sa tekstom Contact. Link sekcija je sada gotova i uklanjamo privremeni helper outline sa nje.',
+    'Dodajemo završni `.topbar-cta` link sa tekstom Contact. Dugme takođe dobija svoj helper outline koji ostaje do njegovog završnog rezimea.',
     'html:cta',
-    'CTA se uvodi na kraju, tek kada su logo i navigacija već stabilni.'
+    'CTA se uvodi na kraju, tek kada su logo i navigacija već stabilni.',
+    ['class="topbar-cta"']
   ),
   ...[
-    ['cta_outline', '.topbar-cta', 'outline', '1px dashed #11a4d3', 'Dodajemo privremeni pomoćni border radi lakšeg snalaženja, da footprint CTA dugmeta bude jasan i pre boje. Kasnije ćemo ga ukloniti.', 'Kod dugmeta je helper outline koristan dok još nema svoju pozadinu.'],
+    ['cta_outline', '.topbar-cta', 'outline', '1px dashed #11a4d3', 'Dodajemo tanak pomoćni outline za CTA i držimo ga do završnog rezime koraka za dugme.', 'Kod CTA dugmeta helper outline ostaje sve dok ne zaključimo ceo element.'],
     ['cta_display', '.topbar-cta', 'display', 'inline-flex', 'CTA prebacujemo u inline-flex da padding i centriranje rade kao na pravom dugmetu.'],
     ['cta_align_items', '.topbar-cta', 'align-items', 'center', 'Tekst dugmeta centriramo po visini.'],
     ['cta_padding', '.topbar-cta', 'padding', '12px 28px', 'Padding daje CTA dugmetu njegov pravi footprint.'],
     ['cta_radius', '.topbar-cta', 'border-radius', '999px', 'Pil oblik odmah približava dugme referentnom primeru.'],
-    ['cta_background', '.topbar-cta', 'background', '#11a4d3', 'Dodajemo završnu boju CTA dugmeta i uklanjamo privremeni pomoćni border, više nam ne treba.'],
+    ['cta_background', '.topbar-cta', 'background', '#11a4d3', 'Dodajemo završnu boju CTA dugmeta, ali outline i dalje ostaje do rezime koraka za `.topbar-cta`.'],
     ['cta_color', '.topbar-cta', 'color', '#ffffff', 'Beli tekst pravi čist kontrast preko plave pozadine.'],
     ['cta_text_decoration', '.topbar-cta', 'text-decoration', 'none', 'Uklanjamo underline da CTA izgleda kao pravo dugme.'],
     ['cta_shadow', '.topbar-cta', 'box-shadow', '0 10px 20px rgba(17,164,211,0.28)', 'Shadow pojačava prisustvo CTA dugmeta i zatvara vizuelni match sa ciljem.']
   ].map(config => describeCssPropertyStep(...config)),
+  describeCssSummaryStep(
+    'topbar_summary',
+    '.topbar',
+    'Završni rezime za `.topbar`: sada kada vidimo kompletan block CSS, uklanjamo helper outline sa glavnog wrapper-a.',
+    'Rezime korak je mesto gde helper outline odlazi i ostaje čist završni CSS za taj element.'
+  ),
+  describeCssSummaryStep(
+    'logo_summary',
+    '.topbar-logo',
+    'Rezimiramo `.topbar-logo` i uklanjamo njegov helper outline tek sada, kada je sav CSS za logo već jasan i kompletan.',
+    'Logo outline ostaje sve do ovog trenutka da bi fokus bio čitljiv tokom cele lekcije.'
+  ),
+  describeCssSummaryStep(
+    'navigation_summary',
+    '.topbar-links',
+    'Rezimiramo navigacionu celinu i uklanjamo helper outline i sa wrapper-a i sa pojedinačnih linkova.',
+    'Kada završavaš celu navigacionu grupu, tek tada gasiš outline helpere za sve njene delove.'
+  ),
+  describeCssSummaryStep(
+    'cta_summary',
+    '.topbar-cta',
+    'Rezime za CTA dugme: helper outline više nije potreban, jer završni stil već jasno govori šta je element i kako izgleda.',
+    'Outline služi učenju; kad je učenje za taj element završeno, može da nestane.'
+  ),
   describeFinishedStep(
     'done',
     'Done: Top Navigation',

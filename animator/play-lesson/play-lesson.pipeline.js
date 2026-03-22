@@ -209,6 +209,7 @@ export function playLesson({ ownerDocument, ownerLocation, ownerWindow, lesson, 
 
     showGrowingCode({
       lessonParts,
+      step,
       currentStepNumber: lessonProgress.currentStepNumber,
       buildHtmlAtStep: lesson.buildHtmlAtStep,
       buildCssAtStep: lesson.buildCssAtStep
