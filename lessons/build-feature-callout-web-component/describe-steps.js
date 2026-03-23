@@ -204,7 +204,7 @@ export const lessonSteps = [
   describeJsFlowStep(
     'constructor_shadow',
     'JS: constructor + attachShadow',
-    'U konstruktoru pozivamo `super()` i odmah otvaramo `this.attachShadow({ mode: \'open\' })` da komponenta dobije sopstveni shadow root.',
+    'U konstruktoru pozivamo `super()` i odmah otvaramo `const shadowRoot = this.attachShadow({ mode: \'open\' })` da komponenta dobije sopstveni shadow root.',
     'Shadow root je granica komponente: unutrašnji markup i stilovi žive iza nje.'
   ),
   describeJsFlowStep(

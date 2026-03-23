@@ -480,7 +480,7 @@
     "lines": [
       "  constructor() {",
       "    super();",
-      "    this.attachShadow({ mode: 'open' });",
+      "    const shadowRoot = this.attachShadow({ mode: 'open' });",
       "    @@slot:constructor-body@@",
       "  }",
       ""
@@ -490,21 +490,21 @@
     "from": "constructor_clone",
     "target": "constructor-body",
     "lines": [
-      "    this.shadowRoot.appendChild(featureCalloutTemplate.content.cloneNode(true));"
+      "    shadowRoot.appendChild(featureCalloutTemplate.content.cloneNode(true));"
     ]
   },
   {
     "from": "constructor_cache_title",
     "target": "constructor-body",
     "lines": [
-      "    this.titleElement = this.shadowRoot.querySelector('.title');"
+      "    this.titleElement = shadowRoot.querySelector('.title');"
     ]
   },
   {
     "from": "constructor_cache_cta",
     "target": "constructor-body",
     "lines": [
-      "    this.ctaElement = this.shadowRoot.querySelector('.cta');"
+      "    this.ctaElement = shadowRoot.querySelector('.cta');"
     ]
   },
   {

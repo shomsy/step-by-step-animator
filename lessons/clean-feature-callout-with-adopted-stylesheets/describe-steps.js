@@ -228,7 +228,7 @@ export const lessonSteps = [
   describeJsFlowStep(
     'constructor_shadow',
     'JS: constructor + attachShadow',
-    'U konstruktoru pozivamo `super()` i odmah otvaramo `this.attachShadow({ mode: \'open\' })` da komponenta dobije sopstveni shadow root.',
+    'U konstruktoru pozivamo `super()` i odmah otvaramo `const shadowRoot = this.attachShadow({ mode: \'open\' })` da komponenta dobije sopstveni shadow root.',
     'Shadow root je granica komponente: markup i adopted stylesheet žive iza nje.'
   ),
   describeJsFlowStep(
@@ -240,7 +240,7 @@ export const lessonSteps = [
   describeJsFlowStep(
     'constructor_adopt_stylesheet',
     'JS: Shadow Root Usvaja Stylesheet',
-    'Dodajemo `this.shadowRoot.adoptedStyleSheets = [featureCalloutStyles]`, pa shadow root dobija stil bez ubacivanja `<style>` taga u template.',
+    'Dodajemo `shadowRoot.adoptedStyleSheets = [featureCalloutStyles]`, pa shadow root dobija stil bez ubacivanja `<style>` taga u template.',
     'Ovo je trenutak kada čisti separation stvarno proradi: stylesheet je izdvojen, a shadow root ga samo preuzima.'
   ),
   describeJsFlowStep(

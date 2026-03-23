@@ -5676,7 +5676,7 @@ Druga Web Components lekcija nadograđuje osnove iz prve: isti nivo komponente s
     "lines": [
       "  constructor() {",
       "    super();",
-      "    this.attachShadow({ mode: 'open' });",
+      "    const shadowRoot = this.attachShadow({ mode: 'open' });",
       "    @@slot:constructor-body@@",
       "  }",
       ""
@@ -5686,21 +5686,21 @@ Druga Web Components lekcija nadograđuje osnove iz prve: isti nivo komponente s
     "from": "constructor_clone",
     "target": "constructor-body",
     "lines": [
-      "    this.shadowRoot.appendChild(featureCalloutTemplate.content.cloneNode(true));"
+      "    shadowRoot.appendChild(featureCalloutTemplate.content.cloneNode(true));"
     ]
   },
   {
     "from": "constructor_cache_title",
     "target": "constructor-body",
     "lines": [
-      "    this.titleElement = this.shadowRoot.querySelector('.title');"
+      "    this.titleElement = shadowRoot.querySelector('.title');"
     ]
   },
   {
     "from": "constructor_cache_cta",
     "target": "constructor-body",
     "lines": [
-      "    this.ctaElement = this.shadowRoot.querySelector('.cta');"
+      "    this.ctaElement = shadowRoot.querySelector('.cta');"
     ]
   },
   {
@@ -6036,7 +6036,7 @@ export const lessonSteps = [
   describeJsFlowStep(
     'constructor_shadow',
     'JS: constructor + attachShadow',
-    'U konstruktoru pozivamo `super()` i odmah otvaramo `this.attachShadow({ mode: \'open\' })` da komponenta dobije sopstveni shadow root.',
+    'U konstruktoru pozivamo `super()` i odmah otvaramo `const shadowRoot = this.attachShadow({ mode: \'open\' })` da komponenta dobije sopstveni shadow root.',
     'Shadow root je granica komponente: unutrašnji markup i stilovi žive iza nje.'
   ),
   describeJsFlowStep(
@@ -7589,7 +7589,7 @@ Treća Web Components lekcija uzima isti feature callout i čisti njegov unutra�
     "lines": [
       "  constructor() {",
       "    super();",
-      "    this.attachShadow({ mode: 'open' });",
+      "    const shadowRoot = this.attachShadow({ mode: 'open' });",
       "    @@slot:constructor-body@@",
       "  }",
       ""
@@ -7599,28 +7599,28 @@ Treća Web Components lekcija uzima isti feature callout i čisti njegov unutra�
     "from": "constructor_clone",
     "target": "constructor-body",
     "lines": [
-      "    this.shadowRoot.appendChild(featureCalloutTemplate.content.cloneNode(true));"
+      "    shadowRoot.appendChild(featureCalloutTemplate.content.cloneNode(true));"
     ]
   },
   {
     "from": "constructor_adopt_stylesheet",
     "target": "constructor-body",
     "lines": [
-      "    this.shadowRoot.adoptedStyleSheets = [featureCalloutStyles];"
+      "    shadowRoot.adoptedStyleSheets = [featureCalloutStyles];"
     ]
   },
   {
     "from": "constructor_cache_title",
     "target": "constructor-body",
     "lines": [
-      "    this.titleElement = this.shadowRoot.querySelector('.title');"
+      "    this.titleElement = shadowRoot.querySelector('.title');"
     ]
   },
   {
     "from": "constructor_cache_cta",
     "target": "constructor-body",
     "lines": [
-      "    this.ctaElement = this.shadowRoot.querySelector('.cta');"
+      "    this.ctaElement = shadowRoot.querySelector('.cta');"
     ]
   },
   {
@@ -8086,7 +8086,7 @@ export const lessonSteps = [
   describeJsFlowStep(
     'constructor_shadow',
     'JS: constructor + attachShadow',
-    'U konstruktoru pozivamo `super()` i odmah otvaramo `this.attachShadow({ mode: \'open\' })` da komponenta dobije sopstveni shadow root.',
+    'U konstruktoru pozivamo `super()` i odmah otvaramo `const shadowRoot = this.attachShadow({ mode: \'open\' })` da komponenta dobije sopstveni shadow root.',
     'Shadow root je granica komponente: markup i adopted stylesheet žive iza nje.'
   ),
   describeJsFlowStep(
@@ -8098,7 +8098,7 @@ export const lessonSteps = [
   describeJsFlowStep(
     'constructor_adopt_stylesheet',
     'JS: Shadow Root Usvaja Stylesheet',
-    'Dodajemo `this.shadowRoot.adoptedStyleSheets = [featureCalloutStyles]`, pa shadow root dobija stil bez ubacivanja `<style>` taga u template.',
+    'Dodajemo `shadowRoot.adoptedStyleSheets = [featureCalloutStyles]`, pa shadow root dobija stil bez ubacivanja `<style>` taga u template.',
     'Ovo je trenutak kada čisti separation stvarno proradi: stylesheet je izdvojen, a shadow root ga samo preuzima.'
   ),
   describeJsFlowStep(
