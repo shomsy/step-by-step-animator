@@ -65,19 +65,28 @@ export function showGrowingCode({
     shadowCssPane: showCodePane(lessonParts.shadowCssCodePane, buildShadowCssAtStep, currentStepNumber, 'css')
   };
 
-  // Sync sidebar dots and handle auto-focus
-  let paneToFocus = null;
+  // Sync sidebar dots
   lessonParts.ownerDocument.querySelectorAll('.ide-file-item').forEach(item => {
     const paneId = item.dataset.paneId;
     const hasChanges = changes[paneId];
     item.classList.toggle('has-changes', hasChanges);
-    if (hasChanges && !paneToFocus) {
-      paneToFocus = paneId;
-    }
   });
 
-  // If a file changed, switch to it automatically
-  if (paneToFocus) {
+  // Calculate smart pane focus for IDE Mode
+  const activePane = lessonParts.ownerDocument.querySelector('.live-pane.active');
+  const activePaneId = activePane ? activePane.id : null;
+  
+  // If we are in IDE mode and the current pane has NO changes, 
+  // but another pane DOES have changes, switch to the first one with changes.
+  if (activePaneId && !changes[activePaneId]) {
+    const paneWithChanges = Object.keys(changes).find(id => changes[id]);
+    if (paneWithChanges) {
+      lessonParts.ownerDocument.querySelectorAll('.ide-file-item').forEach(el => el.classList.toggle('active', el.dataset.paneId === paneWithChanges));
+      lessonParts.ownerDocument.querySelectorAll('.live-pane').forEach(el => el.classList.toggle('active', el.id === paneWithChanges));
+    }
+  } else if (!activePaneId) {
+    // If nothing is active (initial state), focus first one with changes or htmlPane
+    const paneToFocus = Object.keys(changes).find(id => changes[id]) || 'htmlPane';
     lessonParts.ownerDocument.querySelectorAll('.ide-file-item').forEach(el => el.classList.toggle('active', el.dataset.paneId === paneToFocus));
     lessonParts.ownerDocument.querySelectorAll('.live-pane').forEach(el => el.classList.toggle('active', el.id === paneToFocus));
   }
