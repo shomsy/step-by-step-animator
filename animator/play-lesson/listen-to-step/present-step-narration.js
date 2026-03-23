@@ -234,6 +234,10 @@ function showVoiceBadge({
   );
 }
 
+function switchToOpenSourceVoice(lessonParts) {
+  lessonParts.stepSpeechSourceSelect.value = 'open-source';
+}
+
 export function presentStepNarration({ lessonParts, ownerWindow }) {
   let currentStep = null;
   let currentStepNumber = 0;
@@ -307,9 +311,18 @@ export function presentStepNarration({ lessonParts, ownerWindow }) {
   });
 
   lessonParts.stepSpeechSourceSelect.addEventListener('change', event => {
-    voiceSourcePreference = VOICE_SOURCE_PREFERENCES.has(event.target.value)
+    const requestedVoiceSourcePreference = VOICE_SOURCE_PREFERENCES.has(event.target.value)
       ? event.target.value
       : 'auto';
+    const nextVoiceSourcePreference = requestedVoiceSourcePreference === 'browser' && !preferredBrowserVoice
+      ? 'open-source'
+      : requestedVoiceSourcePreference;
+
+    voiceSourcePreference = nextVoiceSourcePreference;
+
+    if (nextVoiceSourcePreference !== requestedVoiceSourcePreference) {
+      switchToOpenSourceVoice(lessonParts);
+    }
 
     showBrowserVoiceChoices({
       lessonParts,
@@ -545,8 +558,9 @@ export function presentStepNarration({ lessonParts, ownerWindow }) {
 
       showStepSpeechStatus(lessonParts, statusText);
     };
+    const hasPreferredBrowserVoice = Boolean(preferredBrowserVoice);
 
-    if (voiceSourcePreference === 'browser' && preferredBrowserVoice) {
+    if (voiceSourcePreference === 'browser' && hasPreferredBrowserVoice) {
       return speakWithBrowserVoice({
         ownerWindow,
         text: narrationText,
@@ -557,11 +571,11 @@ export function presentStepNarration({ lessonParts, ownerWindow }) {
       });
     }
 
-    if (voiceSourcePreference === 'browser' && !preferredBrowserVoice) {
+    if (voiceSourcePreference === 'browser' && !hasPreferredBrowserVoice) {
       showNarrationStatus(`Nema lokalnog ${readNarrationLanguageLabel(narrationLanguagePreference)} sistemskog glasa. Prelazim na open-source Piper.`);
     }
 
-    if (voiceSourcePreference === 'auto' && preferredBrowserVoice) {
+    if (voiceSourcePreference === 'auto' && hasPreferredBrowserVoice) {
       return speakWithBrowserVoice({
         ownerWindow,
         text: narrationText,
@@ -572,37 +586,42 @@ export function presentStepNarration({ lessonParts, ownerWindow }) {
       });
     }
 
-    if (!shouldUseBrowserFallback || voiceSourcePreference === 'open-source') {
-      try {
-        await prepareCurrentOpenSourceVoice();
+    try {
+      await prepareCurrentOpenSourceVoice();
 
-        return await speakWithOpenSourceVoice({
-          ownerWindow,
-          text: narrationText,
-          speechRate,
-          onStatusChange: showNarrationStatus,
-          narrationLanguagePreference
-        });
-      } catch {
-        isOpenSourceVoiceReady = false;
-        shouldUseBrowserFallback = true;
-        showVoiceBadge({
-          lessonParts,
-          narrationLanguagePreference,
-          voiceSourcePreference,
-          preferredBrowserVoice,
-          isPreparingOpenSourceVoice,
-          isOpenSourceVoiceReady,
-          shouldUseBrowserFallback
-        });
-        showPrepareStepSpeechButton({
-          lessonParts,
-          isPreparingOpenSourceVoice,
-          isOpenSourceVoiceReady,
-          shouldUseBrowserFallback
-        });
-        showNarrationStatus(`Open-source Piper glas nije uspeo za ${readNarrationLanguageLabel(narrationLanguagePreference)} naraciju.`);
+      return await speakWithOpenSourceVoice({
+        ownerWindow,
+        text: narrationText,
+        speechRate,
+        onStatusChange: showNarrationStatus,
+        narrationLanguagePreference
+      });
+    } catch {
+      isOpenSourceVoiceReady = false;
+      shouldUseBrowserFallback = hasPreferredBrowserVoice;
+      showVoiceBadge({
+        lessonParts,
+        narrationLanguagePreference,
+        voiceSourcePreference,
+        preferredBrowserVoice,
+        isPreparingOpenSourceVoice,
+        isOpenSourceVoiceReady,
+        shouldUseBrowserFallback
+      });
+      showPrepareStepSpeechButton({
+        lessonParts,
+        isPreparingOpenSourceVoice,
+        isOpenSourceVoiceReady,
+        shouldUseBrowserFallback
+      });
+
+      if (!hasPreferredBrowserVoice) {
+        throw new Error(
+          `Nema lokalnog ${readNarrationLanguageLabel(narrationLanguagePreference)} glasa, a open-source Piper trenutno nije uspeo.`
+        );
       }
+
+      showNarrationStatus(`Open-source Piper glas nije uspeo za ${readNarrationLanguageLabel(narrationLanguagePreference)} naraciju. Prelazim na sistemski glas.`);
     }
 
     return speakWithBrowserVoice({
@@ -713,6 +732,11 @@ export function presentStepNarration({ lessonParts, ownerWindow }) {
       );
     } catch {
       preferredBrowserVoice = null;
+    }
+
+    if (voiceSourcePreference === 'browser' && !preferredBrowserVoice) {
+      voiceSourcePreference = 'open-source';
+      switchToOpenSourceVoice(lessonParts);
     }
 
     try {
