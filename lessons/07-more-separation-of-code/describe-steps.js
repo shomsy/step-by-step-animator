@@ -57,6 +57,17 @@ function describeTemplateJsStep(id, title, desc, proTip) {
   };
 }
 
+function describeTeachingStep(id, title, desc, proTip, focusHtmlNeedles = readFocusHtmlNeedles('my-first-component')) {
+  return {
+    id,
+    title,
+    desc,
+    tag: `teaching:${id.replace(/_/g, '-')}`,
+    proTip,
+    focusHtmlNeedles
+  };
+}
+
 function describeJsFlowStep(id, title, desc, proTip, focusHtmlNeedles = readFocusHtmlNeedles('my-first-component')) {
   return {
     id,
@@ -188,10 +199,16 @@ export const lessonSteps = [
     'Refactor pristupa stilovima ne menja HTML API komponente.',
     ['<my-first-component', 'slot="eyebrow"']
   ),
+  describeTeachingStep(
+    'what_is_separated_now',
+    'Teaching Moment: Šta je sada odvojeno',
+    'U prethodnoj lekciji template markup, behavior i shadow stil bili su bliže jedan drugom. U Lesson 07 ih namerno razdvajamo: `component.html.js` čuva markup, `my-first-component.js` ostaje behavior fajl, `shadow-dom-style.css` stilizuje unutrašnjost, a `style.css` ostaje spoljašnji host/theme sloj.',
+    'Poenta nije da imamo više fajlova radi estetike, nego da iz imena fajla odmah pogodiš njegovu odgovornost.'
+  ),
   describeTemplateJsStep(
     'template_html_declaration',
     'Template JS: Eksportujemo templateHtml',
-    'U `component.html.js` izdvajamo card markup u `export const templateHtml = ...`. Modul sada sadrži samo template concern i ništa više.',
+    'U prethodnoj verziji card markup je bio direktno u component class fajlu. Sada ga selimo u `export const templateHtml = ...` unutar `component.html.js`, pa template modul nosi samo markup concern.',
     'Kada markup dobije sopstveni export, behavior fajl više ne mora da zna kako je HTML sastavljen.'
   ),
   describeTemplateJsStep(
@@ -269,8 +286,8 @@ export const lessonSteps = [
   describeJsFlowStep(
     'cache_dom',
     'JS: Uvodimo cacheDom()',
-    'Dodajemo `cacheDom()` kao jedino mesto gde komponenta radi sa shadow DOM strukturom i internim referencama.',
-    'Kad markup i DOM pretrage žive na jednom mestu, ostatak klase ostaje mnogo čistiji.'
+    'Dodajemo `cacheDom()` kao jedino mesto gde komponenta po potrebi jednom stampuje template u shadow root, pa zatim kešira interne reference.',
+    'Ime metode naglašava cache, ali u ovoj lekciji ona namerno radi i prvi mount template-a, da class zadrži jedno mesto za DOM setup.'
   ),
   describeJsFlowStep(
     'cache_dom_clone',
@@ -338,6 +355,12 @@ export const lessonSteps = [
     'Na isti način `cta-label` pretvaramo u tekst CTA dugmeta.',
     'Isti obrazac koristiš za svaki dinamični prop: pročitaj API, ažuriraj postojeći DOM.'
   ),
+  describeTeachingStep(
+    'render_patch_instead_of_rebuild',
+    'Teaching Moment: render patchuje, ne rebuild-uje',
+    'Ovo je jedna od najvažnijih razlika lekcije: `render()` više ne dira template strukturu i ne pravi novi `innerHTML`. On samo ažurira `textContent` na već keširanim referencama.',
+    'Kada render patch-uje umesto da rebuild-uje, DOM ostaje stabilan, eventi se ne dupliraju i component class postaje lakša za održavanje.'
+  ),
   describeJsFlowStep(
     'handle_click_dispatch_event',
     'JS: handleClick emituje component-action',
@@ -357,6 +380,13 @@ export const lessonSteps = [
     'Svaki fajl sada ima jednu predvidivu odgovornost: template, behavior, shadow CSS i host CSS.'
   ),
   ...shellCssSteps.map(config => describeCssPropertyStep(...config)),
+  describeTeachingStep(
+    'host_vs_shadow_styles',
+    'Teaching Moment: style.css spolja, shadow-dom-style.css unutra',
+    'Do ovog trenutka `style.css` je izgradio samo host scenu i theme tokene na `<my-first-component>`. Sledeći koraci prelaze u `shadow-dom-style.css`, gde stilizujemo samo unutrašnje delove kao što su `.card`, `.eyebrow`, `.title`, `.summary` i `.cta`.',
+    'Pravilo ove lekcije je jednostavno: host i theme ostaju spolja, a stvarna unutrašnja komponenta živi u shadow stylesheet-u.',
+    ['<my-first-component']
+  ),
   ...stylesheetSteps.map(config => describeShadowCssPropertyStep(...config)),
   describeSummaryStep(
     'card_summary',
