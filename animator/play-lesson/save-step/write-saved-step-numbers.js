@@ -3,5 +3,9 @@ function composeSavedStepStorageKey(lessonId) {
 }
 
 export function writeSavedStepNumbers({ lessonId, savedStepNumbers }) {
-  localStorage.setItem(composeSavedStepStorageKey(lessonId), JSON.stringify(savedStepNumbers));
+  try {
+    localStorage.setItem(composeSavedStepStorageKey(lessonId), JSON.stringify(savedStepNumbers));
+  } catch {
+    // Ignore storage write failures so the lesson runtime stays usable.
+  }
 }

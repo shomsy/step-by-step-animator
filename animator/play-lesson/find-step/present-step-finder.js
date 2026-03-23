@@ -1,5 +1,9 @@
 import { escapeInlineText } from '../escape-inline-text.js';
 
+function readSearchableStepText(value) {
+  return typeof value === 'string' ? value : '';
+}
+
 export function presentStepFinder({ lessonParts, steps, goToStepNumber }) {
   lessonParts.stepFinderInput.addEventListener('input', event => {
     showMatchingStepResults(event.target.value);
@@ -23,21 +27,27 @@ export function presentStepFinder({ lessonParts, steps, goToStepNumber }) {
   });
 
   function showMatchingStepResults(query) {
-    const normalizedQuery = query.toLowerCase();
+    const normalizedQuery = String(query || '').toLowerCase();
     const matchingSteps = steps
-      .map((step, index) => ({ ...step, index }))
+      .map((step, index) => ({
+        ...step,
+        index,
+        titleText: readSearchableStepText(step.title),
+        descText: readSearchableStepText(step.desc),
+        tagText: readSearchableStepText(step.tag)
+      }))
       .filter(step =>
-        step.title.toLowerCase().includes(normalizedQuery) ||
-        step.desc.toLowerCase().includes(normalizedQuery) ||
-        step.tag.toLowerCase().includes(normalizedQuery)
+        step.titleText.toLowerCase().includes(normalizedQuery) ||
+        step.descText.toLowerCase().includes(normalizedQuery) ||
+        step.tagText.toLowerCase().includes(normalizedQuery)
       );
 
     lessonParts.stepFinderResults.innerHTML = matchingSteps.map(step => `
       <div class="search-result" data-index="${step.index}">
         <div class="search-result-num">${step.index + 1}</div>
         <div class="search-result-info">
-          <h4>${escapeInlineText(step.title)}</h4>
-          <p>${escapeInlineText(step.desc)}</p>
+          <h4>${escapeInlineText(step.titleText)}</h4>
+          <p>${escapeInlineText(step.descText)}</p>
         </div>
       </div>
     `).join('');

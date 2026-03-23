@@ -1,5 +1,21 @@
 const THEME_STORAGE_KEY = 'stepByStepAnimatorTheme';
 
+function writeStoredTheme(theme) {
+  try {
+    localStorage.setItem(THEME_STORAGE_KEY, theme);
+  } catch {
+    // Ignore storage write failures and keep runtime theme active.
+  }
+}
+
+function readStoredTheme() {
+  try {
+    return localStorage.getItem(THEME_STORAGE_KEY);
+  } catch {
+    return null;
+  }
+}
+
 function showThemeButtonIcon(themeButton, theme) {
   themeButton.innerHTML = theme === 'dark'
     ? `<svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"/></svg>`
@@ -12,7 +28,7 @@ export function chooseTheme({ rootElement, themeButton }) {
     showThemeButtonIcon(themeButton, theme);
 
     if (persist) {
-      localStorage.setItem(THEME_STORAGE_KEY, theme);
+      writeStoredTheme(theme);
     }
   }
 
@@ -23,7 +39,7 @@ export function chooseTheme({ rootElement, themeButton }) {
   }
 
   function initializeTheme() {
-    const storedTheme = localStorage.getItem(THEME_STORAGE_KEY);
+    const storedTheme = readStoredTheme();
     const initialTheme = storedTheme === 'light' || storedTheme === 'dark'
       ? storedTheme
       : (rootElement.getAttribute('data-theme') || 'dark');

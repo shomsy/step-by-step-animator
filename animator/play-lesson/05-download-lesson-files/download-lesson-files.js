@@ -5,7 +5,10 @@ function triggerFileDownload(fileName, mimeType, fileContent) {
 
   downloadLink.href = objectUrl;
   downloadLink.download = fileName;
+  downloadLink.style.display = 'none';
+  document.body.append(downloadLink);
   downloadLink.click();
+  downloadLink.remove();
 
   window.setTimeout(() => {
     URL.revokeObjectURL(objectUrl);

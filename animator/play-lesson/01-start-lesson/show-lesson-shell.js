@@ -116,18 +116,22 @@ export function showLessonShell({ ownerDocument, lessonParts, lesson }) {
     lessonParts.shadowCssCodePane.innerHTML = '';
   }
 
-  lessonParts.livePreviewFrame.title = lesson.previewTitle;
+  lessonParts.livePreviewFrame.title = lesson.previewTitle || lesson.lessonTitle || 'Lesson preview';
   showLessonGoal({ lessonParts, lesson });
   ownerDocument.title = `Step By Step Animator · ${lesson.lessonTitle}`;
 
-  lessonParts.ideFileList.addEventListener('click', (e) => {
+  lessonParts.ideFileList.onclick = e => {
     const item = e.target.closest('.ide-file-item');
-    if (!item) return;
+    if (!item) {
+      return;
+    }
 
     const paneId = item.dataset.paneId;
     lessonParts.ideFileList.querySelectorAll('.ide-file-item').forEach(el => el.classList.toggle('active', el === item));
     [lessonParts.htmlPane, lessonParts.cssPane, lessonParts.jsPane, lessonParts.templateJsPane, lessonParts.shadowCssPane].forEach(pane => {
-      if (pane) pane.classList.toggle('active', pane.id === paneId);
+      if (pane) {
+        pane.classList.toggle('active', pane.id === paneId);
+      }
     });
-  });
+  };
 }

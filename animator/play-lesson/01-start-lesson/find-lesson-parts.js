@@ -8,6 +8,16 @@ function readRequiredElement(ownerDocument, id) {
   return element;
 }
 
+function readRequiredSelector(ownerDocument, selector) {
+  const element = ownerDocument.querySelector(selector);
+
+  if (!element) {
+    throw new Error(`Missing required element: ${selector}`);
+  }
+
+  return element;
+}
+
 export function findLessonParts(ownerDocument) {
   return {
     ownerDocument,
@@ -50,7 +60,7 @@ export function findLessonParts(ownerDocument) {
     savedStepList: readRequiredElement(ownerDocument, 'bookmarkList'),
     savedStepEmptyState: readRequiredElement(ownerDocument, 'bookmarkEmpty'),
     savedStepSummary: readRequiredElement(ownerDocument, 'bookmarkSummary'),
-    liveEditorPanel: ownerDocument.querySelector('.live-editor-panel'),
+    liveEditorPanel: readRequiredSelector(ownerDocument, '.live-editor-panel'),
     liveEditorBody: readRequiredElement(ownerDocument, 'liveEditorBody'),
     htmlCodePane: readRequiredElement(ownerDocument, 'liveHtmlPane'),
     cssCodePane: readRequiredElement(ownerDocument, 'liveCssPane'),

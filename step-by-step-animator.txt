@@ -2134,6 +2134,16 @@ function readRequiredElement(ownerDocument, id) {
   return element;
 }
 
+function readRequiredSelector(ownerDocument, selector) {
+  const element = ownerDocument.querySelector(selector);
+
+  if (!element) {
+    throw new Error(`Missing required element: ${selector}`);
+  }
+
+  return element;
+}
+
 export function findLessonParts(ownerDocument) {
   return {
     ownerDocument,
@@ -2176,7 +2186,7 @@ export function findLessonParts(ownerDocument) {
     savedStepList: readRequiredElement(ownerDocument, 'bookmarkList'),
     savedStepEmptyState: readRequiredElement(ownerDocument, 'bookmarkEmpty'),
     savedStepSummary: readRequiredElement(ownerDocument, 'bookmarkSummary'),
-    liveEditorPanel: ownerDocument.querySelector('.live-editor-panel'),
+    liveEditorPanel: readRequiredSelector(ownerDocument, '.live-editor-panel'),
     liveEditorBody: readRequiredElement(ownerDocument, 'liveEditorBody'),
     htmlCodePane: readRequiredElement(ownerDocument, 'liveHtmlPane'),
     cssCodePane: readRequiredElement(ownerDocument, 'liveCssPane'),
@@ -2318,20 +2328,24 @@ export function showLessonShell({ ownerDocument, lessonParts, lesson }) {
     lessonParts.shadowCssCodePane.innerHTML = '';
   }
 
-  lessonParts.livePreviewFrame.title = lesson.previewTitle;
+  lessonParts.livePreviewFrame.title = lesson.previewTitle || lesson.lessonTitle || 'Lesson preview';
   showLessonGoal({ lessonParts, lesson });
   ownerDocument.title = `Step By Step Animator · ${lesson.lessonTitle}`;
 
-  lessonParts.ideFileList.addEventListener('click', (e) => {
+  lessonParts.ideFileList.onclick = e => {
     const item = e.target.closest('.ide-file-item');
-    if (!item) return;
+    if (!item) {
+      return;
+    }
 
     const paneId = item.dataset.paneId;
     lessonParts.ideFileList.querySelectorAll('.ide-file-item').forEach(el => el.classList.toggle('active', el === item));
     [lessonParts.htmlPane, lessonParts.cssPane, lessonParts.jsPane, lessonParts.templateJsPane, lessonParts.shadowCssPane].forEach(pane => {
-      if (pane) pane.classList.toggle('active', pane.id === paneId);
+      if (pane) {
+        pane.classList.toggle('active', pane.id === paneId);
+      }
     });
-  });
+  };
 }
 
 === animator/play-lesson/02-follow-lesson/listen-for-lesson-keys.js ===
@@ -2395,18 +2409,35 @@ export function showActiveLessonPanel(lessonParts, activePanel) {
 
 === animator/play-lesson/02-follow-lesson/show-current-step.js ===
 function composeStepTagMarkup(tag) {
+  if (!tag) {
+    return '';
+  }
+
   return `<svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4"/></svg> ${tag}`;
 }
 
 export function showCurrentStep({ lessonParts, step, currentStepNumber, totalSteps }) {
   const progressPercent = ((currentStepNumber + 1) / totalSteps) * 100;
   const remainingMinutes = Math.ceil((totalSteps - currentStepNumber - 1) * 0.1);
+  const titleText = typeof step.title === 'string' ? step.title : '';
+  const descText = typeof step.desc === 'string' ? step.desc : '';
+  const tagText = typeof step.tag === 'string' ? step.tag : '';
+  const proTipText = typeof step.proTip === 'string' ? step.proTip : '';
 
-  lessonParts.stepTitle.innerHTML = step.title + (currentStepNumber === totalSteps - 1 ? ' <span class="badge">GOTOV</span>' : '');
-  lessonParts.stepDescription.textContent = step.desc;
+  lessonParts.stepTitle.textContent = titleText;
+
+  if (currentStepNumber === totalSteps - 1) {
+    const badge = lessonParts.ownerDocument.createElement('span');
+    badge.className = 'badge';
+    badge.textContent = 'GOTOV';
+    lessonParts.stepTitle.append(' ', badge);
+  }
+
+  lessonParts.stepDescription.textContent = descText;
   lessonParts.stepNumber.textContent = `Prizor ${currentStepNumber + 1} / ${totalSteps}`;
-  lessonParts.tagText.innerHTML = composeStepTagMarkup(step.tag);
-  lessonParts.proTipText.textContent = step.proTip;
+  lessonParts.tagText.innerHTML = composeStepTagMarkup(tagText);
+  lessonParts.tagText.hidden = !tagText;
+  lessonParts.proTipText.textContent = proTipText;
   lessonParts.progressBar.style.width = `${progressPercent}%`;
   lessonParts.progressText.textContent = `${Math.round(progressPercent)}% završeno`;
   lessonParts.timeEstimate.textContent = remainingMinutes > 0 ? `~${remainingMinutes} min preostalo` : 'Završeno!';
@@ -2758,7 +2789,10 @@ function triggerFileDownload(fileName, mimeType, fileContent) {
 
   downloadLink.href = objectUrl;
   downloadLink.download = fileName;
+  downloadLink.style.display = 'none';
+  document.body.append(downloadLink);
   downloadLink.click();
+  downloadLink.remove();
 
   window.setTimeout(() => {
     URL.revokeObjectURL(objectUrl);
@@ -2813,6 +2847,22 @@ export function downloadLessonFiles({ lesson }) {
 === animator/play-lesson/choose-theme/choose-theme.js ===
 const THEME_STORAGE_KEY = 'stepByStepAnimatorTheme';
 
+function writeStoredTheme(theme) {
+  try {
+    localStorage.setItem(THEME_STORAGE_KEY, theme);
+  } catch {
+    // Ignore storage write failures and keep runtime theme active.
+  }
+}
+
+function readStoredTheme() {
+  try {
+    return localStorage.getItem(THEME_STORAGE_KEY);
+  } catch {
+    return null;
+  }
+}
+
 function showThemeButtonIcon(themeButton, theme) {
   themeButton.innerHTML = theme === 'dark'
     ? `<svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"/></svg>`
@@ -2825,7 +2875,7 @@ export function chooseTheme({ rootElement, themeButton }) {
     showThemeButtonIcon(themeButton, theme);
 
     if (persist) {
-      localStorage.setItem(THEME_STORAGE_KEY, theme);
+      writeStoredTheme(theme);
     }
   }
 
@@ -2836,7 +2886,7 @@ export function chooseTheme({ rootElement, themeButton }) {
   }
 
   function initializeTheme() {
-    const storedTheme = localStorage.getItem(THEME_STORAGE_KEY);
+    const storedTheme = readStoredTheme();
     const initialTheme = storedTheme === 'light' || storedTheme === 'dark'
       ? storedTheme
       : (rootElement.getAttribute('data-theme') || 'dark');
@@ -2863,6 +2913,10 @@ export function escapeInlineText(value) {
 === animator/play-lesson/find-step/present-step-finder.js ===
 import { escapeInlineText } from '../escape-inline-text.js';
 
+function readSearchableStepText(value) {
+  return typeof value === 'string' ? value : '';
+}
+
 export function presentStepFinder({ lessonParts, steps, goToStepNumber }) {
   lessonParts.stepFinderInput.addEventListener('input', event => {
     showMatchingStepResults(event.target.value);
@@ -2886,21 +2940,27 @@ export function presentStepFinder({ lessonParts, steps, goToStepNumber }) {
   });
 
   function showMatchingStepResults(query) {
-    const normalizedQuery = query.toLowerCase();
+    const normalizedQuery = String(query || '').toLowerCase();
     const matchingSteps = steps
-      .map((step, index) => ({ ...step, index }))
+      .map((step, index) => ({
+        ...step,
+        index,
+        titleText: readSearchableStepText(step.title),
+        descText: readSearchableStepText(step.desc),
+        tagText: readSearchableStepText(step.tag)
+      }))
       .filter(step =>
-        step.title.toLowerCase().includes(normalizedQuery) ||
-        step.desc.toLowerCase().includes(normalizedQuery) ||
-        step.tag.toLowerCase().includes(normalizedQuery)
+        step.titleText.toLowerCase().includes(normalizedQuery) ||
+        step.descText.toLowerCase().includes(normalizedQuery) ||
+        step.tagText.toLowerCase().includes(normalizedQuery)
       );
 
     lessonParts.stepFinderResults.innerHTML = matchingSteps.map(step => `
       <div class="search-result" data-index="${step.index}">
         <div class="search-result-num">${step.index + 1}</div>
         <div class="search-result-info">
-          <h4>${escapeInlineText(step.title)}</h4>
-          <p>${escapeInlineText(step.desc)}</p>
+          <h4>${escapeInlineText(step.titleText)}</h4>
+          <p>${escapeInlineText(step.descText)}</p>
         </div>
       </div>
     `).join('');
@@ -4650,9 +4710,9 @@ export function showSavedStepList({
   lessonParts.savedStepList.innerHTML = savedItems.map(({ stepNumber, step }) => `
     <div class="bookmark-item${stepNumber === currentStepNumber ? ' current' : ''}">
       <button type="button" class="bookmark-link" data-step-number="${stepNumber}">
-        <span class="bookmark-meta">Prizor ${stepNumber + 1} <span class="bookmark-tag">${escapeInlineText(step.tag)}</span></span>
-        <strong>${escapeInlineText(step.title)}</strong>
-        <p>${escapeInlineText(step.desc)}</p>
+        <span class="bookmark-meta">Prizor ${stepNumber + 1}${readBookmarkTagMarkup(step)}</span></span>
+        <strong>${escapeInlineText(typeof step.title === 'string' ? step.title : '')}</strong>
+        <p>${escapeInlineText(typeof step.desc === 'string' ? step.desc : '')}</p>
       </button>
       <button type="button" class="bookmark-remove" data-remove-step-number="${stepNumber}" title="Ukloni bookmark">
         <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
@@ -4661,13 +4721,27 @@ export function showSavedStepList({
   `).join('');
 }
 
+function readBookmarkTagMarkup(step) {
+  const tagText = typeof step.tag === 'string' ? step.tag : '';
+
+  if (!tagText) {
+    return '';
+  }
+
+  return ` <span class="bookmark-tag">${escapeInlineText(tagText)}</span>`;
+}
+
 === animator/play-lesson/save-step/write-saved-step-numbers.js ===
 function composeSavedStepStorageKey(lessonId) {
   return `stepByStepAnimator:${lessonId}:savedSteps`;
 }
 
 export function writeSavedStepNumbers({ lessonId, savedStepNumbers }) {
-  localStorage.setItem(composeSavedStepStorageKey(lessonId), JSON.stringify(savedStepNumbers));
+  try {
+    localStorage.setItem(composeSavedStepStorageKey(lessonId), JSON.stringify(savedStepNumbers));
+  } catch {
+    // Ignore storage write failures so the lesson runtime stays usable.
+  }
 }
 
 === index.html ===
