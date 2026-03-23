@@ -81,6 +81,13 @@ animator/
       show-current-preview.js
     05-download-lesson-files/
       download-lesson-files.js
+    listen-to-step/
+      compose-step-narration-text.js
+      present-step-narration.js
+      read-step-narration-preferences.js
+      speak-with-browser-voice.js
+      speak-with-open-source-voice.js
+      write-step-narration-preferences.js
     find-step/
       present-step-finder.js
     save-step/
@@ -435,6 +442,7 @@ Levi panel:
 - prikazuje progress
 - sadrži bookmark tok
 - sadrži kontrole za navigaciju i playback
+- sadrži open-source naraciju trenutnog koraka sa auto-read i voice speed kontrolom
 
 Srednji panel:
 

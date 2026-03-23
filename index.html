@@ -154,6 +154,45 @@
         </div>
       </div>
 
+      <div class="step-narration-panel">
+        <div class="step-narration-head">
+          <div>
+            <span class="step-number">Naracija koraka</span>
+            <h3>Open-source glas za objašnjenje</h3>
+          </div>
+          <span class="step-narration-badge">Piper</span>
+        </div>
+        <p class="step-narration-copy">
+          Open-source Piper glas čita naslov, opis i pro tip trenutnog koraka. Pri prvom pokretanju model se preuzima u browser.
+        </p>
+        <div class="step-narration-controls">
+          <button class="btn-secondary" id="speakStepBtn" title="Pročitaj trenutni korak">
+            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z"/></svg>
+            <span>Čitaj korak</span>
+          </button>
+          <button class="btn-secondary" id="pauseStepSpeechBtn" title="Pauziraj glas">
+            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 9v6m4-6v6"/></svg>
+            <span>Pauza</span>
+          </button>
+          <button class="btn-ghost" id="stopStepSpeechBtn" title="Zaustavi glas">
+            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 9h6v6H9z"/></svg>
+            <span>Stop</span>
+          </button>
+        </div>
+        <label class="step-narration-toggle" for="autoSpeakStepToggle">
+          <input id="autoSpeakStepToggle" type="checkbox">
+          <span>Automatski čitaj svaki novi korak</span>
+        </label>
+        <div class="step-narration-speed-head">
+          <span>Brzina glasa</span>
+          <span class="step-narration-speed-value" id="stepSpeechSpeedValue">1.00x</span>
+        </div>
+        <input class="step-narration-speed-slider" id="stepSpeechSpeedSlider" type="range" min="0.8" max="1.3" step="0.05" value="1" aria-label="Brzina naracije">
+        <p class="step-narration-status" id="stepSpeechStatus" aria-live="polite">
+          Open-source Piper glas je spreman na zahtev.
+        </p>
+      </div>
+
       <div class="shortcuts">
         <div class="shortcut"><span class="kbd">←</span><span class="kbd">→</span> Navigacija</div>
         <div class="shortcut"><span class="kbd">Space</span> Play / Pause</div>

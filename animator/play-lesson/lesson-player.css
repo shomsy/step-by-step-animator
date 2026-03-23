@@ -1130,6 +1130,103 @@ h1 {
   font-weight: 600;
 }
 
+.step-narration-panel {
+  margin-top: 18px;
+  padding: 16px;
+  border-radius: 18px;
+  border: 1px solid var(--border);
+  background: rgba(255,255,255,0.04);
+  display: grid;
+  gap: 14px;
+}
+
+.step-narration-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.step-narration-head h3 {
+  margin-top: 4px;
+  font-size: 15px;
+}
+
+.step-narration-badge {
+  flex-shrink: 0;
+  padding: 6px 10px;
+  border-radius: 999px;
+  background: rgba(54,211,153,0.14);
+  color: var(--success);
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.step-narration-copy {
+  color: var(--text-secondary);
+  font-size: 13px;
+  line-height: 1.6;
+}
+
+.step-narration-controls {
+  display: grid;
+  grid-template-columns: 1.2fr 1fr 0.9fr;
+  gap: 10px;
+}
+
+.step-narration-controls button svg {
+  width: 18px;
+  height: 18px;
+  flex-shrink: 0;
+}
+
+.step-narration-toggle {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: var(--text-secondary);
+  font-size: 13px;
+  cursor: pointer;
+}
+
+.step-narration-toggle input {
+  width: 16px;
+  height: 16px;
+  accent-color: var(--accent);
+}
+
+.step-narration-speed-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  color: var(--text-secondary);
+  font-size: 13px;
+}
+
+.step-narration-speed-value {
+  color: var(--text);
+  font-weight: 800;
+}
+
+.step-narration-speed-slider {
+  width: 100%;
+  accent-color: var(--success);
+}
+
+.step-narration-status {
+  min-height: 42px;
+  padding: 12px 14px;
+  border-radius: 14px;
+  border: 1px solid rgba(54,211,153,0.16);
+  background: rgba(54,211,153,0.08);
+  color: var(--text);
+  font-size: 13px;
+  line-height: 1.55;
+}
+
 button {
   appearance: none;
   border: 0;
@@ -1449,5 +1546,6 @@ button:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
   .bookmarks-head, .bookmark-item { flex-direction: column; }
   .bookmark-summary { align-self: flex-start; }
   .bookmark-remove { width: 100%; }
+  .step-narration-controls { grid-template-columns: 1fr; }
   .shortcuts { display: none; }
 }

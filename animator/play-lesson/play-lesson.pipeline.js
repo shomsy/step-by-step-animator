@@ -11,6 +11,7 @@ import { showCurrentPreview } from './04-watch-preview/show-current-preview.js';
 import { downloadLessonFiles } from './05-download-lesson-files/download-lesson-files.js';
 import { chooseTheme } from './choose-theme/choose-theme.js';
 import { presentStepFinder } from './find-step/present-step-finder.js';
+import { presentStepNarration } from './listen-to-step/present-step-narration.js';
 import { rememberSavedSteps } from './save-step/remember-saved-steps.js';
 
 const DEFAULT_PLAYBACK_SPEED = 1;
@@ -52,6 +53,10 @@ export function playLesson({ ownerDocument, ownerLocation, ownerWindow, lesson, 
   const themeChoice = chooseTheme({
     rootElement: ownerDocument.documentElement,
     themeButton: lessonParts.themeButton
+  });
+  const stepNarration = presentStepNarration({
+    lessonParts,
+    ownerWindow
   });
 
   lessonParts.nextButton.addEventListener('click', () => {
@@ -98,6 +103,7 @@ export function playLesson({ ownerDocument, ownerLocation, ownerWindow, lesson, 
   });
 
   themeChoice.initializeTheme();
+  stepNarration.initializeStepNarration();
   applyPlaybackSpeed(DEFAULT_PLAYBACK_SPEED, { restartPlayback: false });
   showCurrentLesson();
 
@@ -237,6 +243,11 @@ export function playLesson({ ownerDocument, ownerLocation, ownerWindow, lesson, 
 
     showCurrentStep({
       lessonParts,
+      step,
+      currentStepNumber: lessonProgress.currentStepNumber,
+      totalSteps: lesson.steps.length
+    });
+    stepNarration.showCurrentStepNarration({
       step,
       currentStepNumber: lessonProgress.currentStepNumber,
       totalSteps: lesson.steps.length
