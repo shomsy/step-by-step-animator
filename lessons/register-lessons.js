@@ -3,13 +3,15 @@ import { buildSidebarLesson } from './build-sidebar/build-sidebar.lesson.js';
 import { buildFeatureCalloutWebComponentLesson } from './build-feature-callout-web-component/build-feature-callout-web-component.lesson.js';
 import { buildTopNavigationLesson } from './build-top-navigation/build-top-navigation.lesson.js';
 import { cleanFeatureCalloutWithAdoptedStylesheetsLesson } from './clean-feature-callout-with-adopted-stylesheets/clean-feature-callout-with-adopted-stylesheets.lesson.js';
+import { modularWebComponentsLesson } from './06-modular-web-components/06-modular-web-components.lesson.js';
 
 export const registeredLessons = [
   buildSidebarLesson,
   buildTopNavigationLesson,
   buildCalloutCustomElementLesson,
   buildFeatureCalloutWebComponentLesson,
-  cleanFeatureCalloutWithAdoptedStylesheetsLesson
+  cleanFeatureCalloutWithAdoptedStylesheetsLesson,
+  modularWebComponentsLesson
 ];
 
 const lessonsById = new Map(registeredLessons.map(lesson => [lesson.lessonId, lesson]));

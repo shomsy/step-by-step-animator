@@ -14,7 +14,7 @@ function isFocusedHtmlLine(lineText, focusHtmlNeedles) {
 function showCodePane(container, buildLinesAtStep, currentStepNumber, paneType = 'html', focusHtmlNeedles = []) {
   if (typeof buildLinesAtStep !== 'function') {
     container.innerHTML = '';
-    return;
+    return false;
   }
 
   let lineNumber = 0;
@@ -22,6 +22,7 @@ function showCodePane(container, buildLinesAtStep, currentStepNumber, paneType =
   const currentLines = buildLinesAtStep(currentStepNumber);
   const previousLines = currentStepNumber > 0 ? buildLinesAtStep(currentStepNumber - 1) : [];
   const renderedLines = compareCodeLines(currentLines, previousLines);
+  const hasAddedLines = renderedLines.some(entry => entry.isNewLine && !entry.isEmptyLine);
 
   container.innerHTML = renderedLines.map(entry => {
     lineNumber += 1;
@@ -42,6 +43,8 @@ function showCodePane(container, buildLinesAtStep, currentStepNumber, paneType =
       </div>
     `;
   }).join('');
+
+  return hasAddedLines;
 }
 
 export function showGrowingCode({
@@ -55,10 +58,30 @@ export function showGrowingCode({
 }) {
   const focusHtmlNeedles = Array.isArray(step.focusHtmlNeedles) ? step.focusHtmlNeedles : [];
 
-  showCodePane(lessonParts.htmlCodePane, buildHtmlAtStep, currentStepNumber, 'html', focusHtmlNeedles);
-  showCodePane(lessonParts.cssCodePane, buildCssAtStep, currentStepNumber, 'css');
-  showCodePane(lessonParts.jsCodePane, buildJsAtStep, currentStepNumber, 'js');
-  showCodePane(lessonParts.shadowCssCodePane, buildShadowCssAtStep, currentStepNumber, 'css');
+  const changes = {
+    htmlPane: showCodePane(lessonParts.htmlCodePane, buildHtmlAtStep, currentStepNumber, 'html', focusHtmlNeedles),
+    cssPane: showCodePane(lessonParts.cssCodePane, buildCssAtStep, currentStepNumber, 'css'),
+    jsPane: showCodePane(lessonParts.jsCodePane, buildJsAtStep, currentStepNumber, 'js'),
+    shadowCssPane: showCodePane(lessonParts.shadowCssCodePane, buildShadowCssAtStep, currentStepNumber, 'css')
+  };
+
+  // Sync sidebar dots and handle auto-focus
+  let paneToFocus = null;
+  lessonParts.ownerDocument.querySelectorAll('.ide-file-item').forEach(item => {
+    const paneId = item.dataset.paneId;
+    const hasChanges = changes[paneId];
+    item.classList.toggle('has-changes', hasChanges);
+    if (hasChanges && !paneToFocus) {
+      paneToFocus = paneId;
+    }
+  });
+
+  // If a file changed, switch to it automatically
+  if (paneToFocus) {
+    lessonParts.ownerDocument.querySelectorAll('.ide-file-item').forEach(el => el.classList.toggle('active', el.dataset.paneId === paneToFocus));
+    lessonParts.ownerDocument.querySelectorAll('.live-pane').forEach(el => el.classList.toggle('active', el.id === paneToFocus));
+  }
+
   lessonParts.currentStepBadge.textContent = `Prizor ${currentStepNumber + 1}`;
   scrollToAddedLine(lessonParts.htmlCodePane);
   scrollToAddedLine(lessonParts.cssCodePane);

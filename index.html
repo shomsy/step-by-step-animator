@@ -156,38 +156,45 @@
         <span class="live-editor-step" id="liveStepBadge">Prizor 1</span>
       </div>
 
-      <div class="live-editor-body" id="liveEditorBody" data-pane-count="2">
-        <div class="live-pane">
-          <div class="live-pane-head">
-            <span id="htmlFileLabel">index.html</span>
-            <span>Postojeće muted, novo istaknuto</span>
+      <div class="live-ide-layout">
+        <div class="live-editor-body" id="liveEditorBody" data-pane-count="2">
+          <div class="live-pane" id="htmlPane">
+            <div class="live-pane-head">
+              <span id="htmlFileLabel">index.html</span>
+              <span>Postojeće muted, novo istaknuto</span>
+            </div>
+            <div class="live-code-scroll" id="liveHtmlPane"></div>
           </div>
-          <div class="live-code-scroll" id="liveHtmlPane"></div>
+
+          <div class="live-pane" id="cssPane">
+            <div class="live-pane-head">
+              <span id="cssFileLabel">style.css</span>
+              <span>Staro muted, novo property istaknuto</span>
+            </div>
+            <div class="live-code-scroll" id="liveCssPane"></div>
+          </div>
+
+          <div class="live-pane" id="jsPane" hidden>
+            <div class="live-pane-head">
+              <span id="jsFileLabel">component.js</span>
+              <span>Novo ponašanje istaknuto liniju po liniju</span>
+            </div>
+            <div class="live-code-scroll" id="liveJsPane"></div>
+          </div>
+
+          <div class="live-pane" id="shadowCssPane" hidden>
+            <div class="live-pane-head">
+              <span id="shadowCssFileLabel">shadow-dom-style.css</span>
+              <span>Shadow DOM CSS raste property po property</span>
+            </div>
+            <div class="live-code-scroll" id="liveShadowCssPane"></div>
+          </div>
         </div>
 
-        <div class="live-pane">
-          <div class="live-pane-head">
-            <span id="cssFileLabel">style.css</span>
-            <span>Staro muted, novo property istaknuto</span>
-          </div>
-          <div class="live-code-scroll" id="liveCssPane"></div>
-        </div>
-
-        <div class="live-pane" id="jsPane" hidden>
-          <div class="live-pane-head">
-            <span id="jsFileLabel">component.js</span>
-            <span>Novo ponašanje istaknuto liniju po liniju</span>
-          </div>
-          <div class="live-code-scroll" id="liveJsPane"></div>
-        </div>
-
-        <div class="live-pane" id="shadowCssPane" hidden>
-          <div class="live-pane-head">
-            <span id="shadowCssFileLabel">shadow-dom-style.css</span>
-            <span>Shadow DOM CSS raste property po property</span>
-          </div>
-          <div class="live-code-scroll" id="liveShadowCssPane"></div>
-        </div>
+        <aside class="live-ide-sidebar">
+          <div class="live-ide-sidebar-head">Files</div>
+          <div class="live-ide-sidebar-list" id="ideFileList"></div>
+        </aside>
       </div>
     </section>
 
