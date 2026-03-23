@@ -2693,7 +2693,7 @@ html, body {
     linear-gradient(180deg, var(--bg), #f1f5f9 70%, var(--bg));
 }
 
-body { padding: 24px 24px 24px 16px; }
+body { padding: 24px 0 24px 24px; }
 
 /* Header Controls */
 .header-controls {
@@ -2841,11 +2841,11 @@ body { padding: 24px 24px 24px 16px; }
 
 /* Page Layout */
 .page {
-  max-width: min(2100px, calc(100vw - 24px));
-  margin: 0 auto 0 0;
+  max-width: none;
+  margin: 0;
   display: grid;
-  grid-template-columns: 372px minmax(520px, 680px) minmax(0, 1fr);
-  gap: 24px;
+  grid-template-columns: 372px 2.2fr 1.8fr;
+  gap: 32px;
   align-items: start;
 }
 
@@ -3705,7 +3705,7 @@ button:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
 /* Viewer */
 .viewer {
   height: calc(100vh - 48px);
-  padding: 16px;
+  padding: 16px 0 16px 16px;
   position: sticky;
   top: 24px;
   display: flex;
