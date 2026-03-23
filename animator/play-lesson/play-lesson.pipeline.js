@@ -206,6 +206,7 @@ export function playLesson({ ownerDocument, ownerLocation, ownerWindow, lesson, 
       buildHtmlAtStep: lesson.buildHtmlAtStep,
       buildCssAtStep: lesson.buildCssAtStep,
       buildJsAtStep: lesson.buildJsAtStep,
+      buildTemplateJsAtStep: lesson.buildTemplateJsAtStep,
       buildShadowCssAtStep: lesson.buildShadowCssAtStep
     });
 

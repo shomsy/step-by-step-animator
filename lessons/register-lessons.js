@@ -4,6 +4,7 @@ import { buildFeatureCalloutWebComponentLesson } from './build-feature-callout-w
 import { buildTopNavigationLesson } from './build-top-navigation/build-top-navigation.lesson.js';
 import { cleanFeatureCalloutWithAdoptedStylesheetsLesson } from './clean-feature-callout-with-adopted-stylesheets/clean-feature-callout-with-adopted-stylesheets.lesson.js';
 import { modularWebComponentsLesson } from './06-modular-web-components/06-modular-web-components.lesson.js';
+import { moreSeparationOfCodeLesson } from './07-more-separation-of-code/07-more-separation-of-code.lesson.js';
 
 export const registeredLessons = [
   buildSidebarLesson,
@@ -11,7 +12,8 @@ export const registeredLessons = [
   buildCalloutCustomElementLesson,
   buildFeatureCalloutWebComponentLesson,
   cleanFeatureCalloutWithAdoptedStylesheetsLesson,
-  modularWebComponentsLesson
+  modularWebComponentsLesson,
+  moreSeparationOfCodeLesson
 ];
 
 const lessonsById = new Map(registeredLessons.map(lesson => [lesson.lessonId, lesson]));

@@ -35,8 +35,9 @@ function showLessonGoal({ lessonParts, lesson }) {
 
 export function showLessonShell({ ownerDocument, lessonParts, lesson }) {
   const hasJavaScriptFile = typeof lesson.buildJsAtStep === 'function';
+  const hasTemplateJsFile = typeof lesson.buildTemplateJsAtStep === 'function';
   const hasShadowCssFile = typeof lesson.buildShadowCssAtStep === 'function';
-  const paneCount = 2 + (hasJavaScriptFile ? 1 : 0) + (hasShadowCssFile ? 1 : 0);
+  const paneCount = 2 + (hasJavaScriptFile ? 1 : 0) + (hasTemplateJsFile ? 1 : 0) + (hasShadowCssFile ? 1 : 0);
   const isIdeMode = !!lesson.ideMode;
 
   lessonParts.lessonHeading.textContent = lesson.lessonTitle;
@@ -53,7 +54,6 @@ export function showLessonShell({ ownerDocument, lessonParts, lesson }) {
   lessonParts.cssFileLabel.textContent = lesson.cssFileName;
 
   if (isIdeMode) {
-    // Initialize IDE File List
     const files = [
       { id: 'htmlPane', name: lesson.htmlFileName, type: 'html' },
       { id: 'cssPane', name: lesson.cssFileName, type: 'css' }
@@ -61,12 +61,14 @@ export function showLessonShell({ ownerDocument, lessonParts, lesson }) {
 
     if (hasJavaScriptFile) {
       files.push({ id: 'jsPane', name: lesson.jsFileName || 'component.js', type: 'js' });
-      lessonParts.jsFileLabel.textContent = lesson.jsFileName || 'component.js';
+    }
+
+    if (hasTemplateJsFile) {
+      files.push({ id: 'templateJsPane', name: lesson.templateJsFileName || 'component.html.js', type: 'js' });
     }
 
     if (hasShadowCssFile) {
       files.push({ id: 'shadowCssPane', name: lesson.shadowCssFileName || 'shadow-dom-style.css', type: 'css' });
-      lessonParts.shadowCssFileLabel.textContent = lesson.shadowCssFileName || 'shadow-dom-style.css';
     }
 
     lessonParts.ideFileList.innerHTML = files.map((file, index) => `
@@ -77,20 +79,22 @@ export function showLessonShell({ ownerDocument, lessonParts, lesson }) {
       </div>
     `).join('');
 
-    // Set initial active state
     lessonParts.htmlPane.classList.add('active');
     lessonParts.cssPane.classList.remove('active');
     lessonParts.jsPane.classList.remove('active');
+    lessonParts.templateJsPane.classList.remove('active');
     lessonParts.shadowCssPane.classList.remove('active');
   } else {
     lessonParts.ideFileList.innerHTML = '';
     lessonParts.htmlPane.classList.remove('active');
     lessonParts.cssPane.classList.remove('active');
     lessonParts.jsPane.classList.remove('active');
+    lessonParts.templateJsPane.classList.remove('active');
     lessonParts.shadowCssPane.classList.remove('active');
   }
 
   lessonParts.jsPane.hidden = !hasJavaScriptFile;
+  lessonParts.templateJsPane.hidden = !hasTemplateJsFile;
   lessonParts.shadowCssPane.hidden = !hasShadowCssFile;
   lessonParts.liveEditorBody.dataset.paneCount = String(paneCount);
 
@@ -98,6 +102,12 @@ export function showLessonShell({ ownerDocument, lessonParts, lesson }) {
     lessonParts.jsFileLabel.textContent = lesson.jsFileName || 'component.js';
   } else {
     lessonParts.jsCodePane.innerHTML = '';
+  }
+
+  if (hasTemplateJsFile) {
+    lessonParts.templateJsFileLabel.textContent = lesson.templateJsFileName || 'component.html.js';
+  } else {
+    lessonParts.templateJsCodePane.innerHTML = '';
   }
 
   if (hasShadowCssFile) {
@@ -110,13 +120,14 @@ export function showLessonShell({ ownerDocument, lessonParts, lesson }) {
   showLessonGoal({ lessonParts, lesson });
   ownerDocument.title = `Step By Step Animator · ${lesson.lessonTitle}`;
 
-  // Add event listeners for the file list
   lessonParts.ideFileList.addEventListener('click', (e) => {
     const item = e.target.closest('.ide-file-item');
     if (!item) return;
 
     const paneId = item.dataset.paneId;
-    ownerDocument.querySelectorAll('.ide-file-item').forEach(el => el.classList.toggle('active', el === item));
-    ownerDocument.querySelectorAll('.live-pane').forEach(el => el.classList.toggle('active', el.id === paneId));
+    lessonParts.ideFileList.querySelectorAll('.ide-file-item').forEach(el => el.classList.toggle('active', el === item));
+    [lessonParts.htmlPane, lessonParts.cssPane, lessonParts.jsPane, lessonParts.templateJsPane, lessonParts.shadowCssPane].forEach(pane => {
+      if (pane) pane.classList.toggle('active', pane.id === paneId);
+    });
   });
 }

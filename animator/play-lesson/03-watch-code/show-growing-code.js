@@ -51,13 +51,21 @@ const TAG_TO_PANE = {
   'html': 'htmlPane',
   'css': 'cssPane',
   'js': 'jsPane',
+  'template-js': 'templateJsPane',
   'shadow-css': 'shadowCssPane',
   'summary': 'htmlPane',
   'success': 'htmlPane'
 };
 
 function switchActiveIdePane(lessonParts, paneId) {
-  const allPanes = [lessonParts.htmlPane, lessonParts.cssPane, lessonParts.jsPane, lessonParts.shadowCssPane];
+  const allPanes = [
+    lessonParts.htmlPane,
+    lessonParts.cssPane,
+    lessonParts.jsPane,
+    lessonParts.templateJsPane,
+    lessonParts.shadowCssPane
+  ];
+
   const ideFileItems = lessonParts.ideFileList.querySelectorAll('.ide-file-item');
 
   allPanes.forEach(pane => {
@@ -78,6 +86,7 @@ export function showGrowingCode({
   buildHtmlAtStep,
   buildCssAtStep,
   buildJsAtStep,
+  buildTemplateJsAtStep,
   buildShadowCssAtStep
 }) {
   // IDE Mode: switch active pane FIRST, before rendering code
@@ -96,6 +105,7 @@ export function showGrowingCode({
     htmlPane: showCodePane(lessonParts.htmlCodePane, buildHtmlAtStep, currentStepNumber, 'html', focusHtmlNeedles),
     cssPane: showCodePane(lessonParts.cssCodePane, buildCssAtStep, currentStepNumber, 'css'),
     jsPane: showCodePane(lessonParts.jsCodePane, buildJsAtStep, currentStepNumber, 'js'),
+    templateJsPane: showCodePane(lessonParts.templateJsCodePane, buildTemplateJsAtStep, currentStepNumber, 'js'),
     shadowCssPane: showCodePane(lessonParts.shadowCssCodePane, buildShadowCssAtStep, currentStepNumber, 'css')
   };
 
@@ -110,5 +120,6 @@ export function showGrowingCode({
   scrollToAddedLine(lessonParts.htmlCodePane);
   scrollToAddedLine(lessonParts.cssCodePane);
   scrollToAddedLine(lessonParts.jsCodePane);
+  scrollToAddedLine(lessonParts.templateJsCodePane);
   scrollToAddedLine(lessonParts.shadowCssCodePane);
 }

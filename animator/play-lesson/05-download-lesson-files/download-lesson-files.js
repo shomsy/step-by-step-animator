@@ -19,35 +19,40 @@ export function downloadLessonFiles({ lesson }) {
   const jsCode = typeof lesson.buildJsAtStep === 'function'
     ? lesson.buildJsAtStep(finalStep).join('\n')
     : '';
+  const templateJsCode = typeof lesson.buildTemplateJsAtStep === 'function'
+    ? lesson.buildTemplateJsAtStep(finalStep).join('\n')
+    : '';
   const shadowCssCode = typeof lesson.buildShadowCssAtStep === 'function'
     ? lesson.buildShadowCssAtStep(finalStep).join('\n')
     : '';
 
+  let delay = 0;
+
   triggerFileDownload(lesson.htmlFileName, 'text/html', htmlCode);
+  delay += 500;
 
   window.setTimeout(() => {
     triggerFileDownload(lesson.cssFileName, 'text/css', cssCode);
-  }, 500);
+  }, delay);
 
-  if (!jsCode) {
-    if (shadowCssCode) {
-      window.setTimeout(() => {
-        triggerFileDownload(lesson.shadowCssFileName || 'shadow-dom-style.css', 'text/css', shadowCssCode);
-      }, 1000);
-    }
-
-    return;
+  if (jsCode) {
+    delay += 500;
+    window.setTimeout(() => {
+      triggerFileDownload(lesson.jsFileName || 'component.js', 'text/javascript', jsCode);
+    }, delay);
   }
 
-  window.setTimeout(() => {
-    triggerFileDownload(lesson.jsFileName || 'component.js', 'text/javascript', jsCode);
-  }, 1000);
-
-  if (!shadowCssCode) {
-    return;
+  if (templateJsCode) {
+    delay += 500;
+    window.setTimeout(() => {
+      triggerFileDownload(lesson.templateJsFileName || 'component.html.js', 'text/javascript', templateJsCode);
+    }, delay);
   }
 
-  window.setTimeout(() => {
-    triggerFileDownload(lesson.shadowCssFileName || 'shadow-dom-style.css', 'text/css', shadowCssCode);
-  }, 1500);
+  if (shadowCssCode) {
+    delay += 500;
+    window.setTimeout(() => {
+      triggerFileDownload(lesson.shadowCssFileName || 'shadow-dom-style.css', 'text/css', shadowCssCode);
+    }, delay);
+  }
 }
