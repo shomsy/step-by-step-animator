@@ -2424,6 +2424,30 @@ function showCodePane(container, buildLinesAtStep, currentStepNumber, paneType =
   return hasAddedLines;
 }
 
+const TAG_TO_PANE = {
+  'html': 'htmlPane',
+  'css': 'cssPane',
+  'js': 'jsPane',
+  'shadow-css': 'shadowCssPane',
+  'summary': 'htmlPane',
+  'success': 'htmlPane'
+};
+
+function switchActiveIdePane(lessonParts, paneId) {
+  const allPanes = [lessonParts.htmlPane, lessonParts.cssPane, lessonParts.jsPane, lessonParts.shadowCssPane];
+  const ideFileItems = lessonParts.ideFileList.querySelectorAll('.ide-file-item');
+
+  allPanes.forEach(pane => {
+    if (pane) {
+      pane.classList.toggle('active', pane.id === paneId);
+    }
+  });
+
+  ideFileItems.forEach(item => {
+    item.classList.toggle('active', item.dataset.paneId === paneId);
+  });
+}
+
 export function showGrowingCode({
   lessonParts,
   step,
@@ -2433,6 +2457,16 @@ export function showGrowingCode({
   buildJsAtStep,
   buildShadowCssAtStep
 }) {
+  // IDE Mode: switch active pane FIRST, before rendering code
+  const isIdeMode = lessonParts.liveEditorPanel.classList.contains('has-ide-mode');
+
+  if (isIdeMode) {
+    const tagType = step.tag ? step.tag.split(':')[0] : '';
+    const paneToFocus = TAG_TO_PANE[tagType] || 'htmlPane';
+    switchActiveIdePane(lessonParts, paneToFocus);
+  }
+
+  // Render code in all panes
   const focusHtmlNeedles = Array.isArray(step.focusHtmlNeedles) ? step.focusHtmlNeedles : [];
 
   const changes = {
@@ -2442,38 +2476,12 @@ export function showGrowingCode({
     shadowCssPane: showCodePane(lessonParts.shadowCssCodePane, buildShadowCssAtStep, currentStepNumber, 'css')
   };
 
-  // Sync sidebar dots
-  lessonParts.ownerDocument.querySelectorAll('.ide-file-item').forEach(item => {
+  // Sync sidebar change dots
+  const ideFileItems = lessonParts.ideFileList.querySelectorAll('.ide-file-item');
+  ideFileItems.forEach(item => {
     const paneId = item.dataset.paneId;
-    const hasChanges = changes[paneId];
-    item.classList.toggle('has-changes', !!hasChanges);
+    item.classList.toggle('has-changes', !!changes[paneId]);
   });
-
-  // Calculate smart pane focus for IDE Mode
-  const isIdeMode = lessonParts.liveEditorPanel.classList.contains('has-ide-mode');
-  
-  if (isIdeMode) {
-    const tagType = step.tag?.split(':')[0];
-    const tagToPane = {
-      'html': 'htmlPane',
-      'css': 'cssPane',
-      'js': 'jsPane',
-      'shadow-css': 'shadowCssPane',
-      'summary': 'htmlPane'
-    };
-
-    let paneToFocus = tagToPane[tagType];
-
-    // If step meta doesn't dictate focus, find first one with changes
-    if (!paneToFocus) {
-      paneToFocus = Object.keys(changes).find(id => changes[id]);
-    }
-
-    if (paneToFocus) {
-      lessonParts.ownerDocument.querySelectorAll('.ide-file-item').forEach(el => el.classList.toggle('active', el.dataset.paneId === paneToFocus));
-      lessonParts.ownerDocument.querySelectorAll('.live-pane').forEach(el => el.classList.toggle('active', el.id === paneToFocus));
-    }
-  }
 
   lessonParts.currentStepBadge.textContent = `Prizor ${currentStepNumber + 1}`;
   scrollToAddedLine(lessonParts.htmlCodePane);
