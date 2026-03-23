@@ -55,6 +55,7 @@ export function findLessonParts(ownerDocument) {
     prepareStepSpeechButton: readRequiredElement(ownerDocument, 'prepareStepSpeechBtn'),
     autoSpeakStepToggle: readRequiredElement(ownerDocument, 'autoSpeakStepToggle'),
     stepSpeechBadge: readRequiredElement(ownerDocument, 'stepSpeechBadge'),
+    stepSpeechLanguageSelect: readRequiredElement(ownerDocument, 'stepSpeechLanguageSelect'),
     stepSpeechSourceSelect: readRequiredElement(ownerDocument, 'stepSpeechSourceSelect'),
     stepSpeechBrowserVoiceSelect: readRequiredElement(ownerDocument, 'stepSpeechBrowserVoiceSelect'),
     stepSpeechSpeedSlider: readRequiredElement(ownerDocument, 'stepSpeechSpeedSlider'),

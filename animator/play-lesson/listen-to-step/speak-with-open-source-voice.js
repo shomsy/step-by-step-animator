@@ -1,8 +1,23 @@
-const OPEN_SOURCE_VOICE_ID = 'sr_RS-serbski_institut-medium';
+const OPEN_SOURCE_SERBIAN_VOICE_ID = 'sr_RS-serbski_institut-medium';
 const OPEN_SOURCE_PROVIDER_LABEL = 'Open-source Piper glas';
-const OPEN_SOURCE_PROVIDER_SHORT_LABEL = 'Open-source Piper · srpski medium';
 
 let piperTtsModulePromise = null;
+
+function readOpenSourceVoiceProfile(narrationLanguagePreference) {
+  if (narrationLanguagePreference === 'hr') {
+    return {
+      voiceId: OPEN_SOURCE_SERBIAN_VOICE_ID,
+      shortLabel: 'Open-source Piper · srpski fallback',
+      statusLabel: 'Open-source Piper koristi srpski fallback jer hrvatski model još nije dostupan.'
+    };
+  }
+
+  return {
+    voiceId: OPEN_SOURCE_SERBIAN_VOICE_ID,
+    shortLabel: 'Open-source Piper · srpski medium',
+    statusLabel: 'Open-source Piper koristi srpski model.'
+  };
+}
 
 function formatDownloadPercent(progress) {
   if (!progress || typeof progress.loaded !== 'number' || typeof progress.total !== 'number' || progress.total <= 0) {
@@ -75,47 +90,55 @@ function createAudioNarrationController({ ownerWindow, audioElement, audioUrl, p
   };
 }
 
-export function readOpenSourceVoiceLabel() {
-  return OPEN_SOURCE_PROVIDER_SHORT_LABEL;
+export function readOpenSourceVoiceLabel(narrationLanguagePreference = 'sr') {
+  return readOpenSourceVoiceProfile(narrationLanguagePreference).shortLabel;
 }
 
-export async function readOpenSourceVoiceAvailability() {
+export function readOpenSourceVoiceStatusLabel(narrationLanguagePreference = 'sr') {
+  return readOpenSourceVoiceProfile(narrationLanguagePreference).statusLabel;
+}
+
+export async function readOpenSourceVoiceAvailability(narrationLanguagePreference = 'sr') {
   const piperTts = await readPiperTtsModule();
   const storedVoices = await piperTts.stored();
+  const { voiceId } = readOpenSourceVoiceProfile(narrationLanguagePreference);
 
-  return storedVoices.includes(OPEN_SOURCE_VOICE_ID);
+  return storedVoices.includes(voiceId);
 }
 
-export async function prepareOpenSourceVoice({ onStatusChange } = {}) {
+export async function prepareOpenSourceVoice({ narrationLanguagePreference = 'sr', onStatusChange } = {}) {
   const piperTts = await readPiperTtsModule();
+  const { voiceId, statusLabel } = readOpenSourceVoiceProfile(narrationLanguagePreference);
 
-  if (await readOpenSourceVoiceAvailability()) {
-    onStatusChange?.(`${OPEN_SOURCE_PROVIDER_LABEL} je već preuzet i spreman.`);
+  if (await readOpenSourceVoiceAvailability(narrationLanguagePreference)) {
+    onStatusChange?.(`${statusLabel} Model je već preuzet i spreman.`);
     return;
   }
 
-  onStatusChange?.(`${OPEN_SOURCE_PROVIDER_LABEL} priprema model…`);
+  onStatusChange?.(`${statusLabel} ${OPEN_SOURCE_PROVIDER_LABEL} priprema model…`);
 
-  await piperTts.download(OPEN_SOURCE_VOICE_ID, progress => {
+  await piperTts.download(voiceId, progress => {
     onStatusChange?.(composeOpenSourceStatus(progress));
   });
 
-  onStatusChange?.(`${OPEN_SOURCE_PROVIDER_LABEL} je preuzet i spreman.`);
+  onStatusChange?.(`${statusLabel} Model je preuzet i spreman.`);
 }
 
 export async function speakWithOpenSourceVoice({
   ownerWindow,
   text,
   speechRate,
-  onStatusChange
+  onStatusChange,
+  narrationLanguagePreference = 'sr'
 }) {
   const piperTts = await readPiperTtsModule();
+  const { voiceId, shortLabel, statusLabel } = readOpenSourceVoiceProfile(narrationLanguagePreference);
 
-  onStatusChange?.(`${OPEN_SOURCE_PROVIDER_LABEL} priprema glas…`);
+  onStatusChange?.(`${statusLabel} ${OPEN_SOURCE_PROVIDER_LABEL} priprema glas…`);
 
   const audioBlob = await piperTts.predict({
     text,
-    voiceId: OPEN_SOURCE_VOICE_ID
+    voiceId
   }, progress => {
     onStatusChange?.(composeOpenSourceStatus(progress));
   });
@@ -129,7 +152,7 @@ export async function speakWithOpenSourceVoice({
     ownerWindow,
     audioElement,
     audioUrl,
-    providerLabel: readOpenSourceVoiceLabel()
+    providerLabel: shortLabel
   });
 
   try {
@@ -139,7 +162,7 @@ export async function speakWithOpenSourceVoice({
     throw error;
   }
 
-  onStatusChange?.(`${OPEN_SOURCE_PROVIDER_LABEL} čita trenutni korak.`);
+  onStatusChange?.(`${statusLabel} ${OPEN_SOURCE_PROVIDER_LABEL} čita trenutni korak.`);
 
   return controller;
 }

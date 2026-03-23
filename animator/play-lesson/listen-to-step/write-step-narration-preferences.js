@@ -3,6 +3,7 @@ function composeStepNarrationStorageKey() {
 }
 
 export function writeStepNarrationPreferences({
+  narrationLanguagePreference,
   shouldAutoNarrateStep,
   speechRate,
   voiceSourcePreference,
@@ -10,6 +11,7 @@ export function writeStepNarrationPreferences({
 }) {
   try {
     localStorage.setItem(composeStepNarrationStorageKey(), JSON.stringify({
+      narrationLanguagePreference,
       shouldAutoNarrateStep,
       speechRate,
       voiceSourcePreference,

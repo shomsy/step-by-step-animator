@@ -8,6 +8,7 @@ export function readStepNarrationPreferences() {
     const parsedValue = JSON.parse(rawValue);
 
     return {
+      narrationLanguagePreference: parsedValue.narrationLanguagePreference === 'hr' ? 'hr' : 'sr',
       shouldAutoNarrateStep: parsedValue.shouldAutoNarrateStep === true,
       speechRate: typeof parsedValue.speechRate === 'number' ? parsedValue.speechRate : 1,
       browserVoiceUriPreference: typeof parsedValue.browserVoiceUriPreference === 'string'
@@ -19,6 +20,7 @@ export function readStepNarrationPreferences() {
     };
   } catch {
     return {
+      narrationLanguagePreference: 'sr',
       shouldAutoNarrateStep: false,
       speechRate: 1,
       browserVoiceUriPreference: '',
