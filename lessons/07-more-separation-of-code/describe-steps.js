@@ -207,24 +207,6 @@ export const lessonSteps = [
     'Ovo je suština ove lekcije: svaki fajl radi jednu stvar. Template modul gradi markup, klasa vodi ponašanje.'
   ),
   describeJsFlowStep(
-    'shadow_css_import',
-    'JS: Uvozimo shadow-dom-style.css kao tekst',
-    'Dodajemo `import shadowDomStyleCssText from \'./shadow-dom-style.css?raw\';`, pa JavaScript samo učitava gotov stylesheet source.',
-    'CSS živi u svom fajlu, a komponenta ga samo pretvara u CSSStyleSheet.'
-  ),
-  describeJsFlowStep(
-    'stylesheet_declaration',
-    'JS: Kreiramo CSSStyleSheet',
-    'Dodajemo `new CSSStyleSheet()` i otvaramo objekat koji čuva CSS komponente.',
-    'Constructed stylesheet je efikasan jer se deli između instanci bez duplikacije.'
-  ),
-  describeJsFlowStep(
-    'stylesheet_replace_sync',
-    'JS: replaceSync Prima Uvezeni CSS',
-    'Kroz `myFirstComponentStyles.replaceSync(shadowDomStyleCssText)` punimo stylesheet tekstom iz CSS fajla.',
-    'JavaScript više ne nosi stil pravila u sebi, samo ih povezuje.'
-  ),
-  describeJsFlowStep(
     'class_declaration',
     'JS: Class Extends HTMLElement',
     'Otvaramo `class MyFirstComponent extends HTMLElement`. Klasa sada ne zna kako je template napravljen; samo ga koristi.',
@@ -233,80 +215,38 @@ export const lessonSteps = [
   describeJsFlowStep(
     'constructor_shadow',
     'JS: constructor + attachShadow',
-    'U konstruktoru pozivamo `super()` i otvaramo `const shadowRoot = this.attachShadow({ mode: \'open\' })`.',
-    'Shadow root je granica komponente: markup i adopted stylesheet žive iza nje.'
-  ),
-  describeJsFlowStep(
-    'constructor_clone',
-    'JS: Kloniramo Uvezeni Template',
-    'Dodajemo `appendChild(myFirstComponentTemplate.content.cloneNode(true))`. Template dolazi iz import-a, ne iz lokalne definicije.',
-    'Klonirani template pravi identičan shadow DOM skeleton za svaku instancu.'
-  ),
-  describeJsFlowStep(
-    'constructor_adopt_stylesheet',
-    'JS: Shadow Root Usvaja Stylesheet',
-    'Dodajemo `shadowRoot.adoptedStyleSheets = [myFirstComponentStyles]`.',
-    'Stylesheet i template dolaze iz različitih modula; klasa ih samo sastavlja.'
-  ),
-  describeJsFlowStep(
-    'constructor_cache_title',
-    'JS: Keširamo Title Element',
-    'U konstruktoru čuvamo referencu na `.title` element.',
-    'Cache DOM referenci drži render jasan i predvidiv.'
-  ),
-  describeJsFlowStep(
-    'constructor_cache_cta',
-    'JS: Keširamo CTA Element',
-    'Čuvamo referencu na `.cta`, jer tekst dugmeta stiže iz atributa.',
-    'Render govori šta menja, ne traži čvorove iznova.'
-  ),
-  describeJsFlowStep(
-    'constructor_bind_click',
-    'JS: Bindujemo CTA Handler',
-    'Vezujemo `this.handleClick = this.handleClick.bind(this)`.',
-    'Stabilna referenca handlera je deo korektnog lifecycle ponašanja.'
-  ),
-  describeJsFlowStep(
-    'render_declaration',
-    'JS: Uvodimo render()',
-    'Dodajemo `render()` metodu kao jedno mesto gde atributi prelaze u UI tekst.',
-    'Jedan render ulaz čini komponentu lakšom za promene.'
-  ),
-  describeJsFlowStep(
-    'render_title',
-    'JS: render() Popunjava Title',
-    'U `render()` čitamo `title` atribut i upisujemo ga u `.title` element.',
-    'Atributi su spoljašnji API; render ih pretvara u vizuelni rezultat.'
-  ),
-  describeJsFlowStep(
-    'render_cta',
-    'JS: render() Popunjava CTA',
-    'Na isti način `cta-label` pretvaramo u tekst CTA dugmeta.',
-    'Isti render tok čuva konzistentnost.'
+    'U konstruktoru pozivamo `super()` i otvaramo shadow root.',
+    'Shadow root je granica komponente: markup i stil žive iza nje.'
   ),
   describeJsFlowStep(
     'connected_callback',
     'JS: connectedCallback Lifecycle',
-    'Dodajemo `connectedCallback()` kao mesto za prvi render i runtime ponašanje.',
+    'Dodajemo `connectedCallback()` kao glavno mesto za startovanje komponente.',
     'Kada komponenta pređe u živi UI, connectedCallback je prirodan ulaz.'
   ),
   describeJsFlowStep(
+    'connected_callback_cache',
+    'JS: Pozivamo cacheDom',
+    'U `connectedCallback` prvo pripremamo DOM referencu.',
+    'Cache optimizacija unapred štedi preglede stabla kasnije.'
+  ),
+  describeJsFlowStep(
     'connected_callback_render',
-    'JS: connectedCallback Pokreće Render',
-    'Pozivamo `this.render()` čim element uđe u DOM.',
+    'JS: Pokrećemo prvi render',
+    'Nakon što smo keširali DOM, odmah štampamo početne vrednosti atributa.',
     'Prvi render vežemo za trenutak kada je element stvarno povezan.'
   ),
   describeJsFlowStep(
-    'connected_callback_listener',
-    'JS: connectedCallback Vezuje Click',
-    'Vezujemo click listener na CTA dugme.',
-    'Komponenta postaje interaktivna, ne samo vizuelna.'
+    'connected_callback_bind',
+    'JS: Vezujemo Događaje',
+    'Pokrećemo event binding.',
+    'Sve što korisnik može da radi mora biti aktivirano.'
   ),
   describeJsFlowStep(
     'disconnected_callback',
     'JS: disconnectedCallback Cleanup',
-    'Dodajemo `disconnectedCallback()` i skidamo CTA listener.',
-    'Cleanup je production-grade signal da komponenta poštuje ceo lifecycle.'
+    'Dodajemo `disconnectedCallback()` i pozivamo `unbindEvents`.',
+    'Cleanup je production-grade signal da komponenta poštuje ceo lifecycle, i sprečava memory leaks.'
   ),
   describeJsFlowStep(
     'observed_attributes',
@@ -317,14 +257,50 @@ export const lessonSteps = [
   describeJsFlowStep(
     'attribute_changed_callback',
     'JS: attributeChangedCallback',
-    'Dodajemo `attributeChangedCallback()` sa guard-om za `isConnected`.',
-    'Guard sprečava render pre nego što je element zaista u DOM-u.'
+    'Dodajemo `attributeChangedCallback()` i pozivamo render, sa guard-om za `isConnected`.',
+    'Ovo omogućava dinamičko osvežavanje UI-ja kada instanca promeni atribute.'
+  ),
+  describeJsFlowStep(
+    'cache_dom',
+    'JS: Keširamo elemente u DOM-u',
+    'U `cacheDom()` kloniramo template, ubrizgamo ga, i selektujemo dinamične elemente poput title i cta dugmeta.',
+    'Ovo radimo samo jednom. Kasniji render samo čita `this.titleElement` i `this.ctaElement` umesto skupih `querySelector` pretraga u svakom koraku.'
+  ),
+  describeJsFlowStep(
+    'bind_events',
+    'JS: bindEvents vezuje click listener',
+    'Vezujemo `this.handleClick = this.handleClick.bind(this)` kako bismo zadržali isti referentni kontekst i registrujemo click listener.',
+    'Zadržavanje tačne reference neophodno je za ispravan unbind.'
+  ),
+  describeJsFlowStep(
+    'unbind_events',
+    'JS: unbindEvents skida click listener',
+    'U `unbindEvents()` potpuno uklanjamo interakcije.',
+    'Metoda je spremljena pozivu u disconnectedCallback-u.'
+  ),
+  describeJsFlowStep(
+    'render_declaration',
+    'JS: Uvodimo render()',
+    'Dodajemo `render()` metodu kao jedno mesto gde atributi prelaze u UI tekst.',
+    'Centralizovan render čuva flow čistim, on sada samo popunjava DOM umesto da ga pravi.'
+  ),
+  describeJsFlowStep(
+    'render_title',
+    'JS: render() Popunjava Title',
+    'U `render()` čitamo `title` atribut i upisujemo ga u `.title` element. Ažuriramo samo izmenjene delove!',
+    'Render menja samo textContent već keširanog elementa.'
+  ),
+  describeJsFlowStep(
+    'render_cta',
+    'JS: render() Popunjava CTA',
+    'Na isti način `cta-label` pretvaramo u tekst CTA dugmeta.',
+    'Isti tok za svaki dinamični prop.'
   ),
   describeJsFlowStep(
     'handle_click_dispatch_event',
-    'JS: CTA Emituje component-action',
+    'JS: Emitujemo component-action',
     "Dodajemo `handleClick()` i emitujemo `CustomEvent('component-action', ...)`.",
-    'Komponenta dobija izlazni API: javlja korisničku akciju spolja.'
+    'Komponenta dobija snažan izlazni API i javlja korisničku akciju ostatku aplikacije.'
   ),
   describeJsFlowStep(
     'define_guard',
@@ -335,8 +311,8 @@ export const lessonSteps = [
   describeJsFlowStep(
     'define_element',
     'JS: Registrujemo Custom Element',
-    'Unutar guard-a pozivamo `customElements.define(\'my-first-component\', MyFirstComponent)`. Preview sada renderuje komponentu čiji template dolazi iz posebnog modula.',
-    'Svaki fajl ima jednu odgovornost: template, stil, ponašanje, host.'
+    'Unutar guard-a pozivamo `customElements.define(\'my-first-component\', MyFirstComponent)`. Klasa je kompletno modularna.',
+    'Svaki fajl sada ima idealnu responsibilnost.'
   ),
   ...shellCssSteps.map(config => describeCssPropertyStep(...config)),
   ...stylesheetSteps.map(config => describeShadowCssPropertyStep(...config)),

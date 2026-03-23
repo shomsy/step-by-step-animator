@@ -11,34 +11,8 @@
     ]
   },
   {
-    "from": "shadow_css_import",
-    "target": "after-import-template",
-    "lines": [
-      "import shadowDomStyleCssText from './shadow-dom-style.css?raw';",
-      "",
-      "@@slot:after-imports@@"
-    ]
-  },
-  {
-    "from": "stylesheet_declaration",
-    "target": "after-imports",
-    "lines": [
-      "const myFirstComponentStyles = new CSSStyleSheet();",
-      "@@slot:after-stylesheet-declaration@@"
-    ]
-  },
-  {
-    "from": "stylesheet_replace_sync",
-    "target": "after-stylesheet-declaration",
-    "lines": [
-      "",
-      "myFirstComponentStyles.replaceSync(shadowDomStyleCssText);",
-      "@@slot:after-stylesheet-replace-sync@@"
-    ]
-  },
-  {
     "from": "class_declaration",
-    "target": "after-stylesheet-replace-sync",
+    "target": "after-import-template",
     "lines": [
       "",
       "class MyFirstComponent extends HTMLElement {",
@@ -50,6 +24,58 @@
     ]
   },
   {
+    "from": "constructor_shadow",
+    "target": "class-body",
+    "lines": [
+      "  constructor() {",
+      "    super();",
+      "    this.attachShadow({ mode: 'open' });",
+      "  }",
+      ""
+    ]
+  },
+  {
+    "from": "connected_callback",
+    "target": "class-body",
+    "lines": [
+      "  connectedCallback() {",
+      "    @@slot:connected-callback-body@@",
+      "  }",
+      ""
+    ]
+  },
+  {
+    "from": "connected_callback_cache",
+    "target": "connected-callback-body",
+    "lines": [
+      "    this.cacheDom();"
+    ]
+  },
+  {
+    "from": "connected_callback_render",
+    "target": "connected-callback-body",
+    "lines": [
+      "    this.render();"
+    ]
+  },
+  {
+    "from": "connected_callback_bind",
+    "target": "connected-callback-body",
+    "lines": [
+      "    this.bindEvents();"
+    ]
+  },
+  {
+    "from": "disconnected_callback",
+    "target": "class-body",
+    "lines": [
+      "  disconnectedCallback() {",
+      "    this.unbindEvents();",
+      "  }",
+      ""
+    ]
+  },
+  {
     "from": "observed_attributes",
     "target": "class-head",
     "lines": [
@@ -58,50 +84,48 @@
     ]
   },
   {
-    "from": "constructor_shadow",
+    "from": "attribute_changed_callback",
     "target": "class-body",
     "lines": [
-      "  constructor() {",
-      "    super();",
-      "    const shadowRoot = this.attachShadow({ mode: 'open' });",
-      "    @@slot:constructor-body@@",
+      "  attributeChangedCallback() {",
+      "    if (this.isConnected) {",
+      "      this.render();",
+      "    }",
       "  }",
       ""
     ]
   },
   {
-    "from": "constructor_clone",
-    "target": "constructor-body",
+    "from": "cache_dom",
+    "target": "class-body",
     "lines": [
-      "    shadowRoot.appendChild(myFirstComponentTemplate.content.cloneNode(true));"
+      "  cacheDom() {",
+      "    this.shadowRoot.appendChild(myFirstComponentTemplate.content.cloneNode(true));",
+      "    this.titleElement = this.shadowRoot.querySelector('.title');",
+      "    this.ctaElement = this.shadowRoot.querySelector('.cta');",
+      "  }",
+      ""
     ]
   },
   {
-    "from": "constructor_adopt_stylesheet",
-    "target": "constructor-body",
+    "from": "bind_events",
+    "target": "class-body",
     "lines": [
-      "    shadowRoot.adoptedStyleSheets = [myFirstComponentStyles];"
+      "  bindEvents() {",
+      "    this.handleClick = this.handleClick.bind(this);",
+      "    this.ctaElement.addEventListener('click', this.handleClick);",
+      "  }",
+      ""
     ]
   },
   {
-    "from": "constructor_cache_title",
-    "target": "constructor-body",
+    "from": "unbind_events",
+    "target": "class-body",
     "lines": [
-      "    this.titleElement = shadowRoot.querySelector('.title');"
-    ]
-  },
-  {
-    "from": "constructor_cache_cta",
-    "target": "constructor-body",
-    "lines": [
-      "    this.ctaElement = shadowRoot.querySelector('.cta');"
-    ]
-  },
-  {
-    "from": "constructor_bind_click",
-    "target": "constructor-body",
-    "lines": [
-      "    this.handleClick = this.handleClick.bind(this);"
+      "  unbindEvents() {",
+      "    this.ctaElement.removeEventListener('click', this.handleClick);",
+      "  }",
+      ""
     ]
   },
   {
@@ -126,52 +150,6 @@
     "target": "render-body",
     "lines": [
       "    this.ctaElement.textContent = this.getAttribute('cta-label') || 'Saznaj više';"
-    ]
-  },
-  {
-    "from": "connected_callback",
-    "target": "class-body",
-    "lines": [
-      "  connectedCallback() {",
-      "    @@slot:connected-callback-body@@",
-      "  }",
-      ""
-    ]
-  },
-  {
-    "from": "connected_callback_render",
-    "target": "connected-callback-body",
-    "lines": [
-      "    this.render();"
-    ]
-  },
-  {
-    "from": "connected_callback_listener",
-    "target": "connected-callback-body",
-    "lines": [
-      "    this.ctaElement.addEventListener('click', this.handleClick);"
-    ]
-  },
-  {
-    "from": "disconnected_callback",
-    "target": "class-body",
-    "lines": [
-      "  disconnectedCallback() {",
-      "    this.ctaElement.removeEventListener('click', this.handleClick);",
-      "  }",
-      ""
-    ]
-  },
-  {
-    "from": "attribute_changed_callback",
-    "target": "class-body",
-    "lines": [
-      "  attributeChangedCallback() {",
-      "    if (this.isConnected) {",
-      "      this.render();",
-      "    }",
-      "  }",
-      ""
     ]
   },
   {

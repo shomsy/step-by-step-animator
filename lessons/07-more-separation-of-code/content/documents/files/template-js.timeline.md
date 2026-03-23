@@ -30,7 +30,10 @@
     "target": "after-template-html",
     "lines": [
       "export const myFirstComponentTemplate = document.createElement('template');",
-      "myFirstComponentTemplate.innerHTML = templateHtml;"
+      "myFirstComponentTemplate.innerHTML = `",
+      "  <link rel=\"stylesheet\" href=\"./shadow-dom-style.css\" />",
+      "  ${templateHtml}",
+      "`;"
     ]
   }
 ]
