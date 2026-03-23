@@ -139,7 +139,8 @@ export async function speakWithBrowserVoice({
   speechRate,
   onStatusChange,
   narrationLanguagePreference,
-  preferredVoiceUri = ''
+  preferredVoiceUri = '',
+  allowGenericBrowserVoiceFallback = false
 }) {
   const synthesis = ownerWindow.speechSynthesis;
 
@@ -151,7 +152,7 @@ export async function speakWithBrowserVoice({
   const matchingVoices = readMatchingVoices(availableVoices, narrationLanguagePreference);
   const preferredVoice = findPreferredVoice(matchingVoices, narrationLanguagePreference, preferredVoiceUri);
 
-  if (!preferredVoice) {
+  if (!preferredVoice && !allowGenericBrowserVoiceFallback) {
     throw new Error(`Nema lokalnog ${readLanguageLabel(narrationLanguagePreference)} sistemskog glasa u ovom browseru.`);
   }
 
@@ -173,8 +174,12 @@ export async function speakWithBrowserVoice({
   }
 
   utterance.rate = speechRate;
-  utterance.lang = preferredVoice.lang;
-  utterance.voice = preferredVoice;
+  utterance.lang = readLanguageVariants(narrationLanguagePreference)[0];
+
+  if (preferredVoice) {
+    utterance.lang = preferredVoice.lang;
+    utterance.voice = preferredVoice;
+  }
 
   utterance.addEventListener('end', finishNarration, { once: true });
   utterance.addEventListener('error', finishNarration, { once: true });
@@ -182,10 +187,16 @@ export async function speakWithBrowserVoice({
   synthesis.cancel();
   synthesis.speak(utterance);
 
-  onStatusChange?.(`Sistemski glas čita trenutni korak · ${readVoiceLabel(preferredVoice)}`);
+  onStatusChange?.(
+    preferredVoice
+      ? `Sistemski glas čita trenutni korak · ${readVoiceLabel(preferredVoice)}`
+      : `Browser fallback pokušava generički ${readLanguageLabel(narrationLanguagePreference)} TTS.`
+  );
 
   return {
-    providerLabel: `Sistemski glas · ${readVoiceLabel(preferredVoice)}`,
+    providerLabel: preferredVoice
+      ? `Sistemski glas · ${readVoiceLabel(preferredVoice)}`
+      : `Browser fallback · ${readLanguageLabel(narrationLanguagePreference)}`,
     supportsLiveRateChange: false,
     whenFinished,
     isPaused() {

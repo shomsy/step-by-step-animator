@@ -630,7 +630,8 @@ export function presentStepNarration({ lessonParts, ownerWindow }) {
       speechRate,
       onStatusChange: showNarrationStatus,
       narrationLanguagePreference,
-      preferredVoiceUri: browserVoiceUriPreference
+      preferredVoiceUri: browserVoiceUriPreference,
+      allowGenericBrowserVoiceFallback: !hasPreferredBrowserVoice
     });
   }
 
