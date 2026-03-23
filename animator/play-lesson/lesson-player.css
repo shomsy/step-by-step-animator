@@ -23,6 +23,7 @@
   --ease: 480ms cubic-bezier(.22,1,.36,1);
   --ease-fast: 260ms ease;
   --ease-bounce: 500ms cubic-bezier(0.34, 1.56, 0.64, 1);
+  --lesson-animation-duration-factor: 1;
 }
 
 [data-theme="light"] {
@@ -492,8 +493,8 @@ body { padding: 24px 0 24px 24px; }
 .live-line[data-pane="js"].is-added {
   opacity: 0;
   transform: translateY(8px);
-  animation: liveLineReveal 0.42s ease forwards;
-  animation-delay: calc(var(--reveal-order, 0) * 110ms);
+  animation: liveLineReveal calc(0.42s * var(--lesson-animation-duration-factor, 1)) ease forwards;
+  animation-delay: calc(var(--reveal-order, 0) * 110ms * var(--lesson-animation-duration-factor, 1));
 }
 
 .live-line-number {
@@ -1058,6 +1059,75 @@ h1 {
   gap: 10px;
   flex-wrap: wrap;
   margin-bottom: 16px;
+}
+
+.playback-speed-panel {
+  margin-bottom: 20px;
+  padding: 16px 18px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border);
+  background: linear-gradient(180deg, rgba(255,255,255,0.05), rgba(255,255,255,0.02));
+}
+
+.playback-speed-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 14px;
+}
+
+.playback-speed-head h3 {
+  margin-top: 4px;
+  font-size: 15px;
+}
+
+.playback-speed-value {
+  flex-shrink: 0;
+  padding: 8px 10px;
+  border-radius: 999px;
+  background: rgba(109,115,255,0.14);
+  color: var(--accent);
+  font-size: 13px;
+  font-weight: 800;
+}
+
+.playback-speed-slider {
+  width: 100%;
+  appearance: none;
+  height: 6px;
+  border-radius: 999px;
+  background: linear-gradient(90deg, rgba(109,115,255,0.35), rgba(143,92,255,0.72));
+  outline: none;
+  cursor: pointer;
+}
+
+.playback-speed-slider::-webkit-slider-thumb {
+  appearance: none;
+  width: 18px;
+  height: 18px;
+  border-radius: 999px;
+  background: #ffffff;
+  border: 2px solid var(--accent);
+  box-shadow: 0 6px 16px rgba(0,0,0,0.18);
+}
+
+.playback-speed-slider::-moz-range-thumb {
+  width: 18px;
+  height: 18px;
+  border-radius: 999px;
+  background: #ffffff;
+  border: 2px solid var(--accent);
+  box-shadow: 0 6px 16px rgba(0,0,0,0.18);
+}
+
+.playback-speed-scale {
+  margin-top: 10px;
+  display: flex;
+  justify-content: space-between;
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 600;
 }
 
 button {

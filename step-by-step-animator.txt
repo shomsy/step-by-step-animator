@@ -2119,7 +2119,8 @@ export function createLessonProgress() {
   return {
     currentStepNumber: 0,
     playbackTimer: null,
-    activePanel: 'steps'
+    activePanel: 'steps',
+    playbackSpeedMultiplier: 1
   };
 }
 
@@ -2173,6 +2174,8 @@ export function findLessonParts(ownerDocument) {
     playButton: readRequiredElement(ownerDocument, 'playBtn'),
     pauseButton: readRequiredElement(ownerDocument, 'pauseBtn'),
     stopButton: readRequiredElement(ownerDocument, 'stopBtn'),
+    playbackSpeedSlider: readRequiredElement(ownerDocument, 'playbackSpeedSlider'),
+    playbackSpeedValue: readRequiredElement(ownerDocument, 'playbackSpeedValue'),
     saveStepButton: readRequiredElement(ownerDocument, 'bookmarkBtn'),
     savedStepCount: readRequiredElement(ownerDocument, 'bookmarkCount'),
     stepFinderModal: readRequiredElement(ownerDocument, 'searchModal'),
@@ -3014,6 +3017,7 @@ export function presentStepFinder({ lessonParts, steps, goToStepNumber }) {
   --ease: 480ms cubic-bezier(.22,1,.36,1);
   --ease-fast: 260ms ease;
   --ease-bounce: 500ms cubic-bezier(0.34, 1.56, 0.64, 1);
+  --lesson-animation-duration-factor: 1;
 }
 
 [data-theme="light"] {
@@ -3483,8 +3487,8 @@ body { padding: 24px 0 24px 24px; }
 .live-line[data-pane="js"].is-added {
   opacity: 0;
   transform: translateY(8px);
-  animation: liveLineReveal 0.42s ease forwards;
-  animation-delay: calc(var(--reveal-order, 0) * 110ms);
+  animation: liveLineReveal calc(0.42s * var(--lesson-animation-duration-factor, 1)) ease forwards;
+  animation-delay: calc(var(--reveal-order, 0) * 110ms * var(--lesson-animation-duration-factor, 1));
 }
 
 .live-line-number {
@@ -4051,6 +4055,75 @@ h1 {
   margin-bottom: 16px;
 }
 
+.playback-speed-panel {
+  margin-bottom: 20px;
+  padding: 16px 18px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border);
+  background: linear-gradient(180deg, rgba(255,255,255,0.05), rgba(255,255,255,0.02));
+}
+
+.playback-speed-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 14px;
+}
+
+.playback-speed-head h3 {
+  margin-top: 4px;
+  font-size: 15px;
+}
+
+.playback-speed-value {
+  flex-shrink: 0;
+  padding: 8px 10px;
+  border-radius: 999px;
+  background: rgba(109,115,255,0.14);
+  color: var(--accent);
+  font-size: 13px;
+  font-weight: 800;
+}
+
+.playback-speed-slider {
+  width: 100%;
+  appearance: none;
+  height: 6px;
+  border-radius: 999px;
+  background: linear-gradient(90deg, rgba(109,115,255,0.35), rgba(143,92,255,0.72));
+  outline: none;
+  cursor: pointer;
+}
+
+.playback-speed-slider::-webkit-slider-thumb {
+  appearance: none;
+  width: 18px;
+  height: 18px;
+  border-radius: 999px;
+  background: #ffffff;
+  border: 2px solid var(--accent);
+  box-shadow: 0 6px 16px rgba(0,0,0,0.18);
+}
+
+.playback-speed-slider::-moz-range-thumb {
+  width: 18px;
+  height: 18px;
+  border-radius: 999px;
+  background: #ffffff;
+  border: 2px solid var(--accent);
+  box-shadow: 0 6px 16px rgba(0,0,0,0.18);
+}
+
+.playback-speed-scale {
+  margin-top: 10px;
+  display: flex;
+  justify-content: space-between;
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 600;
+}
+
 button {
   appearance: none;
   border: 0;
@@ -4389,6 +4462,15 @@ import { chooseTheme } from './choose-theme/choose-theme.js';
 import { presentStepFinder } from './find-step/present-step-finder.js';
 import { rememberSavedSteps } from './save-step/remember-saved-steps.js';
 
+const DEFAULT_PLAYBACK_SPEED = 1;
+const MIN_PLAYBACK_SPEED = 0.5;
+const MAX_PLAYBACK_SPEED = 2;
+const BASE_STEP_INTERVAL_MS = 4000;
+
+function clampPlaybackSpeed(speedValue) {
+  return Math.max(MIN_PLAYBACK_SPEED, Math.min(MAX_PLAYBACK_SPEED, speedValue));
+}
+
 export function playLesson({ ownerDocument, ownerLocation, ownerWindow, lesson, lessons }) {
   const lessonParts = findLessonParts(ownerDocument);
   const lessonProgress = createLessonProgress();
@@ -4434,6 +4516,9 @@ export function playLesson({ ownerDocument, ownerLocation, ownerWindow, lesson, 
   lessonParts.playButton.addEventListener('click', startPlayback);
   lessonParts.pauseButton.addEventListener('click', pausePlayback);
   lessonParts.stopButton.addEventListener('click', stopPlayback);
+  lessonParts.playbackSpeedSlider.addEventListener('input', event => {
+    applyPlaybackSpeed(parseFloat(event.target.value));
+  });
   lessonParts.saveStepButton.addEventListener('click', () => {
     savedSteps.toggleSavedStepNumber(lessonProgress.currentStepNumber);
   });
@@ -4462,6 +4547,7 @@ export function playLesson({ ownerDocument, ownerLocation, ownerWindow, lesson, 
   });
 
   themeChoice.initializeTheme();
+  applyPlaybackSpeed(DEFAULT_PLAYBACK_SPEED, { restartPlayback: false });
   showCurrentLesson();
 
   function hasOpenLessonDialog() {
@@ -4503,12 +4589,52 @@ export function playLesson({ ownerDocument, ownerLocation, ownerWindow, lesson, 
     showCurrentLesson();
   }
 
+  function readPlaybackIntervalMs() {
+    return Math.max(600, Math.round(BASE_STEP_INTERVAL_MS / lessonProgress.playbackSpeedMultiplier));
+  }
+
+  function showPlaybackSpeedValue(playbackSpeedMultiplier) {
+    lessonParts.playbackSpeedValue.textContent = `${playbackSpeedMultiplier.toFixed(1)}x`;
+  }
+
+  function showPlaybackAnimationSpeed(playbackSpeedMultiplier) {
+    ownerDocument.documentElement.style.setProperty(
+      '--lesson-animation-duration-factor',
+      String((1 / playbackSpeedMultiplier).toFixed(3))
+    );
+  }
+
+  function restartPlayback() {
+    if (!lessonProgress.playbackTimer) {
+      return;
+    }
+
+    ownerWindow.clearInterval(lessonProgress.playbackTimer);
+    lessonProgress.playbackTimer = ownerWindow.setInterval(goToNextStep, readPlaybackIntervalMs());
+  }
+
+  function applyPlaybackSpeed(nextPlaybackSpeed, options = {}) {
+    const { restartPlayback = true } = options;
+    const playbackSpeedMultiplier = clampPlaybackSpeed(
+      Number.isFinite(nextPlaybackSpeed) ? nextPlaybackSpeed : DEFAULT_PLAYBACK_SPEED
+    );
+
+    lessonProgress.playbackSpeedMultiplier = playbackSpeedMultiplier;
+    lessonParts.playbackSpeedSlider.value = String(playbackSpeedMultiplier);
+    showPlaybackSpeedValue(playbackSpeedMultiplier);
+    showPlaybackAnimationSpeed(playbackSpeedMultiplier);
+
+    if (restartPlayback) {
+      restartPlayback();
+    }
+  }
+
   function startPlayback() {
     if (lessonProgress.playbackTimer || lessonProgress.currentStepNumber === lesson.steps.length - 1) {
       return;
     }
 
-    lessonProgress.playbackTimer = window.setInterval(goToNextStep, 4000);
+    lessonProgress.playbackTimer = ownerWindow.setInterval(goToNextStep, readPlaybackIntervalMs());
     updatePlaybackControls();
   }
 
@@ -4518,7 +4644,7 @@ export function playLesson({ ownerDocument, ownerLocation, ownerWindow, lesson, 
       return;
     }
 
-    window.clearInterval(lessonProgress.playbackTimer);
+    ownerWindow.clearInterval(lessonProgress.playbackTimer);
     lessonProgress.playbackTimer = null;
     updatePlaybackControls();
   }
@@ -4884,6 +5010,21 @@ export function writeSavedStepNumbers({ lessonId, savedStepNumbers }) {
           <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 9h6v6H9z"/></svg>
           <span>Stop</span>
         </button>
+      </div>
+
+      <div class="playback-speed-panel">
+        <div class="playback-speed-head">
+          <div>
+            <span class="step-number">Tempo animacije</span>
+            <h3>Brzina step by step toka</h3>
+          </div>
+          <span class="playback-speed-value" id="playbackSpeedValue">1.0x</span>
+        </div>
+        <input class="playback-speed-slider" id="playbackSpeedSlider" type="range" min="0.5" max="2" step="0.1" value="1" aria-label="Brzina animacije">
+        <div class="playback-speed-scale">
+          <span>Sporije</span>
+          <span>Brže</span>
+        </div>
       </div>
 
       <div class="shortcuts">

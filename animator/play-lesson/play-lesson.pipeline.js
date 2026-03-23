@@ -13,6 +13,15 @@ import { chooseTheme } from './choose-theme/choose-theme.js';
 import { presentStepFinder } from './find-step/present-step-finder.js';
 import { rememberSavedSteps } from './save-step/remember-saved-steps.js';
 
+const DEFAULT_PLAYBACK_SPEED = 1;
+const MIN_PLAYBACK_SPEED = 0.5;
+const MAX_PLAYBACK_SPEED = 2;
+const BASE_STEP_INTERVAL_MS = 4000;
+
+function clampPlaybackSpeed(speedValue) {
+  return Math.max(MIN_PLAYBACK_SPEED, Math.min(MAX_PLAYBACK_SPEED, speedValue));
+}
+
 export function playLesson({ ownerDocument, ownerLocation, ownerWindow, lesson, lessons }) {
   const lessonParts = findLessonParts(ownerDocument);
   const lessonProgress = createLessonProgress();
@@ -58,6 +67,9 @@ export function playLesson({ ownerDocument, ownerLocation, ownerWindow, lesson, 
   lessonParts.playButton.addEventListener('click', startPlayback);
   lessonParts.pauseButton.addEventListener('click', pausePlayback);
   lessonParts.stopButton.addEventListener('click', stopPlayback);
+  lessonParts.playbackSpeedSlider.addEventListener('input', event => {
+    applyPlaybackSpeed(parseFloat(event.target.value));
+  });
   lessonParts.saveStepButton.addEventListener('click', () => {
     savedSteps.toggleSavedStepNumber(lessonProgress.currentStepNumber);
   });
@@ -86,6 +98,7 @@ export function playLesson({ ownerDocument, ownerLocation, ownerWindow, lesson, 
   });
 
   themeChoice.initializeTheme();
+  applyPlaybackSpeed(DEFAULT_PLAYBACK_SPEED, { restartPlayback: false });
   showCurrentLesson();
 
   function hasOpenLessonDialog() {
@@ -127,12 +140,52 @@ export function playLesson({ ownerDocument, ownerLocation, ownerWindow, lesson, 
     showCurrentLesson();
   }
 
+  function readPlaybackIntervalMs() {
+    return Math.max(600, Math.round(BASE_STEP_INTERVAL_MS / lessonProgress.playbackSpeedMultiplier));
+  }
+
+  function showPlaybackSpeedValue(playbackSpeedMultiplier) {
+    lessonParts.playbackSpeedValue.textContent = `${playbackSpeedMultiplier.toFixed(1)}x`;
+  }
+
+  function showPlaybackAnimationSpeed(playbackSpeedMultiplier) {
+    ownerDocument.documentElement.style.setProperty(
+      '--lesson-animation-duration-factor',
+      String((1 / playbackSpeedMultiplier).toFixed(3))
+    );
+  }
+
+  function restartPlayback() {
+    if (!lessonProgress.playbackTimer) {
+      return;
+    }
+
+    ownerWindow.clearInterval(lessonProgress.playbackTimer);
+    lessonProgress.playbackTimer = ownerWindow.setInterval(goToNextStep, readPlaybackIntervalMs());
+  }
+
+  function applyPlaybackSpeed(nextPlaybackSpeed, options = {}) {
+    const { restartPlayback = true } = options;
+    const playbackSpeedMultiplier = clampPlaybackSpeed(
+      Number.isFinite(nextPlaybackSpeed) ? nextPlaybackSpeed : DEFAULT_PLAYBACK_SPEED
+    );
+
+    lessonProgress.playbackSpeedMultiplier = playbackSpeedMultiplier;
+    lessonParts.playbackSpeedSlider.value = String(playbackSpeedMultiplier);
+    showPlaybackSpeedValue(playbackSpeedMultiplier);
+    showPlaybackAnimationSpeed(playbackSpeedMultiplier);
+
+    if (restartPlayback) {
+      restartPlayback();
+    }
+  }
+
   function startPlayback() {
     if (lessonProgress.playbackTimer || lessonProgress.currentStepNumber === lesson.steps.length - 1) {
       return;
     }
 
-    lessonProgress.playbackTimer = window.setInterval(goToNextStep, 4000);
+    lessonProgress.playbackTimer = ownerWindow.setInterval(goToNextStep, readPlaybackIntervalMs());
     updatePlaybackControls();
   }
 
@@ -142,7 +195,7 @@ export function playLesson({ ownerDocument, ownerLocation, ownerWindow, lesson, 
       return;
     }
 
-    window.clearInterval(lessonProgress.playbackTimer);
+    ownerWindow.clearInterval(lessonProgress.playbackTimer);
     lessonProgress.playbackTimer = null;
     updatePlaybackControls();
   }

@@ -47,6 +47,8 @@ export function findLessonParts(ownerDocument) {
     playButton: readRequiredElement(ownerDocument, 'playBtn'),
     pauseButton: readRequiredElement(ownerDocument, 'pauseBtn'),
     stopButton: readRequiredElement(ownerDocument, 'stopBtn'),
+    playbackSpeedSlider: readRequiredElement(ownerDocument, 'playbackSpeedSlider'),
+    playbackSpeedValue: readRequiredElement(ownerDocument, 'playbackSpeedValue'),
     saveStepButton: readRequiredElement(ownerDocument, 'bookmarkBtn'),
     savedStepCount: readRequiredElement(ownerDocument, 'bookmarkCount'),
     stepFinderModal: readRequiredElement(ownerDocument, 'searchModal'),
