@@ -3069,9 +3069,7 @@ body { padding: 24px 0 24px 24px; }
 }
 
 .live-editor-panel:not(.has-ide-mode) .live-ide-layout {
-  display: block;
-  flex: 1;
-  min-height: 0;
+  display: contents;
 }
 
 .live-ide-sidebar {
