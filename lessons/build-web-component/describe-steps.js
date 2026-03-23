@@ -155,7 +155,7 @@ export const lessonSteps = [
   ),
   describeHtmlElementStep(
     'component_html',
-    'HTML: Feature Callout Host',
+    'HTML: My First Component Host',
     'Dodajemo `<my-first-component>` host sa `title` i `cta-label` atributima. Još nije registrovan, ali browser već vidi custom tag i njegov sirovi sadržaj.',
     'html:my-first-component',
     'Naziv custom elementa mora da sadrži crticu. To je osnovno pravilo registracije custom elementa.',
@@ -338,7 +338,7 @@ export const lessonSteps = [
   ),
   describeFinishedStep(
     'done',
-    'Done: Feature Callout Web Component',
+    'Done: My First Component Web Component',
     'Lekcija je završena: od praznog shell-a stigli smo do pravog custom elementa sa host atributima, slotovima, shadow DOM-om, render lifecycle-om, cleanup-om, sigurnom registracijom, izlaznim event-om i interaction polish slojem.',
     'Sledeći logičan korak je da napraviš drugu komponentu sa više slotova, `part`/`exportparts` strategijom ili još bogatijim public API-jem.'
   )

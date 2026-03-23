@@ -31,7 +31,7 @@ export const cleanWebComponentWithAdoptedStylesheetsLesson = {
   shadowCssFileName: lessonMetadata.shadowCssFileName,
   goalTitle: 'Šta gradimo u ovoj lekciji',
   goalImageSrc: goalImage,
-  goalImageAlt: 'Referentna slika tamnog feature callout card Web Component-a na svetloj pozadini, sa badge oznakom, velikim naslovom, opisom i CTA dugmetom.',
+  goalImageAlt: 'Referentna slika tamnog my first component card Web Component-a na svetloj pozadini, sa badge oznakom, velikim naslovom, opisom i CTA dugmetom.',
   goalImageCaption: 'Ovo je cleanup korak: ista komponenta ostaje ista spolja, ali CSS više ne živi u template string-u, već u posebnom `shadow-dom-style.css` sloju koji shadow root usvaja.',
   steps: lessonSteps,
   buildHtmlAtStep,

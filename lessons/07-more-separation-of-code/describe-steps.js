@@ -166,7 +166,7 @@ export const lessonSteps = [
   ),
   describeHtmlElementStep(
     'component_html',
-    'HTML: Feature Callout Host',
+    'HTML: My First Component Host',
     'Dodajemo `<my-first-component>` host sa `title` i `cta-label` atributima. Host API ostaje isti kao u prethodnim lekcijama.',
     'html:my-first-component',
     'Naziv custom elementa mora da sadrži crticu.',

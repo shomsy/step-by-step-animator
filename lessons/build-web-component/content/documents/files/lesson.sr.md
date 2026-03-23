@@ -1,5 +1,5 @@
 ---
-title: Web Components 2/2 · Shadow DOM feature callout
+title: Web Components 2/2 · Shadow DOM my first component
 previewAddress: browser://build-my-first-component-web-component-preview
 previewTitle: Live Web Component preview
 htmlFileName: index.html

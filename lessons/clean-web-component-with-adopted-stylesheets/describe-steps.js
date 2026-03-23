@@ -155,7 +155,7 @@ export const lessonSteps = [
   ),
   describeHtmlElementStep(
     'component_html',
-    'HTML: Feature Callout Host',
+    'HTML: My First Component Host',
     'Dodajemo `<my-first-component>` host sa `title` i `cta-label` atributima. Host API ostaje isti; menja se samo način na koji komponenta organizuje sopstveni CSS.',
     'html:my-first-component',
     'Naziv custom elementa mora da sadrži crticu. To je osnovno pravilo registracije custom elementa.',
@@ -368,7 +368,7 @@ export const lessonSteps = [
   ),
   describeFinishedStep(
     'done',
-    'Done: Clean Feature Callout with adoptedStyleSheets',
+    'Done: Clean My First Component with adoptedStyleSheets',
     'Lekcija je završena: ista komponenta sada ima čistiji raspored odgovornosti. Host HTML ostaje mali, template čuva samo markup, `shadow-dom-style.css` čuva CSS, a klasa samo uvozi tekst, usvaja stylesheet i vodi lifecycle ponašanje.',
     'Sledeći logičan korak je da isti stylesheet podeliš između više shadow root instanci ili da uvedeš još jedan komponentni stil sloj.'
   )

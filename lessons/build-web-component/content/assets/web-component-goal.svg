@@ -1,5 +1,5 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 760" role="img" aria-labelledby="title desc">
-  <title id="title">Feature callout Web Component goal</title>
+  <title id="title">My first component Web Component goal</title>
   <desc id="desc">Svetla pozadina sa tamnim card komponentom u sredini. Card ima badge Vanilla JS, veliki naslov, opis i plavo CTA dugme.</desc>
   <defs>
     <linearGradient id="bg" x1="0" x2="0" y1="0" y2="1">

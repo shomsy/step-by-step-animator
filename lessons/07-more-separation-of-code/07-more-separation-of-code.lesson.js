@@ -35,7 +35,7 @@ export const moreSeparationOfCodeLesson = {
   ideMode: true,
   goalTitle: 'Cilj: Potpuno Modularna Komponenta',
   goalImageSrc: goalImage,
-  goalImageAlt: 'Referentna slika Feature Callout komponente sa pet fajlova.',
+  goalImageAlt: 'Referentna slika My First Component komponente sa pet fajlova.',
   goalImageCaption: 'U ovoj lekciji razdvajamo template markup u sopstveni modul: component.html.js.',
   steps: lessonSteps,
   buildHtmlAtStep,
