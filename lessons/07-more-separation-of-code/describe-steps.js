@@ -190,129 +190,171 @@ export const lessonSteps = [
   ),
   describeTemplateJsStep(
     'template_html_declaration',
-    'Template JS: Definišemo Template HTML',
-    'U `component.html.js` kreiramo `const templateHtml` sa celim card markup-om. Template HTML sada živi u sopstvenom modulu, odvojeno od class logike.',
-    'Odvajanje template markup-a u poseban fajl čini svaki modul fokusiranim na jednu odgovornost.'
+    'Template JS: Eksportujemo templateHtml',
+    'U `component.html.js` izdvajamo card markup u `export const templateHtml = ...`. Modul sada sadrži samo template concern i ništa više.',
+    'Kada markup dobije sopstveni export, behavior fajl više ne mora da zna kako je HTML sastavljen.'
   ),
   describeTemplateJsStep(
     'template_element_export',
     'Template JS: Eksportujemo Template Element',
-    'Kreiramo `document.createElement(\'template\')`, postavljamo `innerHTML` i eksportujemo gotov template element. `my-first-component.js` ga samo importuje.',
-    'Export čini template dostupnim drugim modulima bez da oni znaju kako je napravljen.'
+    'Kreiramo `myFirstComponentTemplate`, dodajemo `<link rel="stylesheet">` ka `shadow-dom-style.css` i u template ubrizgavamo `${templateHtml}`. `component.html.js` i dalje ostaje čist template modul.',
+    'Template fajl sme da zna za markup i shadow stylesheet ulaz, ali ne i za lifecycle, evente ili render logiku.'
   ),
   describeJsFlowStep(
     'import_template',
-    'JS: Uvozimo Template iz component.html.js',
-    'U `my-first-component.js` dodajemo `import { myFirstComponentTemplate } from \'./component.html.js\'`. Klasa više ne gradi template, samo ga koristi.',
-    'Ovo je suština ove lekcije: svaki fajl radi jednu stvar. Template modul gradi markup, klasa vodi ponašanje.'
+    'JS: Uvozimo Template Modul',
+    'U `my-first-component.js` dodajemo `import { myFirstComponentTemplate } from \'./component.html.js\'`. Behavior fajl više ne gradi template, nego ga samo koristi.',
+    'Ovo je glavna separation-of-concerns granica: template modul pravi markup, component klasa vodi lifecycle i ponašanje.'
   ),
   describeJsFlowStep(
     'class_declaration',
     'JS: Class Extends HTMLElement',
-    'Otvaramo `class MyFirstComponent extends HTMLElement`. Klasa sada ne zna kako je template napravljen; samo ga koristi.',
+    'Otvaramo `class MyFirstComponent extends HTMLElement`. Klasa sada ne zna kako je template sastavljen; samo ga troši.',
     'Custom element je i dalje običan DOM element, samo sa tvojom klasom.'
   ),
   describeJsFlowStep(
+    'observed_attributes',
+    'JS: observedAttributes',
+    'Dodajemo `static observedAttributes = [\'title\', \'cta-label\']` i jasno zaključavamo koje atribute komponenta prati.',
+    'Komponenta eksplicitno kaže koji spoljašnji API ulazi pokreću render update.'
+  ),
+  describeJsFlowStep(
     'constructor_shadow',
-    'JS: constructor + attachShadow',
-    'U konstruktoru pozivamo `super()` i otvaramo shadow root.',
-    'Shadow root je granica komponente: markup i stil žive iza nje.'
+    'JS: constructor otvara shadow root',
+    'U konstruktoru pozivamo `super()` i otvaramo shadow root. Konstruktor samo priprema instancu, bez renderovanja i bez event wiring-a.',
+    'Konstruktor treba da pripremi osnovu komponente, ne da glumi connected lifecycle.'
+  ),
+  describeJsFlowStep(
+    'constructor_component_state',
+    'JS: constructor priprema interne reference',
+    'U konstruktoru vezujemo `handleClick` i pripremamo polja `titleElement`, `ctaElement` i `isCtaBound`.',
+    'Funkciju bindujemo jednom unapred, a DOM reference i event state jasno držimo na instanci.'
   ),
   describeJsFlowStep(
     'connected_callback',
     'JS: connectedCallback Lifecycle',
     'Dodajemo `connectedCallback()` kao glavno mesto za startovanje komponente.',
-    'Kada komponenta pređe u živi UI, connectedCallback je prirodan ulaz.'
+    'Kada komponenta pređe u živi UI, connectedCallback je pravo mesto za cache, render i event wiring.'
   ),
   describeJsFlowStep(
     'connected_callback_cache',
-    'JS: Pozivamo cacheDom',
-    'U `connectedCallback` prvo pripremamo DOM referencu.',
-    'Cache optimizacija unapred štedi preglede stabla kasnije.'
+    'JS: connectedCallback poziva cacheDom',
+    'Prvo keširamo DOM i po potrebi kloniramo template.',
+    'Cache ide pre rendera da bismo imali stabilne reference za dinamične delove.'
   ),
   describeJsFlowStep(
     'connected_callback_render',
-    'JS: Pokrećemo prvi render',
-    'Nakon što smo keširali DOM, odmah štampamo početne vrednosti atributa.',
-    'Prvi render vežemo za trenutak kada je element stvarno povezan.'
+    'JS: connectedCallback pokreće render',
+    'Kada su reference spremne, odmah štampamo trenutne vrednosti atributa.',
+    'Prvi render vezujemo za trenutak kada je element stvarno povezan sa DOM-om.'
   ),
   describeJsFlowStep(
     'connected_callback_bind',
-    'JS: Vezujemo Događaje',
-    'Pokrećemo event binding.',
-    'Sve što korisnik može da radi mora biti aktivirano.'
+    'JS: connectedCallback vezuje evente',
+    'Na kraju `connectedCallback()` pozivamo `bindEvents()` i aktiviramo CTA ponašanje.',
+    'Behavior vežemo tek kada je DOM spreman i kada je komponenta stvarno aktivna.'
   ),
   describeJsFlowStep(
     'disconnected_callback',
     'JS: disconnectedCallback Cleanup',
-    'Dodajemo `disconnectedCallback()` i pozivamo `unbindEvents`.',
-    'Cleanup je production-grade signal da komponenta poštuje ceo lifecycle, i sprečava memory leaks.'
-  ),
-  describeJsFlowStep(
-    'observed_attributes',
-    'JS: observedAttributes',
-    'Dodajemo `static observedAttributes = [\'title\', \'cta-label\']`.',
-    'Komponenta eksplicitno kaže koje atribute prati.'
+    'Dodajemo `disconnectedCallback()` i pozivamo `unbindEvents()` da skinemo aktivne listenere.',
+    'Cleanup je production-grade signal da komponenta poštuje ceo lifecycle i ne ostavlja viseće evente.'
   ),
   describeJsFlowStep(
     'attribute_changed_callback',
     'JS: attributeChangedCallback',
-    'Dodajemo `attributeChangedCallback()` i pozivamo render, sa guard-om za `isConnected`.',
-    'Ovo omogućava dinamičko osvežavanje UI-ja kada instanca promeni atribute.'
+    'Dodajemo `attributeChangedCallback()` i pozivamo `render()`, sa guard-om za `isConnected`.',
+    'Atributi ostaju spoljašnji API komponente, a render ostaje jedino mesto gde ti podaci ulaze u UI.'
   ),
   describeJsFlowStep(
     'cache_dom',
-    'JS: Keširamo elemente u DOM-u',
-    'U `cacheDom()` kloniramo template, ubrizgamo ga, i selektujemo dinamične elemente poput title i cta dugmeta.',
-    'Ovo radimo samo jednom. Kasniji render samo čita `this.titleElement` i `this.ctaElement` umesto skupih `querySelector` pretraga u svakom koraku.'
+    'JS: Uvodimo cacheDom()',
+    'Dodajemo `cacheDom()` kao jedino mesto gde komponenta radi sa shadow DOM strukturom i internim referencama.',
+    'Kad markup i DOM pretrage žive na jednom mestu, ostatak klase ostaje mnogo čistiji.'
+  ),
+  describeJsFlowStep(
+    'cache_dom_clone',
+    'JS: cacheDom klonira template samo jednom',
+    'U `cacheDom()` proveravamo da li shadow root već ima sadržaj. Template kloniramo samo prvi put.',
+    'Ovo sprečava dupliranje markup-a pri reconnect-u i čuva preview stabilnim.'
+  ),
+  describeJsFlowStep(
+    'cache_dom_title',
+    'JS: cacheDom kešira title referencu',
+    'Keširamo `.title` samo ako referenca još ne postoji.',
+    'Render kasnije samo ažurira tekst, bez novih `querySelector` poziva.'
+  ),
+  describeJsFlowStep(
+    'cache_dom_cta',
+    'JS: cacheDom kešira CTA referencu',
+    'Na isti način keširamo `.cta` dugme.',
+    'Kada su reference stabilne, ostatak klase radi nad malim, predvidivim API-jem.'
   ),
   describeJsFlowStep(
     'bind_events',
-    'JS: bindEvents vezuje click listener',
-    'Vezujemo `this.handleClick = this.handleClick.bind(this)` kako bismo zadržali isti referentni kontekst i registrujemo click listener.',
-    'Zadržavanje tačne reference neophodno je za ispravan unbind.'
+    'JS: Uvodimo bindEvents()',
+    'Dodajemo `bindEvents()` kao jedino mesto gde spajamo DOM i ponašanje.',
+    'Event wiring ne treba da curi po celoj klasi.'
+  ),
+  describeJsFlowStep(
+    'bind_events_guard',
+    'JS: bindEvents štiti od duplog binding-a',
+    'Pre dodavanja listenera proveravamo da CTA postoji i da event još nije vezan, pa tek onda registrujemo click i podižemo `isCtaBound`.',
+    'Ovde zatvaramo reconnect i double-bind rizik.'
   ),
   describeJsFlowStep(
     'unbind_events',
-    'JS: unbindEvents skida click listener',
-    'U `unbindEvents()` potpuno uklanjamo interakcije.',
-    'Metoda je spremljena pozivu u disconnectedCallback-u.'
+    'JS: Uvodimo unbindEvents()',
+    'Dodajemo `unbindEvents()` kao jedino mesto gde skidamo aktivne listenere.',
+    'Ako postoji `bindEvents()`, production komponenta treba i jasan cleanup par.'
+  ),
+  describeJsFlowStep(
+    'unbind_events_guard',
+    'JS: unbindEvents skida listener samo kada postoji',
+    'Pre cleanup-a proveravamo da CTA postoji i da je listener zaista aktivan, pa tek onda skidamo binding i vraćamo `isCtaBound` na `false`.',
+    'Ovo drži lifecycle urednim i sprečava nepotrebne remove pozive.'
   ),
   describeJsFlowStep(
     'render_declaration',
     'JS: Uvodimo render()',
-    'Dodajemo `render()` metodu kao jedno mesto gde atributi prelaze u UI tekst.',
-    'Centralizovan render čuva flow čistim, on sada samo popunjava DOM umesto da ga pravi.'
+    'Dodajemo `render()` kao jedino mesto gde atributi prelaze u UI tekst.',
+    'Centralizovan render čuva flow čistim: on sada samo ažurira DOM, a ne pravi novu strukturu.'
+  ),
+  describeJsFlowStep(
+    'render_guard',
+    'JS: render() čuva samo postojeći DOM',
+    'Na vrhu `render()` proveravamo da li reference postoje. Ako nisu spremne, izlazimo bez rebuild-a.',
+    'Ovo jasno pokazuje da `render()` ne pravi novi `innerHTML`, već samo patch-uje postojeće čvorove.'
   ),
   describeJsFlowStep(
     'render_title',
     'JS: render() Popunjava Title',
-    'U `render()` čitamo `title` atribut i upisujemo ga u `.title` element. Ažuriramo samo izmenjene delove!',
-    'Render menja samo textContent već keširanog elementa.'
+    'U `render()` čitamo `title` atribut i upisujemo ga u `.title` element.',
+    'Render menja samo `textContent` već keširanog elementa.'
   ),
   describeJsFlowStep(
     'render_cta',
     'JS: render() Popunjava CTA',
     'Na isti način `cta-label` pretvaramo u tekst CTA dugmeta.',
-    'Isti tok za svaki dinamični prop.'
+    'Isti obrazac koristiš za svaki dinamični prop: pročitaj API, ažuriraj postojeći DOM.'
   ),
   describeJsFlowStep(
     'handle_click_dispatch_event',
-    'JS: Emitujemo component-action',
+    'JS: handleClick emituje component-action',
     "Dodajemo `handleClick()` i emitujemo `CustomEvent('component-action', ...)`.",
-    'Komponenta dobija snažan izlazni API i javlja korisničku akciju ostatku aplikacije.'
+    'Komponenta dobija jasan izlazni API i ostatak aplikacije može da reaguje na CTA bez direktnog zavlačenja u shadow DOM.'
   ),
   describeJsFlowStep(
     'define_guard',
     'JS: Čuvamo se duplog define-a',
     'Pre registracije proveravamo `customElements.get(\'my-first-component\')`.',
-    'U okruženjima sa hot reload-om ovo je obavezna zaštita.'
+    'U okruženjima sa hot reload-om ili ponovnim izvršavanjem modula ovo je obavezna zaštita.'
   ),
   describeJsFlowStep(
     'define_element',
     'JS: Registrujemo Custom Element',
-    'Unutar guard-a pozivamo `customElements.define(\'my-first-component\', MyFirstComponent)`. Klasa je kompletno modularna.',
-    'Svaki fajl sada ima idealnu responsibilnost.'
+    'Unutar guard-a pozivamo `customElements.define(\'my-first-component\', MyFirstComponent)`. Klasa je sada čista, modularna i lifecycle-disciplinovana.',
+    'Svaki fajl sada ima jednu predvidivu odgovornost: template, behavior, shadow CSS i host CSS.'
   ),
   ...shellCssSteps.map(config => describeCssPropertyStep(...config)),
   ...stylesheetSteps.map(config => describeShadowCssPropertyStep(...config)),
@@ -350,8 +392,8 @@ export const lessonSteps = [
   describeFinishedStep(
     'done',
     'Done: More Separation Of Code',
-    'Lekcija je završena: ista komponenta sada ima pet zasebnih fajlova. `index.html` opisuje host, `component.html.js` čuva template markup, `my-first-component.js` vodi lifecycle, `shadow-dom-style.css` stilizuje unutrašnjost, a `style.css` theme-uje host spolja.',
-    'Sledeći korak je da isti template modul podeliš između više komponenata ili uvedeš dinamički template loading.'
+    'Lekcija je završena: ista komponenta sada ima pet zasebnih fajlova. `index.html` opisuje host, `component.html.js` čuva template markup, `my-first-component.js` vodi lifecycle i behavior, `shadow-dom-style.css` stilizuje unutrašnjost, a `style.css` theme-uje host spolja.',
+    'Najvažnija pouka je da separation of concerns nije samo raspodela fajlova, nego i disciplina: cache jednom, bind kontrolisano, render samo patch-uje postojeći DOM.'
   )
 ];
 

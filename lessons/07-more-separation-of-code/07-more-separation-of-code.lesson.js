@@ -10,7 +10,7 @@ import { readLessonMetadata } from '../../animator/lesson-documents/read-lesson-
 
 const lessonMetadata = readLessonMetadata(lessonDocument, {
   lessonTitle: '07 · More Separation Of Code',
-  lessonIntro: 'Četvrta Web Components lekcija razdvaja template markup u sopstveni modul component.html.js. Svaki fajl ima jednu odgovornost: host HTML, template markup, component logic, shadow CSS i host CSS.',
+  lessonIntro: 'Četvrta Web Components lekcija razdvaja template markup u sopstveni modul component.html.js i zateže my-first-component.js u čist lifecycle/behavior fajl. Host HTML, template markup, component behavior, shadow CSS i host CSS sada imaju potpuno jasne granice.',
   previewAddress: 'browser://07-more-separation-of-code-preview',
   previewTitle: 'Live modular Web Component preview',
   htmlFileName: 'index.html',
@@ -36,7 +36,7 @@ export const moreSeparationOfCodeLesson = {
   goalTitle: 'Cilj: Potpuno Modularna Komponenta',
   goalImageSrc: goalImage,
   goalImageAlt: 'Referentna slika My First Component komponente sa pet fajlova.',
-  goalImageCaption: 'U ovoj lekciji razdvajamo template markup u sopstveni modul: component.html.js.',
+  goalImageCaption: 'U ovoj lekciji jasno odvajamo template markup, lifecycle/behavior i shadow styling, bez lomljenja engine pravila.',
   steps: lessonSteps,
   buildHtmlAtStep,
   buildCssAtStep,

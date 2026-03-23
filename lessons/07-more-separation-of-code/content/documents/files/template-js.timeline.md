@@ -6,7 +6,7 @@
     "from": "template_html_declaration",
     "target": "root",
     "lines": [
-      "const templateHtml = `",
+      "export const templateHtml = `",
       "  <article class=\"card\">",
       "    <span class=\"eyebrow\">",
       "      <slot name=\"eyebrow\">Vanilla JS</slot>",
