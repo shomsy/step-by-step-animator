@@ -145,8 +145,8 @@ export const lessonSteps = [
   describeJsFlowStep(
     'define_element',
     'JS: Registrujemo my-first-component',
-    'Pozivamo `customElements.define(\'my-first-component\', MyFirstComponent)`. Od tog trenutka browser zna kako da upgrade-uje svaki `<my-first-component>` u stvarnu komponentu.',
-    'Registracija je trenutak kada nepoznati tag postaje živi custom element.'
+    'Pre registracije proveravamo `customElements.get(\'my-first-component\')`, pa tek onda unutar guarda pozivamo `customElements.define(...)`. Od tog trenutka browser zna kako da upgrade-uje svaki `<my-first-component>` u stvarnu komponentu.',
+    'Registracija je trenutak kada nepoznati tag postaje živi custom element, a guard nas štiti od duplog define-a pri ponovnom izvršavanju.'
   ),
   ...cssSteps.map(config => describeCssPropertyStep(...config)),
   describeSummaryStep(

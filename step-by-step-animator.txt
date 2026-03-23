@@ -224,9 +224,9 @@ lessons/
     build-js-at-step.js
     content/
       assets/
-        feature-callout-goal.svg
+        web-component-goal.svg
       documents/
-        build_feature_callout_web_component.md
+        build_web_component.md
         files/
           lesson.sr.md
           html.timeline.md
@@ -240,9 +240,9 @@ lessons/
     build-js-at-step.js
     content/
       assets/
-        callout-custom-element-goal.svg
+        custom-element-goal.svg
       documents/
-        build_callout_custom_element.md
+        build_custom_element.md
         files/
           lesson.sr.md
           html.timeline.md
@@ -271,14 +271,52 @@ lessons/
     build-shadow-css-at-step.js
     content/
       assets/
-        feature-callout-goal.svg
+        web-component-goal.svg
       documents/
-        clean_feature_callout_with_adopted_stylesheets.md
+        clean_web_component_with_adopted_stylesheets.md
         files/
           lesson.sr.md
           html.timeline.md
           css.rules.md
           js.timeline.md
+          shadow-dom-style.css.md
+  06-modular-web-components/
+    06-modular-web-components.lesson.js
+    describe-steps.js
+    build-html-at-step.js
+    build-css-at-step.js
+    build-js-at-step.js
+    build-shadow-css-at-step.js
+    content/
+      assets/
+        web-component-goal.svg
+      documents/
+        06_modular_web_components.md
+        files/
+          lesson.sr.md
+          html.timeline.md
+          css.rules.md
+          js.timeline.md
+          shadow-dom-style.css.md
+  07-more-separation-of-code/
+    07-more-separation-of-code.lesson.js
+    describe-steps.js
+    build-html-at-step.js
+    build-css-at-step.js
+    build-js-at-step.js
+    build-template-js-at-step.js
+    build-shadow-css-at-step.js
+    content/
+      assets/
+        web-component-goal.svg
+      documents/
+        07_more_separation_of_code.md
+        files/
+          lesson.sr.md
+          html.timeline.md
+          css.rules.md
+          js.timeline.md
+          template-js.timeline.md
           shadow-dom-style.css.md
 ```
 
@@ -300,11 +338,13 @@ Taj file mora da vrati kompletan lesson contract:
 - `htmlFileName`
 - `cssFileName`
 - `jsFileName` kada lekcija zaista ima JavaScript fajl
+- `templateJsFileName` kada lekcija zaista ima poseban template modul kao `component.html.js`
 - `shadowCssFileName` kada lekcija zaista ima poseban shadow DOM CSS fajl
 - `steps`
 - `buildHtmlAtStep`
 - `buildCssAtStep`
 - `buildJsAtStep` kada lekcija traži živi JavaScript u preview-u
+- `buildTemplateJsAtStep` kada lekcija traži poseban template JS editor i download fajl
 - `buildShadowCssAtStep` kada lekcija traži poseban shadow CSS editor i download fajl
 
 Opciona lesson shell polja kada želiš da pokažeš vizuelni cilj i homework:
@@ -331,6 +371,7 @@ feature-name/
         html.timeline.md
         css.rules.md
         js.timeline.md
+        template-js.timeline.md
         shadow-dom-style.css.md
 ```
 
@@ -349,10 +390,11 @@ Pravila:
 - `html.timeline.md` je kanonski source za kumulativni HTML teaching tok
 - `css.rules.md` je kanonski source za CSS rule blokove koji rastu property po property
 - `js.timeline.md` je opcioni kanonski source za kumulativni JavaScript teaching tok
+- `template-js.timeline.md` je opcioni kanonski source za izdvojeni template JS modul kada lekcija prikazuje `component.html.js`
 - `shadow-dom-style.css.md` je opcioni kanonski source za shadow DOM CSS rule blokove kada lekcija odvaja unutrašnji stylesheet u poseban fajl
 - generated book output ide u `content/documents/<lesson_name>.md`
 - generated output se ne uređuje ručno
-- `build-html-at-step.js`, `build-css-at-step.js`, `build-js-at-step.js` i po potrebi `build-shadow-css-at-step.js` ostaju tanki adapteri koji parsiraju markdown DSL i vraćaju linije za dati step
+- `build-html-at-step.js`, `build-css-at-step.js`, `build-js-at-step.js` i po potrebi `build-template-js-at-step.js` i `build-shadow-css-at-step.js` ostaju tanki adapteri koji parsiraju markdown DSL i vraćaju linije za dati step
 
 ### 2.4 Runtime and Entry Rules
 
@@ -651,40 +693,40 @@ lessons/
           lesson.sr.md
           html.timeline.md
           css.rules.md
-  build-callout-custom-element/
-    build-callout-custom-element.lesson.js
+  build-custom-element/
+    build-custom-element.lesson.js
     describe-steps.js
     build-html-at-step.js
     build-css-at-step.js
     build-js-at-step.js
     content/
       assets/
-        callout-custom-element-goal.svg
+        custom-element-goal.svg
       documents/
-        build_callout_custom_element.md
+        build_custom_element.md
         files/
           lesson.sr.md
           html.timeline.md
           css.rules.md
           js.timeline.md
-  build-feature-callout-web-component/
-    build-feature-callout-web-component.lesson.js
+  build-web-component/
+    build-web-component.lesson.js
     describe-steps.js
     build-html-at-step.js
     build-css-at-step.js
     build-js-at-step.js
     content/
       assets/
-        feature-callout-goal.svg
+        web-component-goal.svg
       documents/
-        build_feature_callout_web_component.md
+        build_web_component.md
         files/
           lesson.sr.md
           html.timeline.md
           css.rules.md
           js.timeline.md
-  clean-feature-callout-with-adopted-stylesheets/
-    clean-feature-callout-with-adopted-stylesheets.lesson.js
+  clean-web-component-with-adopted-stylesheets/
+    clean-web-component-with-adopted-stylesheets.lesson.js
     describe-steps.js
     build-html-at-step.js
     build-css-at-step.js
@@ -692,14 +734,34 @@ lessons/
     build-shadow-css-at-step.js
     content/
       assets/
-        feature-callout-goal.svg
+        web-component-goal.svg
       documents/
-        clean_feature_callout_with_adopted_stylesheets.md
+        clean_web_component_with_adopted_stylesheets.md
         files/
           lesson.sr.md
           html.timeline.md
           css.rules.md
           js.timeline.md
+          shadow-dom-style.css.md
+  07-more-separation-of-code/
+    07-more-separation-of-code.lesson.js
+    describe-steps.js
+    build-html-at-step.js
+    build-css-at-step.js
+    build-js-at-step.js
+    build-template-js-at-step.js
+    build-shadow-css-at-step.js
+    content/
+      assets/
+        web-component-goal.svg
+      documents/
+        07_more_separation_of_code.md
+        files/
+          lesson.sr.md
+          html.timeline.md
+          css.rules.md
+          js.timeline.md
+          template-js.timeline.md
           shadow-dom-style.css.md
 ```
 
@@ -770,10 +832,12 @@ content/documents/files/lesson.sr.md
 content/documents/files/html.timeline.md
 content/documents/files/css.rules.md
 content/documents/files/js.timeline.md
+content/documents/files/template-js.timeline.md
 content/documents/files/shadow-dom-style.css.md
 ```
 
 Use markdown for lesson metadata and for the canonical HTML/CSS/JS step DSL.
+When a lesson separates template markup into a dedicated module such as `component.html.js`, use `template-js.timeline.md` as the canonical template JS source and keep `build-template-js-at-step.js` thin as well.
 When a lesson separates inner shadow DOM styles into a fourth editor/download file, use `shadow-dom-style.css.md` as the canonical shadow CSS source and keep `build-shadow-css-at-step.js` thin as well.
 Keep `build-*-at-step.js` files thin; they should parse markdown lesson documents and return derived lines, not re-encode the whole lesson by hand.
 
@@ -933,6 +997,7 @@ lessons/
     build-html-at-step.js
     build-css-at-step.js
     build-js-at-step.js
+    build-template-js-at-step.js
     build-shadow-css-at-step.js
     content/
       assets/
@@ -943,6 +1008,7 @@ lessons/
           html.timeline.md
           css.rules.md
           js.timeline.md
+          template-js.timeline.md
           shadow-dom-style.css.md
 ```
 
@@ -955,6 +1021,7 @@ lessons/
 - povezuje step script
 - povezuje HTML/CSS builder funkcije
 - kada lekcija to traži, povezuje i JS builder funkciju
+- kada lekcija to traži, povezuje i poseban template JS builder
 - kada lekcija to traži, povezuje i poseban shadow CSS builder
 - opciono povezuje referentnu sliku cilja i homework napomene za shell
 
@@ -994,6 +1061,14 @@ lessons/
 - ne vraća diff
 - shadow CSS i dalje ide property po property
 
+`build-template-js-at-step.js`
+
+- koristiš ga samo kada lekcija zaista odvaja template markup u poseban JS modul
+- ostaje tanak adapter preko `template-js.timeline.md`
+- vraća kompletan kumulativni template JS za dati step
+- ne vraća diff
+- služi za slučajeve kao `component.html.js`
+
 `content/documents/files/lesson.sr.md`
 
 - drži title, intro i metadata
@@ -1012,6 +1087,11 @@ lessons/
 
 - drži opcioni JavaScript timeline u fenced `json` formatu
 - koristi se samo kada lekcija zaista ima JS panel i live izvršavanje
+
+`content/documents/files/template-js.timeline.md`
+
+- drži opcioni template JS source u fenced `json` formatu
+- koristi se samo kada lekcija odvaja template markup u poseban modul
 
 `content/documents/files/shadow-dom-style.css.md`
 
@@ -1148,6 +1228,7 @@ previewTitle: Live feature preview
 htmlFileName: index.html
 cssFileName: style.css
 jsFileName: component.js
+templateJsFileName: component.html.js
 shadowCssFileName: shadow-dom-style.css
 ---
 
@@ -1207,6 +1288,24 @@ Kratak uvod u lekciju.
       "}",
       "",
       "@@slot:after-class@@"
+    ]
+  }
+]
+```
+````
+
+`template-js.timeline.md`:
+
+````md
+# Template JS Timeline
+
+```json
+[
+  {
+    "from": "template_element_export",
+    "target": "root",
+    "lines": [
+      "export const componentTemplate = document.createElement('template');"
     ]
   }
 ]
@@ -1538,6 +1637,19 @@ export function buildLinesFromTimelineBlocks({ timelineBlocks, stepNumberById, s
 }
 
 === animator/lesson-documents/parse-frontmatter.js ===
+function normalizeFrontmatterValue(rawValue) {
+  const trimmedValue = String(rawValue || '').trim();
+
+  if (
+    (trimmedValue.startsWith('"') && trimmedValue.endsWith('"')) ||
+    (trimmedValue.startsWith("'") && trimmedValue.endsWith("'"))
+  ) {
+    return trimmedValue.slice(1, -1);
+  }
+
+  return trimmedValue;
+}
+
 export function parseFrontmatter(markdown) {
   if (!markdown) {
     return { attributes: {}, body: '' };
@@ -1571,7 +1683,7 @@ export function parseFrontmatter(markdown) {
       const [, key, rawValue] = keyMatch;
 
       if (rawValue) {
-        attributes[key] = rawValue.trim();
+        attributes[key] = normalizeFrontmatterValue(rawValue);
         activeKey = null;
         return;
       }
@@ -1584,7 +1696,7 @@ export function parseFrontmatter(markdown) {
     const itemMatch = trimmedLine.match(/^-\s+(.+)$/);
 
     if (itemMatch && activeKey && Array.isArray(attributes[activeKey])) {
-      attributes[activeKey].push(itemMatch[1].trim());
+      attributes[activeKey].push(normalizeFrontmatterValue(itemMatch[1]));
     }
   });
 
@@ -1635,6 +1747,7 @@ export function readLessonMetadata(markdown, defaults = {}) {
     htmlFileName: attributes.htmlFileName || defaults.htmlFileName || 'index.html',
     cssFileName: attributes.cssFileName || defaults.cssFileName || 'style.css',
     jsFileName: attributes.jsFileName || defaults.jsFileName || '',
+    templateJsFileName: attributes.templateJsFileName || defaults.templateJsFileName || '',
     shadowCssFileName: attributes.shadowCssFileName || defaults.shadowCssFileName || ''
   };
 }
@@ -2519,18 +2632,30 @@ export function showGrowingCode({
 }
 
 === animator/play-lesson/04-watch-preview/show-current-preview.js ===
-function composePreviewJavaScript(lesson, currentStepNumber) {
-  if (typeof lesson.buildJsAtStep !== 'function') {
+function escapeRegExp(text) {
+  return String(text).replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+}
+
+function escapeTemplateLiteralText(text) {
+  return String(text)
+    .replace(/\\/g, '\\\\')
+    .replace(/`/g, '\\`')
+    .replace(/\$\{/g, '\\${');
+}
+
+function readShadowCssMarkup(lesson, currentStepNumber) {
+  if (typeof lesson.buildShadowCssAtStep !== 'function') {
     return '';
   }
 
-  const jsMarkup = lesson.buildJsAtStep(currentStepNumber).join('\n');
+  return lesson.buildShadowCssAtStep(currentStepNumber).join('\n');
+}
 
+function inlineShadowCssTextImport(jsMarkup, lesson, shadowCssMarkup) {
   if (typeof lesson.buildShadowCssAtStep !== 'function') {
     return jsMarkup;
   }
 
-  const shadowCssMarkup = lesson.buildShadowCssAtStep(currentStepNumber).join('\n');
   const importPath = `./${lesson.shadowCssFileName || 'shadow-dom-style.css'}?raw`;
   const importLine = `import shadowDomStyleCssText from '${importPath}';`;
 
@@ -2541,7 +2666,53 @@ function composePreviewJavaScript(lesson, currentStepNumber) {
     );
   }
 
-  return `const shadowDomStyleCssText = ${JSON.stringify(shadowCssMarkup)};\n${jsMarkup}`;
+  return jsMarkup;
+}
+
+function inlineTemplateModule({ lesson, currentStepNumber, jsMarkup, shadowCssMarkup }) {
+  if (typeof lesson.buildTemplateJsAtStep !== 'function') {
+    return jsMarkup;
+  }
+
+  let templateJsMarkup = lesson.buildTemplateJsAtStep(currentStepNumber).join('\n');
+
+  if (!templateJsMarkup.trim()) {
+    return jsMarkup;
+  }
+
+  const templateFileName = lesson.templateJsFileName || 'component.html.js';
+  const exportedTemplateMatch = templateJsMarkup.match(/export const (\w+) = document\.createElement\('template'\);/);
+  const exportedTemplateName = exportedTemplateMatch?.[1] || 'componentTemplate';
+  const shadowCssStyleTag = `<style>${escapeTemplateLiteralText(shadowCssMarkup)}</style>`;
+  const templateImportPattern = new RegExp(
+    `^import\\s+\\{\\s*${escapeRegExp(exportedTemplateName)}\\s*\\}\\s+from\\s+['"]\\./${escapeRegExp(templateFileName)}['"];?\\n?`,
+    'm'
+  );
+
+  templateJsMarkup = templateJsMarkup
+    .replace(/<link rel="stylesheet" href="\.\/[^"]+" \/>/, shadowCssStyleTag)
+    .replace(/\bexport const\b/g, 'const');
+
+  return `${templateJsMarkup}\n\n${jsMarkup.replace(templateImportPattern, '').trimStart()}`.trim();
+}
+
+function composePreviewJavaScript(lesson, currentStepNumber) {
+  if (typeof lesson.buildJsAtStep !== 'function') {
+    return '';
+  }
+
+  const shadowCssMarkup = readShadowCssMarkup(lesson, currentStepNumber);
+  let jsMarkup = lesson.buildJsAtStep(currentStepNumber).join('\n');
+
+  jsMarkup = inlineShadowCssTextImport(jsMarkup, lesson, shadowCssMarkup);
+  jsMarkup = inlineTemplateModule({
+    lesson,
+    currentStepNumber,
+    jsMarkup,
+    shadowCssMarkup
+  });
+
+  return jsMarkup;
 }
 
 function composeLivePreviewDocument(lesson, currentStepNumber) {
@@ -4880,14 +5051,7 @@ export function buildShadowCssAtStep(stepNumber) {
 
 # 06-modular-web-components
 
-Treća Web Components lekcija uzima isti my first component i čisti njegov unutrašnji styling tok. Umesto da CSS bude zbijen u `<style>` unutar `template.innerHTML`, sada ga držiš u posebnom `shadow-dom-style.css` fajlu, JavaScript ga uvozi kao tekst, puni `CSSStyleSheet` kroz `replaceSync()` i usvaja preko `shadowRoot.adoptedStyleSheets`. Suština lekcije je da CSS može da bude odvojen i od class logike i od template markup-a, dok host API, slotovi i lifecycle ostaju isti.
-
-=== lessons/06-modular-web-components/content/documents/clean_feature_callout_with_adopted_stylesheets.md ===
-<!-- Generated from the same markdown sources used by the web lesson. -->
-
-# clean-my-first-component-with-adopted-stylesheets
-
-Treća Web Components lekcija uzima isti feature callout i čisti njegov unutrašnji styling tok. Umesto da CSS bude zbijen u `<style>` unutar `template.innerHTML`, sada ga držiš u posebnom `shadow-dom-style.css` fajlu, JavaScript ga uvozi kao tekst, puni `CSSStyleSheet` kroz `replaceSync()` i usvaja preko `shadowRoot.adoptedStyleSheets`. Suština lekcije je da CSS može da bude odvojen i od class logike i od template markup-a, dok host API, slotovi i lifecycle ostaju isti.
+Ova lekcija demonstrira novi IDE mode playera. Umesto da svi fajlovi budu vidljivi odjednom, koristiš file browser i automatsko prebacivanje fokusa na fajl koji se trenutno menja, dok ista Web Components komponenta i dalje raste kroz host HTML, component logic, shadow CSS i host CSS.
 
 === lessons/06-modular-web-components/content/documents/files/css.rules.md ===
 # CSS Rule Blocks
@@ -5217,16 +5381,16 @@ Treća Web Components lekcija uzima isti feature callout i čisti njegov unutra�
 
 === lessons/06-modular-web-components/content/documents/files/lesson.sr.md ===
 ---
-title: Web Components 3/3 · Now Let's Clean The Mess
-previewAddress: browser://clean-my-first-component-with-adopted-stylesheets-preview
-previewTitle: Live adoptedStyleSheets preview
+title: "06 · Modular Web Components (IDE View)"
+previewAddress: browser://06-modular-web-components-preview
+previewTitle: IDE View Web Components Preview
 htmlFileName: index.html
 cssFileName: style.css
 jsFileName: my-first-component.js
 shadowCssFileName: shadow-dom-style.css
 ---
 
-Treća Web Components lekcija uzima isti my first component i čisti njegov unutrašnji styling tok. Umesto da CSS bude zbijen u `<style>` unutar `template.innerHTML`, sada ga držiš u posebnom `shadow-dom-style.css` fajlu, JavaScript ga uvozi kao tekst, puni `CSSStyleSheet` kroz `replaceSync()` i usvaja preko `shadowRoot.adoptedStyleSheets`. Suština lekcije je da CSS može da bude odvojen i od class logike i od template markup-a, dok host API, slotovi i lifecycle ostaju isti.
+Ova lekcija demonstrira novi IDE mode playera. Umesto da svi fajlovi budu vidljivi odjednom, koristiš file browser i automatsko prebacivanje fokusa na fajl koji se trenutno menja, dok ista Web Components komponenta i dalje raste kroz host HTML, component logic, shadow CSS i host CSS.
 
 === lessons/06-modular-web-components/content/documents/files/shadow-dom-style.css.md ===
 # Shadow DOM CSS Rule Blocks
@@ -6065,6 +6229,10 @@ export function buildTemplateJsAtStep(stepNumber) {
     "target": "class-body",
     "lines": [
       "  cacheDom() {",
+      "    if (this.titleElement && this.ctaElement) {",
+      "      return;",
+      "    }",
+      "",
       "    this.shadowRoot.appendChild(myFirstComponentTemplate.content.cloneNode(true));",
       "    this.titleElement = this.shadowRoot.querySelector('.title');",
       "    this.ctaElement = this.shadowRoot.querySelector('.cta');",
@@ -6705,7 +6873,7 @@ import { readLessonMetadata } from '../../animator/lesson-documents/read-lesson-
 const lessonMetadata = readLessonMetadata(lessonDocument, {
   lessonTitle: 'Web Components 1/2 · Light DOM custom element',
   lessonIntro: 'Prva Web Components lekcija objašnjava host tag, registraciju, atribute i prvi render kroz light DOM, bez shadow DOM sloja.',
-  previewAddress: 'browser://build-callout-custom-element-preview',
+  previewAddress: 'browser://build-custom-element-preview',
   previewTitle: 'Live custom element preview',
   htmlFileName: 'index.html',
   cssFileName: 'style.css',
@@ -6794,13 +6962,6 @@ export function buildJsAtStep(stepNumber) {
     <text x="105" y="368" fill="#ffffff" font-family="Inter, Arial, sans-serif" font-size="18" font-weight="700" text-anchor="middle">Nastavi dalje</text>
   </g>
 </svg>
-
-=== lessons/build-custom-element/content/documents/build_callout_custom_element.md ===
-<!-- Generated from the same markdown sources used by the web lesson. -->
-
-# build-callout-custom-element
-
-Prva Web Components lekcija namerno kreće bez shadow DOM-a. Tako prvo vidiš samu osnovu platforme: custom tag sa crticom, registraciju preko `customElements.define`, atribute kao spoljašnji API i prvi render kroz `connectedCallback()`. Tek posle toga prelazimo na shadow DOM, template i slotove.
 
 === lessons/build-custom-element/content/documents/build_custom_element.md ===
 <!-- Generated from the same markdown sources used by the web lesson. -->
@@ -6980,7 +7141,9 @@ Prva Web Components lekcija namerno kreće bez shadow DOM-a. Tako prvo vidiš sa
     "from": "define_element",
     "target": "after-class",
     "lines": [
-      "customElements.define('my-first-component', MyFirstComponent);"
+      "if (!customElements.get('my-first-component')) {",
+      "  customElements.define('my-first-component', MyFirstComponent);",
+      "}"
     ]
   }
 ]
@@ -6989,7 +7152,7 @@ Prva Web Components lekcija namerno kreće bez shadow DOM-a. Tako prvo vidiš sa
 === lessons/build-custom-element/content/documents/files/lesson.sr.md ===
 ---
 title: Web Components 1/2 · Light DOM custom element
-previewAddress: browser://build-callout-custom-element-preview
+previewAddress: browser://build-custom-element-preview
 previewTitle: Live custom element preview
 htmlFileName: index.html
 cssFileName: style.css
@@ -7146,8 +7309,8 @@ export const lessonSteps = [
   describeJsFlowStep(
     'define_element',
     'JS: Registrujemo my-first-component',
-    'Pozivamo `customElements.define(\'my-first-component\', MyFirstComponent)`. Od tog trenutka browser zna kako da upgrade-uje svaki `<my-first-component>` u stvarnu komponentu.',
-    'Registracija je trenutak kada nepoznati tag postaje živi custom element.'
+    'Pre registracije proveravamo `customElements.get(\'my-first-component\')`, pa tek onda unutar guarda pozivamo `customElements.define(...)`. Od tog trenutka browser zna kako da upgrade-uje svaki `<my-first-component>` u stvarnu komponentu.',
+    'Registracija je trenutak kada nepoznati tag postaje živi custom element, a guard nas štiti od duplog define-a pri ponovnom izvršavanju.'
   ),
   ...cssSteps.map(config => describeCssPropertyStep(...config)),
   describeSummaryStep(

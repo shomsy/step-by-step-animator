@@ -78,40 +78,40 @@ lessons/
           lesson.sr.md
           html.timeline.md
           css.rules.md
-  build-callout-custom-element/
-    build-callout-custom-element.lesson.js
+  build-custom-element/
+    build-custom-element.lesson.js
     describe-steps.js
     build-html-at-step.js
     build-css-at-step.js
     build-js-at-step.js
     content/
       assets/
-        callout-custom-element-goal.svg
+        custom-element-goal.svg
       documents/
-        build_callout_custom_element.md
+        build_custom_element.md
         files/
           lesson.sr.md
           html.timeline.md
           css.rules.md
           js.timeline.md
-  build-feature-callout-web-component/
-    build-feature-callout-web-component.lesson.js
+  build-web-component/
+    build-web-component.lesson.js
     describe-steps.js
     build-html-at-step.js
     build-css-at-step.js
     build-js-at-step.js
     content/
       assets/
-        feature-callout-goal.svg
+        web-component-goal.svg
       documents/
-        build_feature_callout_web_component.md
+        build_web_component.md
         files/
           lesson.sr.md
           html.timeline.md
           css.rules.md
           js.timeline.md
-  clean-feature-callout-with-adopted-stylesheets/
-    clean-feature-callout-with-adopted-stylesheets.lesson.js
+  clean-web-component-with-adopted-stylesheets/
+    clean-web-component-with-adopted-stylesheets.lesson.js
     describe-steps.js
     build-html-at-step.js
     build-css-at-step.js
@@ -119,14 +119,34 @@ lessons/
     build-shadow-css-at-step.js
     content/
       assets/
-        feature-callout-goal.svg
+        web-component-goal.svg
       documents/
-        clean_feature_callout_with_adopted_stylesheets.md
+        clean_web_component_with_adopted_stylesheets.md
         files/
           lesson.sr.md
           html.timeline.md
           css.rules.md
           js.timeline.md
+          shadow-dom-style.css.md
+  07-more-separation-of-code/
+    07-more-separation-of-code.lesson.js
+    describe-steps.js
+    build-html-at-step.js
+    build-css-at-step.js
+    build-js-at-step.js
+    build-template-js-at-step.js
+    build-shadow-css-at-step.js
+    content/
+      assets/
+        web-component-goal.svg
+      documents/
+        07_more_separation_of_code.md
+        files/
+          lesson.sr.md
+          html.timeline.md
+          css.rules.md
+          js.timeline.md
+          template-js.timeline.md
           shadow-dom-style.css.md
 ```
 
@@ -197,10 +217,12 @@ content/documents/files/lesson.sr.md
 content/documents/files/html.timeline.md
 content/documents/files/css.rules.md
 content/documents/files/js.timeline.md
+content/documents/files/template-js.timeline.md
 content/documents/files/shadow-dom-style.css.md
 ```
 
 Use markdown for lesson metadata and for the canonical HTML/CSS/JS step DSL.
+When a lesson separates template markup into a dedicated module such as `component.html.js`, use `template-js.timeline.md` as the canonical template JS source and keep `build-template-js-at-step.js` thin as well.
 When a lesson separates inner shadow DOM styles into a fourth editor/download file, use `shadow-dom-style.css.md` as the canonical shadow CSS source and keep `build-shadow-css-at-step.js` thin as well.
 Keep `build-*-at-step.js` files thin; they should parse markdown lesson documents and return derived lines, not re-encode the whole lesson by hand.
 

@@ -54,7 +54,9 @@
     "from": "define_element",
     "target": "after-class",
     "lines": [
-      "customElements.define('my-first-component', MyFirstComponent);"
+      "if (!customElements.get('my-first-component')) {",
+      "  customElements.define('my-first-component', MyFirstComponent);",
+      "}"
     ]
   }
 ]

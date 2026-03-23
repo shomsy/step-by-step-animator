@@ -22,6 +22,7 @@ export function readLessonMetadata(markdown, defaults = {}) {
     htmlFileName: attributes.htmlFileName || defaults.htmlFileName || 'index.html',
     cssFileName: attributes.cssFileName || defaults.cssFileName || 'style.css',
     jsFileName: attributes.jsFileName || defaults.jsFileName || '',
+    templateJsFileName: attributes.templateJsFileName || defaults.templateJsFileName || '',
     shadowCssFileName: attributes.shadowCssFileName || defaults.shadowCssFileName || ''
   };
 }

@@ -1,6 +1,6 @@
 ---
 title: Web Components 1/2 · Light DOM custom element
-previewAddress: browser://build-callout-custom-element-preview
+previewAddress: browser://build-custom-element-preview
 previewTitle: Live custom element preview
 htmlFileName: index.html
 cssFileName: style.css

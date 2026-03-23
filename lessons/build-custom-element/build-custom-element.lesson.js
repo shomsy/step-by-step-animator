@@ -9,7 +9,7 @@ import { readLessonMetadata } from '../../animator/lesson-documents/read-lesson-
 const lessonMetadata = readLessonMetadata(lessonDocument, {
   lessonTitle: 'Web Components 1/2 · Light DOM custom element',
   lessonIntro: 'Prva Web Components lekcija objašnjava host tag, registraciju, atribute i prvi render kroz light DOM, bez shadow DOM sloja.',
-  previewAddress: 'browser://build-callout-custom-element-preview',
+  previewAddress: 'browser://build-custom-element-preview',
   previewTitle: 'Live custom element preview',
   htmlFileName: 'index.html',
   cssFileName: 'style.css',

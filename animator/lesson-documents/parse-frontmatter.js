@@ -1,3 +1,16 @@
+function normalizeFrontmatterValue(rawValue) {
+  const trimmedValue = String(rawValue || '').trim();
+
+  if (
+    (trimmedValue.startsWith('"') && trimmedValue.endsWith('"')) ||
+    (trimmedValue.startsWith("'") && trimmedValue.endsWith("'"))
+  ) {
+    return trimmedValue.slice(1, -1);
+  }
+
+  return trimmedValue;
+}
+
 export function parseFrontmatter(markdown) {
   if (!markdown) {
     return { attributes: {}, body: '' };
@@ -31,7 +44,7 @@ export function parseFrontmatter(markdown) {
       const [, key, rawValue] = keyMatch;
 
       if (rawValue) {
-        attributes[key] = rawValue.trim();
+        attributes[key] = normalizeFrontmatterValue(rawValue);
         activeKey = null;
         return;
       }
@@ -44,7 +57,7 @@ export function parseFrontmatter(markdown) {
     const itemMatch = trimmedLine.match(/^-\s+(.+)$/);
 
     if (itemMatch && activeKey && Array.isArray(attributes[activeKey])) {
-      attributes[activeKey].push(itemMatch[1].trim());
+      attributes[activeKey].push(normalizeFrontmatterValue(itemMatch[1]));
     }
   });
 

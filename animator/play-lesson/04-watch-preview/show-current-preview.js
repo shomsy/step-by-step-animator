@@ -1,15 +1,27 @@
-function composePreviewJavaScript(lesson, currentStepNumber) {
-  if (typeof lesson.buildJsAtStep !== 'function') {
+function escapeRegExp(text) {
+  return String(text).replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+}
+
+function escapeTemplateLiteralText(text) {
+  return String(text)
+    .replace(/\\/g, '\\\\')
+    .replace(/`/g, '\\`')
+    .replace(/\$\{/g, '\\${');
+}
+
+function readShadowCssMarkup(lesson, currentStepNumber) {
+  if (typeof lesson.buildShadowCssAtStep !== 'function') {
     return '';
   }
 
-  const jsMarkup = lesson.buildJsAtStep(currentStepNumber).join('\n');
+  return lesson.buildShadowCssAtStep(currentStepNumber).join('\n');
+}
 
+function inlineShadowCssTextImport(jsMarkup, lesson, shadowCssMarkup) {
   if (typeof lesson.buildShadowCssAtStep !== 'function') {
     return jsMarkup;
   }
 
-  const shadowCssMarkup = lesson.buildShadowCssAtStep(currentStepNumber).join('\n');
   const importPath = `./${lesson.shadowCssFileName || 'shadow-dom-style.css'}?raw`;
   const importLine = `import shadowDomStyleCssText from '${importPath}';`;
 
@@ -20,7 +32,53 @@ function composePreviewJavaScript(lesson, currentStepNumber) {
     );
   }
 
-  return `const shadowDomStyleCssText = ${JSON.stringify(shadowCssMarkup)};\n${jsMarkup}`;
+  return jsMarkup;
+}
+
+function inlineTemplateModule({ lesson, currentStepNumber, jsMarkup, shadowCssMarkup }) {
+  if (typeof lesson.buildTemplateJsAtStep !== 'function') {
+    return jsMarkup;
+  }
+
+  let templateJsMarkup = lesson.buildTemplateJsAtStep(currentStepNumber).join('\n');
+
+  if (!templateJsMarkup.trim()) {
+    return jsMarkup;
+  }
+
+  const templateFileName = lesson.templateJsFileName || 'component.html.js';
+  const exportedTemplateMatch = templateJsMarkup.match(/export const (\w+) = document\.createElement\('template'\);/);
+  const exportedTemplateName = exportedTemplateMatch?.[1] || 'componentTemplate';
+  const shadowCssStyleTag = `<style>${escapeTemplateLiteralText(shadowCssMarkup)}</style>`;
+  const templateImportPattern = new RegExp(
+    `^import\\s+\\{\\s*${escapeRegExp(exportedTemplateName)}\\s*\\}\\s+from\\s+['"]\\./${escapeRegExp(templateFileName)}['"];?\\n?`,
+    'm'
+  );
+
+  templateJsMarkup = templateJsMarkup
+    .replace(/<link rel="stylesheet" href="\.\/[^"]+" \/>/, shadowCssStyleTag)
+    .replace(/\bexport const\b/g, 'const');
+
+  return `${templateJsMarkup}\n\n${jsMarkup.replace(templateImportPattern, '').trimStart()}`.trim();
+}
+
+function composePreviewJavaScript(lesson, currentStepNumber) {
+  if (typeof lesson.buildJsAtStep !== 'function') {
+    return '';
+  }
+
+  const shadowCssMarkup = readShadowCssMarkup(lesson, currentStepNumber);
+  let jsMarkup = lesson.buildJsAtStep(currentStepNumber).join('\n');
+
+  jsMarkup = inlineShadowCssTextImport(jsMarkup, lesson, shadowCssMarkup);
+  jsMarkup = inlineTemplateModule({
+    lesson,
+    currentStepNumber,
+    jsMarkup,
+    shadowCssMarkup
+  });
+
+  return jsMarkup;
 }
 
 function composeLivePreviewDocument(lesson, currentStepNumber) {

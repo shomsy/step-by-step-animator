@@ -122,9 +122,9 @@ lessons/
     build-js-at-step.js
     content/
       assets/
-        feature-callout-goal.svg
+        web-component-goal.svg
       documents/
-        build_feature_callout_web_component.md
+        build_web_component.md
         files/
           lesson.sr.md
           html.timeline.md
@@ -138,9 +138,9 @@ lessons/
     build-js-at-step.js
     content/
       assets/
-        callout-custom-element-goal.svg
+        custom-element-goal.svg
       documents/
-        build_callout_custom_element.md
+        build_custom_element.md
         files/
           lesson.sr.md
           html.timeline.md
@@ -169,14 +169,52 @@ lessons/
     build-shadow-css-at-step.js
     content/
       assets/
-        feature-callout-goal.svg
+        web-component-goal.svg
       documents/
-        clean_feature_callout_with_adopted_stylesheets.md
+        clean_web_component_with_adopted_stylesheets.md
         files/
           lesson.sr.md
           html.timeline.md
           css.rules.md
           js.timeline.md
+          shadow-dom-style.css.md
+  06-modular-web-components/
+    06-modular-web-components.lesson.js
+    describe-steps.js
+    build-html-at-step.js
+    build-css-at-step.js
+    build-js-at-step.js
+    build-shadow-css-at-step.js
+    content/
+      assets/
+        web-component-goal.svg
+      documents/
+        06_modular_web_components.md
+        files/
+          lesson.sr.md
+          html.timeline.md
+          css.rules.md
+          js.timeline.md
+          shadow-dom-style.css.md
+  07-more-separation-of-code/
+    07-more-separation-of-code.lesson.js
+    describe-steps.js
+    build-html-at-step.js
+    build-css-at-step.js
+    build-js-at-step.js
+    build-template-js-at-step.js
+    build-shadow-css-at-step.js
+    content/
+      assets/
+        web-component-goal.svg
+      documents/
+        07_more_separation_of_code.md
+        files/
+          lesson.sr.md
+          html.timeline.md
+          css.rules.md
+          js.timeline.md
+          template-js.timeline.md
           shadow-dom-style.css.md
 ```
 
@@ -198,11 +236,13 @@ Taj file mora da vrati kompletan lesson contract:
 - `htmlFileName`
 - `cssFileName`
 - `jsFileName` kada lekcija zaista ima JavaScript fajl
+- `templateJsFileName` kada lekcija zaista ima poseban template modul kao `component.html.js`
 - `shadowCssFileName` kada lekcija zaista ima poseban shadow DOM CSS fajl
 - `steps`
 - `buildHtmlAtStep`
 - `buildCssAtStep`
 - `buildJsAtStep` kada lekcija traži živi JavaScript u preview-u
+- `buildTemplateJsAtStep` kada lekcija traži poseban template JS editor i download fajl
 - `buildShadowCssAtStep` kada lekcija traži poseban shadow CSS editor i download fajl
 
 Opciona lesson shell polja kada želiš da pokažeš vizuelni cilj i homework:
@@ -229,6 +269,7 @@ feature-name/
         html.timeline.md
         css.rules.md
         js.timeline.md
+        template-js.timeline.md
         shadow-dom-style.css.md
 ```
 
@@ -247,10 +288,11 @@ Pravila:
 - `html.timeline.md` je kanonski source za kumulativni HTML teaching tok
 - `css.rules.md` je kanonski source za CSS rule blokove koji rastu property po property
 - `js.timeline.md` je opcioni kanonski source za kumulativni JavaScript teaching tok
+- `template-js.timeline.md` je opcioni kanonski source za izdvojeni template JS modul kada lekcija prikazuje `component.html.js`
 - `shadow-dom-style.css.md` je opcioni kanonski source za shadow DOM CSS rule blokove kada lekcija odvaja unutrašnji stylesheet u poseban fajl
 - generated book output ide u `content/documents/<lesson_name>.md`
 - generated output se ne uređuje ručno
-- `build-html-at-step.js`, `build-css-at-step.js`, `build-js-at-step.js` i po potrebi `build-shadow-css-at-step.js` ostaju tanki adapteri koji parsiraju markdown DSL i vraćaju linije za dati step
+- `build-html-at-step.js`, `build-css-at-step.js`, `build-js-at-step.js` i po potrebi `build-template-js-at-step.js` i `build-shadow-css-at-step.js` ostaju tanki adapteri koji parsiraju markdown DSL i vraćaju linije za dati step
 
 ### 2.4 Runtime and Entry Rules
 

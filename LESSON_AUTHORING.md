@@ -36,6 +36,7 @@ lessons/
     build-html-at-step.js
     build-css-at-step.js
     build-js-at-step.js
+    build-template-js-at-step.js
     build-shadow-css-at-step.js
     content/
       assets/
@@ -46,6 +47,7 @@ lessons/
           html.timeline.md
           css.rules.md
           js.timeline.md
+          template-js.timeline.md
           shadow-dom-style.css.md
 ```
 
@@ -58,6 +60,7 @@ lessons/
 - povezuje step script
 - povezuje HTML/CSS builder funkcije
 - kada lekcija to traži, povezuje i JS builder funkciju
+- kada lekcija to traži, povezuje i poseban template JS builder
 - kada lekcija to traži, povezuje i poseban shadow CSS builder
 - opciono povezuje referentnu sliku cilja i homework napomene za shell
 
@@ -97,6 +100,14 @@ lessons/
 - ne vraća diff
 - shadow CSS i dalje ide property po property
 
+`build-template-js-at-step.js`
+
+- koristiš ga samo kada lekcija zaista odvaja template markup u poseban JS modul
+- ostaje tanak adapter preko `template-js.timeline.md`
+- vraća kompletan kumulativni template JS za dati step
+- ne vraća diff
+- služi za slučajeve kao `component.html.js`
+
 `content/documents/files/lesson.sr.md`
 
 - drži title, intro i metadata
@@ -115,6 +126,11 @@ lessons/
 
 - drži opcioni JavaScript timeline u fenced `json` formatu
 - koristi se samo kada lekcija zaista ima JS panel i live izvršavanje
+
+`content/documents/files/template-js.timeline.md`
+
+- drži opcioni template JS source u fenced `json` formatu
+- koristi se samo kada lekcija odvaja template markup u poseban modul
 
 `content/documents/files/shadow-dom-style.css.md`
 
@@ -251,6 +267,7 @@ previewTitle: Live feature preview
 htmlFileName: index.html
 cssFileName: style.css
 jsFileName: component.js
+templateJsFileName: component.html.js
 shadowCssFileName: shadow-dom-style.css
 ---
 
@@ -310,6 +327,24 @@ Kratak uvod u lekciju.
       "}",
       "",
       "@@slot:after-class@@"
+    ]
+  }
+]
+```
+````
+
+`template-js.timeline.md`:
+
+````md
+# Template JS Timeline
+
+```json
+[
+  {
+    "from": "template_element_export",
+    "target": "root",
+    "lines": [
+      "export const componentTemplate = document.createElement('template');"
     ]
   }
 ]

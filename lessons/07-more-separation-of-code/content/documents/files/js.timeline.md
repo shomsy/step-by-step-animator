@@ -100,6 +100,10 @@
     "target": "class-body",
     "lines": [
       "  cacheDom() {",
+      "    if (this.titleElement && this.ctaElement) {",
+      "      return;",
+      "    }",
+      "",
       "    this.shadowRoot.appendChild(myFirstComponentTemplate.content.cloneNode(true));",
       "    this.titleElement = this.shadowRoot.querySelector('.title');",
       "    this.ctaElement = this.shadowRoot.querySelector('.cta');",
