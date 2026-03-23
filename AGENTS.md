@@ -16,6 +16,7 @@ Trenutno isporučene lekcije su:
 - `build-top-navigation`
 - `build-callout-custom-element`
 - `build-feature-callout-web-component`
+- `clean-feature-callout-with-adopted-stylesheets`
 
 Svaka nova lekcija mora da koristi isti shell i isti teaching model:
 
@@ -157,6 +158,24 @@ lessons/
           lesson.sr.md
           html.timeline.md
           css.rules.md
+  clean-feature-callout-with-adopted-stylesheets/
+    clean-feature-callout-with-adopted-stylesheets.lesson.js
+    describe-steps.js
+    build-html-at-step.js
+    build-css-at-step.js
+    build-js-at-step.js
+    build-shadow-css-at-step.js
+    content/
+      assets/
+        feature-callout-goal.svg
+      documents/
+        clean_feature_callout_with_adopted_stylesheets.md
+        files/
+          lesson.sr.md
+          html.timeline.md
+          css.rules.md
+          js.timeline.md
+          shadow-dom-style.css.md
 ```
 
 ### 2.2 Lesson Contract
@@ -177,10 +196,12 @@ Taj file mora da vrati kompletan lesson contract:
 - `htmlFileName`
 - `cssFileName`
 - `jsFileName` kada lekcija zaista ima JavaScript fajl
+- `shadowCssFileName` kada lekcija zaista ima poseban shadow DOM CSS fajl
 - `steps`
 - `buildHtmlAtStep`
 - `buildCssAtStep`
 - `buildJsAtStep` kada lekcija traži živi JavaScript u preview-u
+- `buildShadowCssAtStep` kada lekcija traži poseban shadow CSS editor i download fajl
 
 Opciona lesson shell polja kada želiš da pokažeš vizuelni cilj i homework:
 
@@ -206,6 +227,7 @@ feature-name/
         html.timeline.md
         css.rules.md
         js.timeline.md
+        shadow-dom-style.css.md
 ```
 
 Ako lesson ima referentnu sliku cilja, asset ide ovde:
@@ -223,9 +245,10 @@ Pravila:
 - `html.timeline.md` je kanonski source za kumulativni HTML teaching tok
 - `css.rules.md` je kanonski source za CSS rule blokove koji rastu property po property
 - `js.timeline.md` je opcioni kanonski source za kumulativni JavaScript teaching tok
+- `shadow-dom-style.css.md` je opcioni kanonski source za shadow DOM CSS rule blokove kada lekcija odvaja unutrašnji stylesheet u poseban fajl
 - generated book output ide u `content/documents/<lesson_name>.md`
 - generated output se ne uređuje ručno
-- `build-html-at-step.js`, `build-css-at-step.js` i `build-js-at-step.js` ostaju tanki adapteri koji parsiraju markdown DSL i vraćaju linije za dati step
+- `build-html-at-step.js`, `build-css-at-step.js`, `build-js-at-step.js` i po potrebi `build-shadow-css-at-step.js` ostaju tanki adapteri koji parsiraju markdown DSL i vraćaju linije za dati step
 
 ### 2.4 Runtime and Entry Rules
 
@@ -415,6 +438,12 @@ Za nju i dalje važe posebna teaching pravila:
 - stvarni live preview koji izvršava isti kumulativni JavaScript
 - Web Components teaching tok kroz custom element, shadow DOM, slot i lifecycle
 
+`clean-feature-callout-with-adopted-stylesheets` zatvara cleanup priču:
+
+- četvrti, opcioni shadow CSS fajl u middle panelu
+- JavaScript uvozi `shadow-dom-style.css` kao tekst preko `?raw`
+- shadow root usvaja odvojen stylesheet preko `adoptedStyleSheets`
+
 ### 3.3 How To Add A New Lesson
 
 Za novu lekciju:
@@ -429,8 +458,10 @@ Za novu lekciju:
 8. dodaj `content/documents/files/html.timeline.md`
 9. dodaj `content/documents/files/css.rules.md`
 10. kada lekcija traži JavaScript, dodaj `content/documents/files/js.timeline.md`
-11. po potrebi dodaj `content/assets/feature-goal.svg`
-12. registruj lekciju u `lessons/register-lessons.js`
+11. kada lekcija traži poseban shadow CSS fajl, dodaj `build-shadow-css-at-step.js`
+12. kada lekcija traži poseban shadow CSS fajl, dodaj `content/documents/files/shadow-dom-style.css.md`
+13. po potrebi dodaj `content/assets/feature-goal.svg`
+14. registruj lekciju u `lessons/register-lessons.js`
 
 Ne kopirati player runtime iz `animator/play-lesson/`.
 Nova lekcija treba da doda samo svoj contract i svoj content.

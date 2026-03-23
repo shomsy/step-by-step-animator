@@ -50,15 +50,18 @@ export function showGrowingCode({
   currentStepNumber,
   buildHtmlAtStep,
   buildCssAtStep,
-  buildJsAtStep
+  buildJsAtStep,
+  buildShadowCssAtStep
 }) {
   const focusHtmlNeedles = Array.isArray(step.focusHtmlNeedles) ? step.focusHtmlNeedles : [];
 
   showCodePane(lessonParts.htmlCodePane, buildHtmlAtStep, currentStepNumber, 'html', focusHtmlNeedles);
   showCodePane(lessonParts.cssCodePane, buildCssAtStep, currentStepNumber, 'css');
   showCodePane(lessonParts.jsCodePane, buildJsAtStep, currentStepNumber, 'js');
+  showCodePane(lessonParts.shadowCssCodePane, buildShadowCssAtStep, currentStepNumber, 'css');
   lessonParts.currentStepBadge.textContent = `Prizor ${currentStepNumber + 1}`;
   scrollToAddedLine(lessonParts.htmlCodePane);
   scrollToAddedLine(lessonParts.cssCodePane);
   scrollToAddedLine(lessonParts.jsCodePane);
+  scrollToAddedLine(lessonParts.shadowCssCodePane);
 }

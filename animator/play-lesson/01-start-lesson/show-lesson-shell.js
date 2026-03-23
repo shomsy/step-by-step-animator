@@ -35,6 +35,8 @@ function showLessonGoal({ lessonParts, lesson }) {
 
 export function showLessonShell({ ownerDocument, lessonParts, lesson }) {
   const hasJavaScriptFile = typeof lesson.buildJsAtStep === 'function';
+  const hasShadowCssFile = typeof lesson.buildShadowCssAtStep === 'function';
+  const paneCount = 2 + (hasJavaScriptFile ? 1 : 0) + (hasShadowCssFile ? 1 : 0);
 
   lessonParts.lessonHeading.textContent = lesson.lessonTitle;
 
@@ -48,13 +50,21 @@ export function showLessonShell({ ownerDocument, lessonParts, lesson }) {
   lessonParts.htmlFileLabel.textContent = lesson.htmlFileName;
   lessonParts.cssFileLabel.textContent = lesson.cssFileName;
   lessonParts.jsPane.hidden = !hasJavaScriptFile;
-  lessonParts.liveEditorBody.dataset.paneCount = hasJavaScriptFile ? '3' : '2';
+  lessonParts.shadowCssPane.hidden = !hasShadowCssFile;
+  lessonParts.liveEditorBody.dataset.paneCount = String(paneCount);
 
   if (hasJavaScriptFile) {
     lessonParts.jsFileLabel.textContent = lesson.jsFileName || 'component.js';
   } else {
     lessonParts.jsFileLabel.textContent = 'component.js';
     lessonParts.jsCodePane.innerHTML = '';
+  }
+
+  if (hasShadowCssFile) {
+    lessonParts.shadowCssFileLabel.textContent = lesson.shadowCssFileName || 'shadow-dom-style.css';
+  } else {
+    lessonParts.shadowCssFileLabel.textContent = 'shadow-dom-style.css';
+    lessonParts.shadowCssCodePane.innerHTML = '';
   }
 
   lessonParts.livePreviewFrame.title = lesson.previewTitle;

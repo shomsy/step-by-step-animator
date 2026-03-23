@@ -55,9 +55,12 @@ export function findLessonParts(ownerDocument) {
     cssCodePane: readRequiredElement(ownerDocument, 'liveCssPane'),
     jsPane: readRequiredElement(ownerDocument, 'jsPane'),
     jsCodePane: readRequiredElement(ownerDocument, 'liveJsPane'),
+    shadowCssPane: readRequiredElement(ownerDocument, 'shadowCssPane'),
+    shadowCssCodePane: readRequiredElement(ownerDocument, 'liveShadowCssPane'),
     htmlFileLabel: readRequiredElement(ownerDocument, 'htmlFileLabel'),
     cssFileLabel: readRequiredElement(ownerDocument, 'cssFileLabel'),
     jsFileLabel: readRequiredElement(ownerDocument, 'jsFileLabel'),
+    shadowCssFileLabel: readRequiredElement(ownerDocument, 'shadowCssFileLabel'),
     currentStepBadge: readRequiredElement(ownerDocument, 'liveStepBadge'),
     lessonPanelButtons: [...ownerDocument.querySelectorAll('.tab-btn')]
   };

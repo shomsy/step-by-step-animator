@@ -118,6 +118,7 @@ Trenutno isporučene lekcije su:
 - `build-top-navigation`
 - `build-callout-custom-element`
 - `build-feature-callout-web-component`
+- `clean-feature-callout-with-adopted-stylesheets`
 
 Svaka nova lekcija mora da koristi isti shell i isti teaching model:
 
@@ -259,6 +260,24 @@ lessons/
           lesson.sr.md
           html.timeline.md
           css.rules.md
+  clean-feature-callout-with-adopted-stylesheets/
+    clean-feature-callout-with-adopted-stylesheets.lesson.js
+    describe-steps.js
+    build-html-at-step.js
+    build-css-at-step.js
+    build-js-at-step.js
+    build-shadow-css-at-step.js
+    content/
+      assets/
+        feature-callout-goal.svg
+      documents/
+        clean_feature_callout_with_adopted_stylesheets.md
+        files/
+          lesson.sr.md
+          html.timeline.md
+          css.rules.md
+          js.timeline.md
+          shadow-dom-style.css.md
 ```
 
 ### 2.2 Lesson Contract
@@ -279,10 +298,12 @@ Taj file mora da vrati kompletan lesson contract:
 - `htmlFileName`
 - `cssFileName`
 - `jsFileName` kada lekcija zaista ima JavaScript fajl
+- `shadowCssFileName` kada lekcija zaista ima poseban shadow DOM CSS fajl
 - `steps`
 - `buildHtmlAtStep`
 - `buildCssAtStep`
 - `buildJsAtStep` kada lekcija traži živi JavaScript u preview-u
+- `buildShadowCssAtStep` kada lekcija traži poseban shadow CSS editor i download fajl
 
 Opciona lesson shell polja kada želiš da pokažeš vizuelni cilj i homework:
 
@@ -308,6 +329,7 @@ feature-name/
         html.timeline.md
         css.rules.md
         js.timeline.md
+        shadow-dom-style.css.md
 ```
 
 Ako lesson ima referentnu sliku cilja, asset ide ovde:
@@ -325,9 +347,10 @@ Pravila:
 - `html.timeline.md` je kanonski source za kumulativni HTML teaching tok
 - `css.rules.md` je kanonski source za CSS rule blokove koji rastu property po property
 - `js.timeline.md` je opcioni kanonski source za kumulativni JavaScript teaching tok
+- `shadow-dom-style.css.md` je opcioni kanonski source za shadow DOM CSS rule blokove kada lekcija odvaja unutrašnji stylesheet u poseban fajl
 - generated book output ide u `content/documents/<lesson_name>.md`
 - generated output se ne uređuje ručno
-- `build-html-at-step.js`, `build-css-at-step.js` i `build-js-at-step.js` ostaju tanki adapteri koji parsiraju markdown DSL i vraćaju linije za dati step
+- `build-html-at-step.js`, `build-css-at-step.js`, `build-js-at-step.js` i po potrebi `build-shadow-css-at-step.js` ostaju tanki adapteri koji parsiraju markdown DSL i vraćaju linije za dati step
 
 ### 2.4 Runtime and Entry Rules
 
@@ -517,6 +540,12 @@ Za nju i dalje važe posebna teaching pravila:
 - stvarni live preview koji izvršava isti kumulativni JavaScript
 - Web Components teaching tok kroz custom element, shadow DOM, slot i lifecycle
 
+`clean-feature-callout-with-adopted-stylesheets` zatvara cleanup priču:
+
+- četvrti, opcioni shadow CSS fajl u middle panelu
+- JavaScript uvozi `shadow-dom-style.css` kao tekst preko `?raw`
+- shadow root usvaja odvojen stylesheet preko `adoptedStyleSheets`
+
 ### 3.3 How To Add A New Lesson
 
 Za novu lekciju:
@@ -531,8 +560,10 @@ Za novu lekciju:
 8. dodaj `content/documents/files/html.timeline.md`
 9. dodaj `content/documents/files/css.rules.md`
 10. kada lekcija traži JavaScript, dodaj `content/documents/files/js.timeline.md`
-11. po potrebi dodaj `content/assets/feature-goal.svg`
-12. registruj lekciju u `lessons/register-lessons.js`
+11. kada lekcija traži poseban shadow CSS fajl, dodaj `build-shadow-css-at-step.js`
+12. kada lekcija traži poseban shadow CSS fajl, dodaj `content/documents/files/shadow-dom-style.css.md`
+13. po potrebi dodaj `content/assets/feature-goal.svg`
+14. registruj lekciju u `lessons/register-lessons.js`
 
 Ne kopirati player runtime iz `animator/play-lesson/`.
 Nova lekcija treba da doda samo svoj contract i svoj content.
@@ -650,6 +681,24 @@ lessons/
           html.timeline.md
           css.rules.md
           js.timeline.md
+  clean-feature-callout-with-adopted-stylesheets/
+    clean-feature-callout-with-adopted-stylesheets.lesson.js
+    describe-steps.js
+    build-html-at-step.js
+    build-css-at-step.js
+    build-js-at-step.js
+    build-shadow-css-at-step.js
+    content/
+      assets/
+        feature-callout-goal.svg
+      documents/
+        clean_feature_callout_with_adopted_stylesheets.md
+        files/
+          lesson.sr.md
+          html.timeline.md
+          css.rules.md
+          js.timeline.md
+          shadow-dom-style.css.md
 ```
 
 ## Naming Rules
@@ -719,9 +768,11 @@ content/documents/files/lesson.sr.md
 content/documents/files/html.timeline.md
 content/documents/files/css.rules.md
 content/documents/files/js.timeline.md
+content/documents/files/shadow-dom-style.css.md
 ```
 
 Use markdown for lesson metadata and for the canonical HTML/CSS/JS step DSL.
+When a lesson separates inner shadow DOM styles into a fourth editor/download file, use `shadow-dom-style.css.md` as the canonical shadow CSS source and keep `build-shadow-css-at-step.js` thin as well.
 Keep `build-*-at-step.js` files thin; they should parse markdown lesson documents and return derived lines, not re-encode the whole lesson by hand.
 
 ### 4. Every other file owns one clear responsibility
@@ -880,6 +931,7 @@ lessons/
     build-html-at-step.js
     build-css-at-step.js
     build-js-at-step.js
+    build-shadow-css-at-step.js
     content/
       assets/
         feature-goal.svg
@@ -889,6 +941,7 @@ lessons/
           html.timeline.md
           css.rules.md
           js.timeline.md
+          shadow-dom-style.css.md
 ```
 
 ## 3. Šta svaki fajl radi
@@ -900,6 +953,7 @@ lessons/
 - povezuje step script
 - povezuje HTML/CSS builder funkcije
 - kada lekcija to traži, povezuje i JS builder funkciju
+- kada lekcija to traži, povezuje i poseban shadow CSS builder
 - opciono povezuje referentnu sliku cilja i homework napomene za shell
 
 `describe-steps.js`
@@ -930,6 +984,14 @@ lessons/
 - ne vraća diff
 - JS mora da raste akciju po akciju i da ostane izvršiv na svakom koraku
 
+`build-shadow-css-at-step.js`
+
+- koristiš ga samo kada lekcija zaista odvaja shadow DOM CSS u poseban fajl
+- ostaje tanak adapter preko `shadow-dom-style.css.md`
+- vraća kompletan kumulativni shadow CSS za dati step
+- ne vraća diff
+- shadow CSS i dalje ide property po property
+
 `content/documents/files/lesson.sr.md`
 
 - drži title, intro i metadata
@@ -948,6 +1010,11 @@ lessons/
 
 - drži opcioni JavaScript timeline u fenced `json` formatu
 - koristi se samo kada lekcija zaista ima JS panel i live izvršavanje
+
+`content/documents/files/shadow-dom-style.css.md`
+
+- drži opcioni shadow DOM CSS source u fenced `json` formatu
+- koristi se samo kada lekcija zaista ima odvojen shadow CSS fajl i četvrti editor panel
 
 `content/assets/feature-goal.svg`
 
@@ -1079,6 +1146,7 @@ previewTitle: Live feature preview
 htmlFileName: index.html
 cssFileName: style.css
 jsFileName: component.js
+shadowCssFileName: shadow-dom-style.css
 ---
 
 Kratak uvod u lekciju.
@@ -1137,6 +1205,23 @@ Kratak uvod u lekciju.
       "}",
       "",
       "@@slot:after-class@@"
+    ]
+  }
+]
+```
+````
+
+`shadow-dom-style.css.md`:
+
+````md
+# Shadow DOM CSS Rule Blocks
+
+```json
+[
+  {
+    "header": ".card {",
+    "entries": [
+      { "from": "card_display", "line": "display: grid;" }
     ]
   }
 ]
@@ -1547,7 +1632,8 @@ export function readLessonMetadata(markdown, defaults = {}) {
     previewTitle: attributes.previewTitle || defaults.previewTitle || '',
     htmlFileName: attributes.htmlFileName || defaults.htmlFileName || 'index.html',
     cssFileName: attributes.cssFileName || defaults.cssFileName || 'style.css',
-    jsFileName: attributes.jsFileName || defaults.jsFileName || ''
+    jsFileName: attributes.jsFileName || defaults.jsFileName || '',
+    shadowCssFileName: attributes.shadowCssFileName || defaults.shadowCssFileName || ''
   };
 }
 
@@ -1980,9 +2066,12 @@ export function findLessonParts(ownerDocument) {
     cssCodePane: readRequiredElement(ownerDocument, 'liveCssPane'),
     jsPane: readRequiredElement(ownerDocument, 'jsPane'),
     jsCodePane: readRequiredElement(ownerDocument, 'liveJsPane'),
+    shadowCssPane: readRequiredElement(ownerDocument, 'shadowCssPane'),
+    shadowCssCodePane: readRequiredElement(ownerDocument, 'liveShadowCssPane'),
     htmlFileLabel: readRequiredElement(ownerDocument, 'htmlFileLabel'),
     cssFileLabel: readRequiredElement(ownerDocument, 'cssFileLabel'),
     jsFileLabel: readRequiredElement(ownerDocument, 'jsFileLabel'),
+    shadowCssFileLabel: readRequiredElement(ownerDocument, 'shadowCssFileLabel'),
     currentStepBadge: readRequiredElement(ownerDocument, 'liveStepBadge'),
     lessonPanelButtons: [...ownerDocument.querySelectorAll('.tab-btn')]
   };
@@ -2026,6 +2115,8 @@ function showLessonGoal({ lessonParts, lesson }) {
 
 export function showLessonShell({ ownerDocument, lessonParts, lesson }) {
   const hasJavaScriptFile = typeof lesson.buildJsAtStep === 'function';
+  const hasShadowCssFile = typeof lesson.buildShadowCssAtStep === 'function';
+  const paneCount = 2 + (hasJavaScriptFile ? 1 : 0) + (hasShadowCssFile ? 1 : 0);
 
   lessonParts.lessonHeading.textContent = lesson.lessonTitle;
 
@@ -2039,13 +2130,21 @@ export function showLessonShell({ ownerDocument, lessonParts, lesson }) {
   lessonParts.htmlFileLabel.textContent = lesson.htmlFileName;
   lessonParts.cssFileLabel.textContent = lesson.cssFileName;
   lessonParts.jsPane.hidden = !hasJavaScriptFile;
-  lessonParts.liveEditorBody.dataset.paneCount = hasJavaScriptFile ? '3' : '2';
+  lessonParts.shadowCssPane.hidden = !hasShadowCssFile;
+  lessonParts.liveEditorBody.dataset.paneCount = String(paneCount);
 
   if (hasJavaScriptFile) {
     lessonParts.jsFileLabel.textContent = lesson.jsFileName || 'component.js';
   } else {
     lessonParts.jsFileLabel.textContent = 'component.js';
     lessonParts.jsCodePane.innerHTML = '';
+  }
+
+  if (hasShadowCssFile) {
+    lessonParts.shadowCssFileLabel.textContent = lesson.shadowCssFileName || 'shadow-dom-style.css';
+  } else {
+    lessonParts.shadowCssFileLabel.textContent = 'shadow-dom-style.css';
+    lessonParts.shadowCssCodePane.innerHTML = '';
   }
 
   lessonParts.livePreviewFrame.title = lesson.previewTitle;
@@ -2276,26 +2375,52 @@ export function showGrowingCode({
   currentStepNumber,
   buildHtmlAtStep,
   buildCssAtStep,
-  buildJsAtStep
+  buildJsAtStep,
+  buildShadowCssAtStep
 }) {
   const focusHtmlNeedles = Array.isArray(step.focusHtmlNeedles) ? step.focusHtmlNeedles : [];
 
   showCodePane(lessonParts.htmlCodePane, buildHtmlAtStep, currentStepNumber, 'html', focusHtmlNeedles);
   showCodePane(lessonParts.cssCodePane, buildCssAtStep, currentStepNumber, 'css');
   showCodePane(lessonParts.jsCodePane, buildJsAtStep, currentStepNumber, 'js');
+  showCodePane(lessonParts.shadowCssCodePane, buildShadowCssAtStep, currentStepNumber, 'css');
   lessonParts.currentStepBadge.textContent = `Prizor ${currentStepNumber + 1}`;
   scrollToAddedLine(lessonParts.htmlCodePane);
   scrollToAddedLine(lessonParts.cssCodePane);
   scrollToAddedLine(lessonParts.jsCodePane);
+  scrollToAddedLine(lessonParts.shadowCssCodePane);
 }
 
 === animator/play-lesson/04-watch-preview/show-current-preview.js ===
+function composePreviewJavaScript(lesson, currentStepNumber) {
+  if (typeof lesson.buildJsAtStep !== 'function') {
+    return '';
+  }
+
+  const jsMarkup = lesson.buildJsAtStep(currentStepNumber).join('\n');
+
+  if (typeof lesson.buildShadowCssAtStep !== 'function') {
+    return jsMarkup;
+  }
+
+  const shadowCssMarkup = lesson.buildShadowCssAtStep(currentStepNumber).join('\n');
+  const importPath = `./${lesson.shadowCssFileName || 'shadow-dom-style.css'}?raw`;
+  const importLine = `import shadowDomStyleCssText from '${importPath}';`;
+
+  if (jsMarkup.includes(importLine)) {
+    return jsMarkup.replace(
+      importLine,
+      `const shadowDomStyleCssText = ${JSON.stringify(shadowCssMarkup)};`
+    );
+  }
+
+  return `const shadowDomStyleCssText = ${JSON.stringify(shadowCssMarkup)};\n${jsMarkup}`;
+}
+
 function composeLivePreviewDocument(lesson, currentStepNumber) {
   const htmlMarkup = lesson.buildHtmlAtStep(currentStepNumber).join('\n');
   const cssMarkup = lesson.buildCssAtStep(currentStepNumber).join('\n');
-  const jsMarkup = typeof lesson.buildJsAtStep === 'function'
-    ? lesson.buildJsAtStep(currentStepNumber).join('\n')
-    : '';
+  const jsMarkup = composePreviewJavaScript(lesson, currentStepNumber);
   const cssBlock = cssMarkup ? `<style>${cssMarkup}</style>` : '';
   const jsBlock = jsMarkup ? `<script>${jsMarkup}<\/script>` : '';
 
@@ -2349,6 +2474,9 @@ export function downloadLessonFiles({ lesson }) {
   const jsCode = typeof lesson.buildJsAtStep === 'function'
     ? lesson.buildJsAtStep(finalStep).join('\n')
     : '';
+  const shadowCssCode = typeof lesson.buildShadowCssAtStep === 'function'
+    ? lesson.buildShadowCssAtStep(finalStep).join('\n')
+    : '';
 
   triggerFileDownload(lesson.htmlFileName, 'text/html', htmlCode);
 
@@ -2357,12 +2485,26 @@ export function downloadLessonFiles({ lesson }) {
   }, 500);
 
   if (!jsCode) {
+    if (shadowCssCode) {
+      window.setTimeout(() => {
+        triggerFileDownload(lesson.shadowCssFileName || 'shadow-dom-style.css', 'text/css', shadowCssCode);
+      }, 1000);
+    }
+
     return;
   }
 
   window.setTimeout(() => {
     triggerFileDownload(lesson.jsFileName || 'component.js', 'text/javascript', jsCode);
   }, 1000);
+
+  if (!shadowCssCode) {
+    return;
+  }
+
+  window.setTimeout(() => {
+    triggerFileDownload(lesson.shadowCssFileName || 'shadow-dom-style.css', 'text/css', shadowCssCode);
+  }, 1500);
 }
 
 === animator/play-lesson/choose-theme/choose-theme.js ===
@@ -2773,6 +2915,11 @@ body { padding: 24px 24px 24px 16px; }
   grid-template-rows: minmax(0, 1fr) minmax(0, 1fr) minmax(0, 1fr);
 }
 
+.live-editor-body[data-pane-count="4"] {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  grid-template-rows: repeat(2, minmax(0, 1fr));
+}
+
 .live-pane {
   min-height: 0;
   display: flex;
@@ -2780,6 +2927,18 @@ body { padding: 24px 24px 24px 16px; }
 }
 
 .live-pane + .live-pane {
+  border-top: 1px solid var(--border);
+}
+
+.live-editor-body[data-pane-count="4"] .live-pane + .live-pane {
+  border-top: 0;
+}
+
+.live-editor-body[data-pane-count="4"] .live-pane:nth-child(2n) {
+  border-left: 1px solid var(--border);
+}
+
+.live-editor-body[data-pane-count="4"] .live-pane:nth-child(n + 3) {
   border-top: 1px solid var(--border);
 }
 
@@ -3948,7 +4107,8 @@ export function playLesson({ ownerDocument, ownerLocation, ownerWindow, lesson, 
       currentStepNumber: lessonProgress.currentStepNumber,
       buildHtmlAtStep: lesson.buildHtmlAtStep,
       buildCssAtStep: lesson.buildCssAtStep,
-      buildJsAtStep: lesson.buildJsAtStep
+      buildJsAtStep: lesson.buildJsAtStep,
+      buildShadowCssAtStep: lesson.buildShadowCssAtStep
     });
 
     savedSteps.showSavedStepList(lessonProgress.currentStepNumber);
@@ -4249,7 +4409,7 @@ export function writeSavedStepNumbers({ lessonId, savedStepNumbers }) {
       <div class="live-editor-head">
         <div class="live-editor-copy">
           <h2>Ekran editora</h2>
-          <p>Kumulativni HTML, CSS i po potrebi JS fajlovi popunjavaju se liniju po liniju, kao da gledaš live tutorijal preko share screen-a.</p>
+          <p>Kumulativni HTML, CSS i po potrebi JS ili shadow CSS fajlovi popunjavaju se liniju po liniju, kao da gledaš live tutorijal preko share screen-a.</p>
         </div>
         <span class="live-editor-step" id="liveStepBadge">Prizor 1</span>
       </div>
@@ -4277,6 +4437,14 @@ export function writeSavedStepNumbers({ lessonId, savedStepNumbers }) {
             <span>Novo ponašanje istaknuto liniju po liniju</span>
           </div>
           <div class="live-code-scroll" id="liveJsPane"></div>
+        </div>
+
+        <div class="live-pane" id="shadowCssPane" hidden>
+          <div class="live-pane-head">
+            <span id="shadowCssFileLabel">shadow-dom-style.css</span>
+            <span>Shadow DOM CSS raste property po property</span>
+          </div>
+          <div class="live-code-scroll" id="liveShadowCssPane"></div>
         </div>
       </div>
     </section>
@@ -7146,10 +7314,27 @@ export function buildJsAtStep(stepNumber) {
   });
 }
 
+=== lessons/clean-feature-callout-with-adopted-stylesheets/build-shadow-css-at-step.js ===
+import shadowCssRulesDocument from './content/documents/files/shadow-dom-style.css.md?raw';
+import { buildLinesFromRuleBlocks } from '../../animator/lesson-documents/build-lines-from-rule-blocks.js';
+import { readRuleBlocks } from '../../animator/lesson-documents/read-rule-blocks.js';
+import { stepNumberById } from './describe-steps.js';
+
+const shadowCssRuleBlocks = readRuleBlocks(shadowCssRulesDocument);
+
+export function buildShadowCssAtStep(stepNumber) {
+  return buildLinesFromRuleBlocks({
+    ruleBlocks: shadowCssRuleBlocks,
+    stepNumberById,
+    stepNumber
+  });
+}
+
 === lessons/clean-feature-callout-with-adopted-stylesheets/clean-feature-callout-with-adopted-stylesheets.lesson.js ===
 import { buildCssAtStep } from './build-css-at-step.js';
 import { buildHtmlAtStep } from './build-html-at-step.js';
 import { buildJsAtStep } from './build-js-at-step.js';
+import { buildShadowCssAtStep } from './build-shadow-css-at-step.js';
 import { lessonSteps } from './describe-steps.js';
 import lessonDocument from './content/documents/files/lesson.sr.md?raw';
 import goalImage from './content/assets/feature-callout-goal.svg';
@@ -7157,12 +7342,13 @@ import { readLessonMetadata } from '../../animator/lesson-documents/read-lesson-
 
 const lessonMetadata = readLessonMetadata(lessonDocument, {
   lessonTitle: "Web Components 3/3 · Now Let's Clean The Mess",
-  lessonIntro: 'Treća Web Components lekcija čisti stilsku priču komponente: CSS više ne živi u template markup-u, nego u constructed stylesheet-u koji shadow root usvaja preko adoptedStyleSheets.',
+  lessonIntro: 'Treća Web Components lekcija čisti stilsku priču komponente: CSS više ne živi ni u template markup-u ni u velikom JS string-u, nego u posebnom shadow CSS fajlu koji JavaScript uvozi kao tekst i usvaja preko adoptedStyleSheets.',
   previewAddress: 'browser://clean-feature-callout-with-adopted-stylesheets-preview',
   previewTitle: 'Live adoptedStyleSheets preview',
   htmlFileName: 'index.html',
   cssFileName: 'style.css',
-  jsFileName: 'feature-callout.js'
+  jsFileName: 'feature-callout.js',
+  shadowCssFileName: 'shadow-dom-style.css'
 });
 
 export const cleanFeatureCalloutWithAdoptedStylesheetsLesson = {
@@ -7175,14 +7361,16 @@ export const cleanFeatureCalloutWithAdoptedStylesheetsLesson = {
   htmlFileName: lessonMetadata.htmlFileName,
   cssFileName: lessonMetadata.cssFileName,
   jsFileName: lessonMetadata.jsFileName,
+  shadowCssFileName: lessonMetadata.shadowCssFileName,
   goalTitle: 'Šta gradimo u ovoj lekciji',
   goalImageSrc: goalImage,
   goalImageAlt: 'Referentna slika tamnog feature callout card Web Component-a na svetloj pozadini, sa badge oznakom, velikim naslovom, opisom i CTA dugmetom.',
-  goalImageCaption: 'Ovo je cleanup korak: ista komponenta ostaje ista spolja, ali CSS više ne živi u template string-u, već u posebnom stylesheet sloju koji shadow root usvaja.',
+  goalImageCaption: 'Ovo je cleanup korak: ista komponenta ostaje ista spolja, ali CSS više ne živi u template string-u, već u posebnom `shadow-dom-style.css` sloju koji shadow root usvaja.',
   steps: lessonSteps,
   buildHtmlAtStep,
   buildCssAtStep,
-  buildJsAtStep
+  buildJsAtStep,
+  buildShadowCssAtStep
 };
 
 === lessons/clean-feature-callout-with-adopted-stylesheets/content/assets/feature-callout-goal.svg ===
@@ -7221,7 +7409,7 @@ export const cleanFeatureCalloutWithAdoptedStylesheetsLesson = {
 
 # clean-feature-callout-with-adopted-stylesheets
 
-Treća Web Components lekcija uzima isti feature callout i čisti njegov unutrašnji styling tok. Umesto da CSS bude zbijen u `<style>` unutar `template.innerHTML`, sada ga izdvajaš u `CSSStyleSheet`, puniš kroz `replaceSync()` i usvajaš preko `shadowRoot.adoptedStyleSheets`. Suština lekcije je da CSS može da bude odvojen od class logike i od template markup-a, dok host API, slotovi i lifecycle ostaju isti.
+Treća Web Components lekcija uzima isti feature callout i čisti njegov unutrašnji styling tok. Umesto da CSS bude zbijen u `<style>` unutar `template.innerHTML`, sada ga držiš u posebnom `shadow-dom-style.css` fajlu, JavaScript ga uvozi kao tekst, puni `CSSStyleSheet` kroz `replaceSync()` i usvaja preko `shadowRoot.adoptedStyleSheets`. Suština lekcije je da CSS može da bude odvojen i od class logike i od template markup-a, dok host API, slotovi i lifecycle ostaju isti.
 
 === lessons/clean-feature-callout-with-adopted-stylesheets/content/documents/files/css.rules.md ===
 # CSS Rule Blocks
@@ -7311,6 +7499,14 @@ Treća Web Components lekcija uzima isti feature callout i čisti njegov unutra�
 ```json
 [
   {
+    "from": "shadow_css_import",
+    "target": "root",
+    "lines": [
+      "import shadowDomStyleCssText from './shadow-dom-style.css?raw';",
+      ""
+    ]
+  },
+  {
     "from": "template_declaration",
     "target": "root",
     "lines": [
@@ -7332,419 +7528,8 @@ Treća Web Components lekcija uzima isti feature callout i čisti njegov unutra�
     "target": "after-stylesheet-declaration",
     "lines": [
       "",
-      "featureCalloutStyles.replaceSync(`",
-      "@@slot:stylesheet-style-rules@@",
-      "`);",
+      "featureCalloutStyles.replaceSync(shadowDomStyleCssText);",
       "@@slot:after-stylesheet-replace-sync@@"
-    ]
-  },
-  {
-    "from": "host_font",
-    "target": "stylesheet-style-rules",
-    "lines": [
-      ":host {",
-      "  font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, \"Segoe UI\", sans-serif;",
-      "  @@slot:host-style-body@@",
-      "}"
-    ]
-  },
-  {
-    "from": "host_color",
-    "target": "host-style-body",
-    "lines": [
-      "  color: var(--callout-text, #e2e8f0);"
-    ]
-  },
-  {
-    "from": "card_outline",
-    "target": "stylesheet-style-rules",
-    "lines": [
-      "",
-      ".card {",
-      "  outline: 1px dashed #38bdf8;",
-      "  @@slot:card-style-body@@",
-      "  @@slot:card-summary-comment@@",
-      "}"
-    ]
-  },
-  {
-    "from": "card_display",
-    "target": "card-style-body",
-    "lines": [
-      "  display: grid;"
-    ]
-  },
-  {
-    "from": "card_gap",
-    "target": "card-style-body",
-    "lines": [
-      "  gap: 16px;"
-    ]
-  },
-  {
-    "from": "card_padding",
-    "target": "card-style-body",
-    "lines": [
-      "  padding: 24px;"
-    ]
-  },
-  {
-    "from": "card_radius",
-    "target": "card-style-body",
-    "lines": [
-      "  border-radius: 28px;"
-    ]
-  },
-  {
-    "from": "card_border",
-    "target": "card-style-body",
-    "lines": [
-      "  border: 1px solid var(--callout-border, rgba(148,163,184,0.24));"
-    ]
-  },
-  {
-    "from": "card_background",
-    "target": "card-style-body",
-    "lines": [
-      "  background: linear-gradient(",
-      "    180deg,",
-      "    var(--callout-surface, rgba(15, 23, 42, 0.98)),",
-      "    var(--callout-surface-alt, rgba(15, 23, 42, 0.92))",
-      "  );"
-    ]
-  },
-  {
-    "from": "card_shadow",
-    "target": "card-style-body",
-    "lines": [
-      "  box-shadow: var(--callout-shadow, 0 26px 60px rgba(15, 23, 42, 0.24));"
-    ]
-  },
-  {
-    "from": "card_summary",
-    "target": "card-summary-comment",
-    "lines": [
-      "  /* helper outline removed in final .card summary */"
-    ]
-  },
-  {
-    "from": "eyebrow_outline",
-    "target": "stylesheet-style-rules",
-    "lines": [
-      "",
-      ".eyebrow {",
-      "  outline: 1px dotted #facc15;",
-      "  @@slot:eyebrow-style-body@@",
-      "  @@slot:eyebrow-summary-comment@@",
-      "}"
-    ]
-  },
-  {
-    "from": "eyebrow_display",
-    "target": "eyebrow-style-body",
-    "lines": [
-      "  display: inline-flex;"
-    ]
-  },
-  {
-    "from": "eyebrow_align_items",
-    "target": "eyebrow-style-body",
-    "lines": [
-      "  align-items: center;"
-    ]
-  },
-  {
-    "from": "eyebrow_justify_content",
-    "target": "eyebrow-style-body",
-    "lines": [
-      "  justify-content: center;"
-    ]
-  },
-  {
-    "from": "eyebrow_width",
-    "target": "eyebrow-style-body",
-    "lines": [
-      "  width: fit-content;"
-    ]
-  },
-  {
-    "from": "eyebrow_padding",
-    "target": "eyebrow-style-body",
-    "lines": [
-      "  padding: 8px 12px;"
-    ]
-  },
-  {
-    "from": "eyebrow_radius",
-    "target": "eyebrow-style-body",
-    "lines": [
-      "  border-radius: 999px;"
-    ]
-  },
-  {
-    "from": "eyebrow_background",
-    "target": "eyebrow-style-body",
-    "lines": [
-      "  background: rgba(56,189,248,0.14);"
-    ]
-  },
-  {
-    "from": "eyebrow_color",
-    "target": "eyebrow-style-body",
-    "lines": [
-      "  color: var(--callout-accent, #38bdf8);"
-    ]
-  },
-  {
-    "from": "eyebrow_font_size",
-    "target": "eyebrow-style-body",
-    "lines": [
-      "  font-size: 12px;"
-    ]
-  },
-  {
-    "from": "eyebrow_font_weight",
-    "target": "eyebrow-style-body",
-    "lines": [
-      "  font-weight: 700;"
-    ]
-  },
-  {
-    "from": "eyebrow_letter_spacing",
-    "target": "eyebrow-style-body",
-    "lines": [
-      "  letter-spacing: 0.04em;"
-    ]
-  },
-  {
-    "from": "eyebrow_text_transform",
-    "target": "eyebrow-style-body",
-    "lines": [
-      "  text-transform: uppercase;"
-    ]
-  },
-  {
-    "from": "eyebrow_summary",
-    "target": "eyebrow-summary-comment",
-    "lines": [
-      "  /* helper outline removed in final .eyebrow summary */"
-    ]
-  },
-  {
-    "from": "title_display",
-    "target": "stylesheet-style-rules",
-    "lines": [
-      "",
-      ".title {",
-      "  display: block;",
-      "  @@slot:title-style-body@@",
-      "}"
-    ]
-  },
-  {
-    "from": "title_margin",
-    "target": "title-style-body",
-    "lines": [
-      "  margin: 0;"
-    ]
-  },
-  {
-    "from": "title_font_size",
-    "target": "title-style-body",
-    "lines": [
-      "  font-size: clamp(1.75rem, 4vw, 2rem);"
-    ]
-  },
-  {
-    "from": "title_line_height",
-    "target": "title-style-body",
-    "lines": [
-      "  line-height: 1.1;"
-    ]
-  },
-  {
-    "from": "title_font_weight",
-    "target": "title-style-body",
-    "lines": [
-      "  font-weight: 800;"
-    ]
-  },
-  {
-    "from": "summary_margin",
-    "target": "stylesheet-style-rules",
-    "lines": [
-      "",
-      ".summary {",
-      "  margin: 0;",
-      "  @@slot:summary-style-body@@",
-      "}"
-    ]
-  },
-  {
-    "from": "summary_color",
-    "target": "summary-style-body",
-    "lines": [
-      "  color: var(--callout-muted, #cbd5e1);"
-    ]
-  },
-  {
-    "from": "summary_line_height",
-    "target": "summary-style-body",
-    "lines": [
-      "  line-height: 1.65;"
-    ]
-  },
-  {
-    "from": "cta_outline",
-    "target": "stylesheet-style-rules",
-    "lines": [
-      "",
-      ".cta {",
-      "  outline: 1px dashed #34d399;",
-      "  @@slot:cta-style-body@@",
-      "  @@slot:cta-summary-comment@@",
-      "}"
-    ]
-  },
-  {
-    "from": "cta_justify_self",
-    "target": "cta-style-body",
-    "lines": [
-      "  justify-self: start;"
-    ]
-  },
-  {
-    "from": "cta_appearance",
-    "target": "cta-style-body",
-    "lines": [
-      "  appearance: none;"
-    ]
-  },
-  {
-    "from": "cta_padding",
-    "target": "cta-style-body",
-    "lines": [
-      "  padding: 12px 16px;"
-    ]
-  },
-  {
-    "from": "cta_border",
-    "target": "cta-style-body",
-    "lines": [
-      "  border: 0;"
-    ]
-  },
-  {
-    "from": "cta_radius",
-    "target": "cta-style-body",
-    "lines": [
-      "  border-radius: 999px;"
-    ]
-  },
-  {
-    "from": "cta_background",
-    "target": "cta-style-body",
-    "lines": [
-      "  background: linear-gradient(",
-      "    135deg,",
-      "    var(--callout-accent, #38bdf8),",
-      "    var(--callout-accent-strong, #2563eb)",
-      "  );"
-    ]
-  },
-  {
-    "from": "cta_color",
-    "target": "cta-style-body",
-    "lines": [
-      "  color: #ffffff;"
-    ]
-  },
-  {
-    "from": "cta_font",
-    "target": "cta-style-body",
-    "lines": [
-      "  font: inherit;"
-    ]
-  },
-  {
-    "from": "cta_font_weight",
-    "target": "cta-style-body",
-    "lines": [
-      "  font-weight: 700;"
-    ]
-  },
-  {
-    "from": "cta_cursor",
-    "target": "cta-style-body",
-    "lines": [
-      "  cursor: pointer;"
-    ]
-  },
-  {
-    "from": "cta_transition",
-    "target": "cta-style-body",
-    "lines": [
-      "  transition: transform 160ms ease, filter 160ms ease, box-shadow 160ms ease;"
-    ]
-  },
-  {
-    "from": "cta_box_shadow",
-    "target": "cta-style-body",
-    "lines": [
-      "  box-shadow: 0 14px 30px rgba(37, 99, 235, 0.28);"
-    ]
-  },
-  {
-    "from": "cta_summary",
-    "target": "cta-summary-comment",
-    "lines": [
-      "  /* helper outline removed in final .cta summary */"
-    ]
-  },
-  {
-    "from": "cta_hover_filter",
-    "target": "stylesheet-style-rules",
-    "lines": [
-      "",
-      ".cta:hover {",
-      "  filter: brightness(1.06);",
-      "  @@slot:cta-hover-body@@",
-      "}"
-    ]
-  },
-  {
-    "from": "cta_hover_transform",
-    "target": "cta-hover-body",
-    "lines": [
-      "  transform: translateY(-1px);"
-    ]
-  },
-  {
-    "from": "cta_active_transform",
-    "target": "stylesheet-style-rules",
-    "lines": [
-      "",
-      ".cta:active {",
-      "  transform: translateY(0);",
-      "}"
-    ]
-  },
-  {
-    "from": "cta_focus_outline",
-    "target": "stylesheet-style-rules",
-    "lines": [
-      "",
-      ".cta:focus-visible {",
-      "  outline: 3px solid rgba(56, 189, 248, 0.45);",
-      "  @@slot:cta-focus-body@@",
-      "}"
-    ]
-  },
-  {
-    "from": "cta_focus_outline_offset",
-    "target": "cta-focus-body",
-    "lines": [
-      "  outline-offset: 3px;"
     ]
   },
   {
@@ -7762,7 +7547,6 @@ Treća Web Components lekcija uzima isti feature callout i čisti njegov unutra�
     "from": "card_markup",
     "target": "template-markup",
     "lines": [
-      "",
       "  <article class=\"card\" part=\"card\">",
       "    <span class=\"eyebrow\" part=\"eyebrow\">",
       "      <slot name=\"eyebrow\">Vanilla JS</slot>",
@@ -7961,9 +7745,115 @@ previewTitle: Live adoptedStyleSheets preview
 htmlFileName: index.html
 cssFileName: style.css
 jsFileName: feature-callout.js
+shadowCssFileName: shadow-dom-style.css
 ---
 
-Treća Web Components lekcija uzima isti feature callout i čisti njegov unutrašnji styling tok. Umesto da CSS bude zbijen u `<style>` unutar `template.innerHTML`, sada ga izdvajaš u `CSSStyleSheet`, puniš kroz `replaceSync()` i usvajaš preko `shadowRoot.adoptedStyleSheets`. Suština lekcije je da CSS može da bude odvojen od class logike i od template markup-a, dok host API, slotovi i lifecycle ostaju isti.
+Treća Web Components lekcija uzima isti feature callout i čisti njegov unutrašnji styling tok. Umesto da CSS bude zbijen u `<style>` unutar `template.innerHTML`, sada ga držiš u posebnom `shadow-dom-style.css` fajlu, JavaScript ga uvozi kao tekst, puni `CSSStyleSheet` kroz `replaceSync()` i usvaja preko `shadowRoot.adoptedStyleSheets`. Suština lekcije je da CSS može da bude odvojen i od class logike i od template markup-a, dok host API, slotovi i lifecycle ostaju isti.
+
+=== lessons/clean-feature-callout-with-adopted-stylesheets/content/documents/files/shadow-dom-style.css.md ===
+# Shadow DOM CSS Rule Blocks
+
+```json
+[
+  {
+    "header": ":host {",
+    "entries": [
+      { "from": "host_font", "line": "font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, \"Segoe UI\", sans-serif;" },
+      { "from": "host_color", "line": "color: var(--callout-text, #e2e8f0);" }
+    ]
+  },
+  {
+    "header": ".card {",
+    "entries": [
+      { "from": "card_outline", "untilBefore": "card_summary", "line": "outline: 1px dashed #38bdf8;" },
+      { "from": "card_display", "line": "display: grid;" },
+      { "from": "card_gap", "line": "gap: 16px;" },
+      { "from": "card_padding", "line": "padding: 24px;" },
+      { "from": "card_radius", "line": "border-radius: 28px;" },
+      { "from": "card_border", "line": "border: 1px solid var(--callout-border, rgba(148,163,184,0.24));" },
+      { "from": "card_background", "line": "background: linear-gradient(180deg, var(--callout-surface, rgba(15,23,42,0.98)), var(--callout-surface-alt, rgba(15,23,42,0.92)));" },
+      { "from": "card_shadow", "line": "box-shadow: var(--callout-shadow, 0 26px 60px rgba(15,23,42,0.24));" },
+      { "from": "card_summary", "line": "/* helper outline removed in final .card summary */" }
+    ]
+  },
+  {
+    "header": ".eyebrow {",
+    "entries": [
+      { "from": "eyebrow_outline", "untilBefore": "eyebrow_summary", "line": "outline: 1px dotted #facc15;" },
+      { "from": "eyebrow_display", "line": "display: inline-flex;" },
+      { "from": "eyebrow_align_items", "line": "align-items: center;" },
+      { "from": "eyebrow_justify_content", "line": "justify-content: center;" },
+      { "from": "eyebrow_width", "line": "width: fit-content;" },
+      { "from": "eyebrow_padding", "line": "padding: 8px 12px;" },
+      { "from": "eyebrow_radius", "line": "border-radius: 999px;" },
+      { "from": "eyebrow_background", "line": "background: rgba(56,189,248,0.14);" },
+      { "from": "eyebrow_color", "line": "color: var(--callout-accent, #38bdf8);" },
+      { "from": "eyebrow_font_size", "line": "font-size: 12px;" },
+      { "from": "eyebrow_font_weight", "line": "font-weight: 700;" },
+      { "from": "eyebrow_letter_spacing", "line": "letter-spacing: 0.04em;" },
+      { "from": "eyebrow_text_transform", "line": "text-transform: uppercase;" },
+      { "from": "eyebrow_summary", "line": "/* helper outline removed in final .eyebrow summary */" }
+    ]
+  },
+  {
+    "header": ".title {",
+    "entries": [
+      { "from": "title_display", "line": "display: block;" },
+      { "from": "title_margin", "line": "margin: 0;" },
+      { "from": "title_font_size", "line": "font-size: clamp(1.75rem, 4vw, 2rem);" },
+      { "from": "title_line_height", "line": "line-height: 1.1;" },
+      { "from": "title_font_weight", "line": "font-weight: 800;" }
+    ]
+  },
+  {
+    "header": ".summary {",
+    "entries": [
+      { "from": "summary_margin", "line": "margin: 0;" },
+      { "from": "summary_color", "line": "color: var(--callout-muted, #cbd5e1);" },
+      { "from": "summary_line_height", "line": "line-height: 1.65;" }
+    ]
+  },
+  {
+    "header": ".cta {",
+    "entries": [
+      { "from": "cta_outline", "untilBefore": "cta_summary", "line": "outline: 1px dashed #34d399;" },
+      { "from": "cta_justify_self", "line": "justify-self: start;" },
+      { "from": "cta_appearance", "line": "appearance: none;" },
+      { "from": "cta_padding", "line": "padding: 12px 16px;" },
+      { "from": "cta_border", "line": "border: 0;" },
+      { "from": "cta_radius", "line": "border-radius: 999px;" },
+      { "from": "cta_background", "line": "background: linear-gradient(135deg, var(--callout-accent, #38bdf8), var(--callout-accent-strong, #2563eb));" },
+      { "from": "cta_color", "line": "color: #ffffff;" },
+      { "from": "cta_font", "line": "font: inherit;" },
+      { "from": "cta_font_weight", "line": "font-weight: 700;" },
+      { "from": "cta_cursor", "line": "cursor: pointer;" },
+      { "from": "cta_transition", "line": "transition: transform 160ms ease, filter 160ms ease, box-shadow 160ms ease;" },
+      { "from": "cta_box_shadow", "line": "box-shadow: 0 14px 30px rgba(37, 99, 235, 0.28);" },
+      { "from": "cta_summary", "line": "/* helper outline removed in final .cta summary */" }
+    ]
+  },
+  {
+    "header": ".cta:hover {",
+    "entries": [
+      { "from": "cta_hover_filter", "line": "filter: brightness(1.06);" },
+      { "from": "cta_hover_transform", "line": "transform: translateY(-1px);" }
+    ]
+  },
+  {
+    "header": ".cta:active {",
+    "entries": [
+      { "from": "cta_active_transform", "line": "transform: translateY(0);" }
+    ]
+  },
+  {
+    "header": ".cta:focus-visible {",
+    "entries": [
+      { "from": "cta_focus_outline", "line": "outline: 3px solid rgba(56, 189, 248, 0.45);" },
+      { "from": "cta_focus_outline_offset", "line": "outline-offset: 3px;" }
+    ]
+  }
+]
+```
 
 === lessons/clean-feature-callout-with-adopted-stylesheets/describe-steps.js ===
 const focusHtmlNeedlesBySelector = {
@@ -8001,15 +7891,15 @@ function describeCssPropertyStep(id, selector, property, value, desc = '', proTi
   };
 }
 
-function describeJsStylesheetStep(id, selector, property, value, desc = '', proTip = '') {
+function describeShadowCssPropertyStep(id, selector, property, value, desc = '', proTip = '') {
   const cssLine = `${property}: ${value};`;
 
   return {
     id,
-    title: `JS: stylesheet / ${selector} / ${property}`,
-    desc: desc || `U constructed stylesheet dodajemo \`${cssLine}\` za \`${selector}\`, pa CSS više ne živi u template string markup-u.`,
-    tag: `js-style:${id.replace(/_/g, '-')}`,
-    proTip: proTip || 'Ovde je poenta da CSS ostane odvojen od class logike i od template markup-a, iako ga i dalje programatski usvajamo kroz Web Components API.',
+    title: `Shadow CSS: ${selector} / ${property}`,
+    desc: desc || `U \`shadow-dom-style.css\` dodajemo \`${cssLine}\` za \`${selector}\`, pa CSS više ne živi u template string markup-u ni u class logici.`,
+    tag: `shadow-css:${id.replace(/_/g, '-')}`,
+    proTip: proTip || 'Ovde je poenta da CSS ostane u sopstvenom fajlu, dok JavaScript samo uvozi tekst i usvaja ga kroz Web Components API.',
     focusHtmlNeedles: readFocusHtmlNeedles(selector)
   };
 }
@@ -8154,8 +8044,14 @@ export const lessonSteps = [
   describeJsFlowStep(
     'cleanup_intro',
     "Now Let's Clean The Mess",
-    'Ovde pravimo glavni refactor: CSS više ne guramo u `<style>` unutar `template.innerHTML`, nego ga izdvajamo u poseban constructed stylesheet koji komponenta kasnije samo usvoji.',
-    'Suština ovog koraka je da CSS može da bude odvojen od class logike i od template markup-a, umesto da sve bude zbijeno u jedan veliki string.'
+    'Ovde pravimo glavni refactor: CSS više ne guramo u `<style>` unutar `template.innerHTML`, niti ga držimo kao veliki inline string u JavaScript fajlu. Prebacujemo ga u poseban `shadow-dom-style.css` koji komponenta kasnije samo usvoji.',
+    'Suština ovog koraka je da CSS može da bude odvojen i od class logike i od template markup-a, umesto da sve bude zbijeno u jedan veliki string.'
+  ),
+  describeJsFlowStep(
+    'shadow_css_import',
+    'JS: Uvozimo shadow-dom-style.css kao tekst',
+    'Dodajemo `import shadowDomStyleCssText from \'./shadow-dom-style.css?raw\';`, pa JavaScript više ne nosi same CSS linije nego samo učitava gotov stylesheet source.',
+    'Ovo je najčistiji Vite-friendly model za ovu lekciju: CSS fizički živi u svom fajlu, a komponenta ga samo pretvara u `CSSStyleSheet`.'
   ),
   describeJsFlowStep(
     'stylesheet_declaration',
@@ -8165,9 +8061,9 @@ export const lessonSteps = [
   ),
   describeJsFlowStep(
     'stylesheet_replace_sync',
-    'JS: replaceSync Prima Sav CSS',
-    'Kroz `featureCalloutStyles.replaceSync(...)` punimo constructed stylesheet svim pravilima komponente. CSS ostaje na jednom mestu, a klasa ga kasnije samo usvaja.',
-    'Ovo je najvažniji mentalni model cele lekcije: CSS je izdvojen, a JavaScript ga samo povezuje sa shadow root-om.'
+    'JS: replaceSync Prima Uvezeni CSS',
+    'Kroz `featureCalloutStyles.replaceSync(shadowDomStyleCssText)` punimo constructed stylesheet tekstom koji stiže iz posebnog CSS fajla. JavaScript više ne nosi stil pravila u sebi.',
+    'Ovo je najvažniji mentalni model cele lekcije: CSS je izdvojen u poseban fajl, a JavaScript ga samo povezuje sa shadow root-om.'
   ),
   describeJsFlowStep(
     'template_markup_open',
@@ -8296,23 +8192,23 @@ export const lessonSteps = [
     'Sada je i struktura koda čistija: template čuva markup, stylesheet čuva CSS, a klasa orkestrira ponašanje.'
   ),
   ...shellCssSteps.map(config => describeCssPropertyStep(...config)),
-  ...stylesheetSteps.map(config => describeJsStylesheetStep(...config)),
+  ...stylesheetSteps.map(config => describeShadowCssPropertyStep(...config)),
   describeSummaryStep(
     'card_summary',
-    'Rezime: .card u constructed stylesheet-u',
-    'Rezimiramo glavni card blok i tek sada uklanjamo njegov helper outline, jer su struktura, stil i način usvajanja stylesheet-a potpuno jasni.',
-    'Helper outline za glavni card ostaje dok i markup i stil i adoptedStyleSheets tok ne budu dovoljno čitljivi.'
+    'Rezime: .card u shadow-dom-style.css',
+    'Rezimiramo glavni card blok i tek sada uklanjamo njegov helper outline, jer su struktura, stil iz posebnog CSS fajla i način usvajanja stylesheet-a potpuno jasni.',
+    'Helper outline za glavni card ostaje dok i markup i poseban shadow CSS tok ne budu dovoljno čitljivi.'
   ),
   describeSummaryStep(
     'eyebrow_summary',
-    'Rezime: .eyebrow u constructed stylesheet-u',
-    'Rezimiramo eyebrow badge i uklanjamo njegov helper outline tek sada, kada slot projekcija i badge stil rade zajedno u izdvojenom stylesheet-u.',
+    'Rezime: .eyebrow u shadow-dom-style.css',
+    'Rezimiramo eyebrow badge i uklanjamo njegov helper outline tek sada, kada slot projekcija i badge stil rade zajedno iz izdvojenog CSS fajla.',
     'Slot je ovde važan deo lekcije, pa helper outline ostaje dok named slot ne postane jasan.'
   ),
   describeSummaryStep(
     'cta_summary',
-    'Rezime: .cta u constructed stylesheet-u',
-    'Rezime za CTA dugme: helper outline više nije potreban, jer završni stil, event i hover/focus ponašanje već jasno pokazuju njegovu ulogu.',
+    'Rezime: .cta u shadow-dom-style.css',
+    'Rezime za CTA dugme: helper outline više nije potreban, jer završni stil iz posebnog CSS fajla, event i hover/focus ponašanje već jasno pokazuju njegovu ulogu.',
     'Outline služi učenju; kad je element potpuno objašnjen, može da nestane.'
   ),
   describeSummaryStep(
@@ -8331,7 +8227,7 @@ export const lessonSteps = [
   describeFinishedStep(
     'done',
     'Done: Clean Feature Callout with adoptedStyleSheets',
-    'Lekcija je završena: ista komponenta sada ima čistiji raspored odgovornosti. Host HTML ostaje mali, template čuva samo markup, constructed stylesheet čuva CSS, a klasa usvaja stylesheet i vodi lifecycle ponašanje.',
+    'Lekcija je završena: ista komponenta sada ima čistiji raspored odgovornosti. Host HTML ostaje mali, template čuva samo markup, `shadow-dom-style.css` čuva CSS, a klasa samo uvozi tekst, usvaja stylesheet i vodi lifecycle ponašanje.',
     'Sledeći logičan korak je da isti stylesheet podeliš između više shadow root instanci ili da uvedeš još jedan komponentni stil sloj.'
   )
 ];

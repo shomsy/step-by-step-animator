@@ -151,7 +151,7 @@
       <div class="live-editor-head">
         <div class="live-editor-copy">
           <h2>Ekran editora</h2>
-          <p>Kumulativni HTML, CSS i po potrebi JS fajlovi popunjavaju se liniju po liniju, kao da gledaš live tutorijal preko share screen-a.</p>
+          <p>Kumulativni HTML, CSS i po potrebi JS ili shadow CSS fajlovi popunjavaju se liniju po liniju, kao da gledaš live tutorijal preko share screen-a.</p>
         </div>
         <span class="live-editor-step" id="liveStepBadge">Prizor 1</span>
       </div>
@@ -179,6 +179,14 @@
             <span>Novo ponašanje istaknuto liniju po liniju</span>
           </div>
           <div class="live-code-scroll" id="liveJsPane"></div>
+        </div>
+
+        <div class="live-pane" id="shadowCssPane" hidden>
+          <div class="live-pane-head">
+            <span id="shadowCssFileLabel">shadow-dom-style.css</span>
+            <span>Shadow DOM CSS raste property po property</span>
+          </div>
+          <div class="live-code-scroll" id="liveShadowCssPane"></div>
         </div>
       </div>
     </section>

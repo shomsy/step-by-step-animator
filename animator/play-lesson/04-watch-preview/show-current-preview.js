@@ -1,9 +1,32 @@
+function composePreviewJavaScript(lesson, currentStepNumber) {
+  if (typeof lesson.buildJsAtStep !== 'function') {
+    return '';
+  }
+
+  const jsMarkup = lesson.buildJsAtStep(currentStepNumber).join('\n');
+
+  if (typeof lesson.buildShadowCssAtStep !== 'function') {
+    return jsMarkup;
+  }
+
+  const shadowCssMarkup = lesson.buildShadowCssAtStep(currentStepNumber).join('\n');
+  const importPath = `./${lesson.shadowCssFileName || 'shadow-dom-style.css'}?raw`;
+  const importLine = `import shadowDomStyleCssText from '${importPath}';`;
+
+  if (jsMarkup.includes(importLine)) {
+    return jsMarkup.replace(
+      importLine,
+      `const shadowDomStyleCssText = ${JSON.stringify(shadowCssMarkup)};`
+    );
+  }
+
+  return `const shadowDomStyleCssText = ${JSON.stringify(shadowCssMarkup)};\n${jsMarkup}`;
+}
+
 function composeLivePreviewDocument(lesson, currentStepNumber) {
   const htmlMarkup = lesson.buildHtmlAtStep(currentStepNumber).join('\n');
   const cssMarkup = lesson.buildCssAtStep(currentStepNumber).join('\n');
-  const jsMarkup = typeof lesson.buildJsAtStep === 'function'
-    ? lesson.buildJsAtStep(currentStepNumber).join('\n')
-    : '';
+  const jsMarkup = composePreviewJavaScript(lesson, currentStepNumber);
   const cssBlock = cssMarkup ? `<style>${cssMarkup}</style>` : '';
   const jsBlock = jsMarkup ? `<script>${jsMarkup}<\/script>` : '';
 

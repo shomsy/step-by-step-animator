@@ -21,6 +21,7 @@ export function readLessonMetadata(markdown, defaults = {}) {
     previewTitle: attributes.previewTitle || defaults.previewTitle || '',
     htmlFileName: attributes.htmlFileName || defaults.htmlFileName || 'index.html',
     cssFileName: attributes.cssFileName || defaults.cssFileName || 'style.css',
-    jsFileName: attributes.jsFileName || defaults.jsFileName || ''
+    jsFileName: attributes.jsFileName || defaults.jsFileName || '',
+    shadowCssFileName: attributes.shadowCssFileName || defaults.shadowCssFileName || ''
   };
 }

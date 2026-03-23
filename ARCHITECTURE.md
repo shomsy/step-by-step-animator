@@ -110,6 +110,24 @@ lessons/
           html.timeline.md
           css.rules.md
           js.timeline.md
+  clean-feature-callout-with-adopted-stylesheets/
+    clean-feature-callout-with-adopted-stylesheets.lesson.js
+    describe-steps.js
+    build-html-at-step.js
+    build-css-at-step.js
+    build-js-at-step.js
+    build-shadow-css-at-step.js
+    content/
+      assets/
+        feature-callout-goal.svg
+      documents/
+        clean_feature_callout_with_adopted_stylesheets.md
+        files/
+          lesson.sr.md
+          html.timeline.md
+          css.rules.md
+          js.timeline.md
+          shadow-dom-style.css.md
 ```
 
 ## Naming Rules
@@ -179,9 +197,11 @@ content/documents/files/lesson.sr.md
 content/documents/files/html.timeline.md
 content/documents/files/css.rules.md
 content/documents/files/js.timeline.md
+content/documents/files/shadow-dom-style.css.md
 ```
 
 Use markdown for lesson metadata and for the canonical HTML/CSS/JS step DSL.
+When a lesson separates inner shadow DOM styles into a fourth editor/download file, use `shadow-dom-style.css.md` as the canonical shadow CSS source and keep `build-shadow-css-at-step.js` thin as well.
 Keep `build-*-at-step.js` files thin; they should parse markdown lesson documents and return derived lines, not re-encode the whole lesson by hand.
 
 ### 4. Every other file owns one clear responsibility

@@ -36,6 +36,7 @@ lessons/
     build-html-at-step.js
     build-css-at-step.js
     build-js-at-step.js
+    build-shadow-css-at-step.js
     content/
       assets/
         feature-goal.svg
@@ -45,6 +46,7 @@ lessons/
           html.timeline.md
           css.rules.md
           js.timeline.md
+          shadow-dom-style.css.md
 ```
 
 ## 3. Šta svaki fajl radi
@@ -56,6 +58,7 @@ lessons/
 - povezuje step script
 - povezuje HTML/CSS builder funkcije
 - kada lekcija to traži, povezuje i JS builder funkciju
+- kada lekcija to traži, povezuje i poseban shadow CSS builder
 - opciono povezuje referentnu sliku cilja i homework napomene za shell
 
 `describe-steps.js`
@@ -86,6 +89,14 @@ lessons/
 - ne vraća diff
 - JS mora da raste akciju po akciju i da ostane izvršiv na svakom koraku
 
+`build-shadow-css-at-step.js`
+
+- koristiš ga samo kada lekcija zaista odvaja shadow DOM CSS u poseban fajl
+- ostaje tanak adapter preko `shadow-dom-style.css.md`
+- vraća kompletan kumulativni shadow CSS za dati step
+- ne vraća diff
+- shadow CSS i dalje ide property po property
+
 `content/documents/files/lesson.sr.md`
 
 - drži title, intro i metadata
@@ -104,6 +115,11 @@ lessons/
 
 - drži opcioni JavaScript timeline u fenced `json` formatu
 - koristi se samo kada lekcija zaista ima JS panel i live izvršavanje
+
+`content/documents/files/shadow-dom-style.css.md`
+
+- drži opcioni shadow DOM CSS source u fenced `json` formatu
+- koristi se samo kada lekcija zaista ima odvojen shadow CSS fajl i četvrti editor panel
 
 `content/assets/feature-goal.svg`
 
@@ -235,6 +251,7 @@ previewTitle: Live feature preview
 htmlFileName: index.html
 cssFileName: style.css
 jsFileName: component.js
+shadowCssFileName: shadow-dom-style.css
 ---
 
 Kratak uvod u lekciju.
@@ -293,6 +310,23 @@ Kratak uvod u lekciju.
       "}",
       "",
       "@@slot:after-class@@"
+    ]
+  }
+]
+```
+````
+
+`shadow-dom-style.css.md`:
+
+````md
+# Shadow DOM CSS Rule Blocks
+
+```json
+[
+  {
+    "header": ".card {",
+    "entries": [
+      { "from": "card_display", "line": "display: grid;" }
     ]
   }
 ]

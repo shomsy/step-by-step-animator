@@ -33,15 +33,15 @@ function describeCssPropertyStep(id, selector, property, value, desc = '', proTi
   };
 }
 
-function describeJsStylesheetStep(id, selector, property, value, desc = '', proTip = '') {
+function describeShadowCssPropertyStep(id, selector, property, value, desc = '', proTip = '') {
   const cssLine = `${property}: ${value};`;
 
   return {
     id,
-    title: `JS: stylesheet / ${selector} / ${property}`,
-    desc: desc || `U constructed stylesheet dodajemo \`${cssLine}\` za \`${selector}\`, pa CSS više ne živi u template string markup-u.`,
-    tag: `js-style:${id.replace(/_/g, '-')}`,
-    proTip: proTip || 'Ovde je poenta da CSS ostane odvojen od class logike i od template markup-a, iako ga i dalje programatski usvajamo kroz Web Components API.',
+    title: `Shadow CSS: ${selector} / ${property}`,
+    desc: desc || `U \`shadow-dom-style.css\` dodajemo \`${cssLine}\` za \`${selector}\`, pa CSS više ne živi u template string markup-u ni u class logici.`,
+    tag: `shadow-css:${id.replace(/_/g, '-')}`,
+    proTip: proTip || 'Ovde je poenta da CSS ostane u sopstvenom fajlu, dok JavaScript samo uvozi tekst i usvaja ga kroz Web Components API.',
     focusHtmlNeedles: readFocusHtmlNeedles(selector)
   };
 }
@@ -186,8 +186,14 @@ export const lessonSteps = [
   describeJsFlowStep(
     'cleanup_intro',
     "Now Let's Clean The Mess",
-    'Ovde pravimo glavni refactor: CSS više ne guramo u `<style>` unutar `template.innerHTML`, nego ga izdvajamo u poseban constructed stylesheet koji komponenta kasnije samo usvoji.',
-    'Suština ovog koraka je da CSS može da bude odvojen od class logike i od template markup-a, umesto da sve bude zbijeno u jedan veliki string.'
+    'Ovde pravimo glavni refactor: CSS više ne guramo u `<style>` unutar `template.innerHTML`, niti ga držimo kao veliki inline string u JavaScript fajlu. Prebacujemo ga u poseban `shadow-dom-style.css` koji komponenta kasnije samo usvoji.',
+    'Suština ovog koraka je da CSS može da bude odvojen i od class logike i od template markup-a, umesto da sve bude zbijeno u jedan veliki string.'
+  ),
+  describeJsFlowStep(
+    'shadow_css_import',
+    'JS: Uvozimo shadow-dom-style.css kao tekst',
+    'Dodajemo `import shadowDomStyleCssText from \'./shadow-dom-style.css?raw\';`, pa JavaScript više ne nosi same CSS linije nego samo učitava gotov stylesheet source.',
+    'Ovo je najčistiji Vite-friendly model za ovu lekciju: CSS fizički živi u svom fajlu, a komponenta ga samo pretvara u `CSSStyleSheet`.'
   ),
   describeJsFlowStep(
     'stylesheet_declaration',
@@ -197,9 +203,9 @@ export const lessonSteps = [
   ),
   describeJsFlowStep(
     'stylesheet_replace_sync',
-    'JS: replaceSync Prima Sav CSS',
-    'Kroz `featureCalloutStyles.replaceSync(...)` punimo constructed stylesheet svim pravilima komponente. CSS ostaje na jednom mestu, a klasa ga kasnije samo usvaja.',
-    'Ovo je najvažniji mentalni model cele lekcije: CSS je izdvojen, a JavaScript ga samo povezuje sa shadow root-om.'
+    'JS: replaceSync Prima Uvezeni CSS',
+    'Kroz `featureCalloutStyles.replaceSync(shadowDomStyleCssText)` punimo constructed stylesheet tekstom koji stiže iz posebnog CSS fajla. JavaScript više ne nosi stil pravila u sebi.',
+    'Ovo je najvažniji mentalni model cele lekcije: CSS je izdvojen u poseban fajl, a JavaScript ga samo povezuje sa shadow root-om.'
   ),
   describeJsFlowStep(
     'template_markup_open',
@@ -328,23 +334,23 @@ export const lessonSteps = [
     'Sada je i struktura koda čistija: template čuva markup, stylesheet čuva CSS, a klasa orkestrira ponašanje.'
   ),
   ...shellCssSteps.map(config => describeCssPropertyStep(...config)),
-  ...stylesheetSteps.map(config => describeJsStylesheetStep(...config)),
+  ...stylesheetSteps.map(config => describeShadowCssPropertyStep(...config)),
   describeSummaryStep(
     'card_summary',
-    'Rezime: .card u constructed stylesheet-u',
-    'Rezimiramo glavni card blok i tek sada uklanjamo njegov helper outline, jer su struktura, stil i način usvajanja stylesheet-a potpuno jasni.',
-    'Helper outline za glavni card ostaje dok i markup i stil i adoptedStyleSheets tok ne budu dovoljno čitljivi.'
+    'Rezime: .card u shadow-dom-style.css',
+    'Rezimiramo glavni card blok i tek sada uklanjamo njegov helper outline, jer su struktura, stil iz posebnog CSS fajla i način usvajanja stylesheet-a potpuno jasni.',
+    'Helper outline za glavni card ostaje dok i markup i poseban shadow CSS tok ne budu dovoljno čitljivi.'
   ),
   describeSummaryStep(
     'eyebrow_summary',
-    'Rezime: .eyebrow u constructed stylesheet-u',
-    'Rezimiramo eyebrow badge i uklanjamo njegov helper outline tek sada, kada slot projekcija i badge stil rade zajedno u izdvojenom stylesheet-u.',
+    'Rezime: .eyebrow u shadow-dom-style.css',
+    'Rezimiramo eyebrow badge i uklanjamo njegov helper outline tek sada, kada slot projekcija i badge stil rade zajedno iz izdvojenog CSS fajla.',
     'Slot je ovde važan deo lekcije, pa helper outline ostaje dok named slot ne postane jasan.'
   ),
   describeSummaryStep(
     'cta_summary',
-    'Rezime: .cta u constructed stylesheet-u',
-    'Rezime za CTA dugme: helper outline više nije potreban, jer završni stil, event i hover/focus ponašanje već jasno pokazuju njegovu ulogu.',
+    'Rezime: .cta u shadow-dom-style.css',
+    'Rezime za CTA dugme: helper outline više nije potreban, jer završni stil iz posebnog CSS fajla, event i hover/focus ponašanje već jasno pokazuju njegovu ulogu.',
     'Outline služi učenju; kad je element potpuno objašnjen, može da nestane.'
   ),
   describeSummaryStep(
@@ -363,7 +369,7 @@ export const lessonSteps = [
   describeFinishedStep(
     'done',
     'Done: Clean Feature Callout with adoptedStyleSheets',
-    'Lekcija je završena: ista komponenta sada ima čistiji raspored odgovornosti. Host HTML ostaje mali, template čuva samo markup, constructed stylesheet čuva CSS, a klasa usvaja stylesheet i vodi lifecycle ponašanje.',
+    'Lekcija je završena: ista komponenta sada ima čistiji raspored odgovornosti. Host HTML ostaje mali, template čuva samo markup, `shadow-dom-style.css` čuva CSS, a klasa samo uvozi tekst, usvaja stylesheet i vodi lifecycle ponašanje.',
     'Sledeći logičan korak je da isti stylesheet podeliš između više shadow root instanci ili da uvedeš još jedan komponentni stil sloj.'
   )
 ];

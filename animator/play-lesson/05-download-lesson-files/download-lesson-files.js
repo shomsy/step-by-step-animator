@@ -19,6 +19,9 @@ export function downloadLessonFiles({ lesson }) {
   const jsCode = typeof lesson.buildJsAtStep === 'function'
     ? lesson.buildJsAtStep(finalStep).join('\n')
     : '';
+  const shadowCssCode = typeof lesson.buildShadowCssAtStep === 'function'
+    ? lesson.buildShadowCssAtStep(finalStep).join('\n')
+    : '';
 
   triggerFileDownload(lesson.htmlFileName, 'text/html', htmlCode);
 
@@ -27,10 +30,24 @@ export function downloadLessonFiles({ lesson }) {
   }, 500);
 
   if (!jsCode) {
+    if (shadowCssCode) {
+      window.setTimeout(() => {
+        triggerFileDownload(lesson.shadowCssFileName || 'shadow-dom-style.css', 'text/css', shadowCssCode);
+      }, 1000);
+    }
+
     return;
   }
 
   window.setTimeout(() => {
     triggerFileDownload(lesson.jsFileName || 'component.js', 'text/javascript', jsCode);
   }, 1000);
+
+  if (!shadowCssCode) {
+    return;
+  }
+
+  window.setTimeout(() => {
+    triggerFileDownload(lesson.shadowCssFileName || 'shadow-dom-style.css', 'text/css', shadowCssCode);
+  }, 1500);
 }

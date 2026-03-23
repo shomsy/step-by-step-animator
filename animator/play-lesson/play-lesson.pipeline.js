@@ -205,7 +205,8 @@ export function playLesson({ ownerDocument, ownerLocation, ownerWindow, lesson, 
       currentStepNumber: lessonProgress.currentStepNumber,
       buildHtmlAtStep: lesson.buildHtmlAtStep,
       buildCssAtStep: lesson.buildCssAtStep,
-      buildJsAtStep: lesson.buildJsAtStep
+      buildJsAtStep: lesson.buildJsAtStep,
+      buildShadowCssAtStep: lesson.buildShadowCssAtStep
     });
 
     savedSteps.showSavedStepList(lessonProgress.currentStepNumber);
