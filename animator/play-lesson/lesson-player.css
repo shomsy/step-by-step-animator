@@ -1147,6 +1147,12 @@ h1 {
   gap: 12px;
 }
 
+.step-narration-head-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
 .step-narration-head h3 {
   margin-top: 4px;
   font-size: 15px;
@@ -1164,10 +1170,83 @@ h1 {
   text-transform: uppercase;
 }
 
+.step-narration-badge[data-state="ready"] {
+  background: rgba(54,211,153,0.14);
+  color: var(--success);
+}
+
+.step-narration-badge[data-state="auto"] {
+  background: rgba(109,115,255,0.16);
+  color: #bfc6ff;
+}
+
+.step-narration-badge[data-state="system"] {
+  background: rgba(56,189,248,0.14);
+  color: #7dd3fc;
+}
+
+.step-narration-badge[data-state="preparing"] {
+  background: rgba(247,183,49,0.14);
+  color: var(--warning);
+}
+
+.step-narration-badge[data-state="fallback"] {
+  background: rgba(255,107,107,0.14);
+  color: var(--error);
+}
+
+.step-narration-prepare {
+  padding: 8px 12px;
+  border-radius: 12px;
+  border: 1px solid var(--border);
+  background: rgba(255,255,255,0.04);
+  color: var(--text);
+  font-size: 12px;
+  font-weight: 700;
+}
+
 .step-narration-copy {
   color: var(--text-secondary);
   font-size: 13px;
   line-height: 1.6;
+}
+
+.step-narration-source {
+  display: grid;
+  gap: 8px;
+}
+
+.step-narration-source-label {
+  color: var(--text-secondary);
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.step-narration-source-select {
+  width: 100%;
+  appearance: none;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: var(--bg);
+  color: var(--text);
+  font: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  padding: 12px 14px;
+}
+
+.step-narration-source-select:hover,
+.step-narration-source-select:focus {
+  border-color: var(--accent);
+  outline: none;
+  box-shadow: 0 0 0 4px rgba(109,115,255,0.12);
+}
+
+.step-narration-source-select:disabled {
+  opacity: 0.58;
+  cursor: not-allowed;
 }
 
 .step-narration-controls {
@@ -1546,6 +1625,8 @@ button:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
   .bookmarks-head, .bookmark-item { flex-direction: column; }
   .bookmark-summary { align-self: flex-start; }
   .bookmark-remove { width: 100%; }
+  .step-narration-head,
+  .step-narration-head-actions { flex-direction: column; align-items: flex-start; }
   .step-narration-controls { grid-template-columns: 1fr; }
   .shortcuts { display: none; }
 }

@@ -1,5 +1,6 @@
 const OPEN_SOURCE_VOICE_ID = 'sr_RS-serbski_institut-medium';
 const OPEN_SOURCE_PROVIDER_LABEL = 'Open-source Piper glas';
+const OPEN_SOURCE_PROVIDER_SHORT_LABEL = 'Open-source Piper · srpski medium';
 
 let piperTtsModulePromise = null;
 
@@ -75,7 +76,31 @@ function createAudioNarrationController({ ownerWindow, audioElement, audioUrl, p
 }
 
 export function readOpenSourceVoiceLabel() {
-  return `${OPEN_SOURCE_PROVIDER_LABEL} · ${OPEN_SOURCE_VOICE_ID}`;
+  return OPEN_SOURCE_PROVIDER_SHORT_LABEL;
+}
+
+export async function readOpenSourceVoiceAvailability() {
+  const piperTts = await readPiperTtsModule();
+  const storedVoices = await piperTts.stored();
+
+  return storedVoices.includes(OPEN_SOURCE_VOICE_ID);
+}
+
+export async function prepareOpenSourceVoice({ onStatusChange } = {}) {
+  const piperTts = await readPiperTtsModule();
+
+  if (await readOpenSourceVoiceAvailability()) {
+    onStatusChange?.(`${OPEN_SOURCE_PROVIDER_LABEL} je već preuzet i spreman.`);
+    return;
+  }
+
+  onStatusChange?.(`${OPEN_SOURCE_PROVIDER_LABEL} priprema model…`);
+
+  await piperTts.download(OPEN_SOURCE_VOICE_ID, progress => {
+    onStatusChange?.(composeOpenSourceStatus(progress));
+  });
+
+  onStatusChange?.(`${OPEN_SOURCE_PROVIDER_LABEL} je preuzet i spreman.`);
 }
 
 export async function speakWithOpenSourceVoice({

@@ -2,11 +2,18 @@ function composeStepNarrationStorageKey() {
   return 'stepByStepAnimator:stepNarration';
 }
 
-export function writeStepNarrationPreferences({ shouldAutoNarrateStep, speechRate }) {
+export function writeStepNarrationPreferences({
+  shouldAutoNarrateStep,
+  speechRate,
+  voiceSourcePreference,
+  browserVoiceUriPreference
+}) {
   try {
     localStorage.setItem(composeStepNarrationStorageKey(), JSON.stringify({
       shouldAutoNarrateStep,
-      speechRate
+      speechRate,
+      voiceSourcePreference,
+      browserVoiceUriPreference
     }));
   } catch {
     // Ignore storage write failures so narration stays usable in restrictive browsers.

@@ -1,6 +1,58 @@
 const PREFERRED_BROWSER_LANGUAGES = ['sr-RS', 'hr-HR', 'bs-BA', 'sr', 'hr', 'bs'];
 
-function findPreferredVoice(voices) {
+function languageLooksRegional(languageTag) {
+  if (typeof languageTag !== 'string') {
+    return false;
+  }
+
+  const normalizedLanguageTag = languageTag.toLowerCase();
+
+  return PREFERRED_BROWSER_LANGUAGES.some(preferredLanguage =>
+    normalizedLanguageTag === preferredLanguage.toLowerCase() ||
+    normalizedLanguageTag.startsWith(`${preferredLanguage.toLowerCase()}-`)
+  );
+}
+
+function readVoiceLabel(voice) {
+  const voiceName = typeof voice?.name === 'string' ? voice.name.trim() : '';
+  const voiceLanguage = typeof voice?.lang === 'string' ? voice.lang.trim() : '';
+
+  if (voiceName && voiceLanguage) {
+    return `${voiceName} · ${voiceLanguage}`;
+  }
+
+  return voiceName || voiceLanguage || 'Podrazumevani sistemski glas';
+}
+
+function sortVoicesByName(firstVoice, secondVoice) {
+  return readVoiceLabel(firstVoice).localeCompare(readVoiceLabel(secondVoice), 'sr');
+}
+
+function readMatchingVoices(voices) {
+  const regionalVoices = voices.filter(voice => languageLooksRegional(voice.lang));
+
+  if (regionalVoices.length) {
+    return [...regionalVoices].sort(sortVoicesByName);
+  }
+
+  return [...voices].sort(sortVoicesByName);
+}
+
+function findVoiceByUri(voices, preferredVoiceUri) {
+  if (typeof preferredVoiceUri !== 'string' || !preferredVoiceUri.trim()) {
+    return null;
+  }
+
+  return voices.find(voice => voice.voiceURI === preferredVoiceUri) || null;
+}
+
+function findPreferredVoice(voices, preferredVoiceUri = '') {
+  const explicitlySelectedVoice = findVoiceByUri(voices, preferredVoiceUri);
+
+  if (explicitlySelectedVoice) {
+    return explicitlySelectedVoice;
+  }
+
   for (const preferredLanguage of PREFERRED_BROWSER_LANGUAGES) {
     const exactVoice = voices.find(voice => voice.lang === preferredLanguage);
 
@@ -8,7 +60,10 @@ function findPreferredVoice(voices) {
       return exactVoice;
     }
 
-    const localeVoice = voices.find(voice => voice.lang.toLowerCase().startsWith(preferredLanguage.toLowerCase()));
+    const localeVoice = voices.find(voice =>
+      typeof voice.lang === 'string' &&
+      voice.lang.toLowerCase().startsWith(preferredLanguage.toLowerCase())
+    );
 
     if (localeVoice) {
       return localeVoice;
@@ -20,6 +75,11 @@ function findPreferredVoice(voices) {
 
 function readAvailableVoices(ownerWindow) {
   const synthesis = ownerWindow.speechSynthesis;
+
+  if (!synthesis) {
+    return Promise.resolve([]);
+  }
+
   const voices = synthesis.getVoices();
 
   if (voices.length) {
@@ -44,11 +104,33 @@ function readAvailableVoices(ownerWindow) {
   });
 }
 
+export function describeBrowserVoice(voice) {
+  return readVoiceLabel(voice);
+}
+
+export async function readBrowserVoiceChoices(ownerWindow) {
+  const availableVoices = await readAvailableVoices(ownerWindow);
+
+  return readMatchingVoices(availableVoices).map(voice => ({
+    voiceURI: voice.voiceURI,
+    name: voice.name,
+    lang: voice.lang,
+    label: readVoiceLabel(voice)
+  }));
+}
+
+export async function readPreferredBrowserVoice(ownerWindow, preferredVoiceUri = '') {
+  const availableVoices = await readAvailableVoices(ownerWindow);
+
+  return findPreferredVoice(availableVoices, preferredVoiceUri);
+}
+
 export async function speakWithBrowserVoice({
   ownerWindow,
   text,
   speechRate,
-  onStatusChange
+  onStatusChange,
+  preferredVoiceUri = ''
 }) {
   const synthesis = ownerWindow.speechSynthesis;
 
@@ -57,7 +139,7 @@ export async function speakWithBrowserVoice({
   }
 
   const availableVoices = await readAvailableVoices(ownerWindow);
-  const preferredVoice = findPreferredVoice(availableVoices);
+  const preferredVoice = findPreferredVoice(availableVoices, preferredVoiceUri);
   const utterance = new ownerWindow.SpeechSynthesisUtterance(text);
   let hasFinished = false;
   let resolveFinished = null;
@@ -90,14 +172,14 @@ export async function speakWithBrowserVoice({
 
   onStatusChange?.(
     preferredVoice
-      ? `Browser fallback glas čita trenutni korak · ${preferredVoice.name}`
-      : 'Browser fallback glas čita trenutni korak.'
+      ? `Sistemski glas čita trenutni korak · ${readVoiceLabel(preferredVoice)}`
+      : 'Sistemski glas čita trenutni korak.'
   );
 
   return {
     providerLabel: preferredVoice
-      ? `Browser fallback · ${preferredVoice.name}`
-      : 'Browser fallback glas',
+      ? `Sistemski glas · ${readVoiceLabel(preferredVoice)}`
+      : 'Sistemski glas',
     supportsLiveRateChange: false,
     whenFinished,
     isPaused() {
