@@ -5,7 +5,7 @@ import { buildTemplateJsAtStep } from './build-template-js-at-step.js';
 import { buildShadowCssAtStep } from './build-shadow-css-at-step.js';
 import { lessonSteps } from './describe-steps.js';
 import lessonDocument from './content/documents/files/lesson.sr.md?raw';
-import goalImage from './content/assets/feature-callout-goal.svg';
+import goalImage from './content/assets/web-component-goal.svg';
 import { readLessonMetadata } from '../../animator/lesson-documents/read-lesson-metadata.js';
 
 const lessonMetadata = readLessonMetadata(lessonDocument, {
@@ -15,7 +15,7 @@ const lessonMetadata = readLessonMetadata(lessonDocument, {
   previewTitle: 'Live modular Web Component preview',
   htmlFileName: 'index.html',
   cssFileName: 'style.css',
-  jsFileName: 'feature-callout.js',
+  jsFileName: 'my-first-component.js',
   templateJsFileName: 'component.html.js',
   shadowCssFileName: 'shadow-dom-style.css'
 });

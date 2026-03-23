@@ -14,9 +14,11 @@ Trenutno isporučene lekcije su:
 
 - `build-sidebar`
 - `build-top-navigation`
-- `build-callout-custom-element`
-- `build-feature-callout-web-component`
-- `clean-feature-callout-with-adopted-stylesheets`
+- `build-custom-element`
+- `build-web-component`
+- `clean-web-component-with-adopted-stylesheets`
+- `06-modular-web-components`
+- `07-more-separation-of-code`
 
 Svaka nova lekcija mora da koristi isti shell i isti teaching model:
 
@@ -112,8 +114,8 @@ lessons/
           lesson.sr.md
           html.timeline.md
           css.rules.md
-  build-feature-callout-web-component/
-    build-feature-callout-web-component.lesson.js
+  build-web-component/
+    build-web-component.lesson.js
     describe-steps.js
     build-html-at-step.js
     build-css-at-step.js
@@ -128,8 +130,8 @@ lessons/
           html.timeline.md
           css.rules.md
           js.timeline.md
-  build-callout-custom-element/
-    build-callout-custom-element.lesson.js
+  build-custom-element/
+    build-custom-element.lesson.js
     describe-steps.js
     build-html-at-step.js
     build-css-at-step.js
@@ -158,8 +160,8 @@ lessons/
           lesson.sr.md
           html.timeline.md
           css.rules.md
-  clean-feature-callout-with-adopted-stylesheets/
-    clean-feature-callout-with-adopted-stylesheets.lesson.js
+  clean-web-component-with-adopted-stylesheets/
+    clean-web-component-with-adopted-stylesheets.lesson.js
     describe-steps.js
     build-html-at-step.js
     build-css-at-step.js
@@ -425,20 +427,20 @@ Za nju i dalje važe posebna teaching pravila:
 - helper linije i pomoćni borderi ostaju dok se ne završi cela vizuelna celina
 - outline helperi ostaju do završnog rezime koraka za dati element ili celinu, pa se tek tada uklanjaju
 
-`build-callout-custom-element` otvara Web Components put:
+`build-custom-element` otvara Web Components put:
 
 - host tag sa crticom
 - registraciju kroz `customElements.define`
 - atribut API
 - prvi render kroz light DOM
 
-`build-feature-callout-web-component` je Web Components nastavak:
+`build-web-component` je Web Components nastavak:
 
 - treći, opcioni JS fajl u middle panelu
 - stvarni live preview koji izvršava isti kumulativni JavaScript
 - Web Components teaching tok kroz custom element, shadow DOM, slot i lifecycle
 
-`clean-feature-callout-with-adopted-stylesheets` zatvara cleanup priču:
+`clean-web-component-with-adopted-stylesheets` zatvara cleanup priču:
 
 - četvrti, opcioni shadow CSS fajl u middle panelu
 - JavaScript uvozi `shadow-dom-style.css` kao tekst preko `?raw`

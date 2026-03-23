@@ -8,18 +8,18 @@ import goalImage from './content/assets/web-component-goal.svg';
 import { readLessonMetadata } from '../../animator/lesson-documents/read-lesson-metadata.js';
 
 const lessonMetadata = readLessonMetadata(lessonDocument, {
-  lessonTitle: "06 · Modular Web Components (IDE View)",
-  lessonIntro: 'Ova lekcija demonstrira novi IDE mode playera. Umesto da svi fajlovi budu vidljivi odjednom, koristimo stvarni file browser i automatsko prebacivanje fokusa na fajl koji se trenutno menja.',
-  previewAddress: 'browser://06-modular-web-components-preview',
-  previewTitle: 'IDE View Web Components Preview',
+  lessonTitle: "Web Components 3/3 · Now Let's Clean The Mess",
+  lessonIntro: 'Treća Web Components lekcija čisti stilsku priču komponente: CSS više ne živi ni u template markup-u ni u velikom JS string-u, nego u posebnom shadow CSS fajlu koji JavaScript uvozi kao tekst i usvaja preko adoptedStyleSheets.',
+  previewAddress: 'browser://clean-my-first-component-with-adopted-stylesheets-preview',
+  previewTitle: 'Live adoptedStyleSheets preview',
   htmlFileName: 'index.html',
   cssFileName: 'style.css',
   jsFileName: 'my-first-component.js',
   shadowCssFileName: 'shadow-dom-style.css'
 });
 
-export const modularWebComponentsLesson = {
-  lessonId: '06-modular-web-components',
+export const cleanWebComponentWithAdoptedStylesheetsLesson = {
+  lessonId: 'clean-web-component-with-adopted-stylesheets',
   lessonTitle: lessonMetadata.lessonTitle,
   lessonIntro: lessonMetadata.lessonIntro,
   lessonIntroHtml: lessonMetadata.lessonIntroHtml,
@@ -29,11 +29,10 @@ export const modularWebComponentsLesson = {
   cssFileName: lessonMetadata.cssFileName,
   jsFileName: lessonMetadata.jsFileName,
   shadowCssFileName: lessonMetadata.shadowCssFileName,
-  ideMode: true,
-  goalTitle: 'Cilj: IDE Iskustvo',
+  goalTitle: 'Šta gradimo u ovoj lekciji',
   goalImageSrc: goalImage,
-  goalImageAlt: 'Referentna slika IDE view-a.',
-  goalImageCaption: 'U ovoj lekciji testiramo IDE layout sa fajlovima na desnoj strani.',
+  goalImageAlt: 'Referentna slika tamnog feature callout card Web Component-a na svetloj pozadini, sa badge oznakom, velikim naslovom, opisom i CTA dugmetom.',
+  goalImageCaption: 'Ovo je cleanup korak: ista komponenta ostaje ista spolja, ali CSS više ne živi u template string-u, već u posebnom `shadow-dom-style.css` sloju koji shadow root usvaja.',
   steps: lessonSteps,
   buildHtmlAtStep,
   buildCssAtStep,

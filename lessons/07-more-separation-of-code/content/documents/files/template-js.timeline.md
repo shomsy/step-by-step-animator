@@ -29,8 +29,8 @@
     "from": "template_element_export",
     "target": "after-template-html",
     "lines": [
-      "export const featureCalloutTemplate = document.createElement('template');",
-      "featureCalloutTemplate.innerHTML = templateHtml;"
+      "export const myFirstComponentTemplate = document.createElement('template');",
+      "myFirstComponentTemplate.innerHTML = templateHtml;"
     ]
   }
 ]

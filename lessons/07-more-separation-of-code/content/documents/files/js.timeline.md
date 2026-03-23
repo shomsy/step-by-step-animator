@@ -6,7 +6,7 @@
     "from": "import_template",
     "target": "root",
     "lines": [
-      "import { featureCalloutTemplate } from './component.html.js';",
+      "import { myFirstComponentTemplate } from './component.html.js';",
       "@@slot:after-import-template@@"
     ]
   },
@@ -23,7 +23,7 @@
     "from": "stylesheet_declaration",
     "target": "after-imports",
     "lines": [
-      "const featureCalloutStyles = new CSSStyleSheet();",
+      "const myFirstComponentStyles = new CSSStyleSheet();",
       "@@slot:after-stylesheet-declaration@@"
     ]
   },
@@ -32,7 +32,7 @@
     "target": "after-stylesheet-declaration",
     "lines": [
       "",
-      "featureCalloutStyles.replaceSync(shadowDomStyleCssText);",
+      "myFirstComponentStyles.replaceSync(shadowDomStyleCssText);",
       "@@slot:after-stylesheet-replace-sync@@"
     ]
   },
@@ -41,7 +41,7 @@
     "target": "after-stylesheet-replace-sync",
     "lines": [
       "",
-      "class FeatureCallout extends HTMLElement {",
+      "class MyFirstComponent extends HTMLElement {",
       "  @@slot:class-head@@",
       "  @@slot:class-body@@",
       "}",
@@ -73,14 +73,14 @@
     "from": "constructor_clone",
     "target": "constructor-body",
     "lines": [
-      "    shadowRoot.appendChild(featureCalloutTemplate.content.cloneNode(true));"
+      "    shadowRoot.appendChild(myFirstComponentTemplate.content.cloneNode(true));"
     ]
   },
   {
     "from": "constructor_adopt_stylesheet",
     "target": "constructor-body",
     "lines": [
-      "    shadowRoot.adoptedStyleSheets = [featureCalloutStyles];"
+      "    shadowRoot.adoptedStyleSheets = [myFirstComponentStyles];"
     ]
   },
   {
@@ -180,7 +180,7 @@
     "lines": [
       "  handleClick() {",
       "    this.dispatchEvent(",
-      "      new CustomEvent('callout-action', {",
+      "      new CustomEvent('component-action', {",
       "        bubbles: true,",
       "        composed: true,",
       "        detail: {",
@@ -196,7 +196,7 @@
     "from": "define_guard",
     "target": "after-class",
     "lines": [
-      "if (!customElements.get('feature-callout')) {",
+      "if (!customElements.get('my-first-component')) {",
       "  @@slot:define-body@@",
       "}"
     ]
@@ -205,7 +205,7 @@
     "from": "define_element",
     "target": "define-body",
     "lines": [
-      "  customElements.define('feature-callout', FeatureCallout);"
+      "  customElements.define('my-first-component', MyFirstComponent);"
     ]
   }
 ]

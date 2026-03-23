@@ -1,15 +1,15 @@
 const focusHtmlNeedlesBySelector = {
   '.app-shell': ['<div class="app-shell">'],
-  'feature-callout': ['<feature-callout', 'slot="eyebrow"'],
-  ':host': ['<feature-callout', 'slot="eyebrow"'],
-  '.card': ['<feature-callout', 'slot="eyebrow"'],
-  '.eyebrow': ['slot="eyebrow"', '<feature-callout'],
-  '.title': ['<feature-callout'],
-  '.summary': ['<feature-callout'],
-  '.cta': ['<feature-callout'],
-  '.cta:hover': ['<feature-callout'],
-  '.cta:active': ['<feature-callout'],
-  '.cta:focus-visible': ['<feature-callout']
+  'my-first-component': ['<my-first-component', 'slot="eyebrow"'],
+  ':host': ['<my-first-component', 'slot="eyebrow"'],
+  '.card': ['<my-first-component', 'slot="eyebrow"'],
+  '.eyebrow': ['slot="eyebrow"', '<my-first-component'],
+  '.title': ['<my-first-component'],
+  '.summary': ['<my-first-component'],
+  '.cta': ['<my-first-component'],
+  '.cta:hover': ['<my-first-component'],
+  '.cta:active': ['<my-first-component'],
+  '.cta:focus-visible': ['<my-first-component']
 };
 
 function readFocusHtmlNeedles(selector) {
@@ -53,11 +53,11 @@ function describeTemplateJsStep(id, title, desc, proTip) {
     desc,
     tag: `template-js:${id.replace(/_/g, '-')}`,
     proTip,
-    focusHtmlNeedles: readFocusHtmlNeedles('feature-callout')
+    focusHtmlNeedles: readFocusHtmlNeedles('my-first-component')
   };
 }
 
-function describeJsFlowStep(id, title, desc, proTip, focusHtmlNeedles = readFocusHtmlNeedles('feature-callout')) {
+function describeJsFlowStep(id, title, desc, proTip, focusHtmlNeedles = readFocusHtmlNeedles('my-first-component')) {
   return {
     id,
     title,
@@ -68,7 +68,7 @@ function describeJsFlowStep(id, title, desc, proTip, focusHtmlNeedles = readFocu
   };
 }
 
-function describeSummaryStep(id, title, desc, proTip, focusHtmlNeedles = readFocusHtmlNeedles('feature-callout')) {
+function describeSummaryStep(id, title, desc, proTip, focusHtmlNeedles = readFocusHtmlNeedles('my-first-component')) {
   return {
     id,
     title,
@@ -90,17 +90,17 @@ const shellCssSteps = [
   ['shell_place_items', '.app-shell', 'place-items', 'center', 'Centar zadržava fokus korisnika na jednoj komponenti.'],
   ['shell_min_height', '.app-shell', 'min-height', '100vh', 'Puna visina drži scenu stabilnom kroz celu lekciju.'],
   ['shell_background', '.app-shell', 'background', 'linear-gradient(180deg, #e2e8f0, #cbd5e1)', 'Svetla pozadina daje kontrast tamnoj komponenti koju gradimo.'],
-  ['host_outline', 'feature-callout', 'outline', '1px solid #f97316', 'Dodajemo tanak helper outline za host element i držimo ga do završnog host rezimea.', 'Host je i dalje spoljašnji API komponente; template markup sada živi u svom modulu.'],
-  ['host_display', 'feature-callout', 'display', 'block', 'Host pretvaramo u block da zauzme svoj red i dobije realan footprint.'],
-  ['host_width', 'feature-callout', 'width', 'min(100%, 420px)', 'Širinu zaključavamo rano da card skeleton ne šeta po sceni.'],
-  ['host_surface_token', 'feature-callout', '--callout-surface', '#0f172a', 'Spolja uvodimo surface token koji adopted stylesheet kasnije povlači kroz `var(...)`.'],
-  ['host_surface_alt_token', 'feature-callout', '--callout-surface-alt', 'rgba(15, 23, 42, 0.92)', 'Dodajemo i drugi surface ton da unutrašnji gradijent ne zavisi od hardkodovanog fallback-a.'],
-  ['host_border_token', 'feature-callout', '--callout-border', 'rgba(148,163,184,0.24)', 'Border token služi da spolja theme-ujemo ivicu komponente.'],
-  ['host_accent_token', 'feature-callout', '--callout-accent', '#38bdf8', 'Accent token će obojiti badge i CTA unutar komponente.'],
-  ['host_accent_strong_token', 'feature-callout', '--callout-accent-strong', '#2563eb', 'Jači accent ton služi za dublji kraj CTA gradijenta.'],
-  ['host_text_token', 'feature-callout', '--callout-text', '#e2e8f0', 'Text token daje konzistentnu boju celom Web Component sadržaju.'],
-  ['host_muted_token', 'feature-callout', '--callout-muted', '#cbd5e1', 'Muted token služi sekundarnom tekstu unutar komponente.'],
-  ['host_shadow_token', 'feature-callout', '--callout-shadow', '0 26px 60px rgba(15, 23, 42, 0.24)', 'Shadow token prebacuje i dubinu komponente u spoljašnji theme sloj.']
+  ['host_outline', 'my-first-component', 'outline', '1px solid #f97316', 'Dodajemo tanak helper outline za host element i držimo ga do završnog host rezimea.', 'Host je i dalje spoljašnji API komponente; template markup sada živi u svom modulu.'],
+  ['host_display', 'my-first-component', 'display', 'block', 'Host pretvaramo u block da zauzme svoj red i dobije realan footprint.'],
+  ['host_width', 'my-first-component', 'width', 'min(100%, 420px)', 'Širinu zaključavamo rano da card skeleton ne šeta po sceni.'],
+  ['host_surface_token', 'my-first-component', '--callout-surface', '#0f172a', 'Spolja uvodimo surface token koji adopted stylesheet kasnije povlači kroz `var(...)`.'],
+  ['host_surface_alt_token', 'my-first-component', '--callout-surface-alt', 'rgba(15, 23, 42, 0.92)', 'Dodajemo i drugi surface ton da unutrašnji gradijent ne zavisi od hardkodovanog fallback-a.'],
+  ['host_border_token', 'my-first-component', '--callout-border', 'rgba(148,163,184,0.24)', 'Border token služi da spolja theme-ujemo ivicu komponente.'],
+  ['host_accent_token', 'my-first-component', '--callout-accent', '#38bdf8', 'Accent token će obojiti badge i CTA unutar komponente.'],
+  ['host_accent_strong_token', 'my-first-component', '--callout-accent-strong', '#2563eb', 'Jači accent ton služi za dublji kraj CTA gradijenta.'],
+  ['host_text_token', 'my-first-component', '--callout-text', '#e2e8f0', 'Text token daje konzistentnu boju celom Web Component sadržaju.'],
+  ['host_muted_token', 'my-first-component', '--callout-muted', '#cbd5e1', 'Muted token služi sekundarnom tekstu unutar komponente.'],
+  ['host_shadow_token', 'my-first-component', '--callout-shadow', '0 26px 60px rgba(15, 23, 42, 0.24)', 'Shadow token prebacuje i dubinu komponente u spoljašnji theme sloj.']
 ];
 
 const stylesheetSteps = [
@@ -167,10 +167,10 @@ export const lessonSteps = [
   describeHtmlElementStep(
     'component_html',
     'HTML: Feature Callout Host',
-    'Dodajemo `<feature-callout>` host sa `title` i `cta-label` atributima. Host API ostaje isti kao u prethodnim lekcijama.',
-    'html:feature-callout',
+    'Dodajemo `<my-first-component>` host sa `title` i `cta-label` atributima. Host API ostaje isti kao u prethodnim lekcijama.',
+    'html:my-first-component',
     'Naziv custom elementa mora da sadrži crticu.',
-    ['<feature-callout']
+    ['<my-first-component']
   ),
   describeHtmlElementStep(
     'eyebrow_slot_html',
@@ -178,7 +178,7 @@ export const lessonSteps = [
     'U host ubacujemo `<span slot="eyebrow">Vanilla JS</span>`. Light DOM sadržaj ostaje nepromenjen.',
     'html:slot-eyebrow',
     'Named slot projicira ciljani deo sadržaja u komponentu.',
-    ['slot="eyebrow"', '<feature-callout']
+    ['slot="eyebrow"', '<my-first-component']
   ),
   describeHtmlElementStep(
     'summary_text_html',
@@ -186,7 +186,7 @@ export const lessonSteps = [
     'Dodajemo opisni tekst kao default slot sadržaj.',
     'html:default-slot',
     'Refactor pristupa stilovima ne menja HTML API komponente.',
-    ['<feature-callout', 'slot="eyebrow"']
+    ['<my-first-component', 'slot="eyebrow"']
   ),
   describeTemplateJsStep(
     'template_html_declaration',
@@ -197,13 +197,13 @@ export const lessonSteps = [
   describeTemplateJsStep(
     'template_element_export',
     'Template JS: Eksportujemo Template Element',
-    'Kreiramo `document.createElement(\'template\')`, postavljamo `innerHTML` i eksportujemo gotov template element. `feature-callout.js` ga samo importuje.',
+    'Kreiramo `document.createElement(\'template\')`, postavljamo `innerHTML` i eksportujemo gotov template element. `my-first-component.js` ga samo importuje.',
     'Export čini template dostupnim drugim modulima bez da oni znaju kako je napravljen.'
   ),
   describeJsFlowStep(
     'import_template',
     'JS: Uvozimo Template iz component.html.js',
-    'U `feature-callout.js` dodajemo `import { featureCalloutTemplate } from \'./component.html.js\'`. Klasa više ne gradi template, samo ga koristi.',
+    'U `my-first-component.js` dodajemo `import { myFirstComponentTemplate } from \'./component.html.js\'`. Klasa više ne gradi template, samo ga koristi.',
     'Ovo je suština ove lekcije: svaki fajl radi jednu stvar. Template modul gradi markup, klasa vodi ponašanje.'
   ),
   describeJsFlowStep(
@@ -221,13 +221,13 @@ export const lessonSteps = [
   describeJsFlowStep(
     'stylesheet_replace_sync',
     'JS: replaceSync Prima Uvezeni CSS',
-    'Kroz `featureCalloutStyles.replaceSync(shadowDomStyleCssText)` punimo stylesheet tekstom iz CSS fajla.',
+    'Kroz `myFirstComponentStyles.replaceSync(shadowDomStyleCssText)` punimo stylesheet tekstom iz CSS fajla.',
     'JavaScript više ne nosi stil pravila u sebi, samo ih povezuje.'
   ),
   describeJsFlowStep(
     'class_declaration',
     'JS: Class Extends HTMLElement',
-    'Otvaramo `class FeatureCallout extends HTMLElement`. Klasa sada ne zna kako je template napravljen; samo ga koristi.',
+    'Otvaramo `class MyFirstComponent extends HTMLElement`. Klasa sada ne zna kako je template napravljen; samo ga koristi.',
     'Custom element je i dalje običan DOM element, samo sa tvojom klasom.'
   ),
   describeJsFlowStep(
@@ -239,13 +239,13 @@ export const lessonSteps = [
   describeJsFlowStep(
     'constructor_clone',
     'JS: Kloniramo Uvezeni Template',
-    'Dodajemo `appendChild(featureCalloutTemplate.content.cloneNode(true))`. Template dolazi iz import-a, ne iz lokalne definicije.',
+    'Dodajemo `appendChild(myFirstComponentTemplate.content.cloneNode(true))`. Template dolazi iz import-a, ne iz lokalne definicije.',
     'Klonirani template pravi identičan shadow DOM skeleton za svaku instancu.'
   ),
   describeJsFlowStep(
     'constructor_adopt_stylesheet',
     'JS: Shadow Root Usvaja Stylesheet',
-    'Dodajemo `shadowRoot.adoptedStyleSheets = [featureCalloutStyles]`.',
+    'Dodajemo `shadowRoot.adoptedStyleSheets = [myFirstComponentStyles]`.',
     'Stylesheet i template dolaze iz različitih modula; klasa ih samo sastavlja.'
   ),
   describeJsFlowStep(
@@ -322,20 +322,20 @@ export const lessonSteps = [
   ),
   describeJsFlowStep(
     'handle_click_dispatch_event',
-    'JS: CTA Emituje callout-action',
-    "Dodajemo `handleClick()` i emitujemo `CustomEvent('callout-action', ...)`.",
+    'JS: CTA Emituje component-action',
+    "Dodajemo `handleClick()` i emitujemo `CustomEvent('component-action', ...)`.",
     'Komponenta dobija izlazni API: javlja korisničku akciju spolja.'
   ),
   describeJsFlowStep(
     'define_guard',
     'JS: Čuvamo se duplog define-a',
-    'Pre registracije proveravamo `customElements.get(\'feature-callout\')`.',
+    'Pre registracije proveravamo `customElements.get(\'my-first-component\')`.',
     'U okruženjima sa hot reload-om ovo je obavezna zaštita.'
   ),
   describeJsFlowStep(
     'define_element',
     'JS: Registrujemo Custom Element',
-    'Unutar guard-a pozivamo `customElements.define(\'feature-callout\', FeatureCallout)`. Preview sada renderuje komponentu čiji template dolazi iz posebnog modula.',
+    'Unutar guard-a pozivamo `customElements.define(\'my-first-component\', MyFirstComponent)`. Preview sada renderuje komponentu čiji template dolazi iz posebnog modula.',
     'Svaki fajl ima jednu odgovornost: template, stil, ponašanje, host.'
   ),
   ...shellCssSteps.map(config => describeCssPropertyStep(...config)),
@@ -360,7 +360,7 @@ export const lessonSteps = [
   ),
   describeSummaryStep(
     'host_summary',
-    'Rezime: feature-callout host',
+    'Rezime: my-first-component host',
     'Uklanjamo host outline.',
     'API atributi, theme tokeni i modularna struktura su sada jasni.'
   ),
@@ -374,7 +374,7 @@ export const lessonSteps = [
   describeFinishedStep(
     'done',
     'Done: More Separation Of Code',
-    'Lekcija je završena: ista komponenta sada ima pet zasebnih fajlova. `index.html` opisuje host, `component.html.js` čuva template markup, `feature-callout.js` vodi lifecycle, `shadow-dom-style.css` stilizuje unutrašnjost, a `style.css` theme-uje host spolja.',
+    'Lekcija je završena: ista komponenta sada ima pet zasebnih fajlova. `index.html` opisuje host, `component.html.js` čuva template markup, `my-first-component.js` vodi lifecycle, `shadow-dom-style.css` stilizuje unutrašnjost, a `style.css` theme-uje host spolja.',
     'Sledeći korak je da isti template modul podeliš između više komponenata ili uvedeš dinamički template loading.'
   )
 ];

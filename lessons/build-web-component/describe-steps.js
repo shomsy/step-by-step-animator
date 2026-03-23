@@ -33,15 +33,15 @@ function describeCssPropertyStep(id, selector, property, value, desc = '', proTi
   };
 }
 
-function describeShadowCssPropertyStep(id, selector, property, value, desc = '', proTip = '') {
+function describeJsTemplateStyleStep(id, selector, property, value, desc = '', proTip = '') {
   const cssLine = `${property}: ${value};`;
 
   return {
     id,
-    title: `Shadow CSS: ${selector} / ${property}`,
-    desc: desc || `U \`shadow-dom-style.css\` dodajemo \`${cssLine}\` za \`${selector}\`, pa CSS više ne živi u template string markup-u ni u class logici.`,
-    tag: `shadow-css:${id.replace(/_/g, '-')}`,
-    proTip: proTip || 'Ovde je poenta da CSS ostane u sopstvenom fajlu, dok JavaScript samo uvozi tekst i usvaja ga kroz Web Components API.',
+    title: `JS: template / ${selector} / ${property}`,
+    desc: desc || `U template string dodajemo \`${cssLine}\` za \`${selector}\`, pa se i shadow DOM stil širi liniju po liniju.`,
+    tag: `js-style:${id.replace(/_/g, '-')}`,
+    proTip: proTip || 'Kod Web Components lekcije i stilovi unutar shadow DOM-a moraju da rastu postepeno, ne kao gotov paket.',
     focusHtmlNeedles: readFocusHtmlNeedles(selector)
   };
 }
@@ -79,26 +79,26 @@ const shellCssSteps = [
   ['shell_place_items', '.app-shell', 'place-items', 'center', 'Centar zadržava fokus korisnika na jednoj komponenti.'],
   ['shell_min_height', '.app-shell', 'min-height', '100vh', 'Puna visina drži scenu stabilnom kroz celu lekciju.'],
   ['shell_background', '.app-shell', 'background', 'linear-gradient(180deg, #e2e8f0, #cbd5e1)', 'Svetla pozadina daje kontrast tamnoj komponenti koju gradimo.'],
-  ['host_outline', 'my-first-component', 'outline', '1px solid #f97316', 'Dodajemo tanak helper outline za host element i držimo ga do završnog host rezimea.', 'Host i dalje ostaje spoljašnji API komponente, čak i kada unutrašnji CSS više ne živi u template string-u.'],
+  ['host_outline', 'my-first-component', 'outline', '1px solid #f97316', 'Dodajemo tanak helper outline za host element i držimo ga do završnog host rezimea.', 'I kada komponenta već renderuje shadow DOM, host ostaje spoljašnji API i zato mora da ostane jasno obeležen.'],
   ['host_display', 'my-first-component', 'display', 'block', 'Host pretvaramo u block da zauzme svoj red i dobije realan footprint.'],
   ['host_width', 'my-first-component', 'width', 'min(100%, 420px)', 'Širinu zaključavamo rano da card skeleton ne šeta po sceni.'],
-  ['host_surface_token', 'my-first-component', '--callout-surface', '#0f172a', 'Spolja uvodimo surface token koji adopted stylesheet kasnije povlači kroz `var(...)`.'],
+  ['host_surface_token', 'my-first-component', '--callout-surface', '#0f172a', 'Spolja uvodimo surface token koji shadow DOM kasnije povlači kroz `var(...)`.'],
   ['host_surface_alt_token', 'my-first-component', '--callout-surface-alt', 'rgba(15, 23, 42, 0.92)', 'Dodajemo i drugi surface ton da unutrašnji gradijent ne zavisi od hardkodovanog fallback-a.'],
   ['host_border_token', 'my-first-component', '--callout-border', 'rgba(148,163,184,0.24)', 'Border token služi da spolja theme-ujemo ivicu komponente.'],
-  ['host_accent_token', 'my-first-component', '--callout-accent', '#38bdf8', 'Accent token će obojiti badge i CTA unutar komponente.'],
+  ['host_accent_token', 'my-first-component', '--callout-accent', '#38bdf8', 'Accent token će obojiti badge i CTA unutar shadow DOM-a.'],
   ['host_accent_strong_token', 'my-first-component', '--callout-accent-strong', '#2563eb', 'Jači accent ton služi za dublji kraj CTA gradijenta.'],
   ['host_text_token', 'my-first-component', '--callout-text', '#e2e8f0', 'Text token daje konzistentnu boju celom Web Component sadržaju.'],
   ['host_muted_token', 'my-first-component', '--callout-muted', '#cbd5e1', 'Muted token služi sekundarnom tekstu unutar komponente.'],
   ['host_shadow_token', 'my-first-component', '--callout-shadow', '0 26px 60px rgba(15, 23, 42, 0.24)', 'Shadow token prebacuje i dubinu komponente u spoljašnji theme sloj.']
 ];
 
-const stylesheetSteps = [
-  ['host_font', ':host', 'font-family', 'Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif', 'Počinje constructed stylesheet: host dobija isti font stack kao i ostatak scene.'],
+const templateStyleSteps = [
+  ['host_font', ':host', 'font-family', 'Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif', 'Počinje unutrašnji template CSS: host dobija isti font stack kao i ostatak scene.'],
   ['host_color', ':host', 'color', 'var(--callout-text, #e2e8f0)', 'Host odmah koristi spoljašnji text token, pa vidiš kako custom property prolazi kroz granicu shadow DOM-a.'],
   ['card_outline', '.card', 'outline', '1px dashed #38bdf8', 'Dodajemo helper outline za glavni card blok i držimo ga do završnog card rezimea.', 'Glavni card outline ostaje dok ne završimo celu unutrašnju celinu.'],
   ['card_display', '.card', 'display', 'grid', 'Card raspored uvodimo grid-om jer imamo vertikalnu stack strukturu.'],
   ['card_gap', '.card', 'gap', '16px', 'Gap odvaja badge, naslov, opis i CTA.'],
-  ['card_padding', '.card', 'padding', '24px', 'Padding pravi pravi card footprint unutar komponente.'],
+  ['card_padding', '.card', 'padding', '24px', 'Padding pravi pravi card footprint unutar shadow DOM-a.'],
   ['card_radius', '.card', 'border-radius', '28px', 'Zaobljenje daje modernu card siluetu.'],
   ['card_border', '.card', 'border', '1px solid var(--callout-border, rgba(148,163,184,0.24))', 'Ivica koristi host token, pa spoljašnji CSS zaista utiče na unutrašnji card.'],
   ['card_background', '.card', 'background', 'linear-gradient(180deg, var(--callout-surface, rgba(15,23,42,0.98)), var(--callout-surface-alt, rgba(15,23,42,0.92)))', 'Tamna pozadina sada čita oba surface tokena direktno sa host elementa.'],
@@ -117,7 +117,7 @@ const stylesheetSteps = [
   ['eyebrow_letter_spacing', '.eyebrow', 'letter-spacing', '0.04em', 'Mali tracking daje badge-u uredniji, label-like karakter.'],
   ['eyebrow_text_transform', '.eyebrow', 'text-transform', 'uppercase', 'Uppercase zatvara eyebrow kao jasnu oznaku kategorije.'],
   ['title_display', '.title', 'display', 'block', 'Naslovu dajemo sopstveni red da ne deli liniju sa drugim delovima.'],
-  ['title_margin', '.title', 'margin', '0', 'Pošto koristimo semantički `h2`, prvo gasimo podrazumevani margin.'],
+  ['title_margin', '.title', 'margin', '0', 'Pošto prelazimo na semantički `h2`, prvo gasimo podrazumevani margin.'],
   ['title_font_size', '.title', 'font-size', 'clamp(1.75rem, 4vw, 2rem)', 'Naslov dobija responzivniju veličinu, bližu finalnom polished utisku.'],
   ['title_line_height', '.title', 'line-height', '1.1', 'Kraći line-height drži naslov zategnutim i čitljivim.'],
   ['title_font_weight', '.title', 'font-weight', '800', 'Pojačavamo naslov da odmah nosi hijerarhiju.'],
@@ -148,7 +148,7 @@ export const lessonSteps = [
   describeHtmlElementStep(
     'empty_shell',
     'Start: Empty App Shell',
-    'Počinjemo od praznog `.app-shell` prostora. Goal slika iznad pokazuje istu komponentu, ali sada je cilj da očistimo način na koji njeni stilovi žive pored JavaScript logike.',
+    'Počinjemo od praznog `.app-shell` prostora. Goal slika iznad pokazuje finalni Web Component koji tek treba da oživi kroz HTML, CSS i vanilla JavaScript.',
     'html:app-shell',
     'Neutralan početak odvaja postojeći page shell od komponente koju tek gradimo.',
     ['<div class="app-shell">']
@@ -156,7 +156,7 @@ export const lessonSteps = [
   describeHtmlElementStep(
     'component_html',
     'HTML: Feature Callout Host',
-    'Dodajemo `<my-first-component>` host sa `title` i `cta-label` atributima. Host API ostaje isti; menja se samo način na koji komponenta organizuje sopstveni CSS.',
+    'Dodajemo `<my-first-component>` host sa `title` i `cta-label` atributima. Još nije registrovan, ali browser već vidi custom tag i njegov sirovi sadržaj.',
     'html:my-first-component',
     'Naziv custom elementa mora da sadrži crticu. To je osnovno pravilo registracije custom elementa.',
     ['<my-first-component']
@@ -164,60 +164,36 @@ export const lessonSteps = [
   describeHtmlElementStep(
     'eyebrow_slot_html',
     'HTML: Named Slot Content',
-    'U host ubacujemo `<span slot="eyebrow">Vanilla JS</span>`. Light DOM sadržaj ostaje isti i u ovoj čistijoj verziji komponente.',
+    'U host ubacujemo `<span slot="eyebrow">Vanilla JS</span>`. To je light DOM sadržaj koji će kasnije upasti u named slot unutar shadow DOM-a.',
     'html:slot-eyebrow',
-    'Named slot je i dalje najjednostavniji način da spolja projiciraš mali, ciljani deo sadržaja u komponentu.',
+    'Named slot je najjednostavniji način da spolja projiciraš mali, ciljani deo sadržaja u komponentu.',
     ['slot="eyebrow"', '<my-first-component']
   ),
   describeHtmlElementStep(
     'summary_text_html',
     'HTML: Default Slot Text',
-    'Dodajemo opisni tekst kao default slot sadržaj. Čišćenje stila ne menja slot logiku; menja samo gde CSS živi.',
+    'Dodajemo opisni tekst kao default slot sadržaj. Pre registracije komponente vidiš ga kao običan sadržaj custom taga; posle registracije odlazi u `<slot>` unutar template-a.',
     'html:default-slot',
-    'Ovo je važna poenta: refactor styling pristupa ne bi trebalo da razbije HTML API komponente.',
+    'Ovo je važan momenat: light DOM i shadow DOM nisu ista stvar, ali mogu da sarađuju kroz slot projekciju.',
     ['<my-first-component', 'slot="eyebrow"']
   ),
   describeJsFlowStep(
     'template_declaration',
-    'JS: Template Sada Čuva Samo Markup',
-    'Kreiramo `document.createElement(\'template\')`, ali ovoga puta template više nije zadužen i za stilove. Čuvamo ga samo za shadow DOM markup.',
-    'Kada template više ne nosi i markup i CSS zajedno, komponenta postaje čitljivija i lakša za održavanje.'
-  ),
-  describeJsFlowStep(
-    'cleanup_intro',
-    "Now Let's Clean The Mess",
-    'Ovde pravimo glavni refactor: CSS više ne guramo u `<style>` unutar `template.innerHTML`, niti ga držimo kao veliki inline string u JavaScript fajlu. Prebacujemo ga u poseban `shadow-dom-style.css` koji komponenta kasnije samo usvoji.',
-    'Suština ovog koraka je da CSS može da bude odvojen i od class logike i od template markup-a, umesto da sve bude zbijeno u jedan veliki string.'
-  ),
-  describeJsFlowStep(
-    'shadow_css_import',
-    'JS: Uvozimo shadow-dom-style.css kao tekst',
-    'Dodajemo `import shadowDomStyleCssText from \'./shadow-dom-style.css?raw\';`, pa JavaScript više ne nosi same CSS linije nego samo učitava gotov stylesheet source.',
-    'Ovo je najčistiji Vite-friendly model za ovu lekciju: CSS fizički živi u svom fajlu, a komponenta ga samo pretvara u `CSSStyleSheet`.'
-  ),
-  describeJsFlowStep(
-    'stylesheet_declaration',
-    'JS: Kreiramo CSSStyleSheet',
-    'Dodajemo `new CSSStyleSheet()` i otvaramo poseban objekat koji će čuvati CSS komponente van same klase.',
-    'To je prvi konkretan signal da stil više nije spakovan zajedno sa markup-om u jednom template bloku.'
-  ),
-  describeJsFlowStep(
-    'stylesheet_replace_sync',
-    'JS: replaceSync Prima Uvezeni CSS',
-    'Kroz `myFirstComponentStyles.replaceSync(shadowDomStyleCssText)` punimo constructed stylesheet tekstom koji stiže iz posebnog CSS fajla. JavaScript više ne nosi stil pravila u sebi.',
-    'Ovo je najvažniji mentalni model cele lekcije: CSS je izdvojen u poseban fajl, a JavaScript ga samo povezuje sa shadow root-om.'
+    'JS: Kreiramo Template',
+    'Počinjemo sa `document.createElement(\'template\')`. Template nam daje inertan komad DOM-a koji možemo bezbedno da kloniramo u svakoj instanci komponente.',
+    'Template je prirodan temelj kada želiš da isti shadow DOM markup i stilovi budu dostupni za svaku novu instancu komponente.'
   ),
   describeJsFlowStep(
     'template_markup_open',
-    'JS: Template Markup Bez <style>',
-    'Sada otvaramo `template.innerHTML = \\`` i ubacujemo samo card markup. Nema više embedded `<style>` bloka u template string-u.',
-    'Kad neko otvori template, vidi isključivo strukturu DOM-a. To je mnogo čistiji signal odgovornosti.'
+    'JS: Otvaramo Template String',
+    'Dodajemo `template.innerHTML = \\`` i od tog trenutka gradimo ceo shadow DOM sadržaj iz jednog kontrolisanog izvora.',
+    'Prvo otvaramo template kao mesto gde će nastati shadow DOM skeleton, a stilove dodajemo tek kada taj skeleton već postoji.'
   ),
   describeJsFlowStep(
     'card_markup',
     'JS: Dodajemo Shadow DOM Markup',
-    'U template ubacujemo card wrapper, named slot za eyebrow, semantički `h2` naslov, paragraf sa default slotom, CTA dugme i `part` atribute za kasniji escape hatch.',
-    'Template sada stvarno priča samo markup priču.'
+    'Sada ubacujemo unutrašnji markup: card wrapper, named slot za eyebrow, semantički `h2` naslov, paragraf sa default slotom, CTA dugme i `part` atribute za kasniji escape hatch.',
+    'Prvo pravimo stvarni shadow DOM markup koji preview može da pokaže; stilovi i component polish dolaze odmah posle toga.'
   ),
   describeJsFlowStep(
     'class_declaration',
@@ -229,19 +205,13 @@ export const lessonSteps = [
     'constructor_shadow',
     'JS: constructor + attachShadow',
     'U konstruktoru pozivamo `super()` i odmah otvaramo `const shadowRoot = this.attachShadow({ mode: \'open\' })` da komponenta dobije sopstveni shadow root.',
-    'Shadow root je granica komponente: markup i adopted stylesheet žive iza nje.'
+    'Shadow root je granica komponente: unutrašnji markup i stilovi žive iza nje.'
   ),
   describeJsFlowStep(
     'constructor_clone',
     'JS: Kloniramo Template',
     'Dodajemo `appendChild(myFirstComponentTemplate.content.cloneNode(true))`, pa svaka instanca komponente dobija isti početni shadow DOM skeleton.',
     'Kloniranje template-a je najčistiji način da jednu definiciju koristiš u više instanci.'
-  ),
-  describeJsFlowStep(
-    'constructor_adopt_stylesheet',
-    'JS: Shadow Root Usvaja Stylesheet',
-    'Dodajemo `shadowRoot.adoptedStyleSheets = [myFirstComponentStyles]`, pa shadow root dobija stil bez ubacivanja `<style>` taga u template.',
-    'Ovo je trenutak kada čisti separation stvarno proradi: stylesheet je izdvojen, a shadow root ga samo preuzima.'
   ),
   describeJsFlowStep(
     'constructor_cache_title',
@@ -330,47 +300,47 @@ export const lessonSteps = [
   describeJsFlowStep(
     'define_element',
     'JS: Registrujemo Custom Element',
-    'Unutar guard-a pozivamo `customElements.define(\'my-first-component\', MyFirstComponent)`. Od ovog trenutka browser zna kako da upgrade-uje `<my-first-component>` u pravu komponentu i preview dobija render bez style taga u template-u.',
-    'Sada je i struktura koda čistija: template čuva markup, stylesheet čuva CSS, a klasa orkestrira ponašanje.'
+    'Unutar guard-a pozivamo `customElements.define(\'my-first-component\', MyFirstComponent)`. Od ovog trenutka browser zna kako da upgrade-uje `<my-first-component>` u pravu komponentu i preview dobija prvi stvarni, još uvek sirovi render.',
+    'Tek kada browser dobije živu komponentu, ima smisla da preko nje gradiš spoljašnji i unutrašnji CSS sloj.'
   ),
   ...shellCssSteps.map(config => describeCssPropertyStep(...config)),
-  ...stylesheetSteps.map(config => describeShadowCssPropertyStep(...config)),
+  ...templateStyleSteps.map(config => describeJsTemplateStyleStep(...config)),
   describeSummaryStep(
     'card_summary',
-    'Rezime: .card u shadow-dom-style.css',
-    'Rezimiramo glavni card blok i tek sada uklanjamo njegov helper outline, jer su struktura, stil iz posebnog CSS fajla i način usvajanja stylesheet-a potpuno jasni.',
-    'Helper outline za glavni card ostaje dok i markup i poseban shadow CSS tok ne budu dovoljno čitljivi.'
+    'Rezime: .card unutar template-a',
+    'Rezimiramo glavni card blok i tek sada uklanjamo njegov helper outline, jer je unutrašnja struktura komponente već potpuno jasna.',
+    'Helper outline za glavni card ostaje dok i markup i stil i ponašanje ne budu dovoljno čitljivi.'
   ),
   describeSummaryStep(
     'eyebrow_summary',
-    'Rezime: .eyebrow u shadow-dom-style.css',
-    'Rezimiramo eyebrow badge i uklanjamo njegov helper outline tek sada, kada slot projekcija i badge stil rade zajedno iz izdvojenog CSS fajla.',
+    'Rezime: .eyebrow unutar template-a',
+    'Rezimiramo eyebrow badge i uklanjamo njegov helper outline tek sada, kada slot projekcija i badge stil rade zajedno.',
     'Slot je ovde važan deo lekcije, pa helper outline ostaje dok named slot ne postane jasan.'
   ),
   describeSummaryStep(
     'cta_summary',
-    'Rezime: .cta u shadow-dom-style.css',
-    'Rezime za CTA dugme: helper outline više nije potreban, jer završni stil iz posebnog CSS fajla, event i hover/focus ponašanje već jasno pokazuju njegovu ulogu.',
+    'Rezime: .cta unutar template-a',
+    'Rezime za CTA dugme: helper outline više nije potreban, jer završni stil, event i hover/focus ponašanje već jasno pokazuju njegovu ulogu.',
     'Outline služi učenju; kad je element potpuno objašnjen, može da nestane.'
   ),
   describeSummaryStep(
     'host_summary',
     'Rezime: my-first-component host',
-    'Završni host rezime: spoljašnji outline host elementa više nije potreban, jer su API atributi, theme tokeni i adopted stylesheet tok sada jasni.',
+    'Završni host rezime: spoljašnji outline host elementa više nije potreban, jer su API atributi, theme tokeni i safe registration sada jasni.',
     'Host outline ostaje dok ne pokažemo i spoljašnji API i unutrašnju implementaciju komponente.'
   ),
   describeSummaryStep(
     'shell_summary',
     'Rezime: .app-shell',
-    'Tek sada uklanjamo helper outline sa `.app-shell`, jer je cela cleanup lekcija kompletna i okvir više nije potreban.',
+    'Tek sada uklanjamo helper outline sa `.app-shell`, jer je cela Web Components lekcija kompletna i okvir više nije potreban.',
     'App shell outline ostaje sve vreme kao teaching okvir i nestaje tek na samom kraju lekcije.',
     ['<div class="app-shell">']
   ),
   describeFinishedStep(
     'done',
-    'Done: Clean Feature Callout with adoptedStyleSheets',
-    'Lekcija je završena: ista komponenta sada ima čistiji raspored odgovornosti. Host HTML ostaje mali, template čuva samo markup, `shadow-dom-style.css` čuva CSS, a klasa samo uvozi tekst, usvaja stylesheet i vodi lifecycle ponašanje.',
-    'Sledeći logičan korak je da isti stylesheet podeliš između više shadow root instanci ili da uvedeš još jedan komponentni stil sloj.'
+    'Done: Feature Callout Web Component',
+    'Lekcija je završena: od praznog shell-a stigli smo do pravog custom elementa sa host atributima, slotovima, shadow DOM-om, render lifecycle-om, cleanup-om, sigurnom registracijom, izlaznim event-om i interaction polish slojem.',
+    'Sledeći logičan korak je da napraviš drugu komponentu sa više slotova, `part`/`exportparts` strategijom ili još bogatijim public API-jem.'
   )
 ];
 

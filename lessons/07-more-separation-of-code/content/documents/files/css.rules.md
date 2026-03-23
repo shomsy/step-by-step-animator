@@ -16,7 +16,7 @@
     ]
   },
   {
-    "header": "feature-callout {",
+    "header": "my-first-component {",
     "showFrom": "component_html",
     "entries": [
       { "from": "host_outline", "untilBefore": "host_summary", "line": "outline: 1px solid #f97316;" },
@@ -30,7 +30,7 @@
       { "from": "host_text_token", "line": "--callout-text: #e2e8f0;" },
       { "from": "host_muted_token", "line": "--callout-muted: #cbd5e1;" },
       { "from": "host_shadow_token", "line": "--callout-shadow: 0 26px 60px rgba(15, 23, 42, 0.24);" },
-      { "from": "host_summary", "line": "/* helper outline removed in final feature-callout host summary */" }
+      { "from": "host_summary", "line": "/* helper outline removed in final my-first-component host summary */" }
     ]
   }
 ]
