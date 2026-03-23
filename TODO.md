@@ -14,7 +14,7 @@ Ovaj fajl je kanonska lista za arhitekturu i sledeće veće korake ovog repoa.
 
 - `Status`: `DONE`
 - `Šta fali`: ništa
-- `Napomena`: Root je sada podeljen na dve jasne celine: `animator/` za tehnički runtime i tooling, i `lessons/` za business lesson slice-ove. `build-sidebar` je sveden na čist lesson contract.
+- `Napomena`: Root je sada podeljen na dve jasne celine: `animator/` za tehnički runtime i tooling, i `lessons/` za business lesson slice-ove. `01-build-sidebar` je sveden na čist lesson contract.
 
 ### 2. Zadrži jedan kanonski engine entry
 
@@ -26,7 +26,7 @@ Ovaj fajl je kanonska lista za arhitekturu i sledeće veće korake ovog repoa.
 
 - `Status`: `DONE`
 - `Šta fali`: ništa
-- `Napomena`: Step script, HTML builder i CSS builder sada žive u `lessons/build-sidebar/`.
+- `Napomena`: Step script, HTML builder i CSS builder sada žive u `lessons/01-build-sidebar/`.
 
 ### 4. Uvedi jasan lesson contract za buduće lekcije
 
@@ -38,7 +38,7 @@ Ovaj fajl je kanonska lista za arhitekturu i sledeće veće korake ovog repoa.
 
 - `Status`: `DONE`
 - `Šta fali`: ništa
-- `Napomena`: `build-sidebar` sada koristi `content/documents/files/lesson.sr.md`, uz generisani `content/documents/build_sidebar.md`.
+- `Napomena`: `01-build-sidebar` sada koristi `content/documents/files/lesson.sr.md`, uz generisani `content/documents/01_build_sidebar.md`.
 
 ### 4b. Uvedi markdown DSL za HTML/CSS/JS lesson sadržaj
 
@@ -52,7 +52,7 @@ Ovaj fajl je kanonska lista za arhitekturu i sledeće veće korake ovog repoa.
 
 - `Status`: `DONE`
 - `Šta fali`: ništa
-- `Napomena`: Dodata je `build-top-navigation` lekcija sa sopstvenim step script-om, builderima, markdown dokumentima i goal slikom.
+- `Napomena`: Dodata je `02-build-top-navigation` lekcija sa sopstvenim step script-om, builderima, markdown dokumentima i goal slikom.
 
 ### 6. Dodaj lesson picker u shell
 

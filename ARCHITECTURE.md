@@ -59,19 +59,19 @@ animator/
     sync-lesson-documents.js
 lessons/
   register-lessons.js
-  build-sidebar/
+  01-build-sidebar/
     build-sidebar.lesson.js
     describe-steps.js
     build-html-at-step.js
     build-css-at-step.js
     content/
       documents/
-        build_sidebar.md
+        01_build_sidebar.md
         files/
           lesson.sr.md
           html.timeline.md
           css.rules.md
-  build-top-navigation/
+  02-build-top-navigation/
     build-top-navigation.lesson.js
     describe-steps.js
     build-html-at-step.js
@@ -80,12 +80,12 @@ lessons/
       assets/
         top-navigation-goal.svg
       documents/
-        build_top_navigation.md
+        02_build_top_navigation.md
         files/
           lesson.sr.md
           html.timeline.md
           css.rules.md
-  build-custom-element/
+  03-build-custom-element/
     build-custom-element.lesson.js
     describe-steps.js
     build-html-at-step.js
@@ -95,13 +95,13 @@ lessons/
       assets/
         custom-element-goal.svg
       documents/
-        build_custom_element.md
+        03_build_custom_element.md
         files/
           lesson.sr.md
           html.timeline.md
           css.rules.md
           js.timeline.md
-  build-web-component/
+  04-build-web-component/
     build-web-component.lesson.js
     describe-steps.js
     build-html-at-step.js
@@ -111,13 +111,13 @@ lessons/
       assets/
         web-component-goal.svg
       documents/
-        build_web_component.md
+        04_build_web_component.md
         files/
           lesson.sr.md
           html.timeline.md
           css.rules.md
           js.timeline.md
-  clean-web-component-with-adopted-stylesheets/
+  05-clean-web-component-with-adopted-stylesheets/
     clean-web-component-with-adopted-stylesheets.lesson.js
     describe-steps.js
     build-html-at-step.js
@@ -128,7 +128,25 @@ lessons/
       assets/
         web-component-goal.svg
       documents/
-        clean_web_component_with_adopted_stylesheets.md
+        05_clean_web_component_with_adopted_stylesheets.md
+        files/
+          lesson.sr.md
+          html.timeline.md
+          css.rules.md
+          js.timeline.md
+          shadow-dom-style.css.md
+  06-modular-web-components/
+    06-modular-web-components.lesson.js
+    describe-steps.js
+    build-html-at-step.js
+    build-css-at-step.js
+    build-js-at-step.js
+    build-shadow-css-at-step.js
+    content/
+      assets/
+        web-component-goal.svg
+      documents/
+        06_modular_web_components.md
         files/
           lesson.sr.md
           html.timeline.md
@@ -189,7 +207,7 @@ Good:
 
 ```txt
 play-lesson/
-build-sidebar/
+01-build-sidebar/
 retry-payment/
 ```
 
@@ -259,7 +277,17 @@ processor.js
 
 Use `01-...`, `02-...` only when the folder order itself carries product meaning without opening the pipeline.
 
-This repo uses numeric prefixes only on the generic lesson journey inside `play-lesson/`:
+This repo uses numeric prefixes on ordered lesson flows in `lessons/` and on the generic lesson journey inside `play-lesson/`:
+
+```txt
+01-build-sidebar/
+02-build-top-navigation/
+03-build-custom-element/
+04-build-web-component/
+05-clean-web-component-with-adopted-stylesheets/
+06-modular-web-components/
+07-more-separation-of-code/
+```
 
 ```txt
 01-start-lesson/
@@ -273,12 +301,12 @@ Support flows such as `find-step/`, `save-step/`, and `choose-theme/` stay unnum
 
 ### 6. Do not repeat the feature name inside the feature folder
 
-If the folder already says `build-sidebar`, do not keep repeating `build-sidebar` in every child file and function.
+If the folder already says `01-build-sidebar`, do not keep repeating `build-sidebar` in every child file and function.
 
 Good:
 
 ```txt
-build-sidebar/
+01-build-sidebar/
   describe-steps.js
   build-html-at-step.js
 ```
@@ -286,7 +314,7 @@ build-sidebar/
 Bad:
 
 ```txt
-build-sidebar/
+01-build-sidebar/
   build-sidebar-steps.js
   build-sidebar-view.js
 ```

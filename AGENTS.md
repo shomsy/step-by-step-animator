@@ -12,11 +12,11 @@ Engine je generičan.
 
 Trenutno isporučene lekcije su:
 
-- `build-sidebar`
-- `build-top-navigation`
-- `build-custom-element`
-- `build-web-component`
-- `clean-web-component-with-adopted-stylesheets`
+- `01-build-sidebar`
+- `02-build-top-navigation`
+- `03-build-custom-element`
+- `04-build-web-component`
+- `05-clean-web-component-with-adopted-stylesheets`
 - `06-modular-web-components`
 - `07-more-separation-of-code`
 
@@ -109,19 +109,19 @@ animator/
     sync-lesson-documents.js
 lessons/
   register-lessons.js
-  build-sidebar/
+  01-build-sidebar/
     build-sidebar.lesson.js
     describe-steps.js
     build-html-at-step.js
     build-css-at-step.js
     content/
       documents/
-        build_sidebar.md
+        01_build_sidebar.md
         files/
           lesson.sr.md
           html.timeline.md
           css.rules.md
-  build-web-component/
+  04-build-web-component/
     build-web-component.lesson.js
     describe-steps.js
     build-html-at-step.js
@@ -131,13 +131,13 @@ lessons/
       assets/
         web-component-goal.svg
       documents/
-        build_web_component.md
+        04_build_web_component.md
         files/
           lesson.sr.md
           html.timeline.md
           css.rules.md
           js.timeline.md
-  build-custom-element/
+  03-build-custom-element/
     build-custom-element.lesson.js
     describe-steps.js
     build-html-at-step.js
@@ -147,13 +147,13 @@ lessons/
       assets/
         custom-element-goal.svg
       documents/
-        build_custom_element.md
+        03_build_custom_element.md
         files/
           lesson.sr.md
           html.timeline.md
           css.rules.md
           js.timeline.md
-  build-top-navigation/
+  02-build-top-navigation/
     build-top-navigation.lesson.js
     describe-steps.js
     build-html-at-step.js
@@ -162,12 +162,12 @@ lessons/
       assets/
         top-navigation-goal.svg
       documents/
-        build_top_navigation.md
+        02_build_top_navigation.md
         files/
           lesson.sr.md
           html.timeline.md
           css.rules.md
-  clean-web-component-with-adopted-stylesheets/
+  05-clean-web-component-with-adopted-stylesheets/
     clean-web-component-with-adopted-stylesheets.lesson.js
     describe-steps.js
     build-html-at-step.js
@@ -178,7 +178,7 @@ lessons/
       assets/
         web-component-goal.svg
       documents/
-        clean_web_component_with_adopted_stylesheets.md
+        05_clean_web_component_with_adopted_stylesheets.md
         files/
           lesson.sr.md
           html.timeline.md
@@ -306,7 +306,7 @@ Pravila:
 - nema `src/` foldera
 - `main.js` je root entry
 - `index.html` je generičan lesson shell
-- `sidebar-step-by-step.html` je kompatibilni alias za `build-sidebar`
+- `sidebar-step-by-step.html` je kompatibilni alias za `01-build-sidebar`
 - build ide kroz Vite
 - repo je podeljen na `animator/` i `lessons/`
 - business lekcije žive pod `lessons/`
@@ -356,6 +356,16 @@ Ne uvoditi novu sinonimsku generaciju ako postojeći glagol već pokriva odgovor
 ### 2.7 Numbering Rules
 
 Brojevi se koriste samo na flow folderima kada redosled zaista nosi značenje u product story-ju.
+
+U `lessons/` to važi za shipped learning path:
+
+- `01-build-sidebar`
+- `02-build-top-navigation`
+- `03-build-custom-element`
+- `04-build-web-component`
+- `05-clean-web-component-with-adopted-stylesheets`
+- `06-modular-web-components`
+- `07-more-separation-of-code`
 
 U player runtime-u to važi za glavni lesson journey:
 
@@ -462,9 +472,9 @@ Desni panel:
 
 ### 3.2 Current Shipped Lessons
 
-`build-sidebar` je referentna lekcija za engine.
+`01-build-sidebar` je referentna lekcija za engine.
 
-`build-top-navigation` pokazuje dodatni shell capability:
+`02-build-top-navigation` pokazuje dodatni shell capability:
 
 - goal sliku koja pokazuje šta gradimo
 - homework napomene za varijante koje još ne implementiramo
@@ -477,20 +487,20 @@ Za nju i dalje važe posebna teaching pravila:
 - helper linije i pomoćni borderi ostaju dok se ne završi cela vizuelna celina
 - outline helperi ostaju do završnog rezime koraka za dati element ili celinu, pa se tek tada uklanjaju
 
-`build-custom-element` otvara Web Components put:
+`03-build-custom-element` otvara Web Components put:
 
 - host tag sa crticom
 - registraciju kroz `customElements.define`
 - atribut API
 - prvi render kroz light DOM
 
-`build-web-component` je Web Components nastavak:
+`04-build-web-component` je Web Components nastavak:
 
 - treći, opcioni JS fajl u middle panelu
 - stvarni live preview koji izvršava isti kumulativni JavaScript
 - Web Components teaching tok kroz custom element, shadow DOM, slot i lifecycle
 
-`clean-web-component-with-adopted-stylesheets` zatvara cleanup priču:
+`05-clean-web-component-with-adopted-stylesheets` zatvara cleanup priču:
 
 - četvrti, opcioni shadow CSS fajl u middle panelu
 - JavaScript uvozi `shadow-dom-style.css` kao tekst preko `?raw`
