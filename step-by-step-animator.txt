@@ -121,6 +121,7 @@ Trenutno isporučene lekcije su:
 - `05-clean-web-component-with-adopted-stylesheets`
 - `06-modular-web-components`
 - `07-more-separation-of-code`
+- `08-smell-of-enterprise`
 
 Svaka nova lekcija mora da koristi isti shell i isti teaching model:
 
@@ -468,6 +469,7 @@ U `lessons/` to važi za shipped learning path:
 - `05-clean-web-component-with-adopted-stylesheets`
 - `06-modular-web-components`
 - `07-more-separation-of-code`
+- `08-smell-of-enterprise`
 
 U player runtime-u to važi za glavni lesson journey:
 
@@ -920,6 +922,7 @@ This repo uses numeric prefixes on ordered lesson flows in `lessons/` and on the
 05-clean-web-component-with-adopted-stylesheets/
 06-modular-web-components/
 07-more-separation-of-code/
+08-smell-of-enterprise/
 ```
 
 ```txt
@@ -12621,6 +12624,1569 @@ export const stepNumberById = Object.fromEntries(
   lessonSteps.map((step, index) => [step.id, index])
 );
 
+=== lessons/08-smell-of-enterprise/08-smell-of-enterprise.lesson.js ===
+import { buildCssAtStep } from './build-css-at-step.js';
+import { buildHtmlAtStep } from './build-html-at-step.js';
+import { buildJsAtStep } from './build-js-at-step.js';
+import { buildTemplateJsAtStep } from './build-template-js-at-step.js';
+import { buildShadowCssAtStep } from './build-shadow-css-at-step.js';
+import { lessonSteps } from './describe-steps.js';
+import lessonDocument from './content/documents/files/lesson.sr.md?raw';
+import goalImage from './content/assets/web-component-goal.svg';
+import { readLessonMetadata } from '../../animator/lesson-documents/read-lesson-metadata.js';
+
+const lessonMetadata = readLessonMetadata(lessonDocument, {
+  lessonTitle: '08 · Smell Of Enterprise',
+  lessonIntro: 'Peta Web Components lekcija pretvara demo komponentu u ozbiljniji UI primitive. Tag i class dobijaju domain-driven ime, template i shadow CSS ostaju odvojeni, a JavaScript dobija property API, precizan attributeChangedCallback, disabled i variant state, namespaced event contract i jasniji lifecycle.',
+  previewAddress: 'browser://08-smell-of-enterprise-preview',
+  previewTitle: 'Live enterprise Web Component preview',
+  htmlFileName: 'index.html',
+  cssFileName: 'style.css',
+  jsFileName: 'ui-callout-card.js',
+  templateJsFileName: 'ui-callout-card.template.js',
+  shadowCssFileName: 'ui-callout-card.shadow.css'
+});
+
+export const smellOfEnterpriseLesson = {
+  lessonId: '08-smell-of-enterprise',
+  lessonTitle: lessonMetadata.lessonTitle,
+  lessonIntro: lessonMetadata.lessonIntro,
+  lessonIntroHtml: lessonMetadata.lessonIntroHtml,
+  previewAddress: lessonMetadata.previewAddress,
+  previewTitle: lessonMetadata.previewTitle,
+  htmlFileName: lessonMetadata.htmlFileName,
+  cssFileName: lessonMetadata.cssFileName,
+  jsFileName: lessonMetadata.jsFileName,
+  templateJsFileName: lessonMetadata.templateJsFileName,
+  shadowCssFileName: lessonMetadata.shadowCssFileName,
+  ideMode: true,
+  goalTitle: 'Cilj: Enterprise-smelling UI Primitive',
+  goalImageSrc: goalImage,
+  goalImageAlt: 'Referentna slika tamnog callout card Web Component-a sa jasnim API i styling contract slojevima.',
+  goalImageCaption: 'U ovoj lekciji ista card komponenta dobija ozbiljniji public API, state i styling contract, bez framework-a i bez gubljenja Web Components čistote.',
+  steps: lessonSteps,
+  buildHtmlAtStep,
+  buildCssAtStep,
+  buildJsAtStep,
+  buildTemplateJsAtStep,
+  buildShadowCssAtStep
+};
+
+=== lessons/08-smell-of-enterprise/build-css-at-step.js ===
+import cssRulesDocument from './content/documents/files/css.rules.md?raw';
+import { buildLinesFromRuleBlocks } from '../../animator/lesson-documents/build-lines-from-rule-blocks.js';
+import { readRuleBlocks } from '../../animator/lesson-documents/read-rule-blocks.js';
+import { stepNumberById } from './describe-steps.js';
+
+const cssRuleBlocks = readRuleBlocks(cssRulesDocument);
+
+export function buildCssAtStep(stepNumber) {
+  return buildLinesFromRuleBlocks({
+    ruleBlocks: cssRuleBlocks,
+    stepNumberById,
+    stepNumber
+  });
+}
+
+=== lessons/08-smell-of-enterprise/build-html-at-step.js ===
+import htmlTimelineDocument from './content/documents/files/html.timeline.md?raw';
+import { buildLinesFromTimelineBlocks } from '../../animator/lesson-documents/build-lines-from-timeline-blocks.js';
+import { readTimelineBlocks } from '../../animator/lesson-documents/read-timeline-blocks.js';
+import { stepNumberById } from './describe-steps.js';
+
+const htmlTimelineBlocks = readTimelineBlocks(htmlTimelineDocument);
+
+export function buildHtmlAtStep(stepNumber) {
+  return buildLinesFromTimelineBlocks({
+    timelineBlocks: htmlTimelineBlocks,
+    stepNumberById,
+    stepNumber
+  });
+}
+
+=== lessons/08-smell-of-enterprise/build-js-at-step.js ===
+import jsTimelineDocument from './content/documents/files/js.timeline.md?raw';
+import { buildLinesFromTimelineBlocks } from '../../animator/lesson-documents/build-lines-from-timeline-blocks.js';
+import { readTimelineBlocks } from '../../animator/lesson-documents/read-timeline-blocks.js';
+import { stepNumberById } from './describe-steps.js';
+
+const jsTimelineBlocks = readTimelineBlocks(jsTimelineDocument);
+
+export function buildJsAtStep(stepNumber) {
+  return buildLinesFromTimelineBlocks({
+    timelineBlocks: jsTimelineBlocks,
+    stepNumberById,
+    stepNumber
+  });
+}
+
+=== lessons/08-smell-of-enterprise/build-shadow-css-at-step.js ===
+import shadowCssRulesDocument from './content/documents/files/shadow-dom-style.css.md?raw';
+import { buildLinesFromRuleBlocks } from '../../animator/lesson-documents/build-lines-from-rule-blocks.js';
+import { readRuleBlocks } from '../../animator/lesson-documents/read-rule-blocks.js';
+import { stepNumberById } from './describe-steps.js';
+
+const shadowCssRuleBlocks = readRuleBlocks(shadowCssRulesDocument);
+
+export function buildShadowCssAtStep(stepNumber) {
+  return buildLinesFromRuleBlocks({
+    ruleBlocks: shadowCssRuleBlocks,
+    stepNumberById,
+    stepNumber
+  });
+}
+
+=== lessons/08-smell-of-enterprise/build-template-js-at-step.js ===
+import templateJsTimelineDocument from './content/documents/files/template-js.timeline.md?raw';
+import { buildLinesFromTimelineBlocks } from '../../animator/lesson-documents/build-lines-from-timeline-blocks.js';
+import { readTimelineBlocks } from '../../animator/lesson-documents/read-timeline-blocks.js';
+import { stepNumberById } from './describe-steps.js';
+
+const templateJsTimelineBlocks = readTimelineBlocks(templateJsTimelineDocument);
+
+export function buildTemplateJsAtStep(stepNumber) {
+  return buildLinesFromTimelineBlocks({
+    timelineBlocks: templateJsTimelineBlocks,
+    stepNumberById,
+    stepNumber
+  });
+}
+
+=== lessons/08-smell-of-enterprise/content/assets/web-component-goal.svg ===
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 760" role="img" aria-labelledby="title desc">
+  <title id="title">My first component Web Component goal</title>
+  <desc id="desc">Svetla pozadina sa tamnim card komponentom u sredini. Card ima badge Vanilla JS, veliki naslov, opis i plavo CTA dugme.</desc>
+  <defs>
+    <linearGradient id="bg" x1="0" x2="0" y1="0" y2="1">
+      <stop offset="0%" stop-color="#e2e8f0"/>
+      <stop offset="100%" stop-color="#cbd5e1"/>
+    </linearGradient>
+    <linearGradient id="cta" x1="0" x2="1" y1="0" y2="1">
+      <stop offset="0%" stop-color="#38bdf8"/>
+      <stop offset="100%" stop-color="#2563eb"/>
+    </linearGradient>
+    <filter id="shadow" x="-20%" y="-20%" width="140%" height="160%">
+      <feDropShadow dx="0" dy="26" stdDeviation="28" flood-color="#0f172a" flood-opacity="0.18"/>
+    </filter>
+  </defs>
+  <rect width="1200" height="760" fill="url(#bg)"/>
+  <g transform="translate(360 168)" filter="url(#shadow)">
+    <rect width="480" height="420" rx="34" fill="#0f172a"/>
+    <rect x="32" y="34" width="118" height="38" rx="19" fill="rgba(56,189,248,0.16)"/>
+    <text x="91" y="58" fill="#38bdf8" font-family="Inter, Arial, sans-serif" font-size="14" font-weight="700" text-anchor="middle" letter-spacing="1.2">VANILLA JS</text>
+    <text x="32" y="138" fill="#f8fafc" font-family="Inter, Arial, sans-serif" font-size="42" font-weight="800">Web Components</text>
+    <text x="32" y="186" fill="#f8fafc" font-family="Inter, Arial, sans-serif" font-size="42" font-weight="800">u praksi</text>
+    <text x="32" y="246" fill="#cbd5e1" font-family="Inter, Arial, sans-serif" font-size="22">Gradiš custom element, shadow DOM</text>
+    <text x="32" y="280" fill="#cbd5e1" font-family="Inter, Arial, sans-serif" font-size="22">i slot projekciju bez framework-a.</text>
+    <rect x="32" y="336" width="156" height="52" rx="26" fill="url(#cta)"/>
+    <text x="110" y="368" fill="#ffffff" font-family="Inter, Arial, sans-serif" font-size="18" font-weight="700" text-anchor="middle">Otvori lekciju</text>
+  </g>
+</svg>
+
+=== lessons/08-smell-of-enterprise/content/documents/08_smell_of_enterprise.md ===
+<!-- Generated from the same markdown sources used by the web lesson. -->
+
+# 08-smell-of-enterprise
+
+Peta Web Components lekcija podiže istu ideju iz prethodnih koraka na nivo reusable UI primitive-a koji već miriše na enterprise. Host HTML ostaje mali, ali komponenta više nije samo demo: tag i class dobijaju domain-driven ime `ui-callout-card`, template markup ostaje u `ui-callout-card.template.js`, `ui-callout-card.js` preuzima stabilan public API kroz attributes i properties, `style.css` ostaje host/theme sloj, a `ui-callout-card.shadow.css` drži unutrašnji styling contract.
+
+Najvažniji teaching fokus ove lekcije su četiri enterprise signala: jasan public API, precizno i usko update ponašanje kroz `attributeChangedCallback(name, oldValue, newValue)`, stabilan event contract i nameran styling contract preko custom properties, `part` atributa i state/variant pravila. Suština nije da komponenta postane veća, nego da postane predvidiva za druge timove, testove i integracije.
+
+=== lessons/08-smell-of-enterprise/content/documents/files/css.rules.md ===
+# CSS Rule Blocks
+
+```json
+[
+  {
+    "header": ".app-shell {",
+    "showFrom": "empty_shell",
+    "entries": [
+      { "from": "shell_outline", "untilBefore": "shell_summary", "line": "outline: 1px dashed #94a3b8;" },
+      { "from": "shell_padding", "line": "padding: 40px;" },
+      { "from": "shell_display", "line": "display: grid;" },
+      { "from": "shell_place_items", "line": "place-items: center;" },
+      { "from": "shell_min_height", "line": "min-height: 100vh;" },
+      { "from": "shell_background", "line": "background: linear-gradient(180deg, #e2e8f0, #cbd5e1);" },
+      { "from": "shell_summary", "line": "/* helper outline removed in final .app-shell summary */" }
+    ]
+  },
+  {
+    "header": "ui-callout-card {",
+    "showFrom": "component_html",
+    "entries": [
+      { "from": "host_outline", "untilBefore": "host_summary", "line": "outline: 1px solid #f97316;" },
+      { "from": "host_display", "line": "display: block;" },
+      { "from": "host_width", "line": "width: min(100%, 460px);" },
+      { "from": "host_surface_token", "line": "--callout-surface: #0f172a;" },
+      { "from": "host_surface_alt_token", "line": "--callout-surface-alt: rgba(15, 23, 42, 0.92);" },
+      { "from": "host_border_token", "line": "--callout-border: rgba(148,163,184,0.24);" },
+      { "from": "host_accent_token", "line": "--callout-accent: #38bdf8;" },
+      { "from": "host_accent_strong_token", "line": "--callout-accent-strong: #2563eb;" },
+      { "from": "host_text_token", "line": "--callout-text: #e2e8f0;" },
+      { "from": "host_muted_token", "line": "--callout-muted: #cbd5e1;" },
+      { "from": "host_shadow_token", "line": "--callout-shadow: 0 26px 60px rgba(15, 23, 42, 0.24);" },
+      { "from": "host_summary", "line": "/* helper outline removed in final ui-callout-card host summary */" }
+    ]
+  },
+  {
+    "header": "ui-callout-card[variant=\"success\"] {",
+    "showFrom": "variant_success_accent",
+    "entries": [
+      { "from": "variant_success_accent", "line": "--callout-accent: #22c55e;" },
+      { "from": "variant_success_accent_strong", "line": "--callout-accent-strong: #15803d;" }
+    ]
+  },
+  {
+    "header": "ui-callout-card[variant=\"warning\"] {",
+    "showFrom": "variant_warning_accent",
+    "entries": [
+      { "from": "variant_warning_accent", "line": "--callout-accent: #f59e0b;" },
+      { "from": "variant_warning_accent_strong", "line": "--callout-accent-strong: #d97706;" },
+      { "from": "variant_warning_text", "line": "--callout-text: #fff7ed;" },
+      { "from": "variant_warning_muted", "line": "--callout-muted: #fed7aa;" }
+    ]
+  },
+  {
+    "header": "ui-callout-card[variant=\"danger\"] {",
+    "showFrom": "variant_danger_accent",
+    "entries": [
+      { "from": "variant_danger_accent", "line": "--callout-accent: #f87171;" },
+      { "from": "variant_danger_accent_strong", "line": "--callout-accent-strong: #dc2626;" }
+    ]
+  },
+  {
+    "header": "ui-callout-card[disabled] {",
+    "showFrom": "host_disabled_opacity",
+    "entries": [
+      { "from": "host_disabled_opacity", "line": "opacity: 0.72;" }
+    ]
+  }
+]
+```
+
+=== lessons/08-smell-of-enterprise/content/documents/files/html.timeline.md ===
+# HTML Timeline
+
+```json
+[
+  {
+    "from": "empty_shell",
+    "target": "root",
+    "lines": [
+      "<div class=\"app-shell\">",
+      "  @@slot:app-shell-content@@",
+      "</div>"
+    ]
+  },
+  {
+    "from": "component_html",
+    "target": "app-shell-content",
+    "lines": [
+      "  <ui-callout-card",
+      "    title=\"Smell of Enterprise\"",
+      "    cta-label=\"Open contract\"",
+      "    @@slot:ui-callout-card-attributes@@",
+      "  >",
+      "    @@slot:ui-callout-card-content@@",
+      "  </ui-callout-card>"
+    ]
+  },
+  {
+    "from": "eyebrow_slot_html",
+    "target": "ui-callout-card-content",
+    "lines": [
+      "    <span slot=\"eyebrow\">Web Components</span>"
+    ]
+  },
+  {
+    "from": "summary_text_html",
+    "target": "ui-callout-card-content",
+    "lines": [
+      "    Stable API, precise updates and clear styling boundaries for real teams."
+    ]
+  },
+  {
+    "from": "variant_attribute_html",
+    "target": "ui-callout-card-attributes",
+    "lines": [
+      "variant=\"success\""
+    ]
+  }
+]
+```
+
+=== lessons/08-smell-of-enterprise/content/documents/files/js.timeline.md ===
+# JS Timeline
+
+```json
+[
+  {
+    "from": "import_template",
+    "target": "root",
+    "lines": [
+      "import { uiCalloutCardTemplate } from './ui-callout-card.template.js';",
+      "@@slot:after-import-template@@"
+    ]
+  },
+  {
+    "from": "normalize_text_helper",
+    "target": "after-import-template",
+    "lines": [
+      "",
+      "function normalizeTextValue(value, fallback) {",
+      "  return String(value ?? '').trim() || fallback;",
+      "}",
+      "",
+      "@@slot:after-normalize-text@@"
+    ]
+  },
+  {
+    "from": "allowed_variants_set",
+    "target": "after-normalize-text",
+    "lines": [
+      "const allowedVariants = new Set(['info', 'success', 'warning', 'danger']);",
+      "",
+      "@@slot:after-allowed-variants@@"
+    ]
+  },
+  {
+    "from": "normalize_variant_helper",
+    "target": "after-allowed-variants",
+    "lines": [
+      "function normalizeVariantValue(value) {",
+      "  const normalizedValue = String(value ?? '').trim().toLowerCase();",
+      "  return allowedVariants.has(normalizedValue) ? normalizedValue : 'info';",
+      "}",
+      "",
+      "@@slot:after-normalize-variant@@"
+    ]
+  },
+  {
+    "from": "class_declaration",
+    "target": "after-normalize-variant",
+    "lines": [
+      "class UiCalloutCard extends HTMLElement {",
+      "  @@slot:class-head@@",
+      "  @@slot:class-body@@",
+      "}",
+      "",
+      "@@slot:after-class@@"
+    ]
+  },
+  {
+    "from": "observed_attributes",
+    "target": "class-head",
+    "lines": [
+      "  static observedAttributes = ['title', 'cta-label', 'disabled', 'variant'];",
+      ""
+    ]
+  },
+  {
+    "from": "constructor_shadow",
+    "target": "class-body",
+    "lines": [
+      "  constructor() {",
+      "    super();",
+      "    this.attachShadow({ mode: 'open' });",
+      "    @@slot:constructor-body@@",
+      "  }",
+      ""
+    ]
+  },
+  {
+    "from": "constructor_bind",
+    "target": "constructor-body",
+    "lines": [
+      "    this.handleActionClick = this.handleActionClick.bind(this);"
+    ]
+  },
+  {
+    "from": "constructor_state",
+    "target": "constructor-body",
+    "lines": [
+      "    this.titleElement = null;",
+      "    this.ctaElement = null;",
+      "    this.isCtaBound = false;"
+    ]
+  },
+  {
+    "from": "connected_callback",
+    "target": "class-body",
+    "lines": [
+      "  connectedCallback() {",
+      "    @@slot:connected-body@@",
+      "  }",
+      ""
+    ]
+  },
+  {
+    "from": "connected_callback_setup",
+    "target": "connected-body",
+    "lines": [
+      "    this.setupTemplateOnce();"
+    ]
+  },
+  {
+    "from": "connected_callback_cache",
+    "target": "connected-body",
+    "lines": [
+      "    this.cacheDom();"
+    ]
+  },
+  {
+    "from": "connected_callback_sync",
+    "target": "connected-body",
+    "lines": [
+      "    this.syncFromAttributes();"
+    ]
+  },
+  {
+    "from": "connected_callback_bind",
+    "target": "connected-body",
+    "lines": [
+      "    this.bindEvents();"
+    ]
+  },
+  {
+    "from": "disconnected_callback",
+    "target": "class-body",
+    "lines": [
+      "  disconnectedCallback() {",
+      "    this.unbindEvents();",
+      "  }",
+      ""
+    ]
+  },
+  {
+    "from": "attribute_changed_callback",
+    "target": "class-body",
+    "lines": [
+      "  attributeChangedCallback(name, oldValue, newValue) {",
+      "    @@slot:attribute-changed-body@@",
+      "  }",
+      ""
+    ]
+  },
+  {
+    "from": "attribute_changed_guard",
+    "target": "attribute-changed-body",
+    "lines": [
+      "    if (oldValue === newValue || !this.isConnected) {",
+      "      return;",
+      "    }",
+      "",
+      "    @@slot:update-switch-body@@"
+    ]
+  },
+  {
+    "from": "attribute_changed_switch",
+    "target": "update-switch-body",
+    "lines": [
+      "    switch (name) {",
+      "      case 'title':",
+      "        this.updateTitle();",
+      "        break;",
+      "      case 'cta-label':",
+      "        this.updateCtaLabel();",
+      "        break;",
+      "      case 'disabled':",
+      "        this.updateDisabledState();",
+      "        break;",
+      "      case 'variant':",
+      "        this.updateVariant();",
+      "        break;",
+      "      default:",
+      "        break;",
+      "    }"
+    ]
+  },
+  {
+    "from": "property_title_getter",
+    "target": "class-body",
+    "lines": [
+      "  get title() {",
+      "    return normalizeTextValue(this.getAttribute('title'), 'Enterprise Callout');",
+      "  }",
+      ""
+    ]
+  },
+  {
+    "from": "property_title_setter",
+    "target": "class-body",
+    "lines": [
+      "  set title(value) {",
+      "    this.setAttribute('title', normalizeTextValue(value, 'Enterprise Callout'));",
+      "  }",
+      ""
+    ]
+  },
+  {
+    "from": "property_cta_getter",
+    "target": "class-body",
+    "lines": [
+      "  get ctaLabel() {",
+      "    return normalizeTextValue(this.getAttribute('cta-label'), 'Review contract');",
+      "  }",
+      ""
+    ]
+  },
+  {
+    "from": "property_cta_setter",
+    "target": "class-body",
+    "lines": [
+      "  set ctaLabel(value) {",
+      "    this.setAttribute('cta-label', normalizeTextValue(value, 'Review contract'));",
+      "  }",
+      ""
+    ]
+  },
+  {
+    "from": "property_disabled_getter",
+    "target": "class-body",
+    "lines": [
+      "  get disabled() {",
+      "    return this.hasAttribute('disabled');",
+      "  }",
+      ""
+    ]
+  },
+  {
+    "from": "property_disabled_setter",
+    "target": "class-body",
+    "lines": [
+      "  set disabled(value) {",
+      "    this.toggleAttribute('disabled', Boolean(value));",
+      "  }",
+      ""
+    ]
+  },
+  {
+    "from": "property_variant_getter",
+    "target": "class-body",
+    "lines": [
+      "  get variant() {",
+      "    return normalizeVariantValue(this.getAttribute('variant'));",
+      "  }",
+      ""
+    ]
+  },
+  {
+    "from": "property_variant_setter",
+    "target": "class-body",
+    "lines": [
+      "  set variant(value) {",
+      "    this.setAttribute('variant', normalizeVariantValue(value));",
+      "  }",
+      ""
+    ]
+  },
+  {
+    "from": "setup_template_once",
+    "target": "class-body",
+    "lines": [
+      "  setupTemplateOnce() {",
+      "    @@slot:setup-template-body@@",
+      "  }",
+      ""
+    ]
+  },
+  {
+    "from": "setup_template_once_guard",
+    "target": "setup-template-body",
+    "lines": [
+      "    if (!this.shadowRoot.hasChildNodes()) {",
+      "      this.shadowRoot.appendChild(uiCalloutCardTemplate.content.cloneNode(true));",
+      "    }"
+    ]
+  },
+  {
+    "from": "cache_dom",
+    "target": "class-body",
+    "lines": [
+      "  cacheDom() {",
+      "    @@slot:cache-dom-body@@",
+      "  }",
+      ""
+    ]
+  },
+  {
+    "from": "cache_dom_title",
+    "target": "cache-dom-body",
+    "lines": [
+      "    if (!this.titleElement) {",
+      "      this.titleElement = this.shadowRoot.querySelector('.title');",
+      "    }",
+      ""
+    ]
+  },
+  {
+    "from": "cache_dom_cta",
+    "target": "cache-dom-body",
+    "lines": [
+      "    if (!this.ctaElement) {",
+      "      this.ctaElement = this.shadowRoot.querySelector('.cta');",
+      "    }"
+    ]
+  },
+  {
+    "from": "sync_from_attributes",
+    "target": "class-body",
+    "lines": [
+      "  syncFromAttributes() {",
+      "    @@slot:sync-body@@",
+      "  }",
+      ""
+    ]
+  },
+  {
+    "from": "sync_from_attributes_calls",
+    "target": "sync-body",
+    "lines": [
+      "    this.updateTitle();",
+      "    this.updateCtaLabel();",
+      "    this.updateDisabledState();",
+      "    this.updateVariant();"
+    ]
+  },
+  {
+    "from": "update_title",
+    "target": "class-body",
+    "lines": [
+      "  updateTitle() {",
+      "    if (!this.titleElement) {",
+      "      return;",
+      "    }",
+      "",
+      "    this.titleElement.textContent = this.title;",
+      "  }",
+      ""
+    ]
+  },
+  {
+    "from": "update_cta_label",
+    "target": "class-body",
+    "lines": [
+      "  updateCtaLabel() {",
+      "    if (!this.ctaElement) {",
+      "      return;",
+      "    }",
+      "",
+      "    this.ctaElement.textContent = this.ctaLabel;",
+      "    this.ctaElement.setAttribute('aria-label', `${this.ctaLabel}: ${this.title}`);",
+      "  }",
+      ""
+    ]
+  },
+  {
+    "from": "update_disabled_state",
+    "target": "class-body",
+    "lines": [
+      "  updateDisabledState() {",
+      "    if (!this.ctaElement) {",
+      "      return;",
+      "    }",
+      "",
+      "    this.ctaElement.disabled = this.disabled;",
+      "    this.setAttribute('aria-disabled', String(this.disabled));",
+      "  }",
+      ""
+    ]
+  },
+  {
+    "from": "update_variant",
+    "target": "class-body",
+    "lines": [
+      "  updateVariant() {",
+      "    const normalizedVariant = this.variant;",
+      "",
+      "    if (this.getAttribute('variant') !== normalizedVariant) {",
+      "      this.setAttribute('variant', normalizedVariant);",
+      "      return;",
+      "    }",
+      "",
+      "    this.dataset.variant = normalizedVariant;",
+      "  }",
+      ""
+    ]
+  },
+  {
+    "from": "bind_events",
+    "target": "class-body",
+    "lines": [
+      "  bindEvents() {",
+      "    @@slot:bind-body@@",
+      "  }",
+      ""
+    ]
+  },
+  {
+    "from": "bind_events_guard",
+    "target": "bind-body",
+    "lines": [
+      "    if (!this.ctaElement || this.isCtaBound) {",
+      "      return;",
+      "    }",
+      "",
+      "    this.ctaElement.addEventListener('click', this.handleActionClick);",
+      "    this.isCtaBound = true;"
+    ]
+  },
+  {
+    "from": "unbind_events",
+    "target": "class-body",
+    "lines": [
+      "  unbindEvents() {",
+      "    @@slot:unbind-body@@",
+      "  }",
+      ""
+    ]
+  },
+  {
+    "from": "unbind_events_guard",
+    "target": "unbind-body",
+    "lines": [
+      "    if (!this.ctaElement || !this.isCtaBound) {",
+      "      return;",
+      "    }",
+      "",
+      "    this.ctaElement.removeEventListener('click', this.handleActionClick);",
+      "    this.isCtaBound = false;"
+    ]
+  },
+  {
+    "from": "handle_click_disabled_guard",
+    "target": "class-body",
+    "lines": [
+      "  handleActionClick(event) {",
+      "    @@slot:handle-click-body@@",
+      "  }",
+      ""
+    ]
+  },
+  {
+    "from": "handle_click_disabled_guard_body",
+    "target": "handle-click-body",
+    "lines": [
+      "    if (this.disabled) {",
+      "      event.preventDefault();",
+      "      return;",
+      "    }",
+      ""
+    ]
+  },
+  {
+    "from": "handle_click_event",
+    "target": "handle-click-body",
+    "lines": [
+      "    const componentActionEvent = new CustomEvent('ui-callout-card:action', {",
+      "      bubbles: true,",
+      "      composed: true,",
+      "      cancelable: true,",
+      "      detail: {",
+      "        title: this.title,",
+      "        ctaLabel: this.ctaLabel,",
+      "        variant: this.variant,",
+      "        source: 'ui-callout-card'",
+      "      }",
+      "    });",
+      "",
+      "    this.dispatchEvent(componentActionEvent);"
+    ]
+  },
+  {
+    "from": "define_guard",
+    "target": "after-class",
+    "lines": [
+      "if (!customElements.get('ui-callout-card')) {",
+      "  @@slot:define-body@@",
+      "}"
+    ]
+  },
+  {
+    "from": "define_element",
+    "target": "define-body",
+    "lines": [
+      "  customElements.define('ui-callout-card', UiCalloutCard);"
+    ]
+  }
+]
+```
+
+=== lessons/08-smell-of-enterprise/content/documents/files/lesson.sr.md ===
+---
+title: "08 · Smell Of Enterprise"
+previewAddress: browser://08-smell-of-enterprise-preview
+previewTitle: Live enterprise Web Component preview
+htmlFileName: index.html
+cssFileName: style.css
+jsFileName: ui-callout-card.js
+templateJsFileName: ui-callout-card.template.js
+shadowCssFileName: ui-callout-card.shadow.css
+---
+
+Peta Web Components lekcija podiže istu ideju iz prethodnih koraka na nivo reusable UI primitive-a koji već miriše na enterprise. Host HTML ostaje mali, ali komponenta više nije samo demo: tag i class dobijaju domain-driven ime `ui-callout-card`, template markup ostaje u `ui-callout-card.template.js`, `ui-callout-card.js` preuzima stabilan public API kroz attributes i properties, `style.css` ostaje host/theme sloj, a `ui-callout-card.shadow.css` drži unutrašnji styling contract.
+
+Najvažniji teaching fokus ove lekcije su četiri enterprise signala: jasan public API, precizno i usko update ponašanje kroz `attributeChangedCallback(name, oldValue, newValue)`, stabilan event contract i nameran styling contract preko custom properties, `part` atributa i state/variant pravila. Suština nije da komponenta postane veća, nego da postane predvidiva za druge timove, testove i integracije.
+
+=== lessons/08-smell-of-enterprise/content/documents/files/shadow-dom-style.css.md ===
+# Shadow CSS Rule Blocks
+
+```json
+[
+  {
+    "header": ":host {",
+    "showFrom": "shadow_host_font",
+    "entries": [
+      { "from": "shadow_host_font", "line": "display: block;" },
+      { "from": "shadow_host_font_family", "line": "font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, \"Segoe UI\", sans-serif;" },
+      { "from": "shadow_host_color", "line": "color: var(--callout-text, #e2e8f0);" }
+    ]
+  },
+  {
+    "header": ".card {",
+    "showFrom": "card_outline",
+    "entries": [
+      { "from": "card_outline", "untilBefore": "card_summary", "line": "outline: 1px dashed #38bdf8;" },
+      { "from": "card_display", "line": "display: grid;" },
+      { "from": "card_gap", "line": "gap: 16px;" },
+      { "from": "card_padding", "line": "padding: 24px;" },
+      { "from": "card_radius", "line": "border-radius: 28px;" },
+      { "from": "card_border", "line": "border: 1px solid var(--callout-border, rgba(148,163,184,0.24));" },
+      { "from": "card_background", "line": "background: linear-gradient(180deg, var(--callout-surface, rgba(15,23,42,0.98)), var(--callout-surface-alt, rgba(15,23,42,0.92)));" },
+      { "from": "card_shadow", "line": "box-shadow: var(--callout-shadow, 0 26px 60px rgba(15,23,42,0.24));" },
+      { "from": "card_summary", "line": "/* helper outline removed in final .card summary */" }
+    ]
+  },
+  {
+    "header": ".eyebrow {",
+    "showFrom": "eyebrow_outline",
+    "entries": [
+      { "from": "eyebrow_outline", "untilBefore": "eyebrow_summary", "line": "outline: 1px dotted #facc15;" },
+      { "from": "eyebrow_display", "line": "display: inline-flex;" },
+      { "from": "eyebrow_align_items", "line": "align-items: center;" },
+      { "from": "eyebrow_justify_content", "line": "justify-content: center;" },
+      { "from": "eyebrow_width", "line": "width: fit-content;" },
+      { "from": "eyebrow_padding", "line": "padding: 8px 12px;" },
+      { "from": "eyebrow_radius", "line": "border-radius: 999px;" },
+      { "from": "eyebrow_background", "line": "background: rgba(56,189,248,0.14);" },
+      { "from": "eyebrow_color", "line": "color: var(--callout-accent, #38bdf8);" },
+      { "from": "eyebrow_font_size", "line": "font-size: 12px;" },
+      { "from": "eyebrow_font_weight", "line": "font-weight: 700;" },
+      { "from": "eyebrow_letter_spacing", "line": "letter-spacing: 0.04em;" },
+      { "from": "eyebrow_text_transform", "line": "text-transform: uppercase;" },
+      { "from": "eyebrow_summary", "line": "/* helper outline removed in final .eyebrow summary */" }
+    ]
+  },
+  {
+    "header": "::slotted([slot=\"eyebrow\"]) {",
+    "showFrom": "eyebrow_slotted_font",
+    "entries": [
+      { "from": "eyebrow_slotted_font", "line": "font: inherit;" }
+    ]
+  },
+  {
+    "header": ".title {",
+    "showFrom": "title_display",
+    "entries": [
+      { "from": "title_display", "line": "display: block;" },
+      { "from": "title_margin", "line": "margin: 0;" },
+      { "from": "title_font_size", "line": "font-size: clamp(1.75rem, 4vw, 2rem);" },
+      { "from": "title_line_height", "line": "line-height: 1.1;" },
+      { "from": "title_font_weight", "line": "font-weight: 800;" }
+    ]
+  },
+  {
+    "header": ".summary {",
+    "showFrom": "summary_margin",
+    "entries": [
+      { "from": "summary_margin", "line": "margin: 0;" },
+      { "from": "summary_color", "line": "color: var(--callout-muted, #cbd5e1);" },
+      { "from": "summary_line_height", "line": "line-height: 1.65;" }
+    ]
+  },
+  {
+    "header": ".cta {",
+    "showFrom": "cta_outline",
+    "entries": [
+      { "from": "cta_outline", "untilBefore": "cta_summary", "line": "outline: 1px dashed #34d399;" },
+      { "from": "cta_justify_self", "line": "justify-self: start;" },
+      { "from": "cta_appearance", "line": "appearance: none;" },
+      { "from": "cta_padding", "line": "padding: 12px 16px;" },
+      { "from": "cta_border", "line": "border: 0;" },
+      { "from": "cta_radius", "line": "border-radius: 999px;" },
+      { "from": "cta_background", "line": "background: linear-gradient(135deg, var(--callout-accent, #38bdf8), var(--callout-accent-strong, #2563eb));" },
+      { "from": "cta_color", "line": "color: #ffffff;" },
+      { "from": "cta_font", "line": "font: inherit;" },
+      { "from": "cta_font_weight", "line": "font-weight: 700;" },
+      { "from": "cta_cursor", "line": "cursor: pointer;" },
+      { "from": "cta_transition", "line": "transition: transform 160ms ease, filter 160ms ease, box-shadow 160ms ease;" },
+      { "from": "cta_box_shadow", "line": "box-shadow: 0 14px 30px rgba(37, 99, 235, 0.28);" },
+      { "from": "cta_summary", "line": "/* helper outline removed in final .cta summary */" }
+    ]
+  },
+  {
+    "header": ".cta:hover {",
+    "showFrom": "cta_hover_filter",
+    "entries": [
+      { "from": "cta_hover_filter", "line": "filter: brightness(1.06);" },
+      { "from": "cta_hover_transform", "line": "transform: translateY(-1px);" }
+    ]
+  },
+  {
+    "header": ".cta:active {",
+    "showFrom": "cta_active_transform",
+    "entries": [
+      { "from": "cta_active_transform", "line": "transform: translateY(0);" }
+    ]
+  },
+  {
+    "header": ".cta:focus-visible {",
+    "showFrom": "cta_focus_outline",
+    "entries": [
+      { "from": "cta_focus_outline", "line": "outline: 3px solid rgba(56, 189, 248, 0.45);" },
+      { "from": "cta_focus_outline_offset", "line": "outline-offset: 3px;" }
+    ]
+  },
+  {
+    "header": ".cta:disabled {",
+    "showFrom": "cta_disabled_cursor",
+    "entries": [
+      { "from": "cta_disabled_cursor", "line": "cursor: not-allowed;" },
+      { "from": "cta_disabled_opacity", "line": "opacity: 0.55;" },
+      { "from": "cta_disabled_filter", "line": "filter: saturate(0.6);" },
+      { "from": "cta_disabled_shadow", "line": "box-shadow: none;" }
+    ]
+  }
+]
+```
+
+=== lessons/08-smell-of-enterprise/content/documents/files/template-js.timeline.md ===
+# Template JS Timeline
+
+```json
+[
+  {
+    "from": "template_html_declaration",
+    "target": "root",
+    "lines": [
+      "export const templateHtml = `",
+      "  <article class=\"card\" part=\"card\">",
+      "    <span class=\"eyebrow\" part=\"eyebrow\">",
+      "      <slot name=\"eyebrow\">Web Components</slot>",
+      "    </span>",
+      "",
+      "    <h2 class=\"title\" part=\"title\"></h2>",
+      "",
+      "    <p class=\"summary\" part=\"summary\">",
+      "      <slot>Dodaj opis enterprise callout primitive-a kroz default slot.</slot>",
+      "    </p>",
+      "",
+      "    <button class=\"cta\" part=\"cta\" type=\"button\"></button>",
+      "  </article>",
+      "`;",
+      "",
+      "@@slot:after-template-html@@"
+    ]
+  },
+  {
+    "from": "template_element_export",
+    "target": "after-template-html",
+    "lines": [
+      "export const uiCalloutCardTemplate = document.createElement('template');",
+      "uiCalloutCardTemplate.innerHTML = `",
+      "  <link rel=\"stylesheet\" href=\"./ui-callout-card.shadow.css\" />",
+      "  ${templateHtml}",
+      "`;"
+    ]
+  }
+]
+```
+
+=== lessons/08-smell-of-enterprise/describe-steps.js ===
+const focusHtmlNeedlesBySelector = {
+  '.app-shell': ['<div class="app-shell">'],
+  'ui-callout-card': ['<ui-callout-card', 'slot="eyebrow"'],
+  'ui-callout-card[variant="success"]': ['<ui-callout-card', 'variant="success"'],
+  'ui-callout-card[variant="warning"]': ['<ui-callout-card'],
+  'ui-callout-card[variant="danger"]': ['<ui-callout-card'],
+  'ui-callout-card[disabled]': ['<ui-callout-card'],
+  ':host': ['<ui-callout-card', 'slot="eyebrow"'],
+  '.card': ['<ui-callout-card', 'slot="eyebrow"'],
+  '.eyebrow': ['slot="eyebrow"', '<ui-callout-card'],
+  '::slotted([slot="eyebrow"])': ['slot="eyebrow"', '<ui-callout-card'],
+  '.title': ['<ui-callout-card'],
+  '.summary': ['<ui-callout-card'],
+  '.cta': ['<ui-callout-card'],
+  '.cta:hover': ['<ui-callout-card'],
+  '.cta:active': ['<ui-callout-card'],
+  '.cta:focus-visible': ['<ui-callout-card'],
+  '.cta:disabled': ['<ui-callout-card']
+};
+
+function readFocusHtmlNeedles(selector) {
+  return focusHtmlNeedlesBySelector[selector] || [];
+}
+
+function describeHtmlElementStep(id, title, desc, tag, proTip, focusHtmlNeedles = []) {
+  return { id, title, desc, tag, proTip, focusHtmlNeedles };
+}
+
+function describeCssPropertyStep(id, selector, property, value, desc = '', proTip = '') {
+  const cssLine = `${property}: ${value};`;
+
+  return {
+    id,
+    title: `CSS: ${selector} / ${property}`,
+    desc: desc || `Dodajemo \`${cssLine}\` u \`${selector}\`.`,
+    tag: `css:${id.replace(/_/g, '-')}`,
+    proTip: proTip || 'Host CSS drži spoljašnji theme, variants i state contract na samom custom elementu.',
+    focusHtmlNeedles: readFocusHtmlNeedles(selector)
+  };
+}
+
+function describeShadowCssPropertyStep(id, selector, property, value, desc = '', proTip = '') {
+  const cssLine = `${property}: ${value};`;
+
+  return {
+    id,
+    title: `Shadow CSS: ${selector} / ${property}`,
+    desc: desc || `U \`ui-callout-card.shadow.css\` dodajemo \`${cssLine}\` za \`${selector}\`.`,
+    tag: `shadow-css:${id.replace(/_/g, '-')}`,
+    proTip: proTip || 'Shadow CSS stilizuje samo unutrašnju strukturu i public `part` površine komponente.',
+    focusHtmlNeedles: readFocusHtmlNeedles(selector)
+  };
+}
+
+function describeTemplateJsStep(id, title, desc, proTip) {
+  return {
+    id,
+    title,
+    desc,
+    tag: `template-js:${id.replace(/_/g, '-')}`,
+    proTip,
+    focusHtmlNeedles: readFocusHtmlNeedles('ui-callout-card')
+  };
+}
+
+function describeTeachingStep(id, title, desc, proTip, focusHtmlNeedles = readFocusHtmlNeedles('ui-callout-card')) {
+  return {
+    id,
+    title,
+    desc,
+    tag: `teaching:${id.replace(/_/g, '-')}`,
+    proTip,
+    focusHtmlNeedles
+  };
+}
+
+function describeJsFlowStep(id, title, desc, proTip, focusHtmlNeedles = readFocusHtmlNeedles('ui-callout-card')) {
+  return {
+    id,
+    title,
+    desc,
+    tag: `js:${id.replace(/_/g, '-')}`,
+    proTip,
+    focusHtmlNeedles
+  };
+}
+
+function describeSummaryStep(id, title, desc, proTip, focusHtmlNeedles = readFocusHtmlNeedles('ui-callout-card')) {
+  return {
+    id,
+    title,
+    desc,
+    tag: `summary:${id.replace(/_/g, '-')}`,
+    proTip,
+    focusHtmlNeedles
+  };
+}
+
+function describeFinishedStep(id, title, desc, proTip) {
+  return { id, title, desc, tag: 'success', proTip };
+}
+
+const shellCssSteps = [
+  ['shell_outline', '.app-shell', 'outline', '1px dashed #94a3b8', 'Dodajemo tanak helper outline za `.app-shell` i držimo ga do završnog shell rezimea.', 'App shell ostaje okvir cele enterprise demonstracije.'],
+  ['shell_padding', '.app-shell', 'padding', '40px', 'Dodajemo padding da komponenta dobije vazduh čim se pojavi.'],
+  ['shell_display', '.app-shell', 'display', 'grid', 'Grid nam daje jednostavan, predvidiv host layout.'],
+  ['shell_place_items', '.app-shell', 'place-items', 'center', 'Centar drži fokus na jednoj reusable komponenti.'],
+  ['shell_min_height', '.app-shell', 'min-height', '100vh', 'Puna visina drži scenu stabilnom kroz celu lekciju.'],
+  ['shell_background', '.app-shell', 'background', 'linear-gradient(180deg, #e2e8f0, #cbd5e1)', 'Svetla pozadina daje kontrast enterprise callout card komponenti.'],
+  ['host_outline', 'ui-callout-card', 'outline', '1px solid #f97316', 'Dodajemo helper outline za host element i držimo ga do završnog host rezimea.', 'Host je spoljašnji contract surface komponente.'],
+  ['host_display', 'ui-callout-card', 'display', 'block', 'Host pretvaramo u block da dobije stabilan footprint.'],
+  ['host_width', 'ui-callout-card', 'width', 'min(100%, 460px)', 'Širina ostaje predvidiva i kroz preview i kroz integraciju.'],
+  ['host_surface_token', 'ui-callout-card', '--callout-surface', '#0f172a', 'Počinje styling contract: surface boju iznosimo u host custom property.'],
+  ['host_surface_alt_token', 'ui-callout-card', '--callout-surface-alt', 'rgba(15, 23, 42, 0.92)', 'Drugi surface ton ostaje takođe spolja theme-ovan.'],
+  ['host_border_token', 'ui-callout-card', '--callout-border', 'rgba(148,163,184,0.24)', 'Border boju iznosimo u javni host token.'],
+  ['host_accent_token', 'ui-callout-card', '--callout-accent', '#38bdf8', 'Accent boja ostaje theme token, ne interni magic number.'],
+  ['host_accent_strong_token', 'ui-callout-card', '--callout-accent-strong', '#2563eb', 'Dublji accent ton zatvara CTA gradijent.'],
+  ['host_text_token', 'ui-callout-card', '--callout-text', '#e2e8f0', 'Text token čuva kontrast kroz ceo component contract.'],
+  ['host_muted_token', 'ui-callout-card', '--callout-muted', '#cbd5e1', 'Muted token pokriva sekundarni tekst.'],
+  ['host_shadow_token', 'ui-callout-card', '--callout-shadow', '0 26px 60px rgba(15, 23, 42, 0.24)', 'I shadow je theme contract, ne hardkodovan interni detalj.'],
+  ['variant_success_accent', 'ui-callout-card[variant="success"]', '--callout-accent', '#22c55e', 'Success variant menja accent boju bez kopiranja internog card CSS-a.', 'Variant ide spolja, kroz host selector i theme tokene.'],
+  ['variant_success_accent_strong', 'ui-callout-card[variant="success"]', '--callout-accent-strong', '#15803d', 'Drugi success ton zatvara gradijent CTA-a.'],
+  ['variant_warning_accent', 'ui-callout-card[variant="warning"]', '--callout-accent', '#f59e0b', 'Warning variant dobija sopstveni accent.'],
+  ['variant_warning_accent_strong', 'ui-callout-card[variant="warning"]', '--callout-accent-strong', '#d97706', 'Jači warning ton drži gradijent konzistentnim.'],
+  ['variant_warning_text', 'ui-callout-card[variant="warning"]', '--callout-text', '#fff7ed', 'Warning može da podigne i text kontrast bez diranja shadow file-a.'],
+  ['variant_warning_muted', 'ui-callout-card[variant="warning"]', '--callout-muted', '#fed7aa', 'Sekundarni tekst warning varijante dobija poseban token.'],
+  ['variant_danger_accent', 'ui-callout-card[variant="danger"]', '--callout-accent', '#f87171', 'Danger variant dobija crvenu accent boju.'],
+  ['variant_danger_accent_strong', 'ui-callout-card[variant="danger"]', '--callout-accent-strong', '#dc2626', 'Drugi danger ton zatvara gradijent.'],
+  ['host_disabled_opacity', 'ui-callout-card[disabled]', 'opacity', '0.72', 'Disabled state dobija i spoljašnji vizuelni signal na host elementu.', 'State contract treba da se vidi i spolja, ne samo u button internals.']
+];
+
+const shadowCssSteps = [
+  ['shadow_host_font', ':host', 'display', 'block', 'Shadow host ostaje block i u internom stilu komponente.'],
+  ['shadow_host_font_family', ':host', 'font-family', 'Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif', 'Komponenta dobija sopstveni font stack u shadow sloju.'],
+  ['shadow_host_color', ':host', 'color', 'var(--callout-text, #e2e8f0)', 'Host boju čita iz spoljašnjeg text tokena.'],
+  ['card_outline', '.card', 'outline', '1px dashed #38bdf8', 'Dodajemo helper outline za card blok i držimo ga do završnog card rezimea.', 'Card outline ostaje dok ne završimo celu unutrašnju celinu.'],
+  ['card_display', '.card', 'display', 'grid', 'Card raspored koristimo kao vertikalni stack.'],
+  ['card_gap', '.card', 'gap', '16px', 'Gap odvaja badge, naslov, opis i CTA.'],
+  ['card_padding', '.card', 'padding', '24px', 'Padding pravi pravi card footprint.'],
+  ['card_radius', '.card', 'border-radius', '28px', 'Zaobljenje daje modernu siluetu.'],
+  ['card_border', '.card', 'border', '1px solid var(--callout-border, rgba(148,163,184,0.24))', 'Border čita host token i time potvrđuje styling contract.'],
+  ['card_background', '.card', 'background', 'linear-gradient(180deg, var(--callout-surface, rgba(15,23,42,0.98)), var(--callout-surface-alt, rgba(15,23,42,0.92)))', 'Card pozadina čita surface tokene spolja.'],
+  ['card_shadow', '.card', 'box-shadow', 'var(--callout-shadow, 0 26px 60px rgba(15,23,42,0.24))', 'Shadow dolazi iz host contract-a.'],
+  ['eyebrow_outline', '.eyebrow', 'outline', '1px dotted #facc15', 'Dodajemo helper outline za eyebrow badge.', 'Badge ostaje deo unutrašnjeg component styling contract-a.'],
+  ['eyebrow_display', '.eyebrow', 'display', 'inline-flex', 'Badge ostaje kompaktan.'],
+  ['eyebrow_align_items', '.eyebrow', 'align-items', 'center', 'Vertikalno centriramo sadržaj badge-a.'],
+  ['eyebrow_justify_content', '.eyebrow', 'justify-content', 'center', 'Badge sadržaj ostaje simetričan.'],
+  ['eyebrow_width', '.eyebrow', 'width', 'fit-content', 'Badge širinu vežemo samo za sadržaj.'],
+  ['eyebrow_padding', '.eyebrow', 'padding', '8px 12px', 'Padding daje badge-u jasan pill footprint.'],
+  ['eyebrow_radius', '.eyebrow', 'border-radius', '999px', 'Veliki radius zatvara badge u kapsulu.'],
+  ['eyebrow_background', '.eyebrow', 'background', 'rgba(56,189,248,0.14)', 'Poluprovidna pozadina drži badge nenapadnim.'],
+  ['eyebrow_color', '.eyebrow', 'color', 'var(--callout-accent, #38bdf8)', 'Eyebrow boja čita spoljašnji accent token.'],
+  ['eyebrow_font_size', '.eyebrow', 'font-size', '12px', 'Manji font čini badge sekundarnim signalom.'],
+  ['eyebrow_font_weight', '.eyebrow', 'font-weight', '700', 'Jači font drži eyebrow labelu kompaktnom.'],
+  ['eyebrow_letter_spacing', '.eyebrow', 'letter-spacing', '0.04em', 'Mali tracking daje uredniji badge ton.'],
+  ['eyebrow_text_transform', '.eyebrow', 'text-transform', 'uppercase', 'Uppercase zatvara eyebrow kao jasnu kategoriju.'],
+  ['eyebrow_slotted_font', '::slotted([slot="eyebrow"])', 'font', 'inherit', 'Named slot sadržaj nasleđuje badge font pravila.', 'Slot je public surface, ali ga i dalje blago normalizujemo unutar komponente.'],
+  ['title_display', '.title', 'display', 'block', 'Naslov dobija svoj red.'],
+  ['title_margin', '.title', 'margin', '0', 'Uklanjamo default heading margin.'],
+  ['title_font_size', '.title', 'font-size', 'clamp(1.75rem, 4vw, 2rem)', 'Naslov dobija responzivnu veličinu.'],
+  ['title_line_height', '.title', 'line-height', '1.1', 'Kraći line-height drži naslov zategnutim.'],
+  ['title_font_weight', '.title', 'font-weight', '800', 'Pojačavamo hijerarhiju naslova.'],
+  ['summary_margin', '.summary', 'margin', '0', 'Brišemo podrazumevani paragraf margin.'],
+  ['summary_color', '.summary', 'color', 'var(--callout-muted, #cbd5e1)', 'Opis dobija muted token.'],
+  ['summary_line_height', '.summary', 'line-height', '1.65', 'Otvaramo tekst za lakše čitanje.'],
+  ['cta_outline', '.cta', 'outline', '1px dashed #34d399', 'Dodajemo helper outline za CTA.', 'CTA outline ostaje dok ne zaključimo interaktivnu zonu.'],
+  ['cta_justify_self', '.cta', 'justify-self', 'start', 'CTA ostaje uz levu ivicu.'],
+  ['cta_appearance', '.cta', 'appearance', 'none', 'Gasimo browser-native izgled.'],
+  ['cta_padding', '.cta', 'padding', '12px 16px', 'Padding pravi jasnu klik zonu.'],
+  ['cta_border', '.cta', 'border', '0', 'Uklanjamo podrazumevani border.'],
+  ['cta_radius', '.cta', 'border-radius', '999px', 'Pil radius drži CTA bliskim badge logici.'],
+  ['cta_background', '.cta', 'background', 'linear-gradient(135deg, var(--callout-accent, #38bdf8), var(--callout-accent-strong, #2563eb))', 'CTA gradijent čita theme tokene.'],
+  ['cta_color', '.cta', 'color', '#ffffff', 'Beli tekst drži kontrast.'],
+  ['cta_font', '.cta', 'font', 'inherit', 'CTA preuzima isti font.'],
+  ['cta_font_weight', '.cta', 'font-weight', '700', 'Teži font zatvara action hijerarhiju.'],
+  ['cta_cursor', '.cta', 'cursor', 'pointer', 'Kursor potvrđuje interaktivnost.'],
+  ['cta_transition', '.cta', 'transition', 'transform 160ms ease, filter 160ms ease, box-shadow 160ms ease', 'Tranzicija daje finiji response.'],
+  ['cta_box_shadow', '.cta', 'box-shadow', '0 14px 30px rgba(37, 99, 235, 0.28)', 'Mali shadow pojačava CTA.'],
+  ['cta_hover_filter', '.cta:hover', 'filter', 'brightness(1.06)', 'Hover blago diže svetlinu.'],
+  ['cta_hover_transform', '.cta:hover', 'transform', 'translateY(-1px)', 'Minimalni lift na hover.'],
+  ['cta_active_transform', '.cta:active', 'transform', 'translateY(0)', 'Na active vraćamo dugme nazad.'],
+  ['cta_focus_outline', '.cta:focus-visible', 'outline', '3px solid rgba(56, 189, 248, 0.45)', 'Focus-visible dodaje tastaturski focus ring.'],
+  ['cta_focus_outline_offset', '.cta:focus-visible', 'outline-offset', '3px', 'Offset odvaja focus ring od ivice dugmeta.'],
+  ['cta_disabled_cursor', '.cta:disabled', 'cursor', 'not-allowed', 'Disabled CTA dobija jasan cursor signal.', 'Disabled state mora biti vidljiv i bez čitanja API-ja.'],
+  ['cta_disabled_opacity', '.cta:disabled', 'opacity', '0.55', 'Spuštamo opacity kada je komponenta onemogućena.'],
+  ['cta_disabled_filter', '.cta:disabled', 'filter', 'saturate(0.6)', 'Gasimo deo zasićenja da disabled stanje bude očigledno.'],
+  ['cta_disabled_shadow', '.cta:disabled', 'box-shadow', 'none', 'Uklanjamo CTA shadow u disabled stanju.']
+];
+
+export const lessonSteps = [
+  describeHtmlElementStep(
+    'empty_shell',
+    'Start: Empty App Shell',
+    'Počinjemo od praznog `.app-shell` prostora. I ova lekcija i dalje počinje od neutralne host stranice.',
+    'html:app-shell',
+    'Enterprise komponenta i dalje mora da živi u običnom DOM okruženju, ne u specijalnoj demo sceni.',
+    ['<div class="app-shell">']
+  ),
+  describeHtmlElementStep(
+    'component_html',
+    'HTML: ui-callout-card Host',
+    'Dodajemo `<ui-callout-card>` host sa `title` i `cta-label` atributima. Tag sada zvuči kao reusable UI primitive, ne kao vežba.',
+    'html:ui-callout-card',
+    'Domain-driven naming je prvi enterprise signal: ime taga mora da sugeriše šta komponenta jeste.',
+    ['<ui-callout-card']
+  ),
+  describeHtmlElementStep(
+    'eyebrow_slot_html',
+    'HTML: Named Slot Content',
+    'Dodajemo `<span slot="eyebrow">Web Components</span>` kao named slot sadržaj.',
+    'html:slot-eyebrow',
+    'Slot ostaje public surface komponente i u enterprise varijanti.'
+  ),
+  describeHtmlElementStep(
+    'summary_text_html',
+    'HTML: Default Slot Text',
+    'Dodajemo opisni tekst kao default slot sadržaj.',
+    'html:default-slot',
+    'Usage API ostaje mali i čitljiv iako interna arhitektura postaje ozbiljnija.'
+  ),
+  describeHtmlElementStep(
+    'variant_attribute_html',
+    'HTML: variant="success"',
+    'Dodajemo `variant="success"` i uvodimo jasan, deklarativni state/variant API.',
+    'html:variant',
+    'Enterprise komponenta ne treba da zahteva ručno prepisivanje stilova; variants su deo public contract-a.'
+  ),
+  describeTeachingStep(
+    'enterprise_api_contract',
+    'Teaching Moment: Smell of Enterprise',
+    'Ova lekcija ne pravi “veću” komponentu nego predvidiviju: public API sada ima attributes i properties, update tok se sužava, event payload postaje jasan, a styling contract je svesno dizajniran.',
+    'Cilj enterprise smell-a nije složenost, nego stabilan contract za druge timove i integracije.'
+  ),
+  describeTemplateJsStep(
+    'template_html_declaration',
+    'Template JS: Izdvajamo markup',
+    'U `ui-callout-card.template.js` card markup ostaje u `templateHtml`, odvojeno od behavior koda.',
+    'Template modul sada nosi samo strukturu komponente.'
+  ),
+  describeTemplateJsStep(
+    'template_parts',
+    'Template JS: Dodajemo part contract',
+    'U template markup uvodimo `part="card"`, `part="eyebrow"`, `part="title"`, `part="summary"` i `part="cta"`.',
+    '`part` je javni styling API: parent može da stilizuje dozvoljene surface delove, bez lomljenja shadow internals.'
+  ),
+  describeTemplateJsStep(
+    'template_element_export',
+    'Template JS: Eksportujemo Template Element',
+    'Kreiramo `uiCalloutCardTemplate`, dodajemo `<link rel="stylesheet">` ka `ui-callout-card.shadow.css` i ubrizgavamo `${templateHtml}`.',
+    'Template fajl zna za markup i shadow stylesheet ulaz, ali ne zna za lifecycle, state i evente.'
+  ),
+  describeJsFlowStep(
+    'import_template',
+    'JS: Uvozimo Template Modul',
+    'Behavior fajl uvozi `uiCalloutCardTemplate` iz template modula. Klasa ga samo koristi.',
+    'Ovo je prva jasna granica: class ne gradi HTML stringove.'
+  ),
+  describeJsFlowStep(
+    'normalize_text_helper',
+    'JS: normalizujemo string ulaze',
+    'Dodajemo `normalizeTextValue()` da title i CTA label ne zavise od sirovog ulaza.',
+    'Enterprise API ne pretpostavlja da je svaki input već lep i čist.'
+  ),
+  describeJsFlowStep(
+    'allowed_variants_set',
+    'JS: zaključavamo dozvoljene variants',
+    'Dodajemo `allowedVariants` skup kao mali, predvidiv styling contract.',
+    'Ne želimo otvoren string chaos za state koji direktno utiče na styling.'
+  ),
+  describeJsFlowStep(
+    'normalize_variant_helper',
+    'JS: normalizujemo variant vrednost',
+    'Dodajemo `normalizeVariantValue()` da nepoznat variant automatski padne na `info`.',
+    'Fallback je deo contract-a; komponenta ne sme da padne zato što je neko poslao lošu vrednost.'
+  ),
+  describeJsFlowStep(
+    'class_declaration',
+    'JS: UiCalloutCard extends HTMLElement',
+    'Klasa sada prati domain-driven ime taga: `UiCalloutCard`.',
+    'Class ime i custom element tag treba da pričaju istu priču.'
+  ),
+  describeJsFlowStep(
+    'observed_attributes',
+    'JS: proširujemo observedAttributes',
+    'Komponenta sada eksplicitno prati `title`, `cta-label`, `disabled` i `variant`.',
+    'Observed attributes su spoljašnji declarative API ulazi.'
+  ),
+  describeJsFlowStep(
+    'constructor_shadow',
+    'JS: constructor otvara shadow root',
+    'U konstruktoru i dalje samo pripremamo instancu i shadow root.',
+    'Konstruktor priprema osnovu, ne radi lifecycle posao umesto connectedCallback-a.'
+  ),
+  describeJsFlowStep(
+    'constructor_bind',
+    'JS: constructor binduje action handler',
+    'Vezujemo `handleActionClick` unapred da event cleanup ostane stabilan.',
+    'Handler bindujemo jednom, ne pri svakom connect-u.'
+  ),
+  describeJsFlowStep(
+    'constructor_state',
+    'JS: constructor priprema interne reference',
+    'Inicijalizujemo reference i state flagove za CTA binding.',
+    'Interno stanje ostaje malo i predvidivo.'
+  ),
+  describeJsFlowStep(
+    'connected_callback',
+    'JS: connectedCallback Lifecycle',
+    'Connected lifecycle ostaje glavni ulaz kada komponenta stvarno uđe u DOM.',
+    'Sve što zavisi od živog DOM-a i eventa ide ovde.'
+  ),
+  describeJsFlowStep(
+    'connected_callback_setup',
+    'JS: connectedCallback poziva setupTemplateOnce',
+    'Prvo jednom stampujemo template u shadow root.',
+    'Ovim izbegavamo da `cacheDom()` meša template mount i query odgovornost.'
+  ),
+  describeJsFlowStep(
+    'connected_callback_cache',
+    'JS: connectedCallback poziva cacheDom',
+    'Tek kada template postoji, keširamo reference.',
+    'Setup i cache sada imaju odvojene odgovornosti.'
+  ),
+  describeJsFlowStep(
+    'connected_callback_sync',
+    'JS: connectedCallback sinhronizuje atribute',
+    'Dodajemo `syncFromAttributes()` kao prvi enterprise-friendly render pass.',
+    'Umesto jednog velikog `render()`, ovde pozivamo uske update metode.'
+  ),
+  describeJsFlowStep(
+    'connected_callback_bind',
+    'JS: connectedCallback vezuje evente',
+    'Na kraju povezujemo behavior sa već spremnim DOM-om.',
+    'Event wiring ide tek kada su DOM reference spremne.'
+  ),
+  describeJsFlowStep(
+    'disconnected_callback',
+    'JS: disconnectedCallback cleanup',
+    'Komponenta i dalje poštuje ceo lifecycle i skida evente na izlazu.',
+    'Production-ready komponenta mora da bude sigurna i pri reconnect scenariju.'
+  ),
+  describeJsFlowStep(
+    'attribute_changed_callback',
+    'JS: precizniji attributeChangedCallback',
+    'Potpis sada prima `name`, `oldValue` i `newValue`.',
+    'Ovo je polazna tačka za uži i predvidiviji update tok.'
+  ),
+  describeJsFlowStep(
+    'attribute_changed_guard',
+    'JS: guard za iste vrednosti i disconnected stanje',
+    'Odmah izlazimo kada se vrednost nije stvarno promenila ili komponenta još nije povezana.',
+    'Enterprise update path ne radi posao bez potrebe.'
+  ),
+  describeJsFlowStep(
+    'attribute_changed_switch',
+    'JS: menjamo samo ono što se promenilo',
+    'Switch poziva `updateTitle()`, `updateCtaLabel()`, `updateDisabledState()` ili `updateVariant()` zavisno od atributa.',
+    'Ovo je glavna razlika u odnosu na demo pristup: nema slepog full render-a na svaku promenu.'
+  ),
+  describeTeachingStep(
+    'precise_updates_over_full_render',
+    'Teaching Moment: uski update path',
+    'Lesson 07 je već išla ka patch pristupu, ali ovde ga zatežemo do kraja: update tok je sada granularan po responsibility metodi, umesto da svaka promena završi u jednom opštem render pozivu.',
+    'Što je update uži, to je komponenta predvidivija za testove, profiling i timsku integraciju.'
+  ),
+  describeJsFlowStep(
+    'property_title_getter',
+    'JS: title getter',
+    'Dodajemo property getter za `title` i vraćamo normalizovanu vrednost.',
+    'Property API otvara čist JS contract pored declarative HTML atributa.'
+  ),
+  describeJsFlowStep(
+    'property_title_setter',
+    'JS: title setter',
+    'Setter vraća kontrolu na attribute layer i postavlja normalizovan `title`.',
+    'Source of truth ostaje na atributu, pa declarative i imperative upotreba ne odlaze u dva sveta.'
+  ),
+  describeJsFlowStep(
+    'property_cta_getter',
+    'JS: ctaLabel getter',
+    'Dodajemo property getter za `ctaLabel` i uvodimo jasnu JS reprezentaciju `cta-label` atributa.',
+    'CamelCase property i kebab-case attribute čine standardni Web Components API par.'
+  ),
+  describeJsFlowStep(
+    'property_cta_setter',
+    'JS: ctaLabel setter',
+    'Setter piše nazad u `cta-label` atribut i drži isti source of truth model.',
+    'Imperative JS API i declarative HTML API sada rade kroz isti kanal.'
+  ),
+  describeJsFlowStep(
+    'property_disabled_getter',
+    'JS: disabled getter',
+    "Boolean state čitamo kroz `hasAttribute('disabled')`.",
+    'Boolean atributi treba da ostanu jednostavni i predvidivi.'
+  ),
+  describeJsFlowStep(
+    'property_disabled_setter',
+    'JS: disabled setter',
+    "Setter koristi `toggleAttribute('disabled', value)` umesto ručnog string menadžmenta.",
+    'Za boolean atribute ovo je najčistiji Web API obrazac.'
+  ),
+  describeJsFlowStep(
+    'property_variant_getter',
+    'JS: variant getter',
+    'Getter vraća normalizovanu variant vrednost sa fallback-om.',
+    'Komponenta nikad ne treba da izbacuje neprovereni variant string dalje kroz UI.'
+  ),
+  describeJsFlowStep(
+    'property_variant_setter',
+    'JS: variant setter',
+    'Setter normalizuje variant pre upisa nazad u atribut.',
+    'Normalization držimo na granici API-ja, ne usred styling logike.'
+  ),
+  describeJsFlowStep(
+    'setup_template_once',
+    'JS: Uvodimo setupTemplateOnce()',
+    'Template mount dobija sopstvenu responsibility metodu.',
+    'Sada je jasno: jedna metoda montira strukturu, druga kešira reference.'
+  ),
+  describeJsFlowStep(
+    'setup_template_once_guard',
+    'JS: Template kloniramo samo jednom',
+    'Guard sprečava dupliranje markup-a pri reconnect-u.',
+    'Reconnect mora da bude boring i bez side effect-a.'
+  ),
+  describeJsFlowStep(
+    'cache_dom',
+    'JS: cacheDom sada stvarno samo kešira',
+    'U ovoj lekciji `cacheDom()` više ne radi first mount, nego samo pronalazi reference kada zatrebaju.',
+    'Ime metode i ponašanje su sada potpuno usklađeni.'
+  ),
+  describeJsFlowStep(
+    'cache_dom_title',
+    'JS: cacheDom kešira title referencu',
+    'Title element čuvamo na instanci da updateTitle radi bez novog query-ja.',
+    'Kasnije update metode rade samo nad malim internim API-jem reference.'
+  ),
+  describeJsFlowStep(
+    'cache_dom_cta',
+    'JS: cacheDom kešira CTA referencu',
+    'Na isti način čuvamo i CTA dugme.',
+    'Kad reference postoje, ostatak klase postaje uži i čistiji.'
+  ),
+  describeJsFlowStep(
+    'sync_from_attributes',
+    'JS: syncFromAttributes()',
+    'Dodajemo centralno mesto koje pri connect-u sinhronizuje DOM sa atribut API-jem.',
+    'Ovo je one-time orchestration, a ne opšti render za svaki slučaj.'
+  ),
+  describeJsFlowStep(
+    'sync_from_attributes_calls',
+    'JS: syncFromAttributes poziva update metode',
+    'Pri prvom connect-u pozivamo `updateTitle()`, `updateCtaLabel()`, `updateDisabledState()` i `updateVariant()`.',
+    'Ovaj tok jasno kaže koje responsibility metode čine inicijalnu sinhronizaciju.'
+  ),
+  describeJsFlowStep(
+    'update_title',
+    'JS: updateTitle()',
+    'Naslov se ažurira kroz jednu, usku metodu.',
+    'Property API i DOM patch sada imaju jasnu jednu tačku dodira.'
+  ),
+  describeJsFlowStep(
+    'update_cta_label',
+    'JS: updateCtaLabel()',
+    'CTA tekst i `aria-label` ažuriramo zajedno, ali i dalje usko i lokalno.',
+    'Accessibility ne ide naknadno; ona je deo istog update contract-a.'
+  ),
+  describeJsFlowStep(
+    'update_disabled_state',
+    'JS: updateDisabledState()',
+    'Disabled stanje istovremeno ažurira stvarni `<button disabled>` i host `aria-disabled` signal.',
+    'State contract mora da se vidi i u DOM semantici, ne samo u vizuelnom CSS-u.'
+  ),
+  describeJsFlowStep(
+    'update_variant',
+    'JS: updateVariant()',
+    'Variant se normalizuje i potvrđuje nazad na host atributu, a zatim se čuva i kao dataset signal.',
+    'Styling contract sada ima jasan gateway: nepoznat variant ne ide dalje bez kontrole.'
+  ),
+  describeJsFlowStep(
+    'bind_events',
+    'JS: bindEvents()',
+    'Event wiring ostaje u sopstvenoj responsibility metodi.',
+    'DOM i behavior se spajaju na jednom mestu.'
+  ),
+  describeJsFlowStep(
+    'bind_events_guard',
+    'JS: bindEvents štiti od duplog binding-a',
+    'Pre dodavanja listenera proveravamo i ref i state flag.',
+    'Double-bind bug ne sme da uđe u lifecycle tok.'
+  ),
+  describeJsFlowStep(
+    'unbind_events',
+    'JS: unbindEvents()',
+    'Cleanup dobija jasan par za `bindEvents()`.',
+    'Ako postoji bind responsibility, treba da postoji i cleanup responsibility.'
+  ),
+  describeJsFlowStep(
+    'unbind_events_guard',
+    'JS: unbindEvents skida listener samo kada postoji',
+    'Pre cleanup-a proveravamo da je listener stvarno aktivan.',
+    'Ovim reconnect ostaje dosadan i siguran.'
+  ),
+  describeJsFlowStep(
+    'handle_click_disabled_guard',
+    'JS: handleActionClick()',
+    'Klik handler dobija sopstvenu metodu sa jasnim responsibility-jem.',
+    'Action method treba da bude mala i predvidiva.'
+  ),
+  describeJsFlowStep(
+    'handle_click_disabled_guard_body',
+    'JS: disabled guard u action handleru',
+    'Ako je komponenta onemogućena, klik odmah prekidamo.',
+    'Disabled nije samo vizuelna etiketa; to je pravo behavioral stanje.'
+  ),
+  describeJsFlowStep(
+    'handle_click_event',
+    'JS: namespaced event contract',
+    'Emitujemo `ui-callout-card:action` sa `bubbles`, `composed`, `cancelable` i stabilnim `detail` payload-om.',
+    'Event contract je deo javnog API-ja, ne interni detalj implementacije.'
+  ),
+  describeJsFlowStep(
+    'define_guard',
+    'JS: guard pre registracije',
+    'I dalje se čuvamo duplog `customElements.define(...)` poziva.',
+    'Hot reload i ponovna evaluacija modula ne smeju da razbiju komponentu.'
+  ),
+  describeJsFlowStep(
+    'define_element',
+    'JS: registrujemo ui-callout-card',
+    'Komponenta sada ima domain-driven tag, ozbiljniji API i stabilniji lifecycle.',
+    'Ovo je tačka gde demo prelazi u reusable primitive.'
+  ),
+  ...shellCssSteps.map(config => describeCssPropertyStep(...config)),
+  describeTeachingStep(
+    'host_vs_shadow_styles',
+    'Teaching Moment: styling contract',
+    'Do ovog trenutka `style.css` je definisao samo host scenu, theme tokene, variants i disabled host signal. Sledeći koraci prelaze u `ui-callout-card.shadow.css`, gde stilizujemo samo unutrašnji card, badge, naslov, opis i CTA.',
+    'Pravilo je jednostavno: host/theme/state spolja, card internals unutra.'
+  ),
+  ...shadowCssSteps.map(config => describeShadowCssPropertyStep(...config)),
+  describeSummaryStep(
+    'card_summary',
+    'Rezime: .card u ui-callout-card.shadow.css',
+    'Uklanjamo card helper outline.',
+    'Card sada čita javne host tokene bez curenja internog styling contract-a.'
+  ),
+  describeSummaryStep(
+    'eyebrow_summary',
+    'Rezime: .eyebrow i slot contract',
+    'Uklanjamo eyebrow helper outline.',
+    'Badge i slot ostaju mali, ali namerno dizajnirani public surface-i.'
+  ),
+  describeSummaryStep(
+    'cta_summary',
+    'Rezime: .cta sa state pravilima',
+    'Uklanjamo CTA helper outline.',
+    'CTA sada ima hover, focus i disabled ponašanje kao deo stabilnog component contract-a.'
+  ),
+  describeSummaryStep(
+    'host_summary',
+    'Rezime: ui-callout-card host',
+    'Uklanjamo host outline.',
+    'Host sada nosi theme tokene, variants i state signal bez mešanja sa shadow internals.'
+  ),
+  describeSummaryStep(
+    'shell_summary',
+    'Rezime: .app-shell',
+    'Uklanjamo helper outline sa `.app-shell`.',
+    'Okvir je završio posao; fokus ostaje na reusable komponenti.',
+    ['<div class="app-shell">']
+  ),
+  describeFinishedStep(
+    'done',
+    'Done: Smell Of Enterprise',
+    'Lekcija je završena: `index.html` koristi `ui-callout-card`, `ui-callout-card.template.js` drži markup i `part` surface-e, `ui-callout-card.js` vodi public API, lifecycle i event contract, `style.css` theme-uje host, a `ui-callout-card.shadow.css` drži unutrašnji styling.',
+    'Najvažnija pouka je da enterprise miris dolazi iz jasnog contract-a: attributes i properties imaju ista pravila, update put je uzak, event payload je stabilan, a styling granica je namerno dizajnirana.'
+  )
+];
+
+export const stepNumberById = Object.fromEntries(
+  lessonSteps.map((step, index) => [step.id, index])
+);
+
 === lessons/register-lessons.js ===
 import { buildSidebarLesson } from './01-build-sidebar/build-sidebar.lesson.js';
 import { buildTopNavigationLesson } from './02-build-top-navigation/build-top-navigation.lesson.js';
@@ -12629,6 +14195,7 @@ import { buildWebComponentLesson } from './04-build-web-component/build-web-comp
 import { cleanWebComponentWithAdoptedStylesheetsLesson } from './05-clean-web-component-with-adopted-stylesheets/clean-web-component-with-adopted-stylesheets.lesson.js';
 import { modularWebComponentsLesson } from './06-modular-web-components/06-modular-web-components.lesson.js';
 import { moreSeparationOfCodeLesson } from './07-more-separation-of-code/07-more-separation-of-code.lesson.js';
+import { smellOfEnterpriseLesson } from './08-smell-of-enterprise/08-smell-of-enterprise.lesson.js';
 
 export const registeredLessons = [
   buildSidebarLesson,
@@ -12637,7 +14204,8 @@ export const registeredLessons = [
   buildWebComponentLesson,
   cleanWebComponentWithAdoptedStylesheetsLesson,
   modularWebComponentsLesson,
-  moreSeparationOfCodeLesson
+  moreSeparationOfCodeLesson,
+  smellOfEnterpriseLesson
 ];
 
 const lessonsById = new Map(registeredLessons.map(lesson => [lesson.lessonId, lesson]));

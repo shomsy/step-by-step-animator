@@ -5,6 +5,7 @@ import { buildWebComponentLesson } from './04-build-web-component/build-web-comp
 import { cleanWebComponentWithAdoptedStylesheetsLesson } from './05-clean-web-component-with-adopted-stylesheets/clean-web-component-with-adopted-stylesheets.lesson.js';
 import { modularWebComponentsLesson } from './06-modular-web-components/06-modular-web-components.lesson.js';
 import { moreSeparationOfCodeLesson } from './07-more-separation-of-code/07-more-separation-of-code.lesson.js';
+import { smellOfEnterpriseLesson } from './08-smell-of-enterprise/08-smell-of-enterprise.lesson.js';
 
 export const registeredLessons = [
   buildSidebarLesson,
@@ -13,7 +14,8 @@ export const registeredLessons = [
   buildWebComponentLesson,
   cleanWebComponentWithAdoptedStylesheetsLesson,
   modularWebComponentsLesson,
-  moreSeparationOfCodeLesson
+  moreSeparationOfCodeLesson,
+  smellOfEnterpriseLesson
 ];
 
 const lessonsById = new Map(registeredLessons.map(lesson => [lesson.lessonId, lesson]));

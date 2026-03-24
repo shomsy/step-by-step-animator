@@ -287,6 +287,7 @@ This repo uses numeric prefixes on ordered lesson flows in `lessons/` and on the
 05-clean-web-component-with-adopted-stylesheets/
 06-modular-web-components/
 07-more-separation-of-code/
+08-smell-of-enterprise/
 ```
 
 ```txt

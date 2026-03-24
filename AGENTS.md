@@ -19,6 +19,7 @@ Trenutno isporučene lekcije su:
 - `05-clean-web-component-with-adopted-stylesheets`
 - `06-modular-web-components`
 - `07-more-separation-of-code`
+- `08-smell-of-enterprise`
 
 Svaka nova lekcija mora da koristi isti shell i isti teaching model:
 
@@ -366,6 +367,7 @@ U `lessons/` to važi za shipped learning path:
 - `05-clean-web-component-with-adopted-stylesheets`
 - `06-modular-web-components`
 - `07-more-separation-of-code`
+- `08-smell-of-enterprise`
 
 U player runtime-u to važi za glavni lesson journey:
 
