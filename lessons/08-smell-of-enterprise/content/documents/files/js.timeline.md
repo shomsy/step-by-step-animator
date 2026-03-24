@@ -329,12 +329,13 @@
       "  get ctaLabel() {",
       "    return normalizeTextValue(this.getAttribute('cta-label'), 'Get started');",
       "  }",
-      ""
+      "",
+      "@@slot:after-property-cta-label@@"
     ]
   },
   {
     "from": "derived_state_getters",
-    "target": "class-body",
+    "target": "after-property-cta-label",
     "lines": [
       "  get isYearlyBilling() {",
       "    return this.billing === 'yearly';",
