@@ -155,21 +155,82 @@ Primer:
 
 ---
 
-## 7. Recommendation: “step-1/step-2/... content refactor”
+## 7. Recommendation: "step-1/step-2/... content refactor"
 
 ### 7.1 Struktura (future-proof)
 
 ```
-lessons/feature-name/
-  step-01/
-    html/
-      html.timeline.md
-    css/
-      css.rules.md
-    js/
-      js.timeline.md
-  step-02/
-  ...
+lessons/
+├── 01-build-sidebar/
+│   ├── step-01/
+│   │   ├── html/
+│   │   │   └── html.timeline.md
+│   │   ├── css/
+│   │   │   └── css.rules.md
+│   │   └── js/
+│   │       └── js.timeline.md
+│   ├── step-02/
+│   │   ├── html/
+│   │   │   └── html.timeline.md
+│   │   ├── css/
+│   │   │   └── css.rules.md
+│   │   └── js/
+│   │       └── js.timeline.md
+│   ├── feature-name.lesson.js
+│   ├── describe-steps.js
+│   ├── build-html-at-step.js
+│   ├── build-css-at-step.js
+│   └── build-js-at-step.js
+├── 02-build-top-navigation/
+│   ├── step-01/
+│   │   ├── html/
+│   │   │   └── html.timeline.md
+│   │   ├── css/
+│   │   │   └── css.rules.md
+│   │   └── js/
+│   │       └── js.timeline.md
+│   ├── step-02/
+│   │   ├── html/
+│   │   │   └── html.timeline.md
+│   │   ├── css/
+│   │   │   └── css.rules.md
+│   │   └── js/
+│   │       └── js.timeline.md
+│   ├── feature-name.lesson.js
+│   ├── describe-steps.js
+│   ├── build-html-at-step.js
+│   ├── build-css-at-step.js
+│   └── build-js-at-step.js
+├── ...
+└── 08-smell-of-enterprise/
+    ├── step-01/
+    │   ├── html/
+    │   │   └── html.timeline.md
+    │   ├── css/
+    │   │   └── css.rules.md
+    │   └── js/
+    │       └── js.timeline.md
+    ├── step-02/
+    │   ├── html/
+    │   │   └── html.timeline.md
+    │   ├── css/
+    │   │   └── css.rules.md
+    │   └── js/
+    │       └── js.timeline.md
+    ├── step-03/
+    │   ├── html/
+    │   │   └── html.timeline.md
+    │   ├── css/
+    │   │   └── css.rules.md
+    │   └── js/
+    │       └── js.timeline.md
+    ├── feature-name.lesson.js
+    ├── describe-steps.js
+    ├── build-html-at-step.js
+    ├── build-css-at-step.js
+    ├── build-js-at-step.js
+    ├── build-shadow-css-at-step.js
+    └── build-template-js-at-step.js
 ```
 
 ### 7.2 Koja je prednost
