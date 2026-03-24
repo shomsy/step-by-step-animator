@@ -174,14 +174,14 @@ Primer:
 ```
 lessons/
 ├── 01-build-sidebar/
-│   ├── step-01/
+│   ├── step-1/
 │   │   ├── html/
 │   │   │   └── html.timeline.md
 │   │   ├── css/
 │   │   │   └── css.rules.md
 │   │   └── js/
 │   │       └── js.timeline.md
-│   ├── step-02/
+│   ├── step-2/
 │   │   ├── html/
 │   │   │   └── html.timeline.md
 │   │   ├── css/
@@ -194,14 +194,14 @@ lessons/
 │   ├── build-css-at-step.js
 │   └── build-js-at-step.js
 ├── 02-build-top-navigation/
-│   ├── step-01/
+│   ├── step-1/
 │   │   ├── html/
 │   │   │   └── html.timeline.md
 │   │   ├── css/
 │   │   │   └── css.rules.md
 │   │   └── js/
 │   │       └── js.timeline.md
-│   ├── step-02/
+│   ├── step-2/
 │   │   ├── html/
 │   │   │   └── html.timeline.md
 │   │   ├── css/
@@ -215,21 +215,21 @@ lessons/
 │   └── build-js-at-step.js
 ├── ...
 └── 08-smell-of-enterprise/
-    ├── step-01/
+    ├── step-1/
     │   ├── html/
     │   │   └── html.timeline.md
     │   ├── css/
     │   │   └── css.rules.md
     │   └── js/
     │       └── js.timeline.md
-    ├── step-02/
+    ├── step-2/
     │   ├── html/
     │   │   └── html.timeline.md
     │   ├── css/
     │   │   └── css.rules.md
     │   └── js/
     │       └── js.timeline.md
-    ├── step-03/
+    ├── step-3/
     │   ├── html/
     │   │   └── html.timeline.md
     │   ├── css/
