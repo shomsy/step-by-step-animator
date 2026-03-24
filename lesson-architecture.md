@@ -97,7 +97,7 @@ Cilj je da struktura bude:
 
 ## 4. Koraci u `lessons/<feature>/content/documents/files/js.timeline.md`
 
-Sadržaj generiše se u blokovima sa intuitivnim ključevima:
+Sadržaj generiše se u blokovima sa intuitivnim, fluent i human-readable ključevima:
 - `step`: kada se ovaj blok primenjuje (step boundary identifikator)
 - `slot`: gde se ubacuje u finalnom kodu (slot marker ime)
 - `code`: šta se ubacuje (niz linija koda)
