@@ -129,6 +129,7 @@
     "lines": [
       "    this.tierNameElement = null;",
       "    this.priceAmountElement = null;",
+      "    this.pricePeriodElement = null;",
       "    this.ctaElement = null;",
       "    this.toggleSwitchElement = null;",
       "    this.urgencyTextElement = null;",
@@ -222,6 +223,7 @@
       "    switch (name) {",
       "      case 'tier':",
       "        this.updateTierName();",
+      "        this.updateCtaLabel();",
       "        break;",
       "      case 'price-monthly':",
       "      case 'price-yearly':",
@@ -231,6 +233,9 @@
       "        break;",
       "      case 'cta-label':",
       "        this.updateCtaLabel();",
+      "        break;",
+      "      case 'popular':",
+      "        // CSS reactive only",
       "        break;",
       "      default:",
       "        break;",
@@ -368,6 +373,16 @@
     ]
   },
   {
+    "from": "cache_dom_price_period",
+    "target": "cache-dom-body",
+    "lines": [
+      "    if (!this.pricePeriodElement) {",
+      "      this.pricePeriodElement = this.shadowRoot.querySelector('.price-period');",
+      "    }",
+      ""
+    ]
+  },
+  {
     "from": "cache_dom_cta",
     "target": "cache-dom-body",
     "lines": [
@@ -435,12 +450,13 @@
     "target": "class-body",
     "lines": [
       "  updatePrice() {",
-      "    if (!this.priceAmountElement) {",
+      "    if (!this.priceAmountElement || !this.pricePeriodElement) {",
       "      return;",
       "    }",
       "",
-      "    const price = this.billing === 'yearly' ? this.priceYearly : this.priceMonthly;",
-      "    this.priceAmountElement.textContent = price;",
+      "    const isYearly = this.billing === 'yearly';",
+      "    this.priceAmountElement.textContent = isYearly ? this.priceYearly : this.priceMonthly;",
+      "    this.pricePeriodElement.textContent = isYearly ? '/yr' : '/mo';",
       "  }",
       ""
     ]

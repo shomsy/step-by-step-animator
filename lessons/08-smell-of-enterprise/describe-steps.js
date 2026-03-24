@@ -538,6 +538,12 @@ export const lessonSteps = [
     'Cena se menja na toggle klik — keš ubrzava taj update.'
   ),
   describeJsFlowStep(
+    'cache_dom_price_period',
+    'JS: cacheDom kešira .price-period',
+    'Price period span čuvamo za dinamičko menjanje tekstualne labele (/mo ili /yr).',
+    'Vizuelni tekst perioda mora pratiti iznos cene.'
+  ),
+  describeJsFlowStep(
     'cache_dom_cta',
     'JS: cacheDom kešira .cta',
     'CTA dugme čuvamo za tekst i event binding.',
