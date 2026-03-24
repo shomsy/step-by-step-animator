@@ -97,18 +97,18 @@ Cilj je da struktura bude:
 
 ## 4. Koraci u `lessons/<feature>/content/documents/files/js.timeline.md`
 
-Sadržaj generiše se u blokovima:
-- `from`: naziv koraka (služi za stepNumber granice)
-- `target`: slot gde se ubacuje (root, class-head, cache-dom-body, itd.)
-- `lines`: niz stringova koji definišu linije koda
+Sadržaj generiše se u blokovima sa intuitivnim ključevima:
+- `step`: kada se ovaj blok primenjuje (step boundary identifikator)
+- `slot`: gde se ubacuje u finalnom kodu (slot marker ime)
+- `code`: šta se ubacuje (niz linija koda)
 
 Primer:
 
 ```json
 {
-  "from":"cache_dom_price_period",
-  "target":"cache-dom-body",
-  "lines":[
+  "step": "cache_dom_price_period",
+  "slot": "cache-dom-body",
+  "code": [
     "    if (!this.pricePeriodElement) {",
     "      this.pricePeriodElement = this.shadowRoot.querySelector('.price-period');",
     "    }",
@@ -116,6 +116,18 @@ Primer:
   ]
 }
 ```
+
+### 4.1 Zašto ovi ključevi?
+
+- `step`: jasno kaže "u kom koraku se ovo dešava" (flow-first)
+- `slot`: direktno govori "u koju poziciju se ubacuje" (DSL-friendly)
+- `code`: intuitivno "šta je sadržaj" (developer-friendly)
+
+### 4.2 Prednosti intuitivnih ključeva
+
+- Čita se kao engleski: "u step-u X, ubaci code u slot Y"
+- Lakše za autore lekcija da razumeju bez dokumentacije
+- Manje grešaka u pisanju (step vs from, slot vs target, code vs lines)
 
 ---
 
