@@ -14020,8 +14020,9 @@ U ovoj lekciji gradimo `ui-pricing-card` — enterprise SaaS pricing table kompo
       "      return;",
       "    }",
       "",
-      "    const isYearly = this.billing === 'yearly';",
+      "    const isYearly = this.isYearlyBilling;",
       "    this.toggleSwitchElement.setAttribute('aria-checked', String(isYearly));",
+      "    this.toggleSwitchElement.setAttribute('aria-label', isYearly ? 'Switch to monthly billing' : 'Switch to yearly billing');",
       "  }",
       ""
     ]
@@ -14160,7 +14161,7 @@ U ovoj lekciji gradimo `ui-pricing-card` — enterprise SaaS pricing table kompo
       "        cancelable: true,",
       "        detail: {",
       "          tier: this.tier,",
-      "          price: this.billing === 'yearly' ? this.priceYearly : this.priceMonthly,",
+      "          price: this.currentPrice,",
       "          billing: this.billing,",
       "          ctaLabel: this.ctaLabel,",
       "          source: 'ui-pricing-card'",
@@ -14513,7 +14514,7 @@ U ovoj lekciji gradimo `ui-pricing-card` — enterprise SaaS pricing table kompo
       "",
       "    <div class=\"billing-toggle\" part=\"billing-toggle\">",
       "      <span class=\"toggle-label\">Monthly</span>",
-      "      <button class=\"toggle-switch\" type=\"button\" role=\"switch\" aria-checked=\"false\" aria-label=\"Toggle billing period\">",
+      "      <button class=\"toggle-switch\" type=\"button\" role=\"switch\" aria-checked=\"false\">",
       "        <span class=\"toggle-knob\"></span>",
       "      </button>",
       "      <span class=\"toggle-label\">Yearly <span class=\"save-badge\">Save 20%</span></span>",
@@ -15045,7 +15046,7 @@ export const lessonSteps = [
     'property_billing_setter',
     'JS: billing setter',
     'Setter piše normalizovani billing nazad u atribut.',
-    'Toggle menja atribut → attributeChangedCallback → updatePrice(). Jednosmerni tok.'
+    'Toggle menja atribut → attributeChangedCallback → updatePrice() + updateToggleState(). Jednosmerni tok.'
   ),
   describeJsFlowStep(
     'property_popular_getter',
@@ -15074,7 +15075,7 @@ export const lessonSteps = [
   describeJsFlowStep(
     'cache_dom',
     'JS: cacheDom — samo kešira reference',
-    'Querijemo pet internih elemenata i čuvamo na instanci.',
+    'Querijemo šest internih elemenata i čuvamo na instanci.',
     'Cache znači pamti, ne gradi. Ime i ponašanje su usklađeni.'
   ),
   describeJsFlowStep(
@@ -15122,7 +15123,7 @@ export const lessonSteps = [
   describeJsFlowStep(
     'sync_from_attributes_calls',
     'JS: sync poziva četiri update metode',
-    'Pozivamo `updateTierName()`, `updatePrice()`, `updateCtaLabel()` i `updateToggleState()`.',
+    'Pozivamo `updateTierName()`, `updatePrice()`, `updateToggleState()` i `updateCtaLabel()`.',
     'Svaki poziv je uski i individualno testabilan.'
   ),
   describeJsFlowStep(

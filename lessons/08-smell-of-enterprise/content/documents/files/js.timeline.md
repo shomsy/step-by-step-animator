@@ -511,8 +511,9 @@
       "      return;",
       "    }",
       "",
-      "    const isYearly = this.billing === 'yearly';",
+      "    const isYearly = this.isYearlyBilling;",
       "    this.toggleSwitchElement.setAttribute('aria-checked', String(isYearly));",
+      "    this.toggleSwitchElement.setAttribute('aria-label', isYearly ? 'Switch to monthly billing' : 'Switch to yearly billing');",
       "  }",
       ""
     ]
@@ -651,7 +652,7 @@
       "        cancelable: true,",
       "        detail: {",
       "          tier: this.tier,",
-      "          price: this.billing === 'yearly' ? this.priceYearly : this.priceMonthly,",
+      "          price: this.currentPrice,",
       "          billing: this.billing,",
       "          ctaLabel: this.ctaLabel,",
       "          source: 'ui-pricing-card'",

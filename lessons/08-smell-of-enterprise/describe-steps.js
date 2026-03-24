@@ -493,7 +493,7 @@ export const lessonSteps = [
     'property_billing_setter',
     'JS: billing setter',
     'Setter piše normalizovani billing nazad u atribut.',
-    'Toggle menja atribut → attributeChangedCallback → updatePrice(). Jednosmerni tok.'
+    'Toggle menja atribut → attributeChangedCallback → updatePrice() + updateToggleState(). Jednosmerni tok.'
   ),
   describeJsFlowStep(
     'property_popular_getter',
@@ -522,7 +522,7 @@ export const lessonSteps = [
   describeJsFlowStep(
     'cache_dom',
     'JS: cacheDom — samo kešira reference',
-    'Querijemo pet internih elemenata i čuvamo na instanci.',
+    'Querijemo šest internih elemenata i čuvamo na instanci.',
     'Cache znači pamti, ne gradi. Ime i ponašanje su usklađeni.'
   ),
   describeJsFlowStep(
@@ -570,7 +570,7 @@ export const lessonSteps = [
   describeJsFlowStep(
     'sync_from_attributes_calls',
     'JS: sync poziva četiri update metode',
-    'Pozivamo `updateTierName()`, `updatePrice()`, `updateCtaLabel()` i `updateToggleState()`.',
+    'Pozivamo `updateTierName()`, `updatePrice()`, `updateToggleState()` i `updateCtaLabel()`.',
     'Svaki poziv je uski i individualno testabilan.'
   ),
   describeJsFlowStep(

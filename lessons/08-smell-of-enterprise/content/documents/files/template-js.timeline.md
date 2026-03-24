@@ -22,7 +22,7 @@
       "",
       "    <div class=\"billing-toggle\" part=\"billing-toggle\">",
       "      <span class=\"toggle-label\">Monthly</span>",
-      "      <button class=\"toggle-switch\" type=\"button\" role=\"switch\" aria-checked=\"false\" aria-label=\"Toggle billing period\">",
+      "      <button class=\"toggle-switch\" type=\"button\" role=\"switch\" aria-checked=\"false\">",
       "        <span class=\"toggle-knob\"></span>",
       "      </button>",
       "      <span class=\"toggle-label\">Yearly <span class=\"save-badge\">Save 20%</span></span>",
