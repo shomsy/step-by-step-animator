@@ -99,7 +99,14 @@
     "from": "observed_attributes",
     "target": "class-head",
     "lines": [
-      "  static observedAttributes = ['tier', 'price-monthly', 'price-yearly', 'billing', 'popular', 'cta-label'];",
+      "  static observedAttributes = [",
+      "    'tier',",
+      "    'price-monthly',",
+      "    'price-yearly',",
+      "    'billing',",
+      "    'popular', // CSS-only reactive attribute",
+      "    'cta-label'",
+      "  ];",
       ""
     ]
   },
@@ -222,12 +229,14 @@
     "lines": [
       "    switch (name) {",
       "      case 'tier':",
+      "        // visual title + CTA accessibility text both depend on tier",
       "        this.updateTierName();",
       "        this.updateCtaLabel();",
       "        break;",
       "      case 'price-monthly':",
       "      case 'price-yearly':",
       "      case 'billing':",
+      "        // price amount, price period, and switch state depend on billing",
       "        this.updatePrice();",
       "        this.updateToggleState();",
       "        break;",
@@ -235,7 +244,7 @@
       "        this.updateCtaLabel();",
       "        break;",
       "      case 'popular':",
-      "        // CSS reactive only",
+      "        // CSS-only reactive attribute, no JS update needed",
       "        break;",
       "      default:",
       "        break;",
@@ -319,6 +328,24 @@
     "lines": [
       "  get ctaLabel() {",
       "    return normalizeTextValue(this.getAttribute('cta-label'), 'Get started');",
+      "  }",
+      ""
+    ]
+  },
+  {
+    "from": "derived_state_getters",
+    "target": "class-body",
+    "lines": [
+      "  get isYearlyBilling() {",
+      "    return this.billing === 'yearly';",
+      "  }",
+      "",
+      "  get currentPrice() {",
+      "    return this.isYearlyBilling ? this.priceYearly : this.priceMonthly;",
+      "  }",
+      "",
+      "  get currentPricePeriodLabel() {",
+      "    return this.isYearlyBilling ? '/yr' : '/mo';",
       "  }",
       ""
     ]
@@ -427,8 +454,8 @@
     "lines": [
       "    this.updateTierName();",
       "    this.updatePrice();",
-      "    this.updateCtaLabel();",
-      "    this.updateToggleState();"
+      "    this.updateToggleState();",
+      "    this.updateCtaLabel();"
     ]
   },
   {
@@ -454,9 +481,8 @@
       "      return;",
       "    }",
       "",
-      "    const isYearly = this.billing === 'yearly';",
-      "    this.priceAmountElement.textContent = isYearly ? this.priceYearly : this.priceMonthly;",
-      "    this.pricePeriodElement.textContent = isYearly ? '/yr' : '/mo';",
+      "    this.priceAmountElement.textContent = this.currentPrice;",
+      "    this.pricePeriodElement.textContent = this.currentPricePeriodLabel;",
       "  }",
       ""
     ]
@@ -496,6 +522,10 @@
     "target": "class-body",
     "lines": [
       "  startUrgencyTimer() {",
+      "    if (this.urgencyTimerId !== null) {",
+      "      return;",
+      "    }",
+      "",
       "    this.updateUrgencyDisplay();",
       "",
       "    this.urgencyTimerId = setInterval(() => {",
