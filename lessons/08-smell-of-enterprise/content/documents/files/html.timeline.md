@@ -15,34 +15,48 @@
     "from": "component_html",
     "target": "app-shell-content",
     "lines": [
-      "  <ui-callout-card",
-      "    title=\"Smell of Enterprise\"",
-      "    cta-label=\"Open contract\"",
-      "    @@slot:ui-callout-card-attributes@@",
+      "  <ui-pricing-card",
+      "    tier=\"pro\"",
+      "    price-monthly=\"29\"",
+      "    price-yearly=\"24\"",
+      "    @@slot:pricing-card-attributes@@",
       "  >",
-      "    @@slot:ui-callout-card-content@@",
-      "  </ui-callout-card>"
+      "    @@slot:pricing-card-content@@",
+      "  </ui-pricing-card>"
     ]
   },
   {
-    "from": "eyebrow_slot_html",
-    "target": "ui-callout-card-content",
+    "from": "popular_attribute_html",
+    "target": "pricing-card-attributes",
     "lines": [
-      "    <span slot=\"eyebrow\">Web Components</span>"
+      "    popular"
     ]
   },
   {
-    "from": "summary_text_html",
-    "target": "ui-callout-card-content",
+    "from": "cta_label_attribute_html",
+    "target": "pricing-card-attributes",
     "lines": [
-      "    Stable API, precise updates and clear styling boundaries for real teams."
+      "    cta-label=\"Start free trial\""
     ]
   },
   {
-    "from": "variant_attribute_html",
-    "target": "ui-callout-card-attributes",
+    "from": "badge_slot_html",
+    "target": "pricing-card-content",
     "lines": [
-      "variant=\"success\""
+      "    <span slot=\"badge\">⭐ Most Popular</span>"
+    ]
+  },
+  {
+    "from": "features_slot_html",
+    "target": "pricing-card-content",
+    "lines": [
+      "    <ul slot=\"features\">",
+      "      <li>Unlimited projects</li>",
+      "      <li>Priority support</li>",
+      "      <li>Advanced analytics</li>",
+      "      <li>Team collaboration</li>",
+      "      <li>Custom integrations</li>",
+      "    </ul>"
     ]
   }
 ]

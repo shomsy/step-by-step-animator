@@ -1,14 +1,12 @@
 ---
-title: "08 · Smell Of Enterprise"
-previewAddress: browser://08-smell-of-enterprise-preview
-previewTitle: Live enterprise Web Component preview
+title: "08 · UI Pricing Card — SaaS Pricing Table"
+previewAddress: browser://08-ui-pricing-card-preview
+previewTitle: "Live SaaS Pricing Card Preview"
 htmlFileName: index.html
 cssFileName: style.css
-jsFileName: ui-callout-card.js
-templateJsFileName: ui-callout-card.template.js
-shadowCssFileName: ui-callout-card.shadow.css
+jsFileName: ui-pricing-card.js
+templateJsFileName: ui-pricing-card.template.js
+shadowCssFileName: ui-pricing-card.shadow.css
 ---
 
-Peta Web Components lekcija podiže istu ideju iz prethodnih koraka na nivo reusable UI primitive-a koji već miriše na enterprise. Host HTML ostaje mali, ali komponenta više nije samo demo: tag i class dobijaju domain-driven ime `ui-callout-card`, template markup ostaje u `ui-callout-card.template.js`, `ui-callout-card.js` preuzima stabilan public API kroz attributes i properties, `style.css` ostaje host/theme sloj, a `ui-callout-card.shadow.css` drži unutrašnji styling contract.
-
-Najvažniji teaching fokus ove lekcije su četiri enterprise signala: jasan public API, precizno i usko update ponašanje kroz `attributeChangedCallback(name, oldValue, newValue)`, stabilan event contract i nameran styling contract preko custom properties, `part` atributa i state/variant pravila. Suština nije da komponenta postane veća, nego da postane predvidiva za druge timove, testove i integracije.
+U ovoj lekciji gradimo `ui-pricing-card` — enterprise SaaS pricing table komponentu sa tier varijantama (starter/pro/enterprise), popular highlight stanjem, yearly/monthly toggle koji menja prikazanu cenu, CTA dugmetom sa urgency timerom i feature matrix slotovima. Komponenta ima precizan property API, granularni update tok i namespaced event contract.

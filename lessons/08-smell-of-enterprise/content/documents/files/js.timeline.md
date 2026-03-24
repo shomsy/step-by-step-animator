@@ -6,7 +6,7 @@
     "from": "import_template",
     "target": "root",
     "lines": [
-      "import { uiCalloutCardTemplate } from './ui-callout-card.template.js';",
+      "import { uiPricingCardTemplate } from './ui-pricing-card.template.js';",
       "@@slot:after-import-template@@"
     ]
   },
@@ -23,31 +23,71 @@
     ]
   },
   {
-    "from": "allowed_variants_set",
+    "from": "allowed_tiers_set",
     "target": "after-normalize-text",
     "lines": [
-      "const allowedVariants = new Set(['info', 'success', 'warning', 'danger']);",
+      "const allowedTiers = new Set(['starter', 'pro', 'enterprise']);",
       "",
-      "@@slot:after-allowed-variants@@"
+      "@@slot:after-allowed-tiers@@"
     ]
   },
   {
-    "from": "normalize_variant_helper",
-    "target": "after-allowed-variants",
+    "from": "normalize_tier_helper",
+    "target": "after-allowed-tiers",
     "lines": [
-      "function normalizeVariantValue(value) {",
-      "  const normalizedValue = String(value ?? '').trim().toLowerCase();",
-      "  return allowedVariants.has(normalizedValue) ? normalizedValue : 'info';",
+      "function normalizeTierValue(value) {",
+      "  const v = String(value ?? '').trim().toLowerCase();",
+      "  return allowedTiers.has(v) ? v : 'starter';",
       "}",
       "",
-      "@@slot:after-normalize-variant@@"
+      "@@slot:after-normalize-tier@@"
+    ]
+  },
+  {
+    "from": "parse_price_helper",
+    "target": "after-normalize-tier",
+    "lines": [
+      "function parsePriceValue(value) {",
+      "  const parsed = parseFloat(value);",
+      "  return Number.isFinite(parsed) && parsed >= 0 ? parsed : 0;",
+      "}",
+      "",
+      "@@slot:after-parse-price@@"
+    ]
+  },
+  {
+    "from": "format_time_helper",
+    "target": "after-parse-price",
+    "lines": [
+      "function formatTimeRemaining(totalSeconds) {",
+      "  const hours = Math.floor(totalSeconds / 3600);",
+      "  const minutes = Math.floor((totalSeconds % 3600) / 60);",
+      "  const seconds = totalSeconds % 60;",
+      "  const pad = (n) => String(n).padStart(2, '0');",
+      "  return `${pad(hours)}:${pad(minutes)}:${pad(seconds)}`;",
+      "}",
+      "",
+      "@@slot:after-format-time@@"
+    ]
+  },
+  {
+    "from": "tier_display_map",
+    "target": "after-format-time",
+    "lines": [
+      "const tierDisplayName = {",
+      "  starter: 'Starter',",
+      "  pro: 'Pro',",
+      "  enterprise: 'Enterprise'",
+      "};",
+      "",
+      "@@slot:after-tier-display@@"
     ]
   },
   {
     "from": "class_declaration",
-    "target": "after-normalize-variant",
+    "target": "after-tier-display",
     "lines": [
-      "class UiCalloutCard extends HTMLElement {",
+      "class UiPricingCard extends HTMLElement {",
       "  @@slot:class-head@@",
       "  @@slot:class-body@@",
       "}",
@@ -59,7 +99,7 @@
     "from": "observed_attributes",
     "target": "class-head",
     "lines": [
-      "  static observedAttributes = ['title', 'cta-label', 'disabled', 'variant'];",
+      "  static observedAttributes = ['tier', 'price-monthly', 'price-yearly', 'billing', 'popular', 'cta-label'];",
       ""
     ]
   },
@@ -79,16 +119,23 @@
     "from": "constructor_bind",
     "target": "constructor-body",
     "lines": [
-      "    this.handleActionClick = this.handleActionClick.bind(this);"
+      "    this.handleCtaClick = this.handleCtaClick.bind(this);",
+      "    this.handleToggleClick = this.handleToggleClick.bind(this);"
     ]
   },
   {
     "from": "constructor_state",
     "target": "constructor-body",
     "lines": [
-      "    this.titleElement = null;",
+      "    this.tierNameElement = null;",
+      "    this.priceAmountElement = null;",
       "    this.ctaElement = null;",
-      "    this.isCtaBound = false;"
+      "    this.toggleSwitchElement = null;",
+      "    this.urgencyTextElement = null;",
+      "    this.isCtaBound = false;",
+      "    this.isToggleBound = false;",
+      "    this.urgencyTimerId = null;",
+      "    this.urgencyRemaining = 3600;"
     ]
   },
   {
@@ -130,11 +177,19 @@
     ]
   },
   {
+    "from": "connected_callback_urgency",
+    "target": "connected-body",
+    "lines": [
+      "    this.startUrgencyTimer();"
+    ]
+  },
+  {
     "from": "disconnected_callback",
     "target": "class-body",
     "lines": [
       "  disconnectedCallback() {",
       "    this.unbindEvents();",
+      "    this.stopUrgencyTimer();",
       "  }",
       ""
     ]
@@ -157,25 +212,25 @@
       "      return;",
       "    }",
       "",
-      "    @@slot:update-switch-body@@"
+      "    @@slot:attribute-switch-body@@"
     ]
   },
   {
     "from": "attribute_changed_switch",
-    "target": "update-switch-body",
+    "target": "attribute-switch-body",
     "lines": [
       "    switch (name) {",
-      "      case 'title':",
-      "        this.updateTitle();",
+      "      case 'tier':",
+      "        this.updateTierName();",
+      "        break;",
+      "      case 'price-monthly':",
+      "      case 'price-yearly':",
+      "      case 'billing':",
+      "        this.updatePrice();",
+      "        this.updateToggleState();",
       "        break;",
       "      case 'cta-label':",
       "        this.updateCtaLabel();",
-      "        break;",
-      "      case 'disabled':",
-      "        this.updateDisabledState();",
-      "        break;",
-      "      case 'variant':",
-      "        this.updateVariant();",
       "        break;",
       "      default:",
       "        break;",
@@ -183,81 +238,82 @@
     ]
   },
   {
-    "from": "property_title_getter",
+    "from": "property_tier_getter",
     "target": "class-body",
     "lines": [
-      "  get title() {",
-      "    return normalizeTextValue(this.getAttribute('title'), 'Enterprise Callout');",
+      "  get tier() {",
+      "    return normalizeTierValue(this.getAttribute('tier'));",
       "  }",
       ""
     ]
   },
   {
-    "from": "property_title_setter",
+    "from": "property_tier_setter",
     "target": "class-body",
     "lines": [
-      "  set title(value) {",
-      "    this.setAttribute('title', normalizeTextValue(value, 'Enterprise Callout'));",
+      "  set tier(value) {",
+      "    this.setAttribute('tier', normalizeTierValue(value));",
       "  }",
       ""
     ]
   },
   {
-    "from": "property_cta_getter",
+    "from": "property_price_monthly_getter",
+    "target": "class-body",
+    "lines": [
+      "  get priceMonthly() {",
+      "    return parsePriceValue(this.getAttribute('price-monthly'));",
+      "  }",
+      ""
+    ]
+  },
+  {
+    "from": "property_price_yearly_getter",
+    "target": "class-body",
+    "lines": [
+      "  get priceYearly() {",
+      "    return parsePriceValue(this.getAttribute('price-yearly'));",
+      "  }",
+      ""
+    ]
+  },
+  {
+    "from": "property_billing_getter",
+    "target": "class-body",
+    "lines": [
+      "  get billing() {",
+      "    const v = String(this.getAttribute('billing') ?? '').trim().toLowerCase();",
+      "    return v === 'yearly' ? 'yearly' : 'monthly';",
+      "  }",
+      ""
+    ]
+  },
+  {
+    "from": "property_billing_setter",
+    "target": "class-body",
+    "lines": [
+      "  set billing(value) {",
+      "    this.setAttribute('billing', value === 'yearly' ? 'yearly' : 'monthly');",
+      "  }",
+      ""
+    ]
+  },
+  {
+    "from": "property_popular_getter",
+    "target": "class-body",
+    "lines": [
+      "  get popular() {",
+      "    return this.hasAttribute('popular');",
+      "  }",
+      ""
+    ]
+  },
+  {
+    "from": "property_cta_label_getter",
     "target": "class-body",
     "lines": [
       "  get ctaLabel() {",
-      "    return normalizeTextValue(this.getAttribute('cta-label'), 'Review contract');",
-      "  }",
-      ""
-    ]
-  },
-  {
-    "from": "property_cta_setter",
-    "target": "class-body",
-    "lines": [
-      "  set ctaLabel(value) {",
-      "    this.setAttribute('cta-label', normalizeTextValue(value, 'Review contract'));",
-      "  }",
-      ""
-    ]
-  },
-  {
-    "from": "property_disabled_getter",
-    "target": "class-body",
-    "lines": [
-      "  get disabled() {",
-      "    return this.hasAttribute('disabled');",
-      "  }",
-      ""
-    ]
-  },
-  {
-    "from": "property_disabled_setter",
-    "target": "class-body",
-    "lines": [
-      "  set disabled(value) {",
-      "    this.toggleAttribute('disabled', Boolean(value));",
-      "  }",
-      ""
-    ]
-  },
-  {
-    "from": "property_variant_getter",
-    "target": "class-body",
-    "lines": [
-      "  get variant() {",
-      "    return normalizeVariantValue(this.getAttribute('variant'));",
-      "  }",
-      ""
-    ]
-  },
-  {
-    "from": "property_variant_setter",
-    "target": "class-body",
-    "lines": [
-      "  set variant(value) {",
-      "    this.setAttribute('variant', normalizeVariantValue(value));",
+      "    return normalizeTextValue(this.getAttribute('cta-label'), 'Get started');",
       "  }",
       ""
     ]
@@ -277,7 +333,7 @@
     "target": "setup-template-body",
     "lines": [
       "    if (!this.shadowRoot.hasChildNodes()) {",
-      "      this.shadowRoot.appendChild(uiCalloutCardTemplate.content.cloneNode(true));",
+      "      this.shadowRoot.appendChild(uiPricingCardTemplate.content.cloneNode(true));",
       "    }"
     ]
   },
@@ -292,11 +348,21 @@
     ]
   },
   {
-    "from": "cache_dom_title",
+    "from": "cache_dom_tier_name",
     "target": "cache-dom-body",
     "lines": [
-      "    if (!this.titleElement) {",
-      "      this.titleElement = this.shadowRoot.querySelector('.title');",
+      "    if (!this.tierNameElement) {",
+      "      this.tierNameElement = this.shadowRoot.querySelector('.tier-name');",
+      "    }",
+      ""
+    ]
+  },
+  {
+    "from": "cache_dom_price_amount",
+    "target": "cache-dom-body",
+    "lines": [
+      "    if (!this.priceAmountElement) {",
+      "      this.priceAmountElement = this.shadowRoot.querySelector('.price-amount');",
       "    }",
       ""
     ]
@@ -307,6 +373,26 @@
     "lines": [
       "    if (!this.ctaElement) {",
       "      this.ctaElement = this.shadowRoot.querySelector('.cta');",
+      "    }",
+      ""
+    ]
+  },
+  {
+    "from": "cache_dom_toggle",
+    "target": "cache-dom-body",
+    "lines": [
+      "    if (!this.toggleSwitchElement) {",
+      "      this.toggleSwitchElement = this.shadowRoot.querySelector('.toggle-switch');",
+      "    }",
+      ""
+    ]
+  },
+  {
+    "from": "cache_dom_urgency",
+    "target": "cache-dom-body",
+    "lines": [
+      "    if (!this.urgencyTextElement) {",
+      "      this.urgencyTextElement = this.shadowRoot.querySelector('.urgency-text');",
       "    }"
     ]
   },
@@ -324,22 +410,37 @@
     "from": "sync_from_attributes_calls",
     "target": "sync-body",
     "lines": [
-      "    this.updateTitle();",
+      "    this.updateTierName();",
+      "    this.updatePrice();",
       "    this.updateCtaLabel();",
-      "    this.updateDisabledState();",
-      "    this.updateVariant();"
+      "    this.updateToggleState();"
     ]
   },
   {
-    "from": "update_title",
+    "from": "update_tier_name",
     "target": "class-body",
     "lines": [
-      "  updateTitle() {",
-      "    if (!this.titleElement) {",
+      "  updateTierName() {",
+      "    if (!this.tierNameElement) {",
       "      return;",
       "    }",
       "",
-      "    this.titleElement.textContent = this.title;",
+      "    this.tierNameElement.textContent = tierDisplayName[this.tier] || 'Starter';",
+      "  }",
+      ""
+    ]
+  },
+  {
+    "from": "update_price",
+    "target": "class-body",
+    "lines": [
+      "  updatePrice() {",
+      "    if (!this.priceAmountElement) {",
+      "      return;",
+      "    }",
+      "",
+      "    const price = this.billing === 'yearly' ? this.priceYearly : this.priceMonthly;",
+      "    this.priceAmountElement.textContent = price;",
       "  }",
       ""
     ]
@@ -354,39 +455,69 @@
       "    }",
       "",
       "    this.ctaElement.textContent = this.ctaLabel;",
-      "    this.ctaElement.setAttribute('aria-label', `${this.ctaLabel}: ${this.title}`);",
+      "    this.ctaElement.setAttribute('aria-label', `${this.ctaLabel}: ${tierDisplayName[this.tier] || 'Starter'} plan`);",
       "  }",
       ""
     ]
   },
   {
-    "from": "update_disabled_state",
+    "from": "update_toggle_state",
     "target": "class-body",
     "lines": [
-      "  updateDisabledState() {",
-      "    if (!this.ctaElement) {",
+      "  updateToggleState() {",
+      "    if (!this.toggleSwitchElement) {",
       "      return;",
       "    }",
       "",
-      "    this.ctaElement.disabled = this.disabled;",
-      "    this.setAttribute('aria-disabled', String(this.disabled));",
+      "    const isYearly = this.billing === 'yearly';",
+      "    this.toggleSwitchElement.setAttribute('aria-checked', String(isYearly));",
       "  }",
       ""
     ]
   },
   {
-    "from": "update_variant",
+    "from": "start_urgency_timer",
     "target": "class-body",
     "lines": [
-      "  updateVariant() {",
-      "    const normalizedVariant = this.variant;",
+      "  startUrgencyTimer() {",
+      "    this.updateUrgencyDisplay();",
       "",
-      "    if (this.getAttribute('variant') !== normalizedVariant) {",
-      "      this.setAttribute('variant', normalizedVariant);",
+      "    this.urgencyTimerId = setInterval(() => {",
+      "      if (this.urgencyRemaining <= 0) {",
+      "        this.stopUrgencyTimer();",
+      "        return;",
+      "      }",
+      "",
+      "      this.urgencyRemaining -= 1;",
+      "      this.updateUrgencyDisplay();",
+      "    }, 1000);",
+      "  }",
+      ""
+    ]
+  },
+  {
+    "from": "stop_urgency_timer",
+    "target": "class-body",
+    "lines": [
+      "  stopUrgencyTimer() {",
+      "    if (this.urgencyTimerId !== null) {",
+      "      clearInterval(this.urgencyTimerId);",
+      "      this.urgencyTimerId = null;",
+      "    }",
+      "  }",
+      ""
+    ]
+  },
+  {
+    "from": "update_urgency_display",
+    "target": "class-body",
+    "lines": [
+      "  updateUrgencyDisplay() {",
+      "    if (!this.urgencyTextElement) {",
       "      return;",
       "    }",
       "",
-      "    this.dataset.variant = normalizedVariant;",
+      "    this.urgencyTextElement.textContent = `Offer ends in ${formatTimeRemaining(this.urgencyRemaining)}`;",
       "  }",
       ""
     ]
@@ -402,15 +533,24 @@
     ]
   },
   {
-    "from": "bind_events_guard",
+    "from": "bind_cta_event",
     "target": "bind-body",
     "lines": [
-      "    if (!this.ctaElement || this.isCtaBound) {",
-      "      return;",
+      "    if (this.ctaElement && !this.isCtaBound) {",
+      "      this.ctaElement.addEventListener('click', this.handleCtaClick);",
+      "      this.isCtaBound = true;",
       "    }",
-      "",
-      "    this.ctaElement.addEventListener('click', this.handleActionClick);",
-      "    this.isCtaBound = true;"
+      ""
+    ]
+  },
+  {
+    "from": "bind_toggle_event",
+    "target": "bind-body",
+    "lines": [
+      "    if (this.toggleSwitchElement && !this.isToggleBound) {",
+      "      this.toggleSwitchElement.addEventListener('click', this.handleToggleClick);",
+      "      this.isToggleBound = true;",
+      "    }"
     ]
   },
   {
@@ -424,62 +564,71 @@
     ]
   },
   {
-    "from": "unbind_events_guard",
+    "from": "unbind_cta_event",
     "target": "unbind-body",
     "lines": [
-      "    if (!this.ctaElement || !this.isCtaBound) {",
-      "      return;",
+      "    if (this.ctaElement && this.isCtaBound) {",
+      "      this.ctaElement.removeEventListener('click', this.handleCtaClick);",
+      "      this.isCtaBound = false;",
       "    }",
-      "",
-      "    this.ctaElement.removeEventListener('click', this.handleActionClick);",
-      "    this.isCtaBound = false;"
+      ""
     ]
   },
   {
-    "from": "handle_click_disabled_guard",
+    "from": "unbind_toggle_event",
+    "target": "unbind-body",
+    "lines": [
+      "    if (this.toggleSwitchElement && this.isToggleBound) {",
+      "      this.toggleSwitchElement.removeEventListener('click', this.handleToggleClick);",
+      "      this.isToggleBound = false;",
+      "    }"
+    ]
+  },
+  {
+    "from": "handle_cta_click",
     "target": "class-body",
     "lines": [
-      "  handleActionClick(event) {",
-      "    @@slot:handle-click-body@@",
+      "  handleCtaClick() {",
+      "    @@slot:cta-click-body@@",
       "  }",
       ""
     ]
   },
   {
-    "from": "handle_click_disabled_guard_body",
-    "target": "handle-click-body",
+    "from": "handle_cta_click_event",
+    "target": "cta-click-body",
     "lines": [
-      "    if (this.disabled) {",
-      "      event.preventDefault();",
-      "      return;",
-      "    }",
-      ""
+      "    this.dispatchEvent(",
+      "      new CustomEvent('ui-pricing-card:subscribe', {",
+      "        bubbles: true,",
+      "        composed: true,",
+      "        cancelable: true,",
+      "        detail: {",
+      "          tier: this.tier,",
+      "          price: this.billing === 'yearly' ? this.priceYearly : this.priceMonthly,",
+      "          billing: this.billing,",
+      "          ctaLabel: this.ctaLabel,",
+      "          source: 'ui-pricing-card'",
+      "        }",
+      "      })",
+      "    );"
     ]
   },
   {
-    "from": "handle_click_event",
-    "target": "handle-click-body",
+    "from": "handle_toggle_click",
+    "target": "class-body",
     "lines": [
-      "    const componentActionEvent = new CustomEvent('ui-callout-card:action', {",
-      "      bubbles: true,",
-      "      composed: true,",
-      "      cancelable: true,",
-      "      detail: {",
-      "        title: this.title,",
-      "        ctaLabel: this.ctaLabel,",
-      "        variant: this.variant,",
-      "        source: 'ui-callout-card'",
-      "      }",
-      "    });",
-      "",
-      "    this.dispatchEvent(componentActionEvent);"
+      "  handleToggleClick() {",
+      "    this.billing = this.billing === 'yearly' ? 'monthly' : 'yearly';",
+      "  }",
+      ""
     ]
   },
   {
     "from": "define_guard",
     "target": "after-class",
     "lines": [
-      "if (!customElements.get('ui-callout-card')) {",
+      "if (!customElements.get('ui-pricing-card')) {",
       "  @@slot:define-body@@",
       "}"
     ]
@@ -488,7 +637,7 @@
     "from": "define_element",
     "target": "define-body",
     "lines": [
-      "  customElements.define('ui-callout-card', UiCalloutCard);"
+      "  customElements.define('ui-pricing-card', UiPricingCard);"
     ]
   }
 ]

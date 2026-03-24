@@ -9,15 +9,15 @@ import goalImage from './content/assets/web-component-goal.svg';
 import { readLessonMetadata } from '../../animator/lesson-documents/read-lesson-metadata.js';
 
 const lessonMetadata = readLessonMetadata(lessonDocument, {
-  lessonTitle: '08 · Smell Of Enterprise',
-  lessonIntro: 'Peta Web Components lekcija pretvara demo komponentu u ozbiljniji UI primitive. Tag i class dobijaju domain-driven ime, template i shadow CSS ostaju odvojeni, a JavaScript dobija property API, precizan attributeChangedCallback, disabled i variant state, namespaced event contract i jasniji lifecycle.',
-  previewAddress: 'browser://08-smell-of-enterprise-preview',
-  previewTitle: 'Live enterprise Web Component preview',
+  lessonTitle: '08 · UI Pricing Card — SaaS Pricing Table',
+  lessonIntro: 'Gradimo `ui-pricing-card` — enterprise SaaS pricing table komponentu sa tier varijantama (starter/pro/enterprise), popular highlight stanjem, yearly/monthly billing toggle-om koji dinamički menja cenu, CTA dugmetom sa urgency countdown timerom i feature matrix slotovima.',
+  previewAddress: 'browser://08-ui-pricing-card-preview',
+  previewTitle: 'Live SaaS Pricing Card Preview',
   htmlFileName: 'index.html',
   cssFileName: 'style.css',
-  jsFileName: 'ui-callout-card.js',
-  templateJsFileName: 'ui-callout-card.template.js',
-  shadowCssFileName: 'ui-callout-card.shadow.css'
+  jsFileName: 'ui-pricing-card.js',
+  templateJsFileName: 'ui-pricing-card.template.js',
+  shadowCssFileName: 'ui-pricing-card.shadow.css'
 });
 
 export const smellOfEnterpriseLesson = {
@@ -33,10 +33,17 @@ export const smellOfEnterpriseLesson = {
   templateJsFileName: lessonMetadata.templateJsFileName,
   shadowCssFileName: lessonMetadata.shadowCssFileName,
   ideMode: true,
-  goalTitle: 'Cilj: Enterprise-smelling UI Primitive',
+  goalTitle: 'Cilj: SaaS Pricing Card Widget',
   goalImageSrc: goalImage,
-  goalImageAlt: 'Referentna slika tamnog callout card Web Component-a sa jasnim API i styling contract slojevima.',
-  goalImageCaption: 'U ovoj lekciji ista card komponenta dobija ozbiljniji public API, state i styling contract, bez framework-a i bez gubljenja Web Components čistote.',
+  goalImageAlt: 'Referentna slika ui-pricing-card sa Pro tier-om, billing toggle-om, feature listom i urgency timer-om.',
+  goalImageCaption: 'U ovoj lekciji gradimo enterprise pricing karticu sa tier varijantama, dinamičkim toggle-om i countdown urgency timer-om.',
+  homeworkTitle: 'Varijante za samostalnu vežbu',
+  homeworkItems: [
+    'Napravi grid od tri kartice (starter/pro/enterprise) sa različitim feature listama i cenama.',
+    'Dodaj `urgency-seconds` atribut umesto hardkodovanih 3600 sekundi za veću fleksibilnost.',
+    'Implementiraj dynamic pricing calc: dodaj `seats` atribut i množji cenu sa brojem mesta.',
+    'Dodaj `discount-code` atribut koji primeni popust i prikaže precrtan originalni iznos.'
+  ],
   steps: lessonSteps,
   buildHtmlAtStep,
   buildCssAtStep,
