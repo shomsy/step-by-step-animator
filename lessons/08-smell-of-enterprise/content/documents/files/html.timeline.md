@@ -18,7 +18,7 @@
       "  <ui-pricing-card",
       "    tier=\"pro\"",
       "    price-monthly=\"29\"",
-      "    price-yearly=\"24\"",
+      "    price-yearly=\"290\"",
       "    @@slot:pricing-card-attributes@@",
       "  >",
       "    @@slot:pricing-card-content@@",

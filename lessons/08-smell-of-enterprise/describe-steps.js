@@ -276,7 +276,7 @@ export const lessonSteps = [
   describeHtmlElementStep(
     'component_html',
     'HTML: ui-pricing-card Host',
-    'Dodajemo `<ui-pricing-card>` sa `tier="pro"`, `price-monthly="29"` i `price-yearly="24"`. Tag odmah kaže šta widget radi.',
+    'Dodajemo `<ui-pricing-card>` sa `tier="pro"`, `price-monthly="29"` i `price-yearly="290"`. Tag odmah kaže šta widget radi.',
     'html:ui-pricing-card',
     'Domain-driven naming: ime taga govori business use case, ne tehničku implementaciju.'
   ),
