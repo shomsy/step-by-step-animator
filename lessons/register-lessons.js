@@ -4,7 +4,7 @@ import { buildCustomElementLesson } from './03-build-custom-element/build-custom
 import { buildWebComponentLesson } from './04-build-web-component/build-web-component.lesson.js';
 import { cleanWebComponentWithAdoptedStylesheetsLesson } from './05-clean-web-component-with-adopted-stylesheets/clean-web-component-with-adopted-stylesheets.lesson.js';
 import { modularWebComponentsLesson } from './06-modular-web-components/06-modular-web-components.lesson.js';
-import { moreSeparationOfCodeLesson } from './07-more-separation-of-code/07-more-separation-of-code.lesson.js';
+import { buildUIUserAvatarLesson } from './07-build-ui-user-avatar/07-build-ui-user-avatar.lesson.js';
 import { smellOfEnterpriseLesson } from './08-smell-of-enterprise/08-smell-of-enterprise.lesson.js';
 
 export const registeredLessons = [
@@ -14,16 +14,14 @@ export const registeredLessons = [
   buildWebComponentLesson,
   cleanWebComponentWithAdoptedStylesheetsLesson,
   modularWebComponentsLesson,
-  moreSeparationOfCodeLesson,
+  buildUIUserAvatarLesson,
   smellOfEnterpriseLesson
 ];
 
-const lessonsById = new Map(registeredLessons.map(lesson => [lesson.lessonId, lesson]));
-
-export function findLesson(lessonId) {
-  return lessonsById.get(lessonId);
-}
-
 export function getDefaultLessonId() {
   return registeredLessons[0].lessonId;
+}
+
+export function findLesson(lessonId) {
+  return registeredLessons.find(lesson => lesson.lessonId === lessonId);
 }

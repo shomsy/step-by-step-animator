@@ -1481,81 +1481,25 @@ Pre nego što zadržiš step, proveri:
 Ako odgovor nije `da`, step treba razbiti ili pomeriti.
 
 === TODO.md ===
-# TODO
+# Production Code Review: Lessons 07-08
+Status: 🔄 In Progress
 
-Ovaj fajl je kanonska lista za arhitekturu i sledeće veće korake ovog repoa.
+## Lesson 07: ui-user-avatar (60% - Content Broken)
 
-## Status pravila
+✅ lesson.js - Complete 6-step dashboard avatar widget
+❌ content/documents/files/*.md - TRUNCATED/BROKEN
+❌ describe-steps.js - my-first-component selectors
+❌ 07_more_separation_of_code.md - Generic title
 
-- `DONE`: stavka je završena
-- `OPEN`: stavka je poznata i spremna za sledeći pass
-- `BLOCKED`: stavka trenutno ne može da se zatvori; napiši šta fali
+## Lesson 08: ui-pricing-card (0% - Untouched)
 
-## Engine Cleanup
+## CRITICAL FIXES NEEDED:
 
-### 1. Pretvori repo u generičan lesson engine
-
-- `Status`: `DONE`
-- `Šta fali`: ništa
-- `Napomena`: Root je sada podeljen na dve jasne celine: `animator/` za tehnički runtime i tooling, i `lessons/` za business lesson slice-ove. `01-build-sidebar` je sveden na čist lesson contract.
-
-### 2. Zadrži jedan kanonski engine entry
-
-- `Status`: `DONE`
-- `Šta fali`: ništa
-- `Napomena`: Glavni player tok ostaje u `animator/play-lesson/play-lesson.pipeline.js` i nema konkurentske monolitne implementacije.
-
-### 3. Premesti concrete lesson sadržaj van shell-a
-
-- `Status`: `DONE`
-- `Šta fali`: ništa
-- `Napomena`: Step script, HTML builder i CSS builder sada žive u `lessons/01-build-sidebar/`.
-
-### 4. Uvedi jasan lesson contract za buduće lekcije
-
-- `Status`: `DONE`
-- `Šta fali`: ništa
-- `Napomena`: Svaka nova lekcija treba da doda root `feature-name.lesson.js` i da se registruje u `lessons/register-lessons.js`.
-
-### 4a. Uvedi markdown source za lesson metadata
-
-- `Status`: `DONE`
-- `Šta fali`: ništa
-- `Napomena`: `01-build-sidebar` sada koristi `content/documents/files/lesson.sr.md`, uz generisani `content/documents/01_build_sidebar.md`.
-
-### 4b. Uvedi markdown DSL za HTML/CSS/JS lesson sadržaj
-
-- `Status`: `DONE`
-- `Šta fali`: ništa
-- `Napomena`: Shipped lekcije sada koriste `html.timeline.md`, `css.rules.md` i opcioni `js.timeline.md` kao kanonski source za step-by-step code growth, dok `build-*-at-step.js` ostaju tanki adapteri.
-
-## Follow-Up Work
-
-### 5. Dodaj drugu lekciju da potvrdi engine shape
-
-- `Status`: `DONE`
-- `Šta fali`: ništa
-- `Napomena`: Dodata je `02-build-top-navigation` lekcija sa sopstvenim step script-om, builderima, markdown dokumentima i goal slikom.
-
-### 6. Dodaj lesson picker u shell
-
-- `Status`: `DONE`
-- `Šta fali`: ništa
-- `Napomena`: Shell sada ima lesson picker koji menja aktivnu lekciju bez ručnog kucanja query parametra.
-
-## Verification
-
-### 7. Drži build i syntax check zelenim
-
-- `Status`: `DONE`
-- `Šta fali`: ništa
-- `Napomena`: Posle svake veće izmene pokrenuti `find animator lessons -name '*.js' -print0 | xargs -0 -n1 node --check && node --check main.js`, zatim `npm run build`.
-
-### 8. Osveži merge dump posle svakog većeg pass-a
-
-- `Status`: `DONE`
-- `Šta fali`: ništa
-- `Napomena`: `./merge-files.sh .` ostaje obavezni završni korak posle većih rename, split ili doc pass-ova.
+1. **Lesson 07 Content Recovery**
+```
+content/documents/files/
+├── css.rules.md - ui-user-avatar host tokens
+├── html.timeline.md
 
 === animator/choose-lesson/present-lesson-picker.js ===
 export function presentLessonPicker({
@@ -11520,31 +11464,31 @@ export const stepNumberById = Object.fromEntries(
   lessonSteps.map((step, index) => [step.id, index])
 );
 
-=== lessons/07-more-separation-of-code/07-more-separation-of-code.lesson.js ===
+=== lessons/07-build-ui-user-avatar/07-build-ui-user-avatar.lesson.js ===
 import { buildCssAtStep } from './build-css-at-step.js';
 import { buildHtmlAtStep } from './build-html-at-step.js';
 import { buildJsAtStep } from './build-js-at-step.js';
-import { buildTemplateJsAtStep } from './build-template-js-at-step.js';
 import { buildShadowCssAtStep } from './build-shadow-css-at-step.js';
+import { buildTemplateJsAtStep } from './build-template-js-at-step.js';
 import { lessonSteps } from './describe-steps.js';
 import lessonDocument from './content/documents/files/lesson.sr.md?raw';
 import goalImage from './content/assets/web-component-goal.svg';
 import { readLessonMetadata } from '../../animator/lesson-documents/read-lesson-metadata.js';
 
 const lessonMetadata = readLessonMetadata(lessonDocument, {
-  lessonTitle: '07 · More Separation Of Code',
-  lessonIntro: 'Četvrta Web Components lekcija razdvaja template markup u sopstveni modul component.html.js i zateže my-first-component.js u čist lifecycle/behavior fajl. Host HTML, template markup, component behavior, shadow CSS i host CSS sada imaju potpuno jasne granice.',
-  previewAddress: 'browser://07-more-separation-of-code-preview',
-  previewTitle: 'Live modular Web Component preview',
+  lessonTitle: '07 · UI User Avatar — Dashboard Widget',
+  lessonIntro: 'Gradimo `ui-user-avatar` — enterprise dashboard widget koji prikazuje team member kartice sa status badge-om (online/idle/away/offline), tooltip-om, slotovima za inicijale ili sliku i klik interakcijom ka profile modal-u.',
+  previewAddress: 'browser://07-build-ui-user-avatar-preview',
+  previewTitle: 'Live Dashboard Avatar Widget Preview',
   htmlFileName: 'index.html',
   cssFileName: 'style.css',
-  jsFileName: 'my-first-component.js',
-  templateJsFileName: 'component.html.js',
-  shadowCssFileName: 'shadow-dom-style.css'
+  jsFileName: 'ui-user-avatar.js',
+  templateJsFileName: 'ui-user-avatar.template.js',
+  shadowCssFileName: 'ui-user-avatar.shadow.css'
 });
 
-export const moreSeparationOfCodeLesson = {
-  lessonId: '07-more-separation-of-code',
+export const buildUIUserAvatarLesson = {
+  lessonId: '07-build-ui-user-avatar',
   lessonTitle: lessonMetadata.lessonTitle,
   lessonIntro: lessonMetadata.lessonIntro,
   lessonIntroHtml: lessonMetadata.lessonIntroHtml,
@@ -11556,10 +11500,17 @@ export const moreSeparationOfCodeLesson = {
   templateJsFileName: lessonMetadata.templateJsFileName,
   shadowCssFileName: lessonMetadata.shadowCssFileName,
   ideMode: true,
-  goalTitle: 'Cilj: Potpuno Modularna Komponenta',
+  goalTitle: 'Cilj: UI User Avatar Widget',
   goalImageSrc: goalImage,
-  goalImageAlt: 'Referentna slika My First Component komponente sa pet fajlova.',
-  goalImageCaption: 'U ovoj lekciji jasno odvajamo template markup, lifecycle/behavior i shadow styling, bez lomljenja engine pravila.',
+  goalImageAlt: 'Referentna slika ui-user-avatar dashboard widgeta sa status badge-om, tooltip-om i inizialima.',
+  goalImageCaption: 'U ovoj lekciji gradimo enterprise team member card sa deklarativnim status API-jem i namespaced event contract-om.',
+  homeworkTitle: 'Varijante za samostalnu vežbu',
+  homeworkItems: [
+    'Dodaj `<img>` podršku u `initials` slot — komponenta treba da sakrije inicijale kada postoji slika.',
+    'Implementiraj drag-to-reorder na grid od više `ui-user-avatar` widget-a uz `draggable="true"` i `dragover`/`drop` event contract.',
+    'Dodaj context menu event: `ui-user-avatar:context-menu` koji se emituje na desni klik sa `{username, role, status, x, y}` payload-om.',
+    'Dodaj `size` atribut sa varijantama `sm`, `md`, `lg` koji menja dimenzije avatara kroz host CSS tokenе.'
+  ],
   steps: lessonSteps,
   buildHtmlAtStep,
   buildCssAtStep,
@@ -11568,7 +11519,7 @@ export const moreSeparationOfCodeLesson = {
   buildShadowCssAtStep
 };
 
-=== lessons/07-more-separation-of-code/build-css-at-step.js ===
+=== lessons/07-build-ui-user-avatar/build-css-at-step.js ===
 import cssRulesDocument from './content/documents/files/css.rules.md?raw';
 import { buildLinesFromRuleBlocks } from '../../animator/lesson-documents/build-lines-from-rule-blocks.js';
 import { readRuleBlocks } from '../../animator/lesson-documents/read-rule-blocks.js';
@@ -11584,7 +11535,7 @@ export function buildCssAtStep(stepNumber) {
   });
 }
 
-=== lessons/07-more-separation-of-code/build-html-at-step.js ===
+=== lessons/07-build-ui-user-avatar/build-html-at-step.js ===
 import htmlTimelineDocument from './content/documents/files/html.timeline.md?raw';
 import { buildLinesFromTimelineBlocks } from '../../animator/lesson-documents/build-lines-from-timeline-blocks.js';
 import { readTimelineBlocks } from '../../animator/lesson-documents/read-timeline-blocks.js';
@@ -11600,7 +11551,7 @@ export function buildHtmlAtStep(stepNumber) {
   });
 }
 
-=== lessons/07-more-separation-of-code/build-js-at-step.js ===
+=== lessons/07-build-ui-user-avatar/build-js-at-step.js ===
 import jsTimelineDocument from './content/documents/files/js.timeline.md?raw';
 import { buildLinesFromTimelineBlocks } from '../../animator/lesson-documents/build-lines-from-timeline-blocks.js';
 import { readTimelineBlocks } from '../../animator/lesson-documents/read-timeline-blocks.js';
@@ -11616,7 +11567,7 @@ export function buildJsAtStep(stepNumber) {
   });
 }
 
-=== lessons/07-more-separation-of-code/build-shadow-css-at-step.js ===
+=== lessons/07-build-ui-user-avatar/build-shadow-css-at-step.js ===
 import shadowCssRulesDocument from './content/documents/files/shadow-dom-style.css.md?raw';
 import { buildLinesFromRuleBlocks } from '../../animator/lesson-documents/build-lines-from-rule-blocks.js';
 import { readRuleBlocks } from '../../animator/lesson-documents/read-rule-blocks.js';
@@ -11632,7 +11583,7 @@ export function buildShadowCssAtStep(stepNumber) {
   });
 }
 
-=== lessons/07-more-separation-of-code/build-template-js-at-step.js ===
+=== lessons/07-build-ui-user-avatar/build-template-js-at-step.js ===
 import templateJsTimelineDocument from './content/documents/files/template-js.timeline.md?raw';
 import { buildLinesFromTimelineBlocks } from '../../animator/lesson-documents/build-lines-from-timeline-blocks.js';
 import { readTimelineBlocks } from '../../animator/lesson-documents/read-timeline-blocks.js';
@@ -11648,7 +11599,7 @@ export function buildTemplateJsAtStep(stepNumber) {
   });
 }
 
-=== lessons/07-more-separation-of-code/content/assets/web-component-goal.svg ===
+=== lessons/07-build-ui-user-avatar/content/assets/web-component-goal.svg ===
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 760" role="img" aria-labelledby="title desc">
   <title id="title">My first component Web Component goal</title>
   <desc id="desc">Svetla pozadina sa tamnim card komponentom u sredini. Card ima badge Vanilla JS, veliki naslov, opis i plavo CTA dugme.</desc>
@@ -11679,14 +11630,21 @@ export function buildTemplateJsAtStep(stepNumber) {
   </g>
 </svg>
 
-=== lessons/07-more-separation-of-code/content/documents/07_more_separation_of_code.md ===
+=== lessons/07-build-ui-user-avatar/content/documents/07_build_ui_user_avatar.md ===
+<!-- Generated from the same markdown sources used by the web lesson. -->
+
+# 07-build-ui-user-avatar
+
+U ovoj lekciji gradimo `ui-user-avatar` — pravi enterprise dashboard widget koji prikazuje team member kartice sa statusom, tooltip-om, slotovima za inicijale ili sliku i punu klik interakciju ka profile modal-u. Koristimo custom element, shadow DOM, adoptedStyleSheets, namespaced event contract i status variant API.
+
+=== lessons/07-build-ui-user-avatar/content/documents/07_more_separation_of_code.md ===
 <!-- Generated from the same markdown sources used by the web lesson. -->
 
 # 07-more-separation-of-code
 
 Četvrta Web Components lekcija podiže separation of concerns na production-ready nivo. Template markup seli u sopstveni modul `component.html.js`, `my-first-component.js` ostaje čist behavior fajl sa lifecycle metodama `constructor`, `connectedCallback`, `disconnectedCallback`, `cacheDom()`, `bindEvents()`, `unbindEvents()` i `render()`, `shadow-dom-style.css` stilizuje samo unutrašnjost, a `style.css` ostaje host/theme sloj. Tokom lekcije stalno porediš staro i novo stanje: raniji template izlazi iz class fajla, host/theme CSS ostaje spolja, shadow CSS ostaje unutra, a `render()` više ne rebuild-uje ceo DOM nego samo patch-uje već keširane dinamične delove.
 
-=== lessons/07-more-separation-of-code/content/documents/files/css.rules.md ===
+=== lessons/07-build-ui-user-avatar/content/documents/files/css.rules.md ===
 # CSS Rule Blocks
 
 ```json
@@ -11696,36 +11654,66 @@ export function buildTemplateJsAtStep(stepNumber) {
     "showFrom": "empty_shell",
     "entries": [
       { "from": "shell_outline", "untilBefore": "shell_summary", "line": "outline: 1px dashed #94a3b8;" },
-      { "from": "shell_padding", "line": "padding: 40px;" },
+      { "from": "shell_padding", "line": "padding: 48px 32px;" },
       { "from": "shell_display", "line": "display: grid;" },
       { "from": "shell_place_items", "line": "place-items: center;" },
+      { "from": "shell_gap", "line": "gap: 24px;" },
       { "from": "shell_min_height", "line": "min-height: 100vh;" },
-      { "from": "shell_background", "line": "background: linear-gradient(180deg, #e2e8f0, #cbd5e1);" },
-      { "from": "shell_summary", "line": "/* helper outline removed in final .app-shell summary */" }
+      { "from": "shell_background", "line": "background: linear-gradient(160deg, #0f172a 0%, #1e293b 50%, #0f172a 100%);" },
+      { "from": "shell_summary", "line": "/* helper outline removed */" }
     ]
   },
   {
-    "header": "my-first-component {",
+    "header": "ui-user-avatar {",
     "showFrom": "component_html",
     "entries": [
       { "from": "host_outline", "untilBefore": "host_summary", "line": "outline: 1px solid #f97316;" },
-      { "from": "host_display", "line": "display: block;" },
-      { "from": "host_width", "line": "width: min(100%, 420px);" },
-      { "from": "host_surface_token", "line": "--callout-surface: #0f172a;" },
-      { "from": "host_surface_alt_token", "line": "--callout-surface-alt: rgba(15, 23, 42, 0.92);" },
-      { "from": "host_border_token", "line": "--callout-border: rgba(148,163,184,0.24);" },
-      { "from": "host_accent_token", "line": "--callout-accent: #38bdf8;" },
-      { "from": "host_accent_strong_token", "line": "--callout-accent-strong: #2563eb;" },
-      { "from": "host_text_token", "line": "--callout-text: #e2e8f0;" },
-      { "from": "host_muted_token", "line": "--callout-muted: #cbd5e1;" },
-      { "from": "host_shadow_token", "line": "--callout-shadow: 0 26px 60px rgba(15, 23, 42, 0.24);" },
-      { "from": "host_summary", "line": "/* helper outline removed in final my-first-component host summary */" }
+      { "from": "host_display", "line": "display: inline-block;" },
+      { "from": "host_position", "line": "position: relative;" },
+      { "from": "host_cursor", "line": "cursor: pointer;" },
+      { "from": "host_surface_token", "line": "--avatar-surface: #1e293b;" },
+      { "from": "host_surface_alt_token", "line": "--avatar-surface-alt: #0f172a;" },
+      { "from": "host_accent_token", "line": "--avatar-accent: #38bdf8;" },
+      { "from": "host_text_token", "line": "--avatar-text: #f1f5f9;" },
+      { "from": "host_muted_token", "line": "--avatar-muted: #94a3b8;" },
+      { "from": "host_border_token", "line": "--avatar-border: rgba(148,163,184,0.2);" },
+      { "from": "host_shadow_token", "line": "--avatar-shadow: 0 8px 32px rgba(15,23,42,0.48);" },
+      { "from": "host_status_color_token", "line": "--avatar-status-color: #22c55e;" },
+      { "from": "host_summary", "line": "/* helper outline removed */" }
+    ]
+  },
+  {
+    "header": "ui-user-avatar[status=\"online\"] {",
+    "showFrom": "variant_online_status_color",
+    "entries": [
+      { "from": "variant_online_status_color", "line": "--avatar-status-color: #22c55e;" }
+    ]
+  },
+  {
+    "header": "ui-user-avatar[status=\"idle\"] {",
+    "showFrom": "variant_idle_status_color",
+    "entries": [
+      { "from": "variant_idle_status_color", "line": "--avatar-status-color: #facc15;" }
+    ]
+  },
+  {
+    "header": "ui-user-avatar[status=\"away\"] {",
+    "showFrom": "variant_away_status_color",
+    "entries": [
+      { "from": "variant_away_status_color", "line": "--avatar-status-color: #fb923c;" }
+    ]
+  },
+  {
+    "header": "ui-user-avatar[status=\"offline\"] {",
+    "showFrom": "variant_offline_status_color",
+    "entries": [
+      { "from": "variant_offline_status_color", "line": "--avatar-status-color: #64748b;" }
     ]
   }
 ]
 ```
 
-=== lessons/07-more-separation-of-code/content/documents/files/html.timeline.md ===
+=== lessons/07-build-ui-user-avatar/content/documents/files/html.timeline.md ===
 # HTML Timeline
 
 ```json
@@ -11743,32 +11731,47 @@ export function buildTemplateJsAtStep(stepNumber) {
     "from": "component_html",
     "target": "app-shell-content",
     "lines": [
-      "  <my-first-component",
-      "    title=\"Web Components u praksi\"",
-      "    cta-label=\"Otvori lekciju\"",
+      "  <ui-user-avatar",
+      "    username=\"Ana Petrović\"",
+      "    role=\"Frontend Lead\"",
+      "    @@slot:avatar-attributes@@",
       "  >",
-      "    @@slot:my-first-component-content@@",
-      "  </my-first-component>"
+      "    @@slot:avatar-slots@@",
+      "  </ui-user-avatar>"
     ]
   },
   {
-    "from": "eyebrow_slot_html",
-    "target": "my-first-component-content",
+    "from": "status_attribute_html",
+    "target": "avatar-attributes",
     "lines": [
-      "    <span slot=\"eyebrow\">Vanilla JS</span>"
+      "    status=\"online\""
     ]
   },
   {
-    "from": "summary_text_html",
-    "target": "my-first-component-content",
+    "from": "profile_url_attribute_html",
+    "target": "avatar-attributes",
     "lines": [
-      "    Gradiš custom element, shadow DOM i slot projekciju bez framework-a."
+      "    profile-url=\"/team/ana-petrovic\""
+    ]
+  },
+  {
+    "from": "initials_slot_html",
+    "target": "avatar-slots",
+    "lines": [
+      "    <span slot=\"initials\">AP</span>"
+    ]
+  },
+  {
+    "from": "tooltip_slot_html",
+    "target": "avatar-slots",
+    "lines": [
+      "    <span slot=\"tooltip\">Ana Petrović · Frontend Lead · Dostupna</span>"
     ]
   }
 ]
 ```
 
-=== lessons/07-more-separation-of-code/content/documents/files/js.timeline.md ===
+=== lessons/07-build-ui-user-avatar/content/documents/files/js.timeline.md ===
 # JS Timeline
 
 ```json
@@ -11777,16 +11780,62 @@ export function buildTemplateJsAtStep(stepNumber) {
     "from": "import_template",
     "target": "root",
     "lines": [
-      "import { myFirstComponentTemplate } from './component.html.js';",
+      "import { uiUserAvatarTemplate } from './ui-user-avatar.template.js';",
       "@@slot:after-import-template@@"
     ]
   },
   {
-    "from": "class_declaration",
+    "from": "normalize_text_helper",
     "target": "after-import-template",
     "lines": [
       "",
-      "class MyFirstComponent extends HTMLElement {",
+      "function normalizeTextValue(value, fallback) {",
+      "  return String(value ?? '').trim() || fallback;",
+      "}",
+      "",
+      "@@slot:after-normalize-text@@"
+    ]
+  },
+  {
+    "from": "allowed_statuses_set",
+    "target": "after-normalize-text",
+    "lines": [
+      "const allowedStatuses = new Set(['online', 'idle', 'away', 'offline']);",
+      "",
+      "@@slot:after-allowed-statuses@@"
+    ]
+  },
+  {
+    "from": "normalize_status_helper",
+    "target": "after-allowed-statuses",
+    "lines": [
+      "function normalizeStatusValue(value) {",
+      "  const v = String(value ?? '').trim().toLowerCase();",
+      "  return allowedStatuses.has(v) ? v : 'offline';",
+      "}",
+      "",
+      "@@slot:after-normalize-status@@"
+    ]
+  },
+  {
+    "from": "status_label_map",
+    "target": "after-normalize-status",
+    "lines": [
+      "const statusAriaLabel = {",
+      "  online: 'Online',",
+      "  idle: 'Idle',",
+      "  away: 'Away',",
+      "  offline: 'Offline'",
+      "};",
+      "",
+      "@@slot:after-status-label-map@@"
+    ]
+  },
+  {
+    "from": "class_declaration",
+    "target": "after-status-label-map",
+    "lines": [
+      "class UiUserAvatar extends HTMLElement {",
       "  @@slot:class-head@@",
       "  @@slot:class-body@@",
       "}",
@@ -11798,7 +11847,7 @@ export function buildTemplateJsAtStep(stepNumber) {
     "from": "observed_attributes",
     "target": "class-head",
     "lines": [
-      "  static observedAttributes = ['title', 'cta-label'];",
+      "  static observedAttributes = ['username', 'role', 'status', 'profile-url'];",
       ""
     ]
   },
@@ -11815,13 +11864,20 @@ export function buildTemplateJsAtStep(stepNumber) {
     ]
   },
   {
-    "from": "constructor_component_state",
+    "from": "constructor_bind",
     "target": "constructor-body",
     "lines": [
-      "    this.handleClick = this.handleClick.bind(this);",
-      "    this.titleElement = null;",
-      "    this.ctaElement = null;",
-      "    this.isCtaBound = false;"
+      "    this.handleAvatarClick = this.handleAvatarClick.bind(this);"
+    ]
+  },
+  {
+    "from": "constructor_state",
+    "target": "constructor-body",
+    "lines": [
+      "    this.usernameElement = null;",
+      "    this.roleElement = null;",
+      "    this.statusBadgeElement = null;",
+      "    this.isClickBound = false;"
     ]
   },
   {
@@ -11829,28 +11885,35 @@ export function buildTemplateJsAtStep(stepNumber) {
     "target": "class-body",
     "lines": [
       "  connectedCallback() {",
-      "    @@slot:connected-callback-body@@",
+      "    @@slot:connected-body@@",
       "  }",
       ""
     ]
   },
   {
+    "from": "connected_callback_setup",
+    "target": "connected-body",
+    "lines": [
+      "    this.setupTemplateOnce();"
+    ]
+  },
+  {
     "from": "connected_callback_cache",
-    "target": "connected-callback-body",
+    "target": "connected-body",
     "lines": [
       "    this.cacheDom();"
     ]
   },
   {
-    "from": "connected_callback_render",
-    "target": "connected-callback-body",
+    "from": "connected_callback_sync",
+    "target": "connected-body",
     "lines": [
-      "    this.render();"
+      "    this.syncFromAttributes();"
     ]
   },
   {
     "from": "connected_callback_bind",
-    "target": "connected-callback-body",
+    "target": "connected-body",
     "lines": [
       "    this.bindEvents();"
     ]
@@ -11869,12 +11932,129 @@ export function buildTemplateJsAtStep(stepNumber) {
     "from": "attribute_changed_callback",
     "target": "class-body",
     "lines": [
-      "  attributeChangedCallback() {",
-      "    if (this.isConnected) {",
-      "      this.render();",
-      "    }",
+      "  attributeChangedCallback(name, oldValue, newValue) {",
+      "    @@slot:attribute-changed-body@@",
       "  }",
       ""
+    ]
+  },
+  {
+    "from": "attribute_changed_guard",
+    "target": "attribute-changed-body",
+    "lines": [
+      "    if (oldValue === newValue || !this.isConnected) {",
+      "      return;",
+      "    }",
+      "",
+      "    @@slot:attribute-switch-body@@"
+    ]
+  },
+  {
+    "from": "attribute_changed_switch",
+    "target": "attribute-switch-body",
+    "lines": [
+      "    switch (name) {",
+      "      case 'username':",
+      "        this.updateUsername();",
+      "        break;",
+      "      case 'role':",
+      "        this.updateRole();",
+      "        break;",
+      "      case 'status':",
+      "        this.updateStatus();",
+      "        break;",
+      "      default:",
+      "        break;",
+      "    }"
+    ]
+  },
+  {
+    "from": "property_username_getter",
+    "target": "class-body",
+    "lines": [
+      "  get username() {",
+      "    return normalizeTextValue(this.getAttribute('username'), 'Team Member');",
+      "  }",
+      ""
+    ]
+  },
+  {
+    "from": "property_username_setter",
+    "target": "class-body",
+    "lines": [
+      "  set username(value) {",
+      "    this.setAttribute('username', normalizeTextValue(value, 'Team Member'));",
+      "  }",
+      ""
+    ]
+  },
+  {
+    "from": "property_role_getter",
+    "target": "class-body",
+    "lines": [
+      "  get role() {",
+      "    return normalizeTextValue(this.getAttribute('role'), '');",
+      "  }",
+      ""
+    ]
+  },
+  {
+    "from": "property_role_setter",
+    "target": "class-body",
+    "lines": [
+      "  set role(value) {",
+      "    this.setAttribute('role', normalizeTextValue(value, ''));",
+      "  }",
+      ""
+    ]
+  },
+  {
+    "from": "property_status_getter",
+    "target": "class-body",
+    "lines": [
+      "  get status() {",
+      "    return normalizeStatusValue(this.getAttribute('status'));",
+      "  }",
+      ""
+    ]
+  },
+  {
+    "from": "property_status_setter",
+    "target": "class-body",
+    "lines": [
+      "  set status(value) {",
+      "    this.setAttribute('status', normalizeStatusValue(value));",
+      "  }",
+      ""
+    ]
+  },
+  {
+    "from": "property_profile_url_getter",
+    "target": "class-body",
+    "lines": [
+      "  get profileUrl() {",
+      "    return this.getAttribute('profile-url') || '';",
+      "  }",
+      ""
+    ]
+  },
+  {
+    "from": "setup_template_once",
+    "target": "class-body",
+    "lines": [
+      "  setupTemplateOnce() {",
+      "    @@slot:setup-template-body@@",
+      "  }",
+      ""
+    ]
+  },
+  {
+    "from": "setup_template_once_guard",
+    "target": "setup-template-body",
+    "lines": [
+      "    if (!this.shadowRoot.hasChildNodes()) {",
+      "      this.shadowRoot.appendChild(uiUserAvatarTemplate.content.cloneNode(true));",
+      "    }"
     ]
   },
   {
@@ -11888,32 +12068,94 @@ export function buildTemplateJsAtStep(stepNumber) {
     ]
   },
   {
-    "from": "cache_dom_clone",
+    "from": "cache_dom_username",
     "target": "cache-dom-body",
     "lines": [
-      "    if (!this.shadowRoot.hasChildNodes()) {",
-      "      this.shadowRoot.appendChild(myFirstComponentTemplate.content.cloneNode(true));",
+      "    if (!this.usernameElement) {",
+      "      this.usernameElement = this.shadowRoot.querySelector('.username');",
       "    }",
       ""
     ]
   },
   {
-    "from": "cache_dom_title",
+    "from": "cache_dom_role",
     "target": "cache-dom-body",
     "lines": [
-      "    if (!this.titleElement) {",
-      "      this.titleElement = this.shadowRoot.querySelector('.title');",
+      "    if (!this.roleElement) {",
+      "      this.roleElement = this.shadowRoot.querySelector('.role');",
       "    }",
       ""
     ]
   },
   {
-    "from": "cache_dom_cta",
+    "from": "cache_dom_status_badge",
     "target": "cache-dom-body",
     "lines": [
-      "    if (!this.ctaElement) {",
-      "      this.ctaElement = this.shadowRoot.querySelector('.cta');",
+      "    if (!this.statusBadgeElement) {",
+      "      this.statusBadgeElement = this.shadowRoot.querySelector('.status-badge');",
       "    }"
+    ]
+  },
+  {
+    "from": "sync_from_attributes",
+    "target": "class-body",
+    "lines": [
+      "  syncFromAttributes() {",
+      "    @@slot:sync-body@@",
+      "  }",
+      ""
+    ]
+  },
+  {
+    "from": "sync_from_attributes_calls",
+    "target": "sync-body",
+    "lines": [
+      "    this.updateUsername();",
+      "    this.updateRole();",
+      "    this.updateStatus();"
+    ]
+  },
+  {
+    "from": "update_username",
+    "target": "class-body",
+    "lines": [
+      "  updateUsername() {",
+      "    if (!this.usernameElement) {",
+      "      return;",
+      "    }",
+      "",
+      "    this.usernameElement.textContent = this.username;",
+      "  }",
+      ""
+    ]
+  },
+  {
+    "from": "update_role",
+    "target": "class-body",
+    "lines": [
+      "  updateRole() {",
+      "    if (!this.roleElement) {",
+      "      return;",
+      "    }",
+      "",
+      "    this.roleElement.textContent = this.role;",
+      "  }",
+      ""
+    ]
+  },
+  {
+    "from": "update_status",
+    "target": "class-body",
+    "lines": [
+      "  updateStatus() {",
+      "    if (!this.statusBadgeElement) {",
+      "      return;",
+      "    }",
+      "",
+      "    const normalizedStatus = this.status;",
+      "    this.statusBadgeElement.setAttribute('aria-label', statusAriaLabel[normalizedStatus] || 'Unknown');",
+      "  }",
+      ""
     ]
   },
   {
@@ -11921,20 +12163,23 @@ export function buildTemplateJsAtStep(stepNumber) {
     "target": "class-body",
     "lines": [
       "  bindEvents() {",
-      "    @@slot:bind-events-body@@",
+      "    @@slot:bind-body@@",
       "  }",
       ""
     ]
   },
   {
     "from": "bind_events_guard",
-    "target": "bind-events-body",
+    "target": "bind-body",
     "lines": [
-      "    if (!this.ctaElement || this.isCtaBound) {",
+      "    if (this.isClickBound) {",
       "      return;",
       "    }",
-      "    this.ctaElement.addEventListener('click', this.handleClick);",
-      "    this.isCtaBound = true;"
+      "",
+      "    this.addEventListener('click', this.handleAvatarClick);",
+      "    this.setAttribute('tabindex', '0');",
+      "    this.setAttribute('role', 'button');",
+      "    this.isClickBound = true;"
     ]
   },
   {
@@ -11942,79 +12187,58 @@ export function buildTemplateJsAtStep(stepNumber) {
     "target": "class-body",
     "lines": [
       "  unbindEvents() {",
-      "    @@slot:unbind-events-body@@",
+      "    @@slot:unbind-body@@",
       "  }",
       ""
     ]
   },
   {
     "from": "unbind_events_guard",
-    "target": "unbind-events-body",
+    "target": "unbind-body",
     "lines": [
-      "    if (!this.ctaElement || !this.isCtaBound) {",
+      "    if (!this.isClickBound) {",
       "      return;",
       "    }",
-      "    this.ctaElement.removeEventListener('click', this.handleClick);",
-      "    this.isCtaBound = false;"
+      "",
+      "    this.removeEventListener('click', this.handleAvatarClick);",
+      "    this.isClickBound = false;"
     ]
   },
   {
-    "from": "render_declaration",
+    "from": "handle_avatar_click",
     "target": "class-body",
     "lines": [
-      "  render() {",
-      "    @@slot:render-body@@",
+      "  handleAvatarClick() {",
+      "    @@slot:click-body@@",
       "  }",
       ""
     ]
   },
   {
-    "from": "render_guard",
-    "target": "render-body",
+    "from": "handle_avatar_click_event",
+    "target": "click-body",
     "lines": [
-      "    if (!this.titleElement || !this.ctaElement) {",
-      "      return;",
-      "    }",
-      ""
-    ]
-  },
-  {
-    "from": "render_title",
-    "target": "render-body",
-    "lines": [
-      "    this.titleElement.textContent = this.getAttribute('title') || 'Naslov komponente';"
-    ]
-  },
-  {
-    "from": "render_cta",
-    "target": "render-body",
-    "lines": [
-      "    this.ctaElement.textContent = this.getAttribute('cta-label') || 'Saznaj više';"
-    ]
-  },
-  {
-    "from": "handle_click_dispatch_event",
-    "target": "class-body",
-    "lines": [
-      "  handleClick() {",
       "    this.dispatchEvent(",
-      "      new CustomEvent('component-action', {",
+      "      new CustomEvent('ui-user-avatar:profile-open', {",
       "        bubbles: true,",
       "        composed: true,",
+      "        cancelable: true,",
       "        detail: {",
-      "          title: this.getAttribute('title') || 'Naslov komponente',",
-      "          ctaLabel: this.getAttribute('cta-label') || 'Saznaj više'",
+      "          username: this.username,",
+      "          role: this.role,",
+      "          status: this.status,",
+      "          profileUrl: this.profileUrl,",
+      "          source: 'ui-user-avatar'",
       "        }",
       "      })",
-      "    );",
-      "  }"
+      "    );"
     ]
   },
   {
     "from": "define_guard",
     "target": "after-class",
     "lines": [
-      "if (!customElements.get('my-first-component')) {",
+      "if (!customElements.get('ui-user-avatar')) {",
       "  @@slot:define-body@@",
       "}"
     ]
@@ -12023,132 +12247,187 @@ export function buildTemplateJsAtStep(stepNumber) {
     "from": "define_element",
     "target": "define-body",
     "lines": [
-      "  customElements.define('my-first-component', MyFirstComponent);"
+      "  customElements.define('ui-user-avatar', UiUserAvatar);"
     ]
   }
 ]
 ```
 
-=== lessons/07-more-separation-of-code/content/documents/files/lesson.sr.md ===
+=== lessons/07-build-ui-user-avatar/content/documents/files/lesson.sr.md ===
 ---
-title: "07 · More Separation Of Code"
-previewAddress: browser://07-more-separation-of-code-preview
-previewTitle: Live modular Web Component preview
+title: "07 · UI User Avatar — Dashboard Widget"
+previewAddress: browser://07-build-ui-user-avatar-preview
+previewTitle: "Live Dashboard Avatar Widget Preview"
 htmlFileName: index.html
 cssFileName: style.css
-jsFileName: my-first-component.js
-templateJsFileName: component.html.js
-shadowCssFileName: shadow-dom-style.css
+jsFileName: ui-user-avatar.js
+templateJsFileName: ui-user-avatar.template.js
+shadowCssFileName: ui-user-avatar.shadow.css
 ---
 
-Četvrta Web Components lekcija podiže separation of concerns na production-ready nivo. Template markup seli u sopstveni modul `component.html.js`, `my-first-component.js` ostaje čist behavior fajl sa lifecycle metodama `constructor`, `connectedCallback`, `disconnectedCallback`, `cacheDom()`, `bindEvents()`, `unbindEvents()` i `render()`, `shadow-dom-style.css` stilizuje samo unutrašnjost, a `style.css` ostaje host/theme sloj. Tokom lekcije stalno porediš staro i novo stanje: raniji template izlazi iz class fajla, host/theme CSS ostaje spolja, shadow CSS ostaje unutra, a `render()` više ne rebuild-uje ceo DOM nego samo patch-uje već keširane dinamične delove.
+U ovoj lekciji gradimo `ui-user-avatar` — pravi enterprise dashboard widget koji prikazuje team member kartice sa statusom, tooltip-om, slotovima za inicijale ili sliku i punu klik interakciju ka profile modal-u. Koristimo custom element, shadow DOM, adoptedStyleSheets, namespaced event contract i status variant API.
 
-=== lessons/07-more-separation-of-code/content/documents/files/shadow-dom-style.css.md ===
-# Shadow DOM CSS Rule Blocks
+=== lessons/07-build-ui-user-avatar/content/documents/files/shadow-dom-style.css.md ===
+# Shadow CSS Rule Blocks
 
 ```json
 [
   {
     "header": ":host {",
+    "showFrom": "shadow_host_display",
     "entries": [
-      { "from": "host_font", "line": "font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, \"Segoe UI\", sans-serif;" },
-      { "from": "host_color", "line": "color: var(--callout-text, #e2e8f0);" }
+      { "from": "shadow_host_display", "line": "display: inline-block;" },
+      { "from": "shadow_host_font_family", "line": "font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, \"Segoe UI\", sans-serif;" },
+      { "from": "shadow_host_color", "line": "color: var(--avatar-text, #f1f5f9);" }
     ]
   },
   {
-    "header": ".card {",
+    "header": ".avatar-container {",
+    "showFrom": "container_outline",
     "entries": [
-      { "from": "card_outline", "untilBefore": "card_summary", "line": "outline: 1px dashed #38bdf8;" },
-      { "from": "card_display", "line": "display: grid;" },
-      { "from": "card_gap", "line": "gap: 16px;" },
-      { "from": "card_padding", "line": "padding: 24px;" },
-      { "from": "card_radius", "line": "border-radius: 28px;" },
-      { "from": "card_border", "line": "border: 1px solid var(--callout-border, rgba(148,163,184,0.24));" },
-      { "from": "card_background", "line": "background: linear-gradient(180deg, var(--callout-surface, rgba(15,23,42,0.98)), var(--callout-surface-alt, rgba(15,23,42,0.92)));" },
-      { "from": "card_shadow", "line": "box-shadow: var(--callout-shadow, 0 26px 60px rgba(15,23,42,0.24));" },
-      { "from": "card_summary", "line": "/* helper outline removed in final .card summary */" }
+      { "from": "container_outline", "untilBefore": "container_summary", "line": "outline: 1px dashed #38bdf8;" },
+      { "from": "container_position", "line": "position: relative;" },
+      { "from": "container_display", "line": "display: inline-flex;" },
+      { "from": "container_direction", "line": "flex-direction: column;" },
+      { "from": "container_align", "line": "align-items: center;" },
+      { "from": "container_gap", "line": "gap: 8px;" },
+      { "from": "container_summary", "line": "/* helper outline removed */" }
     ]
   },
   {
-    "header": ".eyebrow {",
+    "header": ".avatar-image {",
+    "showFrom": "image_outline",
     "entries": [
-      { "from": "eyebrow_outline", "untilBefore": "eyebrow_summary", "line": "outline: 1px dotted #facc15;" },
-      { "from": "eyebrow_display", "line": "display: inline-flex;" },
-      { "from": "eyebrow_align_items", "line": "align-items: center;" },
-      { "from": "eyebrow_justify_content", "line": "justify-content: center;" },
-      { "from": "eyebrow_width", "line": "width: fit-content;" },
-      { "from": "eyebrow_padding", "line": "padding: 8px 12px;" },
-      { "from": "eyebrow_radius", "line": "border-radius: 999px;" },
-      { "from": "eyebrow_background", "line": "background: rgba(56,189,248,0.14);" },
-      { "from": "eyebrow_color", "line": "color: var(--callout-accent, #38bdf8);" },
-      { "from": "eyebrow_font_size", "line": "font-size: 12px;" },
-      { "from": "eyebrow_font_weight", "line": "font-weight: 700;" },
-      { "from": "eyebrow_letter_spacing", "line": "letter-spacing: 0.04em;" },
-      { "from": "eyebrow_text_transform", "line": "text-transform: uppercase;" },
-      { "from": "eyebrow_summary", "line": "/* helper outline removed in final .eyebrow summary */" }
+      { "from": "image_outline", "untilBefore": "image_summary", "line": "outline: 1px dashed #a78bfa;" },
+      { "from": "image_position", "line": "position: relative;" },
+      { "from": "image_width", "line": "width: 72px;" },
+      { "from": "image_height", "line": "height: 72px;" },
+      { "from": "image_radius", "line": "border-radius: 50%;" },
+      { "from": "image_background", "line": "background: linear-gradient(135deg, var(--avatar-accent, #38bdf8), #6366f1);" },
+      { "from": "image_border", "line": "border: 2px solid var(--avatar-border, rgba(148,163,184,0.2));" },
+      { "from": "image_shadow", "line": "box-shadow: var(--avatar-shadow, 0 8px 32px rgba(15,23,42,0.48));" },
+      { "from": "image_display", "line": "display: flex;" },
+      { "from": "image_align", "line": "align-items: center;" },
+      { "from": "image_justify", "line": "justify-content: center;" },
+      { "from": "image_overflow", "line": "overflow: hidden;" },
+      { "from": "image_transition", "line": "transition: transform 180ms ease, box-shadow 180ms ease;" },
+      { "from": "image_summary", "line": "/* helper outline removed */" }
     ]
   },
   {
-    "header": ".title {",
+    "header": ".avatar-image:hover {",
+    "showFrom": "image_hover_transform",
     "entries": [
-      { "from": "title_display", "line": "display: block;" },
-      { "from": "title_margin", "line": "margin: 0;" },
-      { "from": "title_font_size", "line": "font-size: clamp(1.75rem, 4vw, 2rem);" },
-      { "from": "title_line_height", "line": "line-height: 1.1;" },
-      { "from": "title_font_weight", "line": "font-weight: 800;" }
+      { "from": "image_hover_transform", "line": "transform: scale(1.05);" },
+      { "from": "image_hover_shadow", "line": "box-shadow: 0 12px 40px rgba(56,189,248,0.28);" }
     ]
   },
   {
-    "header": ".summary {",
+    "header": "::slotted([slot=\"initials\"]) {",
+    "showFrom": "initials_font_size",
     "entries": [
-      { "from": "summary_margin", "line": "margin: 0;" },
-      { "from": "summary_color", "line": "color: var(--callout-muted, #cbd5e1);" },
-      { "from": "summary_line_height", "line": "line-height: 1.65;" }
+      { "from": "initials_font_size", "line": "font-size: 24px;" },
+      { "from": "initials_font_weight", "line": "font-weight: 800;" },
+      { "from": "initials_color", "line": "color: #ffffff;" },
+      { "from": "initials_letter_spacing", "line": "letter-spacing: 0.04em;" },
+      { "from": "initials_select", "line": "user-select: none;" }
     ]
   },
   {
-    "header": ".cta {",
+    "header": ".status-badge {",
+    "showFrom": "status_outline",
     "entries": [
-      { "from": "cta_outline", "untilBefore": "cta_summary", "line": "outline: 1px dashed #34d399;" },
-      { "from": "cta_justify_self", "line": "justify-self: start;" },
-      { "from": "cta_appearance", "line": "appearance: none;" },
-      { "from": "cta_padding", "line": "padding: 12px 16px;" },
-      { "from": "cta_border", "line": "border: 0;" },
-      { "from": "cta_radius", "line": "border-radius: 999px;" },
-      { "from": "cta_background", "line": "background: linear-gradient(135deg, var(--callout-accent, #38bdf8), var(--callout-accent-strong, #2563eb));" },
-      { "from": "cta_color", "line": "color: #ffffff;" },
-      { "from": "cta_font", "line": "font: inherit;" },
-      { "from": "cta_font_weight", "line": "font-weight: 700;" },
-      { "from": "cta_cursor", "line": "cursor: pointer;" },
-      { "from": "cta_transition", "line": "transition: transform 160ms ease, filter 160ms ease, box-shadow 160ms ease;" },
-      { "from": "cta_box_shadow", "line": "box-shadow: 0 14px 30px rgba(37, 99, 235, 0.28);" },
-      { "from": "cta_summary", "line": "/* helper outline removed in final .cta summary */" }
+      { "from": "status_outline", "untilBefore": "status_summary", "line": "outline: 1px dotted #facc15;" },
+      { "from": "status_position", "line": "position: absolute;" },
+      { "from": "status_bottom", "line": "bottom: 2px;" },
+      { "from": "status_right", "line": "right: 2px;" },
+      { "from": "status_width", "line": "width: 16px;" },
+      { "from": "status_height", "line": "height: 16px;" },
+      { "from": "status_radius", "line": "border-radius: 50%;" },
+      { "from": "status_background", "line": "background: var(--avatar-status-color, #22c55e);" },
+      { "from": "status_border", "line": "border: 2px solid var(--avatar-surface, #1e293b);" },
+      { "from": "status_transition", "line": "transition: background 240ms ease;" },
+      { "from": "status_summary", "line": "/* helper outline removed */" }
     ]
   },
   {
-    "header": ".cta:hover {",
+    "header": ".avatar-info {",
+    "showFrom": "info_outline",
     "entries": [
-      { "from": "cta_hover_filter", "line": "filter: brightness(1.06);" },
-      { "from": "cta_hover_transform", "line": "transform: translateY(-1px);" }
+      { "from": "info_outline", "untilBefore": "info_summary", "line": "outline: 1px dashed #34d399;" },
+      { "from": "info_display", "line": "display: flex;" },
+      { "from": "info_direction", "line": "flex-direction: column;" },
+      { "from": "info_align", "line": "align-items: center;" },
+      { "from": "info_gap", "line": "gap: 2px;" },
+      { "from": "info_summary", "line": "/* helper outline removed */" }
     ]
   },
   {
-    "header": ".cta:active {",
+    "header": ".username {",
+    "showFrom": "username_font_size",
     "entries": [
-      { "from": "cta_active_transform", "line": "transform: translateY(0);" }
+      { "from": "username_font_size", "line": "font-size: 14px;" },
+      { "from": "username_font_weight", "line": "font-weight: 700;" },
+      { "from": "username_color", "line": "color: var(--avatar-text, #f1f5f9);" },
+      { "from": "username_white_space", "line": "white-space: nowrap;" }
     ]
   },
   {
-    "header": ".cta:focus-visible {",
+    "header": ".role {",
+    "showFrom": "role_font_size",
     "entries": [
-      { "from": "cta_focus_outline", "line": "outline: 3px solid rgba(56, 189, 248, 0.45);" },
-      { "from": "cta_focus_outline_offset", "line": "outline-offset: 3px;" }
+      { "from": "role_font_size", "line": "font-size: 11px;" },
+      { "from": "role_font_weight", "line": "font-weight: 500;" },
+      { "from": "role_color", "line": "color: var(--avatar-muted, #94a3b8);" },
+      { "from": "role_text_transform", "line": "text-transform: uppercase;" },
+      { "from": "role_letter_spacing", "line": "letter-spacing: 0.06em;" },
+      { "from": "role_white_space", "line": "white-space: nowrap;" }
+    ]
+  },
+  {
+    "header": ".tooltip {",
+    "showFrom": "tooltip_outline",
+    "entries": [
+      { "from": "tooltip_outline", "untilBefore": "tooltip_summary", "line": "outline: 1px dotted #f472b6;" },
+      { "from": "tooltip_position", "line": "position: absolute;" },
+      { "from": "tooltip_bottom", "line": "bottom: calc(100% + 10px);" },
+      { "from": "tooltip_left", "line": "left: 50%;" },
+      { "from": "tooltip_transform", "line": "transform: translateX(-50%);" },
+      { "from": "tooltip_background", "line": "background: #0f172a;" },
+      { "from": "tooltip_border", "line": "border: 1px solid var(--avatar-border, rgba(148,163,184,0.2));" },
+      { "from": "tooltip_color", "line": "color: var(--avatar-text, #f1f5f9);" },
+      { "from": "tooltip_padding", "line": "padding: 8px 12px;" },
+      { "from": "tooltip_radius", "line": "border-radius: 8px;" },
+      { "from": "tooltip_font_size", "line": "font-size: 12px;" },
+      { "from": "tooltip_white_space", "line": "white-space: nowrap;" },
+      { "from": "tooltip_pointer_events", "line": "pointer-events: none;" },
+      { "from": "tooltip_opacity_start", "line": "opacity: 0;" },
+      { "from": "tooltip_transition", "line": "transition: opacity 180ms ease, transform 180ms ease;" },
+      { "from": "tooltip_z_index", "line": "z-index: 10;" },
+      { "from": "tooltip_summary", "line": "/* helper outline removed */" }
+    ]
+  },
+  {
+    "header": ":host(:hover) .tooltip, :host(:focus-within) .tooltip {",
+    "showFrom": "tooltip_hover_opacity",
+    "entries": [
+      { "from": "tooltip_hover_opacity", "line": "opacity: 1;" },
+      { "from": "tooltip_hover_transform", "line": "transform: translateX(-50%) translateY(-4px);" }
+    ]
+  },
+  {
+    "header": ":host(:focus-visible) {",
+    "showFrom": "host_focus_outline",
+    "entries": [
+      { "from": "host_focus_outline", "line": "outline: 3px solid rgba(56,189,248,0.55);" },
+      { "from": "host_focus_outline_offset", "line": "outline-offset: 4px;" },
+      { "from": "host_focus_radius", "line": "border-radius: 50%;" }
     ]
   }
 ]
 ```
 
-=== lessons/07-more-separation-of-code/content/documents/files/template-js.timeline.md ===
+=== lessons/07-build-ui-user-avatar/content/documents/files/template-js.timeline.md ===
 # Template JS Timeline
 
 ```json
@@ -12158,19 +12437,19 @@ shadowCssFileName: shadow-dom-style.css
     "target": "root",
     "lines": [
       "export const templateHtml = `",
-      "  <article class=\"card\">",
-      "    <span class=\"eyebrow\">",
-      "      <slot name=\"eyebrow\">Vanilla JS</slot>",
-      "    </span>",
-      "",
-      "    <h2 class=\"title\"></h2>",
-      "",
-      "    <p class=\"summary\">",
-      "      <slot>Dodaj opis komponente kroz default slot.</slot>",
-      "    </p>",
-      "",
-      "    <button class=\"cta\" type=\"button\"></button>",
-      "  </article>",
+      "  <div class=\"avatar-container\">",
+      "    <div class=\"avatar-image\">",
+      "      <slot name=\"initials\"></slot>",
+      "    </div>",
+      "    <div class=\"status-badge\" role=\"img\" aria-label=\"Status\"></div>",
+      "    <div class=\"avatar-info\">",
+      "      <span class=\"username\"></span>",
+      "      <span class=\"role\"></span>",
+      "    </div>",
+      "    <div class=\"tooltip\" role=\"tooltip\">",
+      "      <slot name=\"tooltip\"></slot>",
+      "    </div>",
+      "  </div>",
       "`;",
       "",
       "@@slot:after-template-html@@"
@@ -12180,9 +12459,9 @@ shadowCssFileName: shadow-dom-style.css
     "from": "template_element_export",
     "target": "after-template-html",
     "lines": [
-      "export const myFirstComponentTemplate = document.createElement('template');",
-      "myFirstComponentTemplate.innerHTML = `",
-      "  <link rel=\"stylesheet\" href=\"./shadow-dom-style.css\" />",
+      "export const uiUserAvatarTemplate = document.createElement('template');",
+      "uiUserAvatarTemplate.innerHTML = `",
+      "  <link rel=\"stylesheet\" href=\"./ui-user-avatar.shadow.css\" />",
       "  ${templateHtml}",
       "`;"
     ]
@@ -12190,19 +12469,26 @@ shadowCssFileName: shadow-dom-style.css
 ]
 ```
 
-=== lessons/07-more-separation-of-code/describe-steps.js ===
+=== lessons/07-build-ui-user-avatar/describe-steps.js ===
 const focusHtmlNeedlesBySelector = {
   '.app-shell': ['<div class="app-shell">'],
-  'my-first-component': ['<my-first-component', 'slot="eyebrow"'],
-  ':host': ['<my-first-component', 'slot="eyebrow"'],
-  '.card': ['<my-first-component', 'slot="eyebrow"'],
-  '.eyebrow': ['slot="eyebrow"', '<my-first-component'],
-  '.title': ['<my-first-component'],
-  '.summary': ['<my-first-component'],
-  '.cta': ['<my-first-component'],
-  '.cta:hover': ['<my-first-component'],
-  '.cta:active': ['<my-first-component'],
-  '.cta:focus-visible': ['<my-first-component']
+  'ui-user-avatar': ['<ui-user-avatar', 'username='],
+  'ui-user-avatar[status="online"]': ['<ui-user-avatar', 'status="online"'],
+  'ui-user-avatar[status="idle"]': ['<ui-user-avatar', 'status="idle"'],
+  'ui-user-avatar[status="away"]': ['<ui-user-avatar', 'status="away"'],
+  'ui-user-avatar[status="offline"]': ['<ui-user-avatar', 'status="offline"'],
+  ':host': ['<ui-user-avatar', 'username='],
+  '.avatar-container': ['<ui-user-avatar', 'username='],
+  '.avatar-image': ['<ui-user-avatar', 'username='],
+  '.avatar-image:hover': ['<ui-user-avatar', 'username='],
+  '::slotted([slot="initials"])': ['slot="initials"', '<ui-user-avatar'],
+  '.status-badge': ['<ui-user-avatar', 'status='],
+  '.avatar-info': ['<ui-user-avatar', 'username='],
+  '.username': ['<ui-user-avatar', 'username='],
+  '.role': ['<ui-user-avatar', 'role='],
+  '.tooltip': ['<ui-user-avatar', 'username='],
+  ':host(:hover) .tooltip, :host(:focus-within) .tooltip': ['<ui-user-avatar'],
+  ':host(:focus-visible)': ['<ui-user-avatar']
 };
 
 function readFocusHtmlNeedles(selector) {
@@ -12219,9 +12505,9 @@ function describeCssPropertyStep(id, selector, property, value, desc = '', proTi
   return {
     id,
     title: `CSS: ${selector} / ${property}`,
-    desc: desc || `Dodajemo \`${cssLine}\` u \`${selector}\` i širimo stylesheet jedan property po korak.`,
+    desc: desc || `Dodajemo \`${cssLine}\` u \`${selector}\`.`,
     tag: `css:${id.replace(/_/g, '-')}`,
-    proTip: proTip || 'Spoljašnji CSS stilizuje host element i definiše theme tokene koje Web Component povlači iz custom properties.',
+    proTip: proTip || 'Host CSS drži spoljašnji theme, status variants i token contract na samom custom elementu.',
     focusHtmlNeedles: readFocusHtmlNeedles(selector)
   };
 }
@@ -12232,9 +12518,9 @@ function describeShadowCssPropertyStep(id, selector, property, value, desc = '',
   return {
     id,
     title: `Shadow CSS: ${selector} / ${property}`,
-    desc: desc || `U \`shadow-dom-style.css\` dodajemo \`${cssLine}\` za \`${selector}\`.`,
+    desc: desc || `U \`ui-user-avatar.shadow.css\` dodajemo \`${cssLine}\` za \`${selector}\`.`,
     tag: `shadow-css:${id.replace(/_/g, '-')}`,
-    proTip: proTip || 'CSS ostaje u sopstvenom fajlu, dok JavaScript samo uvozi tekst i usvaja ga kroz Web Components API.',
+    proTip: proTip || 'Shadow CSS stilizuje samo unutrašnju strukturu komponente; host token API kontroliše temu spolja.',
     focusHtmlNeedles: readFocusHtmlNeedles(selector)
   };
 }
@@ -12246,11 +12532,11 @@ function describeTemplateJsStep(id, title, desc, proTip) {
     desc,
     tag: `template-js:${id.replace(/_/g, '-')}`,
     proTip,
-    focusHtmlNeedles: readFocusHtmlNeedles('my-first-component')
+    focusHtmlNeedles: readFocusHtmlNeedles('ui-user-avatar')
   };
 }
 
-function describeTeachingStep(id, title, desc, proTip, focusHtmlNeedles = readFocusHtmlNeedles('my-first-component')) {
+function describeTeachingStep(id, title, desc, proTip, focusHtmlNeedles = readFocusHtmlNeedles('ui-user-avatar')) {
   return {
     id,
     title,
@@ -12261,7 +12547,7 @@ function describeTeachingStep(id, title, desc, proTip, focusHtmlNeedles = readFo
   };
 }
 
-function describeJsFlowStep(id, title, desc, proTip, focusHtmlNeedles = readFocusHtmlNeedles('my-first-component')) {
+function describeJsFlowStep(id, title, desc, proTip, focusHtmlNeedles = readFocusHtmlNeedles('ui-user-avatar')) {
   return {
     id,
     title,
@@ -12272,7 +12558,7 @@ function describeJsFlowStep(id, title, desc, proTip, focusHtmlNeedles = readFocu
   };
 }
 
-function describeSummaryStep(id, title, desc, proTip, focusHtmlNeedles = readFocusHtmlNeedles('my-first-component')) {
+function describeSummaryStep(id, title, desc, proTip, focusHtmlNeedles = readFocusHtmlNeedles('ui-user-avatar')) {
   return {
     id,
     title,
@@ -12288,335 +12574,499 @@ function describeFinishedStep(id, title, desc, proTip) {
 }
 
 const shellCssSteps = [
-  ['shell_outline', '.app-shell', 'outline', '1px dashed #94a3b8', 'Dodajemo tanak helper outline za `.app-shell` i zadržavamo ga kroz celu lekciju, sve do završnog shell rezimea.', 'App shell ostaje stalni okvir cele demonstracije dok ne završimo ceo tutorijal.'],
-  ['shell_padding', '.app-shell', 'padding', '40px', 'Dodajemo padding da komponenta dobije vazduh čim se pojavi u preview-u.'],
-  ['shell_display', '.app-shell', 'display', 'grid', 'Grid je jednostavan način da centralno postavimo jedan teaching target.'],
-  ['shell_place_items', '.app-shell', 'place-items', 'center', 'Centar zadržava fokus korisnika na jednoj komponenti.'],
-  ['shell_min_height', '.app-shell', 'min-height', '100vh', 'Puna visina drži scenu stabilnom kroz celu lekciju.'],
-  ['shell_background', '.app-shell', 'background', 'linear-gradient(180deg, #e2e8f0, #cbd5e1)', 'Svetla pozadina daje kontrast tamnoj komponenti koju gradimo.'],
-  ['host_outline', 'my-first-component', 'outline', '1px solid #f97316', 'Dodajemo tanak helper outline za host element i držimo ga do završnog host rezimea.', 'Host je i dalje spoljašnji API komponente; template markup sada živi u svom modulu.'],
-  ['host_display', 'my-first-component', 'display', 'block', 'Host pretvaramo u block da zauzme svoj red i dobije realan footprint.'],
-  ['host_width', 'my-first-component', 'width', 'min(100%, 420px)', 'Širinu zaključavamo rano da card skeleton ne šeta po sceni.'],
-  ['host_surface_token', 'my-first-component', '--callout-surface', '#0f172a', 'Spolja uvodimo surface token koji adopted stylesheet kasnije povlači kroz `var(...)`.'],
-  ['host_surface_alt_token', 'my-first-component', '--callout-surface-alt', 'rgba(15, 23, 42, 0.92)', 'Dodajemo i drugi surface ton da unutrašnji gradijent ne zavisi od hardkodovanog fallback-a.'],
-  ['host_border_token', 'my-first-component', '--callout-border', 'rgba(148,163,184,0.24)', 'Border token služi da spolja theme-ujemo ivicu komponente.'],
-  ['host_accent_token', 'my-first-component', '--callout-accent', '#38bdf8', 'Accent token će obojiti badge i CTA unutar komponente.'],
-  ['host_accent_strong_token', 'my-first-component', '--callout-accent-strong', '#2563eb', 'Jači accent ton služi za dublji kraj CTA gradijenta.'],
-  ['host_text_token', 'my-first-component', '--callout-text', '#e2e8f0', 'Text token daje konzistentnu boju celom Web Component sadržaju.'],
-  ['host_muted_token', 'my-first-component', '--callout-muted', '#cbd5e1', 'Muted token služi sekundarnom tekstu unutar komponente.'],
-  ['host_shadow_token', 'my-first-component', '--callout-shadow', '0 26px 60px rgba(15, 23, 42, 0.24)', 'Shadow token prebacuje i dubinu komponente u spoljašnji theme sloj.']
+  ['shell_outline', '.app-shell', 'outline', '1px dashed #94a3b8', 'Dodajemo tanak helper outline za `.app-shell` i držimo ga do završnog shell rezimea.', 'App shell ostaje neutralna pozornica za enterprise dashboard widget.'],
+  ['shell_padding', '.app-shell', 'padding', '48px 32px', 'Breathing prostor drži scenu urednom.'],
+  ['shell_display', '.app-shell', 'display', 'grid', 'Grid pravi jedinstven container za widget.'],
+  ['shell_place_items', '.app-shell', 'place-items', 'center', 'Widget treba da bude centriran u demo sceni.'],
+  ['shell_gap', '.app-shell', 'gap', '24px', 'Gap priprema prostor za eventualni drugi avatar.'],
+  ['shell_min_height', '.app-shell', 'min-height', '100vh', 'Puna visina drži dark pozadinu stabilnom.'],
+  ['shell_background', '.app-shell', 'background', 'linear-gradient(160deg, #0f172a 0%, #1e293b 50%, #0f172a 100%)', 'Tamna pozadina naglašava avatar widget.'],
+  ['host_outline', 'ui-user-avatar', 'outline', '1px solid #f97316', 'Dodajemo host helper outline i držimo ga do završnog host rezimea.', 'Host je javni contract surface; outline pomaže orijentaciji.'],
+  ['host_display', 'ui-user-avatar', 'display', 'inline-block', 'Avatar ostaje kompaktan inline-block element.'],
+  ['host_position', 'ui-user-avatar', 'position', 'relative', 'Pozicija pravi stacking kontekst za tooltip.'],
+  ['host_cursor', 'ui-user-avatar', 'cursor', 'pointer', 'Avatar je klikabilna zona — cursor to mora jasno da kaže.'],
+  ['host_surface_token', 'ui-user-avatar', '--avatar-surface', '#1e293b', 'Počinjemo token contract: površina je spolja theme-ovana.'],
+  ['host_surface_alt_token', 'ui-user-avatar', '--avatar-surface-alt', '#0f172a', 'Alternativna površina drži gradijent konzistentnim.'],
+  ['host_accent_token', 'ui-user-avatar', '--avatar-accent', '#38bdf8', 'Accent token vodi boju avatara i detalja.'],
+  ['host_text_token', 'ui-user-avatar', '--avatar-text', '#f1f5f9', 'Text token čuva kontrast u celom widgetu.'],
+  ['host_muted_token', 'ui-user-avatar', '--avatar-muted', '#94a3b8', 'Muted token pokriva role i sekundarne labele.'],
+  ['host_border_token', 'ui-user-avatar', '--avatar-border', 'rgba(148,163,184,0.2)', 'Border token drži ivice neagresivnim na tamnoj pozadini.'],
+  ['host_shadow_token', 'ui-user-avatar', '--avatar-shadow', '0 8px 32px rgba(15,23,42,0.48)', 'Shadow token ide kao javni contract, ne internu magiju.'],
+  ['host_status_color_token', 'ui-user-avatar', '--avatar-status-color', '#22c55e', 'Status boja je javni host token — variants ga samo prepišu.'],
+  ['variant_online_status_color', 'ui-user-avatar[status="online"]', '--avatar-status-color', '#22c55e', 'Online status dobija zeleni signal.', 'Variants idu spolja, ne unutar shadow CSS-a.'],
+  ['variant_idle_status_color', 'ui-user-avatar[status="idle"]', '--avatar-status-color', '#facc15', 'Idle dobija žuti signal.'],
+  ['variant_away_status_color', 'ui-user-avatar[status="away"]', '--avatar-status-color', '#fb923c', 'Away dobija narandžasti signal.'],
+  ['variant_offline_status_color', 'ui-user-avatar[status="offline"]', '--avatar-status-color', '#64748b', 'Offline dobija sivi, neutralni signal.']
 ];
 
-const stylesheetSteps = [
-  ['host_font', ':host', 'font-family', 'Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif', 'Počinje constructed stylesheet: host dobija isti font stack kao i ostatak scene.'],
-  ['host_color', ':host', 'color', 'var(--callout-text, #e2e8f0)', 'Host odmah koristi spoljašnji text token, pa vidiš kako custom property prolazi kroz granicu shadow DOM-a.'],
-  ['card_outline', '.card', 'outline', '1px dashed #38bdf8', 'Dodajemo helper outline za glavni card blok i držimo ga do završnog card rezimea.', 'Glavni card outline ostaje dok ne završimo celu unutrašnju celinu.'],
-  ['card_display', '.card', 'display', 'grid', 'Card raspored uvodimo grid-om jer imamo vertikalnu stack strukturu.'],
-  ['card_gap', '.card', 'gap', '16px', 'Gap odvaja badge, naslov, opis i CTA.'],
-  ['card_padding', '.card', 'padding', '24px', 'Padding pravi pravi card footprint unutar komponente.'],
-  ['card_radius', '.card', 'border-radius', '28px', 'Zaobljenje daje modernu card siluetu.'],
-  ['card_border', '.card', 'border', '1px solid var(--callout-border, rgba(148,163,184,0.24))', 'Ivica koristi host token, pa spoljašnji CSS zaista utiče na unutrašnji card.'],
-  ['card_background', '.card', 'background', 'linear-gradient(180deg, var(--callout-surface, rgba(15,23,42,0.98)), var(--callout-surface-alt, rgba(15,23,42,0.92)))', 'Tamna pozadina sada čita oba surface tokena direktno sa host elementa.'],
-  ['card_shadow', '.card', 'box-shadow', 'var(--callout-shadow, 0 26px 60px rgba(15,23,42,0.24))', 'Shadow sada takođe čita spoljašnji token.'],
-  ['eyebrow_outline', '.eyebrow', 'outline', '1px dotted #facc15', 'Dodajemo helper outline za eyebrow badge.', 'Badge je mali element i outline mu posebno pomaže tokom objašnjenja.'],
-  ['eyebrow_display', '.eyebrow', 'display', 'inline-flex', 'Badge ostaje kompakatan i prirodno prati svoj sadržaj.'],
-  ['eyebrow_align_items', '.eyebrow', 'align-items', 'center', 'Vertikalno centriramo sadržaj badge-a.'],
-  ['eyebrow_justify_content', '.eyebrow', 'justify-content', 'center', 'Tekst badge-a ostaje simetrično centriran.'],
-  ['eyebrow_width', '.eyebrow', 'width', 'fit-content', 'Badge širinu vežemo isključivo za sadržaj.'],
-  ['eyebrow_padding', '.eyebrow', 'padding', '8px 12px', 'Padding daje badge-u jasan pill footprint.'],
-  ['eyebrow_radius', '.eyebrow', 'border-radius', '999px', 'Veliki radius zatvara badge u kapsulu.'],
-  ['eyebrow_background', '.eyebrow', 'background', 'rgba(56,189,248,0.14)', 'Poluprovidna pozadina pravi nežan badge signal.'],
-  ['eyebrow_color', '.eyebrow', 'color', 'var(--callout-accent, #38bdf8)', 'Boju badge-a vežemo za host accent token.'],
-  ['eyebrow_font_size', '.eyebrow', 'font-size', '12px', 'Manji font čini badge sekundarnim.'],
-  ['eyebrow_font_weight', '.eyebrow', 'font-weight', '700', 'Težina fonta čini badge labelu kompaktnom.'],
-  ['eyebrow_letter_spacing', '.eyebrow', 'letter-spacing', '0.04em', 'Mali tracking daje badge-u urednji karakter.'],
-  ['eyebrow_text_transform', '.eyebrow', 'text-transform', 'uppercase', 'Uppercase zatvara eyebrow kao jasnu oznaku kategorije.'],
-  ['title_display', '.title', 'display', 'block', 'Naslovu dajemo sopstveni red.'],
-  ['title_margin', '.title', 'margin', '0', 'Gasimo podrazumevani margin.'],
-  ['title_font_size', '.title', 'font-size', 'clamp(1.75rem, 4vw, 2rem)', 'Naslov dobija responzivnu veličinu.'],
-  ['title_line_height', '.title', 'line-height', '1.1', 'Kraći line-height drži naslov zategnutim.'],
-  ['title_font_weight', '.title', 'font-weight', '800', 'Pojačavamo naslov da nosi hijerarhiju.'],
-  ['summary_margin', '.summary', 'margin', '0', 'Brišemo podrazumevani paragraf margin.'],
-  ['summary_color', '.summary', 'color', 'var(--callout-muted, #cbd5e1)', 'Opis dobija muted token.'],
-  ['summary_line_height', '.summary', 'line-height', '1.65', 'Line-height otvara tekst.'],
-  ['cta_outline', '.cta', 'outline', '1px dashed #34d399', 'Dodajemo helper outline za CTA.', 'CTA outline ostaje dok ne zaključimo poslednju interaktivnu zonu.'],
-  ['cta_justify_self', '.cta', 'justify-self', 'start', 'CTA ostaje uz levu ivicu.'],
-  ['cta_appearance', '.cta', 'appearance', 'none', 'Gasimo browser-native izgled dugmeta.'],
-  ['cta_padding', '.cta', 'padding', '12px 16px', 'Padding daje dugmetu klik zonu.'],
-  ['cta_border', '.cta', 'border', '0', 'Uklanjamo podrazumevanu border liniju.'],
-  ['cta_radius', '.cta', 'border-radius', '999px', 'Pil radius drži CTA vizuelno bliskim badge logici.'],
-  ['cta_background', '.cta', 'background', 'linear-gradient(135deg, var(--callout-accent, #38bdf8), var(--callout-accent-strong, #2563eb))', 'CTA koristi oba accent tokena za gradijent.'],
-  ['cta_color', '.cta', 'color', '#ffffff', 'Beli tekst drži kontrast.'],
-  ['cta_font', '.cta', 'font', 'inherit', 'Dugme preuzima isti font.'],
-  ['cta_font_weight', '.cta', 'font-weight', '700', 'Težina fonta zatvara CTA kao action element.'],
-  ['cta_cursor', '.cta', 'cursor', 'pointer', 'Kursor potvrđuje interaktivnost.'],
-  ['cta_transition', '.cta', 'transition', 'transform 160ms ease, filter 160ms ease, box-shadow 160ms ease', 'Fina tranzicija za hover i focus.'],
-  ['cta_box_shadow', '.cta', 'box-shadow', '0 14px 30px rgba(37, 99, 235, 0.28)', 'Mali shadow pojačava CTA.'],
-  ['cta_hover_filter', '.cta:hover', 'filter', 'brightness(1.06)', 'Hover blago podiže svetlinu.'],
-  ['cta_hover_transform', '.cta:hover', 'transform', 'translateY(-1px)', 'Minimalni lift na hover.'],
-  ['cta_active_transform', '.cta:active', 'transform', 'translateY(0)', 'Na active vraćamo dugme nazad.'],
-  ['cta_focus_outline', '.cta:focus-visible', 'outline', '3px solid rgba(56, 189, 248, 0.45)', 'Focus-visible dodaje tastaturski focus ring.'],
-  ['cta_focus_outline_offset', '.cta:focus-visible', 'outline-offset', '3px', 'Offset odvaja focus ring od ivice dugmeta.']
+const shadowCssSteps = [
+  ['shadow_host_display', ':host', 'display', 'inline-block', 'Shadow host potvrđuje inline-block model iznutra.'],
+  ['shadow_host_font_family', ':host', 'font-family', 'Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif', 'Font stack ostaje interni shadow contract.'],
+  ['shadow_host_color', ':host', 'color', 'var(--avatar-text, #f1f5f9)', 'Boja čita spoljašnji text token.'],
+  ['container_outline', '.avatar-container', 'outline', '1px dashed #38bdf8', 'Dodajemo helper outline za avatar container.', 'Container drži sve vizuelne delove avatara na jednom mestu.'],
+  ['container_position', '.avatar-container', 'position', 'relative', 'Relative pozicija pravi stacking kontekst za status badge i tooltip.'],
+  ['container_display', '.avatar-container', 'display', 'inline-flex', 'Flex pravi vertikalni stack avatar delova.'],
+  ['container_direction', '.avatar-container', 'flex-direction', 'column', 'Kolona slaže sliku, info i tooltip vertikalno.'],
+  ['container_align', '.avatar-container', 'align-items', 'center', 'Sve celine se centriraju horizontalno.'],
+  ['container_gap', '.avatar-container', 'gap', '8px', 'Gap drži rastojanje između slike i info zone.'],
+  ['image_outline', '.avatar-image', 'outline', '1px dashed #a78bfa', 'Dodajemo helper outline za avatar sliku.', 'Avatar krug je centralni vizuelni element widgeta.'],
+  ['image_position', '.avatar-image', 'position', 'relative', 'Relative pravi stacking kontekst za absolutni status badge.'],
+  ['image_width', '.avatar-image', 'width', '72px', 'Avatar krug dobija standardnu veličinu.'],
+  ['image_height', '.avatar-image', 'height', '72px', 'Visina odgovara širini — idemo ka krugu.'],
+  ['image_radius', '.avatar-image', 'border-radius', '50%', 'Puni radius završava avatar krug.'],
+  ['image_background', '.avatar-image', 'background', 'linear-gradient(135deg, var(--avatar-accent, #38bdf8), #6366f1)', 'Gradijent pozadina koja se vidi iza inicijala.'],
+  ['image_border', '.avatar-image', 'border', '2px solid var(--avatar-border, rgba(148,163,184,0.2))', 'Border čita host token.'],
+  ['image_shadow', '.avatar-image', 'box-shadow', 'var(--avatar-shadow, 0 8px 32px rgba(15,23,42,0.48))', 'Shadow dolazi iz host contract-a.'],
+  ['image_display', '.avatar-image', 'display', 'flex', 'Flex centrira inicijale unutar kruga.'],
+  ['image_align', '.avatar-image', 'align-items', 'center', 'Vertikalno centriranje inicijala.'],
+  ['image_justify', '.avatar-image', 'justify-content', 'center', 'Horizontalno centriranje inicijala.'],
+  ['image_overflow', '.avatar-image', 'overflow', 'hidden', 'Overflow hidden reže bilo koji sadržaj van kruga.'],
+  ['image_transition', '.avatar-image', 'transition', 'transform 180ms ease, box-shadow 180ms ease', 'Tranzicija pravi glatki hover lift.'],
+  ['image_hover_transform', '.avatar-image:hover', 'transform', 'scale(1.05)', 'Blagi scale na hover daje interaktivni feel.', 'Hover treba da potvrdi klikabilnost.'],
+  ['image_hover_shadow', '.avatar-image:hover', 'box-shadow', '0 12px 40px rgba(56,189,248,0.28)', 'Accent shadow na hover potvrđuje interakciju.'],
+  ['initials_font_size', '::slotted([slot="initials"])', 'font-size', '24px', 'Inicijali dobijaju jasnu veličinu unutar kruga.', 'Named slot je javna API površina — stilizujemo ga unutar shadow konteksta.'],
+  ['initials_font_weight', '::slotted([slot="initials"])', 'font-weight', '800', 'Jaki bold drži inicijale čitkim.'],
+  ['initials_color', '::slotted([slot="initials"])', 'color', '#ffffff', 'Beli tekst drži kontrast na gradijent pozadini.'],
+  ['initials_letter_spacing', '::slotted([slot="initials"])', 'letter-spacing', '0.04em', 'Mali tracking poboljšava čitljivost.'],
+  ['initials_select', '::slotted([slot="initials"])', 'user-select', 'none', 'Inicijali ne treba da budu selektabilni.'],
+  ['status_outline', '.status-badge', 'outline', '1px dotted #facc15', 'Dodajemo helper outline za status badge.', 'Status badge je mali ali kritičan signal widgeta.'],
+  ['status_position', '.status-badge', 'position', 'absolute', 'Absolute ga pozicionira unutar avatar tipa.'],
+  ['status_bottom', '.status-badge', 'bottom', '2px', 'Pozicioniramo badge u donji desni ugao.'],
+  ['status_right', '.status-badge', 'right', '2px', 'Desno od centra, standardna pozicija status badge-a.'],
+  ['status_width', '.status-badge', 'width', '16px', 'Mali kružić.'],
+  ['status_height', '.status-badge', 'height', '16px', 'Visina odgovara širini.'],
+  ['status_radius', '.status-badge', 'border-radius', '50%', 'Puni radius završava status krug.'],
+  ['status_background', '.status-badge', 'background', 'var(--avatar-status-color, #22c55e)', 'Boja čita host status token — nikad hardkodovana iznutra.'],
+  ['status_border', '.status-badge', 'border', '2px solid var(--avatar-surface, #1e293b)', 'Border odvaja badge od pozadine avatara.'],
+  ['status_transition', '.status-badge', 'transition', 'background 240ms ease', 'Tranzicija pravi glatku promenu statusa.'],
+  ['info_outline', '.avatar-info', 'outline', '1px dashed #34d399', 'Dodajemo helper outline za info zonu.', 'Info zona drži username i role labele.'],
+  ['info_display', '.avatar-info', 'display', 'flex', 'Flex pravi vertikalni stack tekstova.'],
+  ['info_direction', '.avatar-info', 'flex-direction', 'column', 'Kolona slaže username iznad role-a.'],
+  ['info_align', '.avatar-info', 'align-items', 'center', 'Centriramo oba teksta ispod avatara.'],
+  ['info_gap', '.avatar-info', 'gap', '2px', 'Minimal gap drži tekstove fokusiranim.'],
+  ['username_font_size', '.username', 'font-size', '14px', 'Solidna veličina za primarnu labelu.'],
+  ['username_font_weight', '.username', 'font-weight', '700', 'Bold drži username kao primarni signal.'],
+  ['username_color', '.username', 'color', 'var(--avatar-text, #f1f5f9)', 'Čita text token.'],
+  ['username_white_space', '.username', 'white-space', 'nowrap', 'Username ostaje na jednoj liniji.'],
+  ['role_font_size', '.role', 'font-size', '11px', 'Manji font čini role sekundarnim signals.'],
+  ['role_font_weight', '.role', 'font-weight', '500', 'Medium weight drži role čitkim ali podređenim.'],
+  ['role_color', '.role', 'color', 'var(--avatar-muted, #94a3b8)', 'Muted token daje sekundarni signal.'],
+  ['role_text_transform', '.role', 'text-transform', 'uppercase', 'Uppercase zatvara role kao kategorijsku labelu.'],
+  ['role_letter_spacing', '.role', 'letter-spacing', '0.06em', 'Tracking čini role urednom.'],
+  ['role_white_space', '.role', 'white-space', 'nowrap', 'Role ostaje na jednoj liniji.'],
+  ['tooltip_outline', '.tooltip', 'outline', '1px dotted #f472b6', 'Dodajemo helper outline za tooltip.', 'Tooltip je interaktivna informaciona zona.'],
+  ['tooltip_position', '.tooltip', 'position', 'absolute', 'Absolute ga odvaja od normalnog toka.'],
+  ['tooltip_bottom', '.tooltip', 'bottom', 'calc(100% + 10px)', 'Tooltip se pojavljuje iznad avatara.'],
+  ['tooltip_left', '.tooltip', 'left', '50%', 'Levim rubom krenemo od centra.'],
+  ['tooltip_transform', '.tooltip', 'transform', 'translateX(-50%)', 'Negativan translate centrira tooltip.'],
+  ['tooltip_background', '.tooltip', 'background', '#0f172a', 'Très tamna pozadina drži tooltip čitkim.'],
+  ['tooltip_border', '.tooltip', 'border', '1px solid var(--avatar-border, rgba(148,163,184,0.2))', 'Border tok čita host token.'],
+  ['tooltip_color', '.tooltip', 'color', 'var(--avatar-text, #f1f5f9)', 'Text čita host token.'],
+  ['tooltip_padding', '.tooltip', 'padding', '8px 12px', 'Padding daje tooltip-u pravi footprint.'],
+  ['tooltip_radius', '.tooltip', 'border-radius', '8px', 'Zaobljenje drži tooltip modernim.'],
+  ['tooltip_font_size', '.tooltip', 'font-size', '12px', 'Manji font za tooltip tip.'],
+  ['tooltip_white_space', '.tooltip', 'white-space', 'nowrap', 'Tooltip ostaje u jednom redu.'],
+  ['tooltip_pointer_events', '.tooltip', 'pointer-events', 'none', 'Tooltip ne blokirа klik na avatar.'],
+  ['tooltip_opacity_start', '.tooltip', 'opacity', '0', 'Tooltip startu nevidljiv.'],
+  ['tooltip_transition', '.tooltip', 'transition', 'opacity 180ms ease, transform 180ms ease', 'Tranzicija pravi glatko prikazivanje.'],
+  ['tooltip_z_index', '.tooltip', 'z-index', '10', 'Z-index drži tooltip iznad ostatka DOM-a.'],
+  ['tooltip_hover_opacity', ':host(:hover) .tooltip, :host(:focus-within) .tooltip', 'opacity', '1', 'Na hover tooltip postaje vidljiv.', 'Focus-within pokriva i tastatursku navigaciju.'],
+  ['tooltip_hover_transform', ':host(:hover) .tooltip, :host(:focus-within) .tooltip', 'transform', 'translateX(-50%) translateY(-4px)', 'Mali lift daje tooltip-u dinamičan ulaz.'],
+  ['host_focus_outline', ':host(:focus-visible)', 'outline', '3px solid rgba(56,189,248,0.55)', 'Focus-visible dodaje tastaturski focus ring.', 'Klavijaturska navigacija mora biti jasno vidljiva.'],
+  ['host_focus_outline_offset', ':host(:focus-visible)', 'outline-offset', '4px', 'Offset drži ring dalje od ivice.'],
+  ['host_focus_radius', ':host(:focus-visible)', 'border-radius', '50%', 'Radius čini focus ring kružnim uz avatar.']
 ];
 
 export const lessonSteps = [
   describeHtmlElementStep(
     'empty_shell',
     'Start: Empty App Shell',
-    'Počinjemo od praznog `.app-shell` prostora. U ovoj lekciji razdvajamo template markup u sopstveni modul `component.html.js`.',
+    'Počinjemo od praznog `.app-shell` prostora. Dashboard widget živi u neutralnom host okruženju.',
     'html:app-shell',
-    'Neutralan početak odvaja host stranicu od komponente.',
+    'Enterprise widget mora da radi u bilo kom host kontekstu, ne samo u specijalnoj demo sceni.',
     ['<div class="app-shell">']
   ),
   describeHtmlElementStep(
     'component_html',
-    'HTML: My First Component Host',
-    'Dodajemo `<my-first-component>` host sa `title` i `cta-label` atributima. Host API ostaje isti kao u prethodnim lekcijama.',
-    'html:my-first-component',
-    'Naziv custom elementa mora da sadrži crticu.',
-    ['<my-first-component']
+    'HTML: ui-user-avatar Host',
+    'Dodajemo `<ui-user-avatar>` sa `username` i `role` atributima. Tag odmah govori šta ovaj widget jeste.',
+    'html:ui-user-avatar',
+    'Domain-driven naming je prvi enterprise signal: ime taga mora da sugeriše business ulogu komponente.'
   ),
   describeHtmlElementStep(
-    'eyebrow_slot_html',
-    'HTML: Named Slot Content',
-    'U host ubacujemo `<span slot="eyebrow">Vanilla JS</span>`. Light DOM sadržaj ostaje nepromenjen.',
-    'html:slot-eyebrow',
-    'Named slot projicira ciljani deo sadržaja u komponentu.',
-    ['slot="eyebrow"', '<my-first-component']
+    'status_attribute_html',
+    'HTML: status="online"',
+    'Dodajemo `status="online"` i uvodimo deklarativni status API. Status je deo HTML contract-a, ne JavaScript stanja.',
+    'html:status',
+    'Declarative status API znači da tim može da promeni status jedino pisanjem atributa, bez znanja o internim detaljima.'
   ),
   describeHtmlElementStep(
-    'summary_text_html',
-    'HTML: Default Slot Text',
-    'Dodajemo opisni tekst kao default slot sadržaj.',
-    'html:default-slot',
-    'Refactor pristupa stilovima ne menja HTML API komponente.',
-    ['<my-first-component', 'slot="eyebrow"']
+    'profile_url_attribute_html',
+    'HTML: profile-url atribut',
+    'Dodajemo `profile-url` koji ide u event payload pri kliku. Komponenta ne navigira sama.',
+    'html:profile-url',
+    'Enterprise komponenta emituje event sa payload-om. Ko otvori modal ili navigira — to odlučuje parent, ne komponenta.'
+  ),
+  describeHtmlElementStep(
+    'initials_slot_html',
+    'HTML: Named Slot — initials',
+    'Dodajemo `<span slot="initials">AP</span>`. Slot je javna API površina za inicijale ili sliku.',
+    'html:slot-initials',
+    'Named slot dozvoljava parent-u da pošalje custom sadržaj. Komponenta ne zna šta je inicijal ili avatar image — samo pravi prostor.'
+  ),
+  describeHtmlElementStep(
+    'tooltip_slot_html',
+    'HTML: Named Slot — tooltip',
+    'Dodajemo `<span slot="tooltip">` sa punim contextualnim opisom član tima. Tooltip sadržaj kontroliše parent.',
+    'html:slot-tooltip',
+    'Tooltip je drugi named slot. Sadržaj može biti plain tekst, HTML, pa i keyboard shortcut — komponenta drži samo posuda.'
   ),
   describeTeachingStep(
-    'what_is_separated_now',
-    'Teaching Moment: Šta je sada odvojeno',
-    'U prethodnoj lekciji template markup, behavior i shadow stil bili su bliže jedan drugom. U Lesson 07 ih namerno razdvajamo: `component.html.js` čuva markup, `my-first-component.js` ostaje behavior fajl, `shadow-dom-style.css` stilizuje unutrašnjost, a `style.css` ostaje spoljašnji host/theme sloj.',
-    'Poenta nije da imamo više fajlova radi estetike, nego da iz imena fajla odmah pogodiš njegovu odgovornost.'
+    'avatar_widget_contract',
+    'Teaching Moment: Dashboard Widget Contract',
+    'Ovaj widget ima četiri javna atributa: `username`, `role`, `status`, `profile-url`. Ima dva named slota: `initials` i `tooltip`. Emituje jedan namespaced event: `ui-user-avatar:profile-open`. Nema internog routing-a i nema opisivanja šta parent treba da uradi.',
+    'Enterprise widget API treba da bude uzan, predvidiv i dokumentovan kao javni contract.',
+    ['<ui-user-avatar', 'username=']
   ),
   describeTemplateJsStep(
     'template_html_declaration',
-    'Template JS: Eksportujemo templateHtml',
-    'U prethodnoj verziji card markup je bio direktno u component class fajlu. Sada ga selimo u `export const templateHtml = ...` unutar `component.html.js`, pa template modul nosi samo markup concern.',
-    'Kada markup dobije sopstveni export, behavior fajl više ne mora da zna kako je HTML sastavljen.'
+    'Template JS: Shadow DOM struktura',
+    'U `ui-user-avatar.template.js` definiše `templateHtml`: avatar-container, avatar-image sa slot za inicijale, status-badge, avatar-info sa username i role spanovima, i tooltip sa named slotom.',
+    'Template modul nosi samo strukturu. Nema lifecycle-a, nema eventa, nema podataka.'
   ),
   describeTemplateJsStep(
     'template_element_export',
-    'Template JS: Eksportujemo Template Element',
-    'Kreiramo `myFirstComponentTemplate`, dodajemo `<link rel="stylesheet">` ka `shadow-dom-style.css` i u template ubrizgavamo `${templateHtml}`. `component.html.js` i dalje ostaje čist template modul.',
-    'Template fajl sme da zna za markup i shadow stylesheet ulaz, ali ne i za lifecycle, evente ili render logiku.'
+    'Template JS: Eksportujemo template element',
+    'Kreiramo `uiUserAvatarTemplate`, dodajemo `<link>` ka shadow CSS fajlu i ubrizgavamo `${templateHtml}`.',
+    'Template zna za markup i stylesheet ulaz. Klasa ga samo klonira — nikad rekreira.'
   ),
   describeJsFlowStep(
     'import_template',
-    'JS: Uvozimo Template Modul',
-    'U `my-first-component.js` dodajemo `import { myFirstComponentTemplate } from \'./component.html.js\'`. Behavior fajl više ne gradi template, nego ga samo koristi.',
-    'Ovo je glavna separation-of-concerns granica: template modul pravi markup, component klasa vodi lifecycle i ponašanje.'
+    'JS: Uvozimo template modul',
+    'Behavior fajl uvozi `uiUserAvatarTemplate` iz template modula. Klasa ne gradi HTML stringove.',
+    'Ovo je prva jasna granica: class i template su odvojeni fajlovi sa odvojenim odgovornostima.'
+  ),
+  describeJsFlowStep(
+    'normalize_text_helper',
+    'JS: normalizeTextValue() helper',
+    'Dodajemo `normalizeTextValue()` da username i role ne zavise od sirovog ulaza.',
+    'API border normalizuje ulaz. Komponenta nikad ne radi sa undefined ili praznim stringovima bez fallback-a.'
+  ),
+  describeJsFlowStep(
+    'allowed_statuses_set',
+    'JS: allowedStatuses Set',
+    'Zaključavamo dozvoljene statusne vrednosti: `online`, `idle`, `away`, `offline`.',
+    'Otvoreni string API za status koji direktno utiče na styling je rizičan. Set ga zatvara.'
+  ),
+  describeJsFlowStep(
+    'normalize_status_helper',
+    'JS: normalizeStatusValue() helper',
+    'Dodajemo `normalizeStatusValue()`. Svaki nepoznat status automatski pada na `offline`.',
+    'Fallback je deo contract-a. Komponenta ne sme da padne zbog pogrešno napisanog statusa.'
+  ),
+  describeJsFlowStep(
+    'status_label_map',
+    'JS: statusAriaLabel mapa',
+    'Dodajemo `statusAriaLabel` objekat koji mapira status vrednosti na human-readable aria labele.',
+    'Accessibility nije opciona. Status badge mora imati smislenu aria labelu na svakom koraku.'
   ),
   describeJsFlowStep(
     'class_declaration',
-    'JS: Class Extends HTMLElement',
-    'Otvaramo `class MyFirstComponent extends HTMLElement`. Klasa sada ne zna kako je template sastavljen; samo ga troši.',
-    'Custom element je i dalje običan DOM element, samo sa tvojom klasom.'
+    'JS: UiUserAvatar extends HTMLElement',
+    'Klasa nosi domain-driven ime, konzistentno sa tagom.',
+    'Class ime i tag treba da pričaju istu priču: `ui-user-avatar` → `UiUserAvatar`.'
   ),
   describeJsFlowStep(
     'observed_attributes',
-    'JS: observedAttributes',
-    'Dodajemo `static observedAttributes = [\'title\', \'cta-label\']` i jasno zaključavamo koje atribute komponenta prati.',
-    'Komponenta eksplicitno kaže koji spoljašnji API ulazi pokreću render update.'
+    'JS: observedAttributes — sva četiri',
+    'Komponenta prati `username`, `role`, `status` i `profile-url` — tačno onoliko koliko je deklarirano kao javni API.',
+    'Observed attributes su spoljašnji declarative API ulaz. Ne pratimo ništa što nije javno.'
   ),
   describeJsFlowStep(
     'constructor_shadow',
     'JS: constructor otvara shadow root',
-    'U konstruktoru pozivamo `super()` i otvaramo shadow root. Konstruktor samo priprema instancu, bez renderovanja i bez event wiring-a.',
-    'Konstruktor treba da pripremi osnovu komponente, ne da glumi connected lifecycle.'
+    'Konstruktor samo priprema instancu: shadow root, bind i nulte reference.',
+    'Konstruktor ne radi lifecycle posao. Ne radi render, ne čita DOM, ne zakačuje evente.'
   ),
   describeJsFlowStep(
-    'constructor_component_state',
+    'constructor_bind',
+    'JS: constructor pre-binduje click handler',
+    'Vezujemo `handleAvatarClick` jednom, pri kreiranju instance.',
+    'Pre-bind osigurava stabilan event cleanup — isti objekat koji dodajemo možemo sigurno da uklonimo.'
+  ),
+  describeJsFlowStep(
+    'constructor_state',
     'JS: constructor priprema interne reference',
-    'U konstruktoru vezujemo `handleClick` i pripremamo polja `titleElement`, `ctaElement` i `isCtaBound`.',
-    'Funkciju bindujemo jednom unapred, a DOM reference i event state jasno držimo na instanci.'
+    'Nulujemo DOM reference i state flag za click binding.',
+    'Interno stanje ostaje transparentno i predvidivo od prvog reda.'
   ),
   describeJsFlowStep(
     'connected_callback',
-    'JS: connectedCallback Lifecycle',
-    'Dodajemo `connectedCallback()` kao glavno mesto za startovanje komponente.',
-    'Kada komponenta pređe u živi UI, connectedCallback je pravo mesto za cache, render i event wiring.'
+    'JS: connectedCallback — lifestyle ulaz',
+    'Connected lifecycle je glavni ulaz kada widget uđe u živi DOM.',
+    'Sve što zavisi od živog DOM-a ide u connectedCallback, ne u constructor.'
+  ),
+  describeJsFlowStep(
+    'connected_callback_setup',
+    'JS: connectedCallback poziva setupTemplateOnce',
+    'Prvo jednom montiramo template u shadow root.',
+    'Mount i cache imaju odvojene metode i odvojene odgovornosti.'
   ),
   describeJsFlowStep(
     'connected_callback_cache',
     'JS: connectedCallback poziva cacheDom',
-    'Prvo keširamo DOM i po potrebi kloniramo template.',
-    'Cache ide pre rendera da bismo imali stabilne reference za dinamične delove.'
+    'Kad template postoji, keširamo DOM reference.',
+    'query selector radi samo jednom — reference žive na instanci.'
   ),
   describeJsFlowStep(
-    'connected_callback_render',
-    'JS: connectedCallback pokreće render',
-    'Kada su reference spremne, odmah štampamo trenutne vrednosti atributa.',
-    'Prvi render vezujemo za trenutak kada je element stvarno povezan sa DOM-om.'
+    'connected_callback_sync',
+    'JS: connectedCallback sinhronizuje atribute',
+    'Pozivamo `syncFromAttributes()` kao prvi ciljani render pass.',
+    'Ovo nije opšti render — to je skup uskih update metoda koje inicijalizuju tačno ono što treba.'
   ),
   describeJsFlowStep(
     'connected_callback_bind',
-    'JS: connectedCallback vezuje evente',
-    'Na kraju `connectedCallback()` pozivamo `bindEvents()` i aktiviramo CTA ponašanje.',
-    'Behavior vežemo tek kada je DOM spreman i kada je komponenta stvarno aktivna.'
+    'JS: connectedCallback zakačuje evente',
+    'Tek na kraju, kad su reference spremne, zakačujemo event listenere.',
+    'Event wiring ide poslednji — DOM mora biti spreman pre binding-a.'
   ),
   describeJsFlowStep(
     'disconnected_callback',
-    'JS: disconnectedCallback Cleanup',
-    'Dodajemo `disconnectedCallback()` i pozivamo `unbindEvents()` da skinemo aktivne listenere.',
-    'Cleanup je production-grade signal da komponenta poštuje ceo lifecycle i ne ostavlja viseće evente.'
+    'JS: disconnectedCallback cleanup',
+    'Na izlazu iz DOM-a skidamo event listener.',
+    'Production widget mora biti siguran i pri reconnect scenariju. Leak-ovi eventa su stvarni bug.'
   ),
   describeJsFlowStep(
     'attribute_changed_callback',
-    'JS: attributeChangedCallback',
-    'Dodajemo `attributeChangedCallback()` i pozivamo `render()`, sa guard-om za `isConnected`.',
-    'Atributi ostaju spoljašnji API komponente, a render ostaje jedino mesto gde ti podaci ulaze u UI.'
+    'JS: precizan attributeChangedCallback',
+    'Potpis prima `name`, `oldValue` i `newValue` — tri argumenta su tačan Web Components API.',
+    'Tačan API potpis je uslov za ispravno granularno razlikovanje promena.'
+  ),
+  describeJsFlowStep(
+    'attribute_changed_guard',
+    'JS: guard za iste vrednosti i disconnected stanje',
+    'Odmah izlazimo ako se vrednost nije promenila ili widget još nije u živom DOM-u.',
+    'Enterprise update path ne troši resurse bez potrebe.'
+  ),
+  describeJsFlowStep(
+    'attribute_changed_switch',
+    'JS: switch — menjamo samo ono što se promenilo',
+    'Switch poziva `updateUsername()`, `updateRole()` ili `updateStatus()` zavisno od atributa koji se promenio.',
+    'Granularni update je ključna razlika: nema slepog full-render poziva za svaku atributsku promenu.'
+  ),
+  describeJsFlowStep(
+    'property_username_getter',
+    'JS: username getter',
+    'Property getter vraća normalizovani username sa fallback-om.',
+    'Property API otvara čist JS contract pored declarative HTML atributa.'
+  ),
+  describeJsFlowStep(
+    'property_username_setter',
+    'JS: username setter',
+    'Setter piše nazad u atribut — source of truth ostaje na atributu.',
+    'Imperative JS i declarative HTML API rade kroz isti kanal.'
+  ),
+  describeJsFlowStep(
+    'property_role_getter',
+    'JS: role getter',
+    'Getter vraća normalizovanu role vrednost.',
+    'Role može biti prazan string — to je validno stanje.'
+  ),
+  describeJsFlowStep(
+    'property_role_setter',
+    'JS: role setter',
+    'Setter piše normalizovanu role nazad u atribut.',
+    'Isti model kao username: atribut je jedini source of truth.'
+  ),
+  describeJsFlowStep(
+    'property_status_getter',
+    'JS: status getter',
+    'Getter vraća normalizovani status sa fallback-om na `offline`.',
+    'Nikad ne vraćamo nevalidni status dalje kroz sistem.'
+  ),
+  describeJsFlowStep(
+    'property_status_setter',
+    'JS: status setter',
+    'Setter normalizuje status pre upisa — nevalidni ulaz se pretvara u `offline`.',
+    'Normalizacija ide na granici API-ja, ne usred update logike.'
+  ),
+  describeJsFlowStep(
+    'property_profile_url_getter',
+    'JS: profileUrl getter',
+    'Getter vraća `profile-url` atribut bez normalizacije — URL je otvoren string.',
+    'Profile URL nije validovan u widgetu; parent je odgovoran za tačnost URL-a.'
+  ),
+  describeJsFlowStep(
+    'setup_template_once',
+    'JS: setupTemplateOnce()',
+    'Template mount dobija sopstvenu metodu.',
+    'Jasno ime kaže: montira se jednom, ne na svaki connectedCallback.'
+  ),
+  describeJsFlowStep(
+    'setup_template_once_guard',
+    'JS: guard sprečava dupliranje',
+    'Kloniramo template samo ako shadow root nema child node-ova.',
+    'Reconnect scenariji moraju biti boring — bez dupliranja DOM-a.'
   ),
   describeJsFlowStep(
     'cache_dom',
-    'JS: Uvodimo cacheDom()',
-    'Dodajemo `cacheDom()` kao jedino mesto gde komponenta po potrebi jednom stampuje template u shadow root, pa zatim kešira interne reference.',
-    'Ime metode naglašava cache, ali u ovoj lekciji ona namerno radi i prvi mount template-a, da class zadrži jedno mesto za DOM setup.'
+    'JS: cacheDom — samo kešira reference',
+    'cacheDom ne montira template i ne radi render. Samo pronalazi reference ako ne postoje.',
+    'Ime i ponašanje su usklađeni: cache znači pamti referencu, ne gradi DOM.'
   ),
   describeJsFlowStep(
-    'cache_dom_clone',
-    'JS: cacheDom klonira template samo jednom',
-    'U `cacheDom()` proveravamo da li shadow root već ima sadržaj. Template kloniramo samo prvi put.',
-    'Ovo sprečava dupliranje markup-a pri reconnect-u i čuva preview stabilnim.'
+    'cache_dom_username',
+    'JS: cacheDom kešira .username element',
+    'Username span čuvamo jednom da updateUsername ne mora da radi query pri svakoj promeni.',
+    'DOM query jednom; update metode rade nad čuvanom referencom.'
   ),
   describeJsFlowStep(
-    'cache_dom_title',
-    'JS: cacheDom kešira title referencu',
-    'Keširamo `.title` samo ako referenca još ne postoji.',
-    'Render kasnije samo ažurira tekst, bez novih `querySelector` poziva.'
+    'cache_dom_role',
+    'JS: cacheDom kešira .role element',
+    'Role span čuvamo na isti način.',
+    'Svaki DOM element koji menjamo kešira se pojedinačno i eksplicitno.'
   ),
   describeJsFlowStep(
-    'cache_dom_cta',
-    'JS: cacheDom kešira CTA referencu',
-    'Na isti način keširamo `.cta` dugme.',
-    'Kada su reference stabilne, ostatak klase radi nad malim, predvidivim API-jem.'
+    'cache_dom_status_badge',
+    'JS: cacheDom kešira .status-badge',
+    'Status badge element čuvamo za aria-label update.',
+    'I elementi koji ne menjaju textContent treba da budu keširani ako ih update metode diraju.'
+  ),
+  describeJsFlowStep(
+    'sync_from_attributes',
+    'JS: syncFromAttributes()',
+    'Centralna one-time inicijalizacija koja propagira sve atribute u DOM na prvom connect-u.',
+    'Ovo nije opšti render; to je orchestration metoda koja zove uske update metode.'
+  ),
+  describeJsFlowStep(
+    'sync_from_attributes_calls',
+    'JS: sync poziva sva tri updatera',
+    'Pozivamo `updateUsername()`, `updateRole()` i `updateStatus()` pri inicijalnom connect-u.',
+    'Svaki poziv je uski i odvojen — lako se testira i debuguje individualno.'
+  ),
+  describeJsFlowStep(
+    'update_username',
+    'JS: updateUsername()',
+    'Username element dobija tačno ono što property API vrati.',
+    'Jedna metoda, jedna odgovornost: piše username u DOM.'
+  ),
+  describeJsFlowStep(
+    'update_role',
+    'JS: updateRole()',
+    'Role element ažuriramo kroz istu usku metodu.',
+    'Svaki tekstualni DOM element ima svoju update metodu.'
+  ),
+  describeJsFlowStep(
+    'update_status',
+    'JS: updateStatus()',
+    'Status badge dobija ažuriranu aria-label iz `statusAriaLabel` mape.',
+    'Status vizuelna promena se dešava kroz CSS token — JS samo drži aria accessibility u sinhronizaciji.'
   ),
   describeJsFlowStep(
     'bind_events',
-    'JS: Uvodimo bindEvents()',
-    'Dodajemo `bindEvents()` kao jedino mesto gde spajamo DOM i ponašanje.',
-    'Event wiring ne treba da curi po celoj klasi.'
+    'JS: bindEvents()',
+    'Event wiring ostaje u sopstvenoj responsibility metodi.',
+    'Bind i unbind idu uvek u par, sa jasnim imenima.'
   ),
   describeJsFlowStep(
     'bind_events_guard',
     'JS: bindEvents štiti od duplog binding-a',
-    'Pre dodavanja listenera proveravamo da CTA postoji i da event još nije vezan, pa tek onda registrujemo click i podižemo `isCtaBound`.',
-    'Ovde zatvaramo reconnect i double-bind rizik.'
+    'Flag `isClickBound` sprečava dvostruko kačenje listenera. Postavljamo i `tabindex` i `role` atribute za accessibility.',
+    'Widget mora biti navigabilan tastaturom — tabindex i role su deo tog contract-a.'
   ),
   describeJsFlowStep(
     'unbind_events',
-    'JS: Uvodimo unbindEvents()',
-    'Dodajemo `unbindEvents()` kao jedino mesto gde skidamo aktivne listenere.',
-    'Ako postoji `bindEvents()`, production komponenta treba i jasan cleanup par.'
+    'JS: unbindEvents()',
+    'Cleanup metoda postoji za svaki bind scenario.',
+    'Ako postoji bind, mora postojati i cleanup. Bez izuzetka.'
   ),
   describeJsFlowStep(
     'unbind_events_guard',
     'JS: unbindEvents skida listener samo kada postoji',
-    'Pre cleanup-a proveravamo da CTA postoji i da je listener zaista aktivan, pa tek onda skidamo binding i vraćamo `isCtaBound` na `false`.',
-    'Ovo drži lifecycle urednim i sprečava nepotrebne remove pozive.'
+    'Guard sprečava grešku pri pokušaju skidanja listenera koji nije zakačen.',
+    'Reconnect moraju biti dosadni — bez neregularnih situacija.'
   ),
   describeJsFlowStep(
-    'render_declaration',
-    'JS: Uvodimo render()',
-    'Dodajemo `render()` kao jedino mesto gde atributi prelaze u UI tekst.',
-    'Centralizovan render čuva flow čistim: on sada samo ažurira DOM, a ne pravi novu strukturu.'
+    'handle_avatar_click',
+    'JS: handleAvatarClick()',
+    'Klik handler emituje namespaced event sa punim payload-om.',
+    'Handler je mali i predvidiv: jedna odgovornost — emitovanje event-a.'
   ),
   describeJsFlowStep(
-    'render_guard',
-    'JS: render() čuva samo postojeći DOM',
-    'Na vrhu `render()` proveravamo da li reference postoje. Ako nisu spremne, izlazimo bez rebuild-a.',
-    'Ovo jasno pokazuje da `render()` ne pravi novi `innerHTML`, već samo patch-uje postojeće čvorove.'
-  ),
-  describeJsFlowStep(
-    'render_title',
-    'JS: render() Popunjava Title',
-    'U `render()` čitamo `title` atribut i upisujemo ga u `.title` element.',
-    'Render menja samo `textContent` već keširanog elementa.'
-  ),
-  describeJsFlowStep(
-    'render_cta',
-    'JS: render() Popunjava CTA',
-    'Na isti način `cta-label` pretvaramo u tekst CTA dugmeta.',
-    'Isti obrazac koristiš za svaki dinamični prop: pročitaj API, ažuriraj postojeći DOM.'
-  ),
-  describeTeachingStep(
-    'render_patch_instead_of_rebuild',
-    'Teaching Moment: render patchuje, ne rebuild-uje',
-    'Ovo je jedna od najvažnijih razlika lekcije: `render()` više ne dira template strukturu i ne pravi novi `innerHTML`. On samo ažurira `textContent` na već keširanim referencama.',
-    'Kada render patch-uje umesto da rebuild-uje, DOM ostaje stabilan, eventi se ne dupliraju i component class postaje lakša za održavanje.'
-  ),
-  describeJsFlowStep(
-    'handle_click_dispatch_event',
-    'JS: handleClick emituje component-action',
-    "Dodajemo `handleClick()` i emitujemo `CustomEvent('component-action', ...)`.",
-    'Komponenta dobija jasan izlazni API i ostatak aplikacije može da reaguje na CTA bez direktnog zavlačenja u shadow DOM.'
+    'handle_avatar_click_event',
+    'JS: ui-user-avatar:profile-open event',
+    'Emitujemo `ui-user-avatar:profile-open` sa `bubbles`, `composed`, `cancelable` i stabilnim `detail`-om: username, role, status, profileUrl, source.',
+    'Event contract je deo javnog API-ja. Parent sluša ovaj event i odlučuje da li otvara modal, navigira ili radi nešto treće.'
   ),
   describeJsFlowStep(
     'define_guard',
-    'JS: Čuvamo se duplog define-a',
-    'Pre registracije proveravamo `customElements.get(\'my-first-component\')`.',
-    'U okruženjima sa hot reload-om ili ponovnim izvršavanjem modula ovo je obavezna zaštita.'
+    'JS: guard pre registracije',
+    'Proveravamo da li je element već registrovan pre `customElements.define()`.',
+    'Hot reload i SSR scenariji ne smeju bacati grešku pri ponovnoj evaluaciji modula.'
   ),
   describeJsFlowStep(
     'define_element',
-    'JS: Registrujemo Custom Element',
-    'Unutar guard-a pozivamo `customElements.define(\'my-first-component\', MyFirstComponent)`. Klasa je sada čista, modularna i lifecycle-disciplinovana.',
-    'Svaki fajl sada ima jednu predvidivu odgovornost: template, behavior, shadow CSS i host CSS.'
+    'JS: registrujemo ui-user-avatar',
+    'Komponenta je registrovana: `customElements.define("ui-user-avatar", UiUserAvatar)`.',
+    'Od ovog momenta svaki `<ui-user-avatar>` u DOM-u dobija pun lifecycle i API.'
   ),
   ...shellCssSteps.map(config => describeCssPropertyStep(...config)),
   describeTeachingStep(
     'host_vs_shadow_styles',
-    'Teaching Moment: style.css spolja, shadow-dom-style.css unutra',
-    'Do ovog trenutka `style.css` je izgradio samo host scenu i theme tokene na `<my-first-component>`. Sledeći koraci prelaze u `shadow-dom-style.css`, gde stilizujemo samo unutrašnje delove kao što su `.card`, `.eyebrow`, `.title`, `.summary` i `.cta`.',
-    'Pravilo ove lekcije je jednostavno: host i theme ostaju spolja, a stvarna unutrašnja komponenta živi u shadow stylesheet-u.',
-    ['<my-first-component']
+    'Teaching Moment: Token styling contract',
+    'Host CSS drži token kontrakt i status variants. Svaka promena statusa menja samo `--avatar-status-color` token — bez diranja shadow internals. Sledeći koraci prelaze u `ui-user-avatar.shadow.css`.',
+    'Ovde je granica: host/theme/variants spolja, widget internals unutra.',
+    ['<ui-user-avatar', 'username=']
   ),
-  ...stylesheetSteps.map(config => describeShadowCssPropertyStep(...config)),
+  ...shadowCssSteps.map(config => describeShadowCssPropertyStep(...config)),
   describeSummaryStep(
-    'card_summary',
-    'Rezime: .card u shadow-dom-style.css',
-    'Uklanjamo card helper outline.',
-    'Card struktura, stil iz posebnog CSS fajla i template iz posebnog JS modula su potpuno jasni.'
-  ),
-  describeSummaryStep(
-    'eyebrow_summary',
-    'Rezime: .eyebrow u shadow-dom-style.css',
-    'Uklanjamo eyebrow helper outline.',
-    'Slot projekcija i badge stil rade zajedno iz izdvojenog CSS fajla.'
+    'container_summary',
+    'Rezime: .avatar-container',
+    'Uklanjamo container helper outline.',
+    'Container drži sve vizuelne delove u jednom stacking kontekstu.'
   ),
   describeSummaryStep(
-    'cta_summary',
-    'Rezime: .cta u shadow-dom-style.css',
-    'Uklanjamo CTA helper outline.',
-    'Stil, event i hover/focus ponašanje jasno pokazuju ulogu CTA dugmeta.'
+    'image_summary',
+    'Rezime: .avatar-image',
+    'Uklanjamo image helper outline.',
+    'Avatar krug sada ima gradijent, border, shadow i hover interakciju.'
+  ),
+  describeSummaryStep(
+    'status_summary',
+    'Rezime: .status-badge',
+    'Uklanjamo status badge helper outline.',
+    'Status badge čita `--avatar-status-color` token — status varijante menjaju samo taj token.'
+  ),
+  describeSummaryStep(
+    'info_summary',
+    'Rezime: .avatar-info',
+    'Uklanjamo info zone helper outline.',
+    'Username i role su sada stilizovani sa jasnom hijerarhijom.'
+  ),
+  describeSummaryStep(
+    'tooltip_summary',
+    'Rezime: .tooltip',
+    'Uklanjamo tooltip helper outline.',
+    'Tooltip se pojavljuje na hover i focus-within sa glatkom animacijom.'
   ),
   describeSummaryStep(
     'host_summary',
-    'Rezime: my-first-component host',
-    'Uklanjamo host outline.',
-    'API atributi, theme tokeni i modularna struktura su sada jasni.'
+    'Rezime: ui-user-avatar host',
+    'Uklanjamo host helper outline.',
+    'Host nosi token contract, variants i interaktivni cursor. Shadow ostaje izolovan.'
   ),
   describeSummaryStep(
     'shell_summary',
     'Rezime: .app-shell',
-    'Uklanjamo helper outline sa `.app-shell`.',
-    'Lekcija je kompletna, okvir više nije potreban.',
+    'Uklanjamo shell helper outline.',
+    'Dashboard widget živi u tamnoj sceni, spreman za integraciju u pravi tim panel.',
     ['<div class="app-shell">']
   ),
   describeFinishedStep(
     'done',
-    'Done: More Separation Of Code',
-    'Lekcija je završena: ista komponenta sada ima pet zasebnih fajlova. `index.html` opisuje host, `component.html.js` čuva template markup, `my-first-component.js` vodi lifecycle i behavior, `shadow-dom-style.css` stilizuje unutrašnjost, a `style.css` theme-uje host spolja.',
-    'Najvažnija pouka je da separation of concerns nije samo raspodela fajlova, nego i disciplina: cache jednom, bind kontrolisano, render samo patch-uje postojeći DOM.'
+    'Done: UI User Avatar Dashboard Widget',
+    '`ui-user-avatar` je završen: `index.html` deklarativno koristi atribute i slotove, `ui-user-avatar.template.js` drži shadow strukturu, `ui-user-avatar.js` vodi property API, lifecycle i namespaced event contract, `style.css` theme-uje host i variants, a `ui-user-avatar.shadow.css` drži unutrašnji styling widgeta.',
+    'Enterprise widget contract je uzan: četiri atributa, dva slota, jedan event. Parent odlučuje šta se dešava pri kliku — widget samo emituje signal.'
   )
 ];
 
@@ -14194,7 +14644,7 @@ import { buildCustomElementLesson } from './03-build-custom-element/build-custom
 import { buildWebComponentLesson } from './04-build-web-component/build-web-component.lesson.js';
 import { cleanWebComponentWithAdoptedStylesheetsLesson } from './05-clean-web-component-with-adopted-stylesheets/clean-web-component-with-adopted-stylesheets.lesson.js';
 import { modularWebComponentsLesson } from './06-modular-web-components/06-modular-web-components.lesson.js';
-import { moreSeparationOfCodeLesson } from './07-more-separation-of-code/07-more-separation-of-code.lesson.js';
+import { buildUIUserAvatarLesson } from './07-build-ui-user-avatar/07-build-ui-user-avatar.lesson.js';
 import { smellOfEnterpriseLesson } from './08-smell-of-enterprise/08-smell-of-enterprise.lesson.js';
 
 export const registeredLessons = [
@@ -14204,18 +14654,16 @@ export const registeredLessons = [
   buildWebComponentLesson,
   cleanWebComponentWithAdoptedStylesheetsLesson,
   modularWebComponentsLesson,
-  moreSeparationOfCodeLesson,
+  buildUIUserAvatarLesson,
   smellOfEnterpriseLesson
 ];
 
-const lessonsById = new Map(registeredLessons.map(lesson => [lesson.lessonId, lesson]));
-
-export function findLesson(lessonId) {
-  return lessonsById.get(lessonId);
-}
-
 export function getDefaultLessonId() {
   return registeredLessons[0].lessonId;
+}
+
+export function findLesson(lessonId) {
+  return registeredLessons.find(lesson => lesson.lessonId === lessonId);
 }
 
 === main.js ===
