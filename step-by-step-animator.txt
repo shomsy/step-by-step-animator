@@ -6849,7 +6849,7 @@ Cilj je da struktura bude:
 Sadržaj generiše se u blokovima sa intuitivnim, fluent i human-readable ključevima:
 - `when`: kada se ovaj blok primenjuje (step boundary identifikator)
 - `into`: gde se ubacuje u finalnom kodu (slot marker ime)
-- `lines`: šta se ubacuje (niz linija koda)
+- `code`: šta se ubacuje (niz linija koda)
 
 Primer:
 
@@ -6857,7 +6857,7 @@ Primer:
 {
   "when": "cache_dom_price_period",
   "into": "cache-dom-body",
-  "lines": [
+  "code": [
     "    if (!this.pricePeriodElement) {",
     "      this.pricePeriodElement = this.shadowRoot.querySelector('.price-period');",
     "    }",
@@ -6870,13 +6870,13 @@ Primer:
 
 - `when`: jasno kaže "u kom koraku se ovo dešava" (flow-first)
 - `into`: direktno govori "u koju poziciju se ubacuje" (DSL-friendly)
-- `lines`: intuitivno "šta je sadržaj" (developer-friendly)
+- `code`: intuitivno "šta je sadržaj" (developer-friendly)
 
 ### 4.2 Prednosti intuitivnih ključeva
 
-- Čita se kao engleski: "when X, insert lines into Y"
+- Čita se kao engleski: "when X, insert code into Y"
 - Lakše za autore lekcija da razumeju bez dokumentacije
-- Manje grešaka u pisanju (when vs step, into vs slot, lines vs code)
+- Manje grešaka u pisanju (when vs step, into vs slot, code vs lines)
 
 ---
 
