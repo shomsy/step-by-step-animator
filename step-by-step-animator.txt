@@ -14674,14 +14674,23 @@ Each lesson slice lives under `education/lessons/<lesson-slug>/source/` and cont
 
 - `lesson.md`
 - `theory.md`
-- `html.timeline.md`
-- `css.rules.md`
-- optional `js.timeline.md`
-- optional `template-js.timeline.md`
-- optional `shadow-dom-style.css.md`
+- `scenes.md`
+- `artifacts/`
 - `assets/` beside the source
 
 Education contains source only. No lesson build glue lives there.
+
+## Authoring DSL
+
+- `lesson.md` is the manifest and machine contract for the lesson
+- `theory.md` is the explanation layer and can be optional when explicitly declared
+- `scenes.md` is the strict storyboard DSL
+- `artifacts/` contains the canonical source artifacts for the lesson
+- `assets/` contains reference visuals and other non-executable authoring assets
+- `step` is the pedagogical unit
+- `scene` is the directed frame inside a step
+- the lesson engine validates, normalizes, projects, and compiles this source into a canonical lesson package
+- the animator engine replays only the compiled package
 
 ## Engine Contract
 
