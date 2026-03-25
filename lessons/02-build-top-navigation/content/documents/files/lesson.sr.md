@@ -1,9 +1,9 @@
 ---
-title: 02 · Kako se pravi top navigation bar
+title: 02 · How to Build a Top Navigation Bar
 previewAddress: browser://02-build-top-navigation-preview
 previewTitle: Live top navigation preview
 htmlFileName: index.html
 cssFileName: style.css
 ---
 
-Koraci po korak gradiš prvi navbar iz reference: logo levo, linkovi u sredini i CTA dugme desno. Druga dva rasporeda iz iste slike ostaju kao domaći zadatak.
+You build your first navbar from a reference image: logo left, links in the middle and CTA button right. The other two layouts from the same reference remain as homework.
