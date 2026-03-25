@@ -445,6 +445,25 @@ In other words:
 
 ## Language and Ecosystem Exceptions
 
+### Functional Programming and Non-OOP Languages
+Some languages and ecosystems are not class-first.
+
+In those cases, low-level design does not disappear.
+It moves into functional design with the same clarity bar.
+
+Rules:
+
+- use pure functions as the smallest meaningful design unit when possible
+- keep inputs explicit and outputs deterministic
+- isolate side effects at the edges
+- prefer immutable data and data transformation pipelines
+- keep modules small, composable and easy to test
+- use composition, higher-order functions and explicit dependency passing instead of class-based patterns
+- if a feature slice is sequential, a pipeline root still owns the flow
+- if a feature slice is not sequential, use the smallest root composition unit that makes the whole slice obvious
+
+**In non-OOP environments, LLD becomes functional clarity, not a weaker version of architecture.**
+
 ### Go
 Go likes small packages, short names and strong connection between package boundary and responsibility.
 

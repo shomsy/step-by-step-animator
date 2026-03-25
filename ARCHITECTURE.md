@@ -10,12 +10,26 @@ This document applies the reusable standard from `architecture-standard.md` to t
 
 If a repo-specific exception is needed, it must be documented here and it must not lower the baseline quality bar.
 
+## Vertical Slice Intent
+
+This repo uses vertical-slice, feature-first architecture.
+
+- the same model applies to animator runtime slices and lesson business slices
+- folder names must describe flow or capability
+- file names must describe responsibility
+- function names must describe exact action
+- the reader should be able to predict what a folder, file or function does before opening it
+- the business flow should stay readable from the first feature to the last feature without changing the mental model
+- technical slices and product slices should both read as vertical slices
+
 ## Repo Shape
 
 This repo has two top-level areas:
 
 - `animator/` for technical runtime and document tooling
 - `lessons/` for business lesson slices
+
+The same flow-first reading order applies to both areas.
 
 Read the tree in this order:
 
@@ -263,6 +277,20 @@ When a lesson separates template markup into a dedicated module such as `compone
 When a lesson separates inner shadow DOM styles into a fourth editor/download file, use `shadow-dom-style.css.md` as the canonical shadow CSS source and keep `build-shadow-css-at-step.js` thin as well.
 Keep `build-*-at-step.js` files thin; they should parse markdown lesson documents and return derived lines, not re-encode the whole lesson by hand.
 
+## Root Ownership Rules
+
+Each feature slice must have one root owner that makes the whole slice obvious.
+
+- use `*.pipeline.js` when the flow is sequential
+- use `*.facade.js` when the feature needs one stable entry into a larger interior
+- use `*.orchestrator.js` when the root coordinates branches, events or multiple subflows
+- use a single root function or single root file when that is the clearest composition root
+- use a banal main name when that is more readable than a pattern name
+
+If none of the named patterns is the clearest answer, use the smallest construct that can still own the whole feature slice.
+
+The same rule applies to both runtime slices under `animator/` and lesson slices under `lessons/`.
+
 ### 4. Every other file owns one clear responsibility
 
 Good:
@@ -368,6 +396,36 @@ Use verbs consistently by responsibility:
 - `write...` is reserved for persistence writes.
 - `play...` orchestrates the complete lesson flow.
 
+## Quality Targets
+
+The repo applies the standard's quality goals without exception.
+
+- SOLID, DRY, KISS and YAGNI
+- composition over inheritance, Law of Demeter, clean code principles and low-level design clarity
+- security by default, OWASP, authentication, authorization, data encryption, vulnerability management and secure APIs
+- usability, flexibility, scalability, interoperability and cost efficiency
+- cache, rate limiting, checksum, integrity and reproducibility where relevant
+- latency vs throughput trade-offs chosen deliberately
+- CAP and consistency patterns made explicit when they matter
+- long polling vs WebSockets chosen deliberately when transport behavior matters
+- observability and operational simplicity
+
+Quality must live inside the slice, but it must not hide the folder/file/function story.
+
+## Functional Programming and Non-OOP Languages
+
+When a language or slice is not OOP-first, low-level design must be expressed as functional design with the same clarity bar.
+
+- use pure functions as the smallest meaningful design unit when possible
+- keep inputs explicit and outputs deterministic
+- isolate side effects at the edges
+- prefer immutable data and data transformation pipelines
+- compose behavior through modules, higher-order functions and explicit dependency passing
+- if a feature slice is sequential, a pipeline root still owns the flow
+- if a feature slice is not sequential, use the smallest root composition unit that makes the whole slice obvious
+
+In non-OOP environments, LLD becomes functional clarity, not a weaker version of architecture.
+
 ## Anti-Patterns
 
 Do not introduce these unless there is a very strong reason:
@@ -380,6 +438,8 @@ Do not introduce these unless there is a very strong reason:
 - `manager`
 - `service`
 - `controller`
+
+Avoid tight coupling, premature reuse, over-engineering and insufficient abstraction.
 
 ## Standard
 

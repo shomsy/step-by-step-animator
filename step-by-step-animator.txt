@@ -116,17 +116,17 @@ dist/
 === AGENTS.md ===
 # AGENTS
 
-Ovaj fajl je kanonski operativni ugovor za rad nad ovim repo-om.
+This file is the canonical operational contract for working on this repo.
 
 ## 1. Product Intent
 
-Ovaj repo je `Step By Step Animator`.
+This repo is `Step By Step Animator`.
 
-To je lesson engine za interaktivne HTML/CSS/JS lekcije koje treba da izgledaju kao da gledaš programera preko share screen-a.
+It is a lesson engine for interactive HTML/CSS/JS lessons that should look like you're watching a programmer over share screen.
 
-Engine je generičan.
+The engine is generic.
 
-Trenutno isporučene lekcije su:
+Currently shipped lessons are:
 
 - `01-build-sidebar`
 - `02-build-top-navigation`
@@ -137,54 +137,54 @@ Trenutno isporučene lekcije su:
 - `07-more-separation-of-code`
 - `08-smell-of-enterprise`
 
-Svaka nova lekcija mora da koristi isti shell i isti teaching model:
+Every new lesson must use the same shell and the same teaching model:
 
-- HTML ide element po element
-- CSS ide property po property
-- kada lekcija to traži, JS ide akciju po akciju
-- preview prikazuje tačno isti kumulativni HTML/CSS/JS koji je trenutno napisan
-- promene moraju da budu jasne, predvidive i lake za verbalno objašnjavanje
-- kod Web Components lekcija, prvo JS mora da napravi stvarni renderovani DOM, pa tek onda CSS sme da stilizuje te delove
+- HTML goes element by element
+- CSS goes property by property
+- when the lesson requires it, JS goes action by action
+- preview shows exactly the same cumulative HTML/CSS/JS that is currently written
+- changes must be clear, predictable and easy to verbalize
+- for Web Components lessons, JS must first create the actual rendered DOM, only then CSS may style those parts
 
-Ovo nije showcase.
-Ovo nije fake storyboard.
-Ovo je teaching product.
+This is not a showcase.
+This is not a fake storyboard.
+This is a teaching product.
 
 ## 1.1 Document Authority
 
-Ovaj repo ima tri nivoa dokumenata:
+This repo has three levels of documents:
 
-- `architecture-standard.md` je reusable arhitektonski baseline.
-- `ARCHITECTURE.md` je repo-specifična primena tog baseline-a.
-- `AGENTS.md` je operativni ugovor za rad, delivery i saradnju u ovom repo-u.
+- `architecture-standard.md` is the reusable architectural baseline.
+- `ARCHITECTURE.md` is the repo-specific application of that baseline.
+- `AGENTS.md` is the operational contract for work, delivery and collaboration in this repo.
 
-Pravila:
+Rules:
 
-- ako menjamo strukturu, naming ili granice odgovornosti, menjamo owning document u istom work item-u
-- nema tihih izuzetaka
-- repo-specifično pravilo sme da suzi standard, ali ne sme da ga oslabi bez eksplicitnog zapisa
+- if we change structure, naming or responsibility boundaries, we change the owning document in the same work item
+- no silent exceptions
+- repo-specific rule may narrow the standard, but may not weaken it without explicit record
 
 ## 2. Technical Contract
 
 ### 2.1 Architecture Shape
 
-Repo prati business-first screaming architecture.
+The repo follows business-first screaming architecture.
 
-Repo-level shape mora da ostane u skladu sa `architecture-standard.md`, a repo-specifična pravila se dokumentuju u `ARCHITECTURE.md`.
+Repo-level shape must stay in sync with `architecture-standard.md`, and repo-specific rules are documented in `ARCHITECTURE.md`.
 
-Tree čitaš ovim redom:
+Read the tree in this order:
 
 1. flow
 2. feature slice
 3. file responsibility
 4. function action
 
-Root je namerno podeljen na dve celine:
+Root is intentionally divided into two areas:
 
-- `animator/` je tehnički runtime, shell, playback i document tooling
-- `lessons/` su business lesson slice-ovi i njihov sadržaj
+- `animator/` is technical runtime, shell, playback and document tooling
+- `lessons/` are business lesson slices and their content
 
-Aktuelni kanonski shape:
+Current canonical shape:
 
 ```txt
 animator/
@@ -360,13 +360,13 @@ lessons/
 
 ### 2.2 Lesson Contract
 
-Svaka nova lesson slice mora da isporuči jedan root lesson file:
+Every new lesson slice must deliver one root lesson file:
 
 ```txt
 feature-name.lesson.js
 ```
 
-Taj file mora da vrati kompletan lesson contract:
+That file must return the complete lesson contract:
 
 - `lessonId`
 - `lessonTitle`
@@ -375,17 +375,17 @@ Taj file mora da vrati kompletan lesson contract:
 - `previewTitle`
 - `htmlFileName`
 - `cssFileName`
-- `jsFileName` kada lekcija zaista ima JavaScript fajl
-- `templateJsFileName` kada lekcija zaista ima poseban template modul kao `component.html.js`
-- `shadowCssFileName` kada lekcija zaista ima poseban shadow DOM CSS fajl
+- `jsFileName` when the lesson actually has a JavaScript file
+- `templateJsFileName` when the lesson actually has a special template module like `component.html.js`
+- `shadowCssFileName` when the lesson actually has a special shadow DOM CSS file
 - `steps`
 - `buildHtmlAtStep`
 - `buildCssAtStep`
-- `buildJsAtStep` kada lekcija traži živi JavaScript u preview-u
-- `buildTemplateJsAtStep` kada lekcija traži poseban template JS editor i download fajl
-- `buildShadowCssAtStep` kada lekcija traži poseban shadow CSS editor i download fajl
+- `buildJsAtStep` when the lesson requires live JavaScript in preview
+- `buildTemplateJsAtStep` when the lesson requires a special template JS editor and download file
+- `buildShadowCssAtStep` when the lesson requires a special shadow CSS editor and download file
 
-Opciona lesson shell polja kada želiš da pokažeš vizuelni cilj i homework:
+Optional lesson shell fields when you want to show visual goal and homework:
 
 - `goalTitle`
 - `goalImageSrc`
@@ -394,11 +394,11 @@ Opciona lesson shell polja kada želiš da pokažeš vizuelni cilj i homework:
 - `homeworkTitle`
 - `homeworkItems`
 
-Ne uvoditi paralelne lesson shape-ove.
+Do not introduce parallel lesson shapes.
 
 ### 2.3 Lesson Documents
 
-Lekcija može da ima markdown source dokumente unutar:
+A lesson may have markdown source documents within:
 
 ```txt
 feature-name/
@@ -413,7 +413,7 @@ feature-name/
         shadow-dom-style.css.md
 ```
 
-Ako lesson ima referentnu sliku cilja, asset ide ovde:
+If the lesson has a reference goal image, the asset goes here:
 
 ```txt
 feature-name/
@@ -422,37 +422,37 @@ feature-name/
       feature-goal.svg
 ```
 
-Pravila:
+Rules:
 
-- `lesson.sr.md` je kanonski source za title, intro i lesson metadata
-- `html.timeline.md` je kanonski source za kumulativni HTML teaching tok
-- `css.rules.md` je kanonski source za CSS rule blokove koji rastu property po property
-- `js.timeline.md` je opcioni kanonski source za kumulativni JavaScript teaching tok
-- `template-js.timeline.md` je opcioni kanonski source za izdvojeni template JS modul kada lekcija prikazuje `component.html.js`
-- `shadow-dom-style.css.md` je opcioni kanonski source za shadow DOM CSS rule blokove kada lekcija odvaja unutrašnji stylesheet u poseban fajl
-- generated book output ide u `content/documents/<lesson_name>.md`
-- generated output se ne uređuje ručno
-- `build-html-at-step.js`, `build-css-at-step.js`, `build-js-at-step.js` i po potrebi `build-template-js-at-step.js` i `build-shadow-css-at-step.js` ostaju tanki adapteri koji parsiraju markdown DSL i vraćaju linije za dati step
+- `lesson.sr.md` is the canonical source for title, intro and lesson metadata
+- `html.timeline.md` is the canonical source for cumulative HTML teaching flow
+- `css.rules.md` is the canonical source for CSS rule blocks that grow property by property
+- `js.timeline.md` is the optional canonical source for cumulative JavaScript teaching flow
+- `template-js.timeline.md` is the optional canonical source for separated template JS module when lesson displays `component.html.js`
+- `shadow-dom-style.css.md` is the optional canonical source for shadow DOM CSS rule blocks when lesson separates inner stylesheet into a separate file
+- generated book output goes to `content/documents/<lesson_name>.md`
+- generated output is not manually edited
+- `build-html-at-step.js`, `build-css-at-step.js`, `build-js-at-step.js` and as needed `build-template-js-at-step.js` and `build-shadow-css-at-step.js` remain thin adapters that parse markdown DSL and return lines for a given step
 
 ### 2.4 Runtime and Entry Rules
 
-- nema `src/` foldera
-- `main.js` je root entry
-- `index.html` je generičan lesson shell
-- `sidebar-step-by-step.html` je kompatibilni alias za `01-build-sidebar`
-- build ide kroz Vite
-- repo je podeljen na `animator/` i `lessons/`
-- business lekcije žive pod `lessons/`
-- tehnički player runtime i markdown tooling žive pod `animator/`
-- kanonski player entry ostaje `animator/play-lesson/play-lesson.pipeline.js`
+- no `src/` folder
+- `main.js` is root entry
+- `index.html` is generic lesson shell
+- `sidebar-step-by-step.html` is compatible alias for `01-build-sidebar`
+- build goes through Vite
+- repo is divided into `animator/` and `lessons/`
+- business lessons live under `lessons/`
+- technical player runtime and markdown tooling live under `animator/`
+- canonical player entry remains `animator/play-lesson/play-lesson.pipeline.js`
 
 ### 2.5 Naming Rules
 
-Koristi ovaj filter pre svakog novog imena:
+Use this filter before every new name:
 
 > If the folder does not say the flow, the file does not say the responsibility, or the function does not say the exact action, the name is not good enough.
 
-Zabranjeni bucket nazivi:
+Prohibited bucket names:
 
 - `utils`
 - `helpers`
@@ -463,7 +463,7 @@ Zabranjeni bucket nazivi:
 - `service`
 - `controller`
 
-Zabranjeni glagoli:
+Prohibited verbs:
 
 - `handle`
 - `run`
@@ -473,24 +473,24 @@ Zabranjeni glagoli:
 
 ### 2.6 Vocabulary Rules
 
-U ovom repo-u glagoli imaju zaključano značenje:
+In this repo, verbs have locked meaning:
 
-- `build...` gradi izveden lesson output za konkretan step
-- `show...` upisuje trenutno stanje u već pronađene page parts
-- `present...` drži interaktivni user flow
-- `create...` inicijalizuje progress za tok
-- `find...` pronalazi postojeće page delove u DOM-u ili u listi
-- `read...` čita iz persistence sloja
-- `write...` upisuje u persistence sloj
-- `play...` orkestrira kompletan lesson flow
+- `build...` builds derived lesson output for a specific step
+- `show...` writes current state to already found page parts
+- `present...` holds an interactive user flow
+- `create...` initializes progress for a flow
+- `find...` finds existing page parts in DOM or in list
+- `read...` reads from persistence layer
+- `write...` writes to persistence layer
+- `play...` orchestrates the complete lesson flow
 
-Ne uvoditi novu sinonimsku generaciju ako postojeći glagol već pokriva odgovornost.
+Do not introduce new synonym generation if existing verb already covers the responsibility.
 
 ### 2.7 Numbering Rules
 
-Brojevi se koriste samo na flow folderima kada redosled zaista nosi značenje u product story-ju.
+Numbers are used only on flow folders when the order truly carries meaning in the product story.
 
-U `lessons/` to važi za shipped learning path:
+In `lessons/` this applies to shipped learning path:
 
 - `01-build-sidebar`
 - `02-build-top-navigation`
@@ -501,7 +501,7 @@ U `lessons/` to važi za shipped learning path:
 - `07-more-separation-of-code`
 - `08-smell-of-enterprise`
 
-U player runtime-u to važi za glavni lesson journey:
+In player runtime this applies to main lesson journey:
 
 - `01-start-lesson`
 - `02-follow-lesson`
@@ -509,41 +509,41 @@ U player runtime-u to važi za glavni lesson journey:
 - `04-watch-preview`
 - `05-download-lesson-files`
 
-Pomoćni tokovi ostaju bez brojeva:
+Support flows remain unnumbered:
 
 - `find-step`
 - `save-step`
 - `choose-theme`
 
-Ne numerisati responsibility fajlove.
+Do not number responsibility files.
 
 ### 2.8 Preview Integrity Rules
 
-Desni preview mora da bude stvarni render istog kumulativnog HTML/CSS/JS koda koji middle panel prikazuje.
+The right preview must be the actual render of the same cumulative HTML/CSS/JS code that the middle panel shows.
 
-To znači:
+This means:
 
-- nema ručno režiranog fake preview-a
-- nema posebnog preview DOM-a koji odstupa od lesson koda
-- preview mora da se hrani iz istih builder funkcija koje hrani lesson contract
-- HTML preview mora da pokaže sirov browser rezultat kada CSS još nije dodat
-- CSS preview mora da utiče samo onoliko koliko je trenutno napisano
-- JS preview mora da izvršava tačno isti kumulativni JavaScript koji middle panel trenutno prikazuje
+- no manually directed fake preview
+- no special preview DOM that deviates from lesson code
+- preview must be fed from the same builder functions that feed the lesson contract
+- HTML preview must show raw browser result when CSS is not yet added
+- CSS preview must affect only as much as currently written
+- JS preview must execute exactly the same cumulative JavaScript that the middle panel currently shows
 
 ### 2.8a Teaching Visibility Rules
 
-Ova pravila važe za sve lekcije, bez izuzetka:
+These rules apply to all lessons, without exception:
 
-- `.app-shell` mora da dobije svoj tanak helper outline i da ga zadrži kroz celu lekciju, sve do završnog shell rezimea
-- svaki važan HTML element ili teaching celina mora da dobije svoj tanak helper outline što ranije
-- taj outline ne skidaš odmah kada dodaš prvi završni stil
-- outline ostaje aktivan do završnog rezime koraka za taj element ili celinu
-- završni rezime korak za dati element treba da pokaže njegov kompletan CSS i tek tada ugasi helper outline
-- dok je aktivan CSS korak za određeni element, odgovarajući HTML target u editor panelu mora da bude jasno žuto označen
+- `.app-shell` must get its thin helper outline and keep it through the entire lesson, until the final shell summary
+- every important HTML element or teaching unit must get its thin helper outline as early as possible
+- that outline is not removed immediately when the first final style is added
+- outline stays active until the final summary step for that element or unit
+- the final summary step for a given element should show its complete CSS and only then turn off the helper outline
+- while a CSS step is active for a certain element, the corresponding HTML target in the editor panel must be clearly highlighted in yellow
 
 ### 2.9 Verification Rules
 
-Posle svake veće izmene obavezno pokreni:
+After every significant change, обязательно запустите:
 
 ```bash
 find animator lessons -name '*.js' -print0 | xargs -0 -n1 node --check && node --check main.js
@@ -552,117 +552,117 @@ npm run build
 ./merge-files.sh .
 ```
 
-Ako menjaš dokumentaciju ili flow tree, osveži i merge dump.
-Ako menjaš arhitektonsku strukturu, proveri da su `architecture-standard.md`, `ARCHITECTURE.md` i `AGENTS.md` i dalje usklađeni.
+If you change documentation or flow tree, also refresh the merge dump.
+If you change the architectural structure, check that `architecture-standard.md`, `ARCHITECTURE.md` and `AGENTS.md` are still in sync.
 
 ### 2.10 Delivery Discipline
 
-Na kraju svakog većeg završenog rada obavezna je završna disciplina iz root-a repoa.
+At the end of every significant finished work, mandatory final discipline from the repo root is required.
 
-To znači:
+This means:
 
-1. ako je promena dotakla arhitekturu ili naming, uskladi relevantne dokumente
-2. pokreni `./merge-files.sh .` iz root-a
-3. uradi `git add -A`
-4. napravi normalan `git commit`
-5. uradi `git push`
+1. if the change touched architecture or naming, sync relevant documents
+2. run `./merge-files.sh .` from repo root
+3. do `git add -A`
+4. make a normal `git commit`
+5. do `git push`
 
-Ne završavaj ozbiljan implementation pass bez ovog zatvaranja, osim ako korisnik eksplicitno traži da se ne commituje ili ne pushuje.
+Do not finish a serious implementation pass without this closing, unless the user explicitly asks not to commit or push.
 
 ## 3. Feature Contract
 
-Za pravljenje novih animiranih lekcija i AI prompt šablon pogledaj [LESSON_AUTHORING.md](/home/shomsy/projects/step-by-step-animator/LESSON_AUTHORING.md).
+For making new animated lessons and AI prompt template, see [LESSON_AUTHORING.md](/home/shomsy/projects/step-by-step-animator/LESSON_AUTHORING.md).
 
 ### 3.1 Lesson Layout
 
-Aplikacija ima tri glavna panela:
+The application has three main panels:
 
-1. levi lesson panel
-2. srednji live editor panel
-3. desni live preview panel
+1. left lesson panel
+2. middle live editor panel
+3. right live preview panel
 
-Levi panel:
+Left panel:
 
-- prikazuje trenutni korak
-- prikazuje opis i pro tip
-- prikazuje progress
-- sadrži bookmark tok
-- sadrži kontrole za navigaciju i playback
-- sadrži open-source naraciju trenutnog koraka sa auto-read i voice speed kontrolom
+- shows current step
+- shows description and pro tip
+- shows progress
+- contains bookmark flow
+- contains controls for navigation and playback
+- contains open-source narration of current step with auto-read and voice speed control
 
-Srednji panel:
+Middle panel:
 
-- prikazuje HTML fajl
-- prikazuje CSS fajl
-- kada lekcija to traži, prikazuje i JS fajl
-- svi prikazi su kumulativni
-- postojeće linije su muted
-- novo dodate linije su naglašene
-- kada je aktivan CSS korak, HTML deo za isti element mora da bude žuto istaknut
+- shows HTML file
+- shows CSS file
+- when the lesson requires it, shows JS file
+- all displays are cumulative
+- existing lines are muted
+- newly added lines are highlighted
+- when CSS step is active, the HTML part for the same element must be highlighted in yellow
 
-Desni panel:
+Right panel:
 
-- zauzima ceo viewer panel
-- imitira browser
-- renderuje stvarni kumulativni HTML/CSS/JS output
+- takes the entire viewer panel
+- imitates browser
+- renders the actual cumulative HTML/CSS/JS output
 
 ### 3.2 Current Shipped Lessons
 
-`01-build-sidebar` je referentna lekcija za engine.
+`01-build-sidebar` is the reference lesson for the engine.
 
-`02-build-top-navigation` pokazuje dodatni shell capability:
+`02-build-top-navigation` shows additional shell capability:
 
-- goal sliku koja pokazuje šta gradimo
-- homework napomene za varijante koje još ne implementiramo
+- goal image showing what we're building
+- homework notes for variants we don't implement yet
 
-Za nju i dalje važe posebna teaching pravila:
+For it, special teaching rules still apply:
 
-- počinje praznim `.app-shell` prostorom
-- sidebar se dodaje kao prva stvar
-- nema filler sadržaja van onoga što lekcija zaista objašnjava
-- helper linije i pomoćni borderi ostaju dok se ne završi cela vizuelna celina
-- outline helperi ostaju do završnog rezime koraka za dati element ili celinu, pa se tek tada uklanjaju
+- starts with empty `.app-shell` space
+- sidebar is added as the first thing
+- no filler content outside of what the lesson actually explains
+- helper lines and helper borders stay until the entire visual unit is finished
+- outline helpers stay until the final summary step for that element or unit, only then removed
 
-`03-build-custom-element` otvara Web Components put:
+`03-build-custom-element` opens the Web Components path:
 
-- host tag sa crticom
-- registraciju kroz `customElements.define`
-- atribut API
-- prvi render kroz light DOM
+- host tag with dash
+- registration through `customElements.define`
+- attribute API
+- first render through light DOM
 
-`04-build-web-component` je Web Components nastavak:
+`04-build-web-component` is the Web Components continuation:
 
-- treći, opcioni JS fajl u middle panelu
-- stvarni live preview koji izvršava isti kumulativni JavaScript
-- Web Components teaching tok kroz custom element, shadow DOM, slot i lifecycle
+- third, optional JS file in the middle panel
+- actual live preview that executes the same cumulative JavaScript
+- Web Components teaching flow through custom element, shadow DOM, slot and lifecycle
 
-`05-clean-web-component-with-adopted-stylesheets` zatvara cleanup priču:
+`05-clean-web-component-with-adopted-stylesheets` closes the cleanup story:
 
-- četvrti, opcioni shadow CSS fajl u middle panelu
-- JavaScript uvozi `shadow-dom-style.css` kao tekst preko `?raw`
-- shadow root usvaja odvojen stylesheet preko `adoptedStyleSheets`
+- fourth, optional shadow CSS file in the middle panel
+- JavaScript imports `shadow-dom-style.css` as text via `?raw`
+- shadow root adopts separated stylesheet via `adoptedStyleSheets`
 
 ### 3.3 How To Add A New Lesson
 
-Za novu lekciju:
+For a new lesson:
 
-1. napravi novi feature folder pod `lessons/`
-2. dodaj root `feature-name.lesson.js`
-3. dodaj `describe-steps.js`
-4. dodaj `build-html-at-step.js`
-5. dodaj `build-css-at-step.js`
-6. kada lekcija traži JavaScript, dodaj `build-js-at-step.js`
-7. dodaj `content/documents/files/lesson.sr.md`
-8. dodaj `content/documents/files/html.timeline.md`
-9. dodaj `content/documents/files/css.rules.md`
-10. kada lekcija traži JavaScript, dodaj `content/documents/files/js.timeline.md`
-11. kada lekcija traži poseban shadow CSS fajl, dodaj `build-shadow-css-at-step.js`
-12. kada lekcija traži poseban shadow CSS fajl, dodaj `content/documents/files/shadow-dom-style.css.md`
-13. po potrebi dodaj `content/assets/feature-goal.svg`
-14. registruj lekciju u `lessons/register-lessons.js`
+1. create new feature folder under `lessons/`
+2. add root `feature-name.lesson.js`
+3. add `describe-steps.js`
+4. add `build-html-at-step.js`
+5. add `build-css-at-step.js`
+6. when lesson requires JavaScript, add `build-js-at-step.js`
+7. add `content/documents/files/lesson.sr.md`
+8. add `content/documents/files/html.timeline.md`
+9. add `content/documents/files/css.rules.md`
+10. when lesson requires JavaScript, add `content/documents/files/js.timeline.md`
+11. when lesson requires special shadow CSS file, add `build-shadow-css-at-step.js`
+12. when lesson requires special shadow CSS file, add `content/documents/files/shadow-dom-style.css.md`
+13. optionally add `content/assets/feature-goal.svg`
+14. register lesson in `lessons/register-lessons.js`
 
-Ne kopirati player runtime iz `animator/play-lesson/`.
-Nova lekcija treba da doda samo svoj contract i svoj content.
+Do not copy player runtime from `animator/play-lesson/`.
+New lesson should only add its contract and its content.
 
 === ARCHITECTURE.md ===
 # Architecture
@@ -677,12 +677,26 @@ This document applies the reusable standard from `architecture-standard.md` to t
 
 If a repo-specific exception is needed, it must be documented here and it must not lower the baseline quality bar.
 
+## Vertical Slice Intent
+
+This repo uses vertical-slice, feature-first architecture.
+
+- the same model applies to animator runtime slices and lesson business slices
+- folder names must describe flow or capability
+- file names must describe responsibility
+- function names must describe exact action
+- the reader should be able to predict what a folder, file or function does before opening it
+- the business flow should stay readable from the first feature to the last feature without changing the mental model
+- technical slices and product slices should both read as vertical slices
+
 ## Repo Shape
 
 This repo has two top-level areas:
 
 - `animator/` for technical runtime and document tooling
 - `lessons/` for business lesson slices
+
+The same flow-first reading order applies to both areas.
 
 Read the tree in this order:
 
@@ -930,6 +944,20 @@ When a lesson separates template markup into a dedicated module such as `compone
 When a lesson separates inner shadow DOM styles into a fourth editor/download file, use `shadow-dom-style.css.md` as the canonical shadow CSS source and keep `build-shadow-css-at-step.js` thin as well.
 Keep `build-*-at-step.js` files thin; they should parse markdown lesson documents and return derived lines, not re-encode the whole lesson by hand.
 
+## Root Ownership Rules
+
+Each feature slice must have one root owner that makes the whole slice obvious.
+
+- use `*.pipeline.js` when the flow is sequential
+- use `*.facade.js` when the feature needs one stable entry into a larger interior
+- use `*.orchestrator.js` when the root coordinates branches, events or multiple subflows
+- use a single root function or single root file when that is the clearest composition root
+- use a banal main name when that is more readable than a pattern name
+
+If none of the named patterns is the clearest answer, use the smallest construct that can still own the whole feature slice.
+
+The same rule applies to both runtime slices under `animator/` and lesson slices under `lessons/`.
+
 ### 4. Every other file owns one clear responsibility
 
 Good:
@@ -1035,6 +1063,36 @@ Use verbs consistently by responsibility:
 - `write...` is reserved for persistence writes.
 - `play...` orchestrates the complete lesson flow.
 
+## Quality Targets
+
+The repo applies the standard's quality goals without exception.
+
+- SOLID, DRY, KISS and YAGNI
+- composition over inheritance, Law of Demeter, clean code principles and low-level design clarity
+- security by default, OWASP, authentication, authorization, data encryption, vulnerability management and secure APIs
+- usability, flexibility, scalability, interoperability and cost efficiency
+- cache, rate limiting, checksum, integrity and reproducibility where relevant
+- latency vs throughput trade-offs chosen deliberately
+- CAP and consistency patterns made explicit when they matter
+- long polling vs WebSockets chosen deliberately when transport behavior matters
+- observability and operational simplicity
+
+Quality must live inside the slice, but it must not hide the folder/file/function story.
+
+## Functional Programming and Non-OOP Languages
+
+When a language or slice is not OOP-first, low-level design must be expressed as functional design with the same clarity bar.
+
+- use pure functions as the smallest meaningful design unit when possible
+- keep inputs explicit and outputs deterministic
+- isolate side effects at the edges
+- prefer immutable data and data transformation pipelines
+- compose behavior through modules, higher-order functions and explicit dependency passing
+- if a feature slice is sequential, a pipeline root still owns the flow
+- if a feature slice is not sequential, use the smallest root composition unit that makes the whole slice obvious
+
+In non-OOP environments, LLD becomes functional clarity, not a weaker version of architecture.
+
 ## Anti-Patterns
 
 Do not introduce these unless there is a very strong reason:
@@ -1047,6 +1105,8 @@ Do not introduce these unless there is a very strong reason:
 - `manager`
 - `service`
 - `controller`
+
+Avoid tight coupling, premature reuse, over-engineering and insufficient abstraction.
 
 ## Standard
 
@@ -1068,33 +1128,33 @@ How a lesson becomes animated is documented in [LESSON_AUTHORING.md](/home/shoms
 === LESSON_AUTHORING.md ===
 # Lesson Authoring
 
-Ovaj fajl je praktični ugovor za pretvaranje sadržaja u animiranu `Step By Step Animator` lekciju.
+This file is the practical contract for converting content into an animated `Step By Step Animator` lesson.
 
-## 1. Suština
+## 1. Essence
 
-Lekcija nije običan tekst i nije statičan tutorial.
+A lesson is not ordinary text and is not a static tutorial.
 
-Lekcija mora da se ponaša kao da gledaš programera preko share screen-a:
+The lesson must behave like you're watching a programmer over share screen:
 
-- HTML se dodaje element po element
-- CSS se dodaje property po property
-- kada lekcija to traži, JavaScript se dodaje akciju po akciju
-- preview prikazuje tačno isti kumulativni HTML/CSS/JS koji je trenutno napisan
-- svaka promena mora da bude vizuelno jasna i verbalno objašnjiva
-- kod Web Components lekcija, prvo JavaScript mora da napravi stvarni renderovani DOM, pa tek onda CSS treba da ga stilizuje
+- HTML is added element by element
+- CSS is added property by property
+- when the lesson requires it, JavaScript is added action by action
+- preview shows exactly the same cumulative HTML/CSS/JS that is currently written
+- every change must be visually clear and verbally explainable
+- for Web Components lessons, JavaScript must first create the actual rendered DOM, only then CSS should style it
 
-Ako sadržaj ne može da se razbije na takve male, čitljive korake, još nije spreman za ovu vrstu animacije.
+If content cannot be broken into such small, readable steps, it's not ready for this type of animation yet.
 
-## 2. Gde ide nova lekcija
+## 2. Where New Lesson Goes
 
-Svaka nova lekcija ide u svoj folder pod:
+Every new lesson goes in its own folder under:
 
 ```txt
 lessons/
   feature-name/
 ```
 
-Minimalni shape:
+Minimal shape:
 
 ```txt
 lessons/
@@ -1119,217 +1179,217 @@ lessons/
           shadow-dom-style.css.md
 ```
 
-## 3. Šta svaki fajl radi
+## 3. What Each File Does
 
 `feature-name.lesson.js`
 
-- sastavlja lesson contract
-- povezuje markdown metadata
-- povezuje step script
-- povezuje HTML/CSS builder funkcije
-- kada lekcija to traži, povezuje i JS builder funkciju
-- kada lekcija to traži, povezuje i poseban template JS builder
-- kada lekcija to traži, povezuje i poseban shadow CSS builder
-- opciono povezuje referentnu sliku cilja i homework napomene za shell
+- assembles the lesson contract
+- connects markdown metadata
+- connects step script
+- connects HTML/CSS builder functions
+- when lesson requires it, also connects JS builder function
+- when lesson requires it, also connects special template JS builder
+- when lesson requires it, also connects special shadow CSS builder
+- optionally connects reference goal image and homework notes for shell
 
 `describe-steps.js`
 
-- opisuje ceo teaching tok
-- svaki step mora da ima jasan naslov, opis, tag i pro tip
-- HTML step i CSS step moraju da budu odvojeni i precizni
+- describes the entire teaching flow
+- each step must have clear title, description, tag and pro tip
+- HTML step and CSS step must be separated and precise
 
 `build-html-at-step.js`
 
-- ostaje tanak adapter preko `html.timeline.md`
-- vraća kompletan kumulativni HTML za dati step
-- ne vraća diff
-- preview se hrani direktno iz ovog output-a
+- remains a thin adapter over `html.timeline.md`
+- returns complete cumulative HTML for given step
+- does not return diff
+- preview is fed directly from this output
 
 `build-css-at-step.js`
 
-- ostaje tanak adapter preko `css.rules.md`
-- vraća kompletan kumulativni CSS za dati step
-- ne vraća diff
-- CSS ide property po property
+- remains a thin adapter over `css.rules.md`
+- returns complete cumulative CSS for given step
+- does not return diff
+- CSS goes property by property
 
 `build-js-at-step.js`
 
-- koristiš ga samo kada lekcija zaista ima JavaScript fajl
-- ostaje tanak adapter preko `js.timeline.md`
-- vraća kompletan kumulativni JS za dati step
-- ne vraća diff
-- JS mora da raste akciju po akciju i da ostane izvršiv na svakom koraku
+- use it only when lesson actually has a JavaScript file
+- remains a thin adapter over `js.timeline.md`
+- returns complete cumulative JS for given step
+- does not return diff
+- JS must grow action by action and remain executable at every step
 
 `build-shadow-css-at-step.js`
 
-- koristiš ga samo kada lekcija zaista odvaja shadow DOM CSS u poseban fajl
-- ostaje tanak adapter preko `shadow-dom-style.css.md`
-- vraća kompletan kumulativni shadow CSS za dati step
-- ne vraća diff
-- shadow CSS i dalje ide property po property
+- use it only when lesson actually separates shadow DOM CSS into a separate file
+- remains a thin adapter over `shadow-dom-style.css.md`
+- returns complete cumulative shadow CSS for given step
+- does not return diff
+- shadow CSS still goes property by property
 
 `build-template-js-at-step.js`
 
-- koristiš ga samo kada lekcija zaista odvaja template markup u poseban JS modul
-- ostaje tanak adapter preko `template-js.timeline.md`
-- vraća kompletan kumulativni template JS za dati step
-- ne vraća diff
-- služi za slučajeve kao `component.html.js`
+- use it only when lesson actually separates template markup into a separate JS module
+- remains a thin adapter over `template-js.timeline.md`
+- returns complete cumulative template JS for given step
+- does not return diff
+- used for cases like `component.html.js`
 
 `content/documents/files/lesson.sr.md`
 
-- drži title, intro i metadata
+- holds title, intro and metadata
 
 `content/documents/files/html.timeline.md`
 
-- drži HTML timeline blokove u fenced `json` formatu
-- svaki blok kaže od kog stepa postoji i u koji slot se ubacuje
+- holds HTML timeline blocks in fenced `json` format
+- each block says from which step it exists and into which slot it's inserted
 
 `content/documents/files/css.rules.md`
 
-- drži CSS rule blokove u fenced `json` formatu
-- svaki blok kaže koji selector otvaramo i koje property linije se vide po step-u
+- holds CSS rule blocks in fenced `json` format
+- each block says which selector we're opening and which property lines are visible per step
 
 `content/documents/files/js.timeline.md`
 
-- drži opcioni JavaScript timeline u fenced `json` formatu
-- koristi se samo kada lekcija zaista ima JS panel i live izvršavanje
+- holds optional JavaScript timeline in fenced `json` format
+- used only when lesson actually has JS panel and live execution
 
 `content/documents/files/template-js.timeline.md`
 
-- drži opcioni template JS source u fenced `json` formatu
-- koristi se samo kada lekcija odvaja template markup u poseban modul
+- holds optional template JS source in fenced `json` format
+- used only when lesson separates template markup into a separate module
 
 `content/documents/files/shadow-dom-style.css.md`
 
-- drži opcioni shadow DOM CSS source u fenced `json` formatu
-- koristi se samo kada lekcija zaista ima odvojen shadow CSS fajl i četvrti editor panel
+- holds optional shadow DOM CSS source in fenced `json` format
+- used only when lesson actually has a separated shadow CSS file and fourth editor panel
 
 `content/assets/feature-goal.svg`
 
-- opciona referentna slika koja pokazuje šta gradimo
-- može da sadrži i homework varijante koje za sada ne implementiramo
+- optional reference image showing what we're building
+- may also contain homework variants that we don't implement yet
 
-## 4. Pravila za animirani lesson flow
+## 4. Rules for Animated Lesson Flow
 
-### 4.1 Početak
+### 4.1 Beginning
 
-Ako lekcija gradi komponentu, kreni od najmanjeg neutralnog početka.
+If the lesson builds a component, start from the smallest neutral beginning.
 
-Za layout ili komponentu to je najčešće:
+For layout or component that's most often:
 
 ```html
 <div class="app-shell">
 ```
 
-Nemoj rano ubacivati filler sadržaj koji lekcija ne objašnjava.
+Don't insert early filler content that the lesson doesn't explain.
 
-### 4.2 HTML pravila
+### 4.2 HTML Rules
 
-HTML piši element po element.
+Write HTML element by element.
 
-Dobro:
+Good:
 
-1. dodaj root wrapper
-2. dodaj glavni semantic element
-3. dodaj child zonu
-4. dodaj child element
-5. dodaj labelu ili copy
+1. add root wrapper
+2. add main semantic element
+3. add child zone
+4. add child element
+5. add label or copy
 
-Loše:
+Bad:
 
-- ubaciti ceo gotov DOM odjednom
-- preskočiti međukorake koje preview treba da pokaže
+- insert entire finished DOM at once
+- skip intermediate steps that preview should show
 
-### 4.3 CSS pravila
+### 4.3 CSS Rules
 
-CSS piši property po property.
+Write CSS property by property.
 
-Dobro:
+Good:
 
-1. dodaj privremeni helper border ili outline da element odmah postane vidljiv
-2. dodaj veličinu ili spacing
-3. dodaj raspored
-4. dodaj boje i polish
-5. zadrži helper outline kroz ceo teaching tok za taj element
-6. ukloni helper outline tek u završnom rezime koraku za taj element ili celinu
+1. add temporary helper border or outline so element becomes immediately visible
+2. add size or spacing
+3. add layout
+4. add colors / polish
+5. keep helper outline through the entire teaching flow for that element
+6. remove helper outline only in the final summary step for that element or unit
 
-Loše:
+Bad:
 
-- nalepiti ceo selector blok odjednom
-- dodati polish pre nego što je footprint elementa jasan
+- paste entire selector block at once
+- add polish before the element's footprint is clear
 
-### 4.4 Helper stilovi
+### 4.4 Helper Styles
 
-Kad je neka celina tek u izgradnji, helper linije su obavezne ako pomažu orijentaciji.
+When some unit is still under construction, helper lines are mandatory if they help orientation.
 
-Pravila:
+Rules:
 
-- helper outline ili border uvodi se rano
-- `.app-shell` takođe mora da dobije svoj tanak helper outline i da ga zadrži kroz celu lekciju, sve do završnog shell rezimea
-- svaki pod-element iste celine treba da ima svoj tanak helper outline
-- svaki pod-element iste celine može imati svoju helper boju
-- helper stilovi ostaju aktivni do završnog rezime koraka za taj element ili celinu
-- završni rezime korak tek tada uklanja helper stilove
+- helper outline or border is introduced early
+- `.app-shell` must also get its thin helper outline and keep it through the entire lesson, until the final shell summary
+- each sub-element of the same unit should have its own thin helper outline
+- each sub-element of the same unit may have its own helper color
+- helper styles stay active until the final summary step for that element or unit
+- final summary step only then removes helper styles
 
-Step opis mora to i da kaže:
+Step description must say this:
 
-- kada uvodiš helper stil: `Dodajemo privremeni pomoćni border radi lakšeg snalaženja, kasnije ćemo ga ukloniti.`
-- kada ga uklanjaš: `Uklanjamo privremeni pomoćni border, više nam ne treba.`
+- when introducing helper style: `We're adding a temporary helper border for easier orientation, we'll remove it later.`
+- when removing it: `We're removing the temporary helper border, we don't need it anymore.`
 
-### 4.4a HTML focus pravilo tokom CSS koraka
+### 4.4a HTML Focus Rule During CSS Steps
 
-Dok pišeš CSS za neki element, odgovarajući HTML target u editor panelu mora da bude jasno žuto istaknut.
+While writing CSS for some element, the corresponding HTML target in the editor panel must be clearly highlighted in yellow.
 
-To znači:
+This means:
 
-- CSS step ne naglašava samo novu CSS liniju
-- isti trenutak mora jasno da pokaže i koji HTML element je pod obradom
-- highlight mora da bude dovoljno upadljiv da se bez razmišljanja vidi o kom elementu govorimo
+- CSS step doesn't just highlight the new CSS line
+- the same moment must clearly show which HTML element is being worked on
+- highlight must be prominent enough to see without thinking which element we're talking about
 
-### 4.5 Preview integritet
+### 4.5 Preview Integrity
 
-Preview mora da bude stvarni rezultat istog koda koji se vidi u editor panelu.
+Preview must be the actual result of the same code shown in the editor panel.
 
-To znači:
+This means:
 
-- nema posebnog fake preview DOM-a
-- nema ručno režirane scene
-- nema CSS-a koji nije došao iz `build-css-at-step.js`
-- nema HTML-a koji nije došao iz `build-html-at-step.js`
-- kada lekcija ima JS, nema JavaScript-a koji nije došao iz `build-js-at-step.js`
+- no special fake preview DOM
+- no manually directed scene
+- no CSS that didn't come from `build-css-at-step.js`
+- no HTML that didn't come from `build-html-at-step.js`
+- when lesson has JS, no JavaScript that didn't come from `build-js-at-step.js`
 
-## 5. Kako razložiti sadržaj u steps
+## 5. How to Break Content Into Steps
 
-Pre nego što pišeš fajlove, sadržaj razloži ovim redom:
+Before writing files, break content in this order:
 
-1. Koji je konačni HTML?
-2. Koje su glavne vizuelne celine?
-3. Kojim redom korisnik treba da ih vidi da bi razumeo građenje?
-4. Koji je najmanji HTML korak koji još uvek ima smisla?
-5. Koji je najmanji CSS property korak koji pravi vidljivu ili logičku promenu?
+1. What is the final HTML?
+2. What are the main visual units?
+3. In what order should the user see them to understand the building?
+4. What is the smallest HTML step that still makes sense?
+5. What is the smallest CSS property step that makes a visible or logical change?
 
-Najčešći dobar redosled je:
+Most common good order is:
 
 1. root shell
-2. glavni semantic wrapper
-3. prva velika celina
-4. child elementi te celine
-5. helper stilovi za orijentaciju
-6. layout property-i
+2. main semantic wrapper
+3. first large unit
+4. child elements of that unit
+5. helper styles for orientation
+6. layout properties
 7. spacing
 8. colors / typography
 9. interaction states
-10. responsive pravila
+10. responsive rules
 11. done
 
-## 6. Markdown contract
+## 6. Markdown Contract
 
 `lesson.sr.md`:
 
 ```md
 ---
-title: Naslov lekcije
+title: Lesson Title
 previewAddress: browser://feature-preview
 previewTitle: Live feature preview
 htmlFileName: index.html
@@ -1339,12 +1399,12 @@ templateJsFileName: component.html.js
 shadowCssFileName: shadow-dom-style.css
 ---
 
-Kratak uvod u lekciju.
+Short intro to the lesson.
 ```
 
 `html.timeline.md`:
 
-````md
+`````md
 # HTML Timeline
 
 ```json
@@ -1360,11 +1420,11 @@ Kratak uvod u lekciju.
   }
 ]
 ```
-````
+`````
 
 `css.rules.md`:
 
-````md
+`````md
 # CSS Rule Blocks
 
 ```json
@@ -1378,11 +1438,11 @@ Kratak uvod u lekciju.
   }
 ]
 ```
-````
+`````
 
 `js.timeline.md`:
 
-````md
+`````md
 # JS Timeline
 
 ```json
@@ -1399,11 +1459,11 @@ Kratak uvod u lekciju.
   }
 ]
 ```
-````
+`````
 
 `template-js.timeline.md`:
 
-````md
+`````md
 # Template JS Timeline
 
 ```json
@@ -1417,11 +1477,11 @@ Kratak uvod u lekciju.
   }
 ]
 ```
-````
+`````
 
 `shadow-dom-style.css.md`:
 
-````md
+`````md
 # Shadow DOM CSS Rule Blocks
 
 ```json
@@ -1434,102 +1494,102 @@ Kratak uvod u lekciju.
   }
 ]
 ```
-````
+`````
 
-Pravila za DSL:
+DSL rules:
 
-- koristi jedan fenced `json` blok po dokumentu
-- `html.timeline.md` i `js.timeline.md` koriste `target` slot marker-e
-- `css.rules.md` koristi `header`, opcioni `showFrom` i `entries`
-- markdown DSL dokumenti su kanonski source step sadržaja; JS builder fajlovi ne smeju da dupliraju isti sadržaj ručno
+- use one fenced `json` block per document
+- `html.timeline.md` and `js.timeline.md` use `target` slot markers
+- `css.rules.md` uses `header`, optional `showFrom` and `entries`
+- markdown DSL documents are the canonical source of step content; JS builder files must not duplicate the same content manually
 
-## 6a. Goal image contract
+## 6a. Goal Image Contract
 
-Ako lesson ima referentni vizuelni cilj, taj deo ostaje u lesson JS contract-u jer je asset tehnički import.
+If the lesson has a reference visual goal, that part stays in the lesson JS contract because the asset is a technical import.
 
-Tipični optional fields u `feature-name.lesson.js`:
+Typical optional fields in `feature-name.lesson.js`:
 
 ```js
-goalTitle: 'Šta gradimo u ovoj lekciji',
+goalTitle: 'What we are building in this lesson',
 goalImageSrc: goalImage,
-goalImageAlt: 'Opis referentne slike',
-goalImageCaption: 'Šta tačno gradimo iz te reference',
-homeworkTitle: 'Domaći zadatak',
+goalImageAlt: 'Reference image description',
+goalImageCaption: 'What exactly we are building from that reference',
+homeworkTitle: 'Homework',
 homeworkItems: [
-  'Varijanta 2 ostaje za samostalnu vežbu.',
-  'Varijanta 3 ostaje za samostalnu vežbu.'
+  'Variant 2 remains for individual practice.',
+  'Variant 3 remains for individual practice.'
 ]
 ```
 
-## 7. Šta da kažeš AI-u
+## 7. What to Tell AI
 
-Ako želiš da AI pretvori sadržaj u lekciju, daj mu i cilj UI-ja i stroga pravila animacije.
+If you want AI to convert content into a lesson, give it both the UI goal and strict animation rules.
 
-Koristi ovaj template:
+Use this template:
 
 ```txt
-Pretvori ovo u Step By Step Animator lekciju.
+Convert this into a Step By Step Animator lesson.
 
-Cilj lekcije:
-- Napraviti [naziv komponente ili layouta]
-- Krajnji rezultat treba da izgleda kao [kratak opis]
+Lesson goal:
+- Make [component or layout name]
+- Final result should look like [short description]
 
 Repo contract:
-- root split je `animator/` i `lessons/`
-- novu lekciju dodaj pod `lessons/[feature-name]/`
-- napravi:
+- root split is `animator/` and `lessons/`
+- add new lesson under `lessons/[feature-name]/`
+- make:
   - `[feature-name].lesson.js`
   - `describe-steps.js`
   - `build-html-at-step.js`
   - `build-css-at-step.js`
-  - `build-js-at-step.js` kada lekcija traži JavaScript
+  - `build-js-at-step.js` when lesson requires JavaScript
   - `content/documents/files/lesson.sr.md`
   - `content/documents/files/html.timeline.md`
   - `content/documents/files/css.rules.md`
-  - `content/documents/files/js.timeline.md` kada lekcija traži JavaScript
-  - `content/assets/[feature-name]-goal.svg` kada postoji referentna slika
+  - `content/documents/files/js.timeline.md` when lesson requires JavaScript
+  - `content/assets/[feature-name]-goal.svg` when reference image exists
   - `content/documents/files/lesson.sr.md`
 
-Animaciona pravila:
-- HTML ide element po element
-- CSS ide property po property
-- kada lekcija traži JavaScript, dodaj ga akciju po akciju i drži ga izvršivim na svakom koraku
-- preview mora da bude hranjen iz istog kumulativnog HTML/CSS/JS output-a
-- kreni od neutralnog početka, najčešće `<div class="app-shell">`
-- ne ubacuj filler sadržaj koji lekcija ne objašnjava
-- uvodi helper bordere ili outlin-e rano ako element bez njih nije dovoljno vidljiv
-- svaki važan element treba da zadrži svoj tanak outline do završnog rezime koraka za taj element
-- rezime korak za element tek tada gasi outline
-- kada AI piše CSS korak, mora da označi i koji HTML target u editoru treba žuto da bude fokusiran
-- ako postoji referentna slika, lesson contract treba da je prikaže kroz goal card u shell-u
-- ako referentna slika sadrži dodatne varijante, one mogu da budu navedene kao homework umesto da se odmah implementiraju
-- helper stilovi ostaju dok se ne završi cela vizuelna celina
-- kada uvodiš helper stil, step opis mora da kaže da je privremen
-- kada uklanjaš helper stil, step opis mora da kaže da ga uklanjaš jer više nije potreban
-- svaka CSS promena mora da bude ili vizuelno jasna ili logički neophodna u tom trenutku
+Animation rules:
+- HTML goes element by element
+- CSS goes property by property
+- when lesson requires JavaScript, add it action by action and keep it executable at every step
+- preview must be fed from the same cumulative HTML/CSS/JS output
+- start from neutral beginning, most often `<div class="app-shell">`
+- don't insert filler content that the lesson doesn't explain
+- introduce helper borders or outlines early if element isn't visible enough without them
+- every important element should keep its thin outline until the final summary step for that element
+- summary step for element only then turns off outline
+- when AI writes CSS step, it must also mark which HTML target in the editor should be in yellow focus
+- if reference image exists, lesson contract should show it through goal card in shell
+- if reference image contains additional variants, they may be listed as homework instead of being implemented immediately
+- helper styles stay while the entire visual unit is not finished
+- when introducing helper style, step description must say it's temporary
+- when removing helper style, step description must say it's being removed because no longer needed
+- every CSS change must be either visually clear or logically necessary at that moment
 
-Authoring pravila:
-- folder kaže use case
-- file kaže jednu odgovornost
-- function kaže tačnu akciju
-- ne koristi generic nazive kao utils, helpers, common, service
-- ne lepi gotov stylesheet odjednom
-- ne lepi gotov HTML odjednom
-- builder JS fajlovi treba da ostanu tanki adapteri, ne novi ručni monoliti
+Authoring rules:
+- folder says use case
+- file says one responsibility
+- function says exact action
+- don't use generic names like utils, helpers, common, service
+- don't paste finished stylesheet at once
+- don't paste finished HTML at once
+- builder JS files should remain thin adapters, not new manual monoliths
 
-Isporuči output spreman za ovaj repo.
+Deliver output ready for this repo.
 ```
 
-## 8. Kratki filter pre svakog novog stepa
+## 8. Quick Filter Before Every New Step
 
-Pre nego što zadržiš step, proveri:
+Before keeping a step, check:
 
-- Da li ovaj step pravi jednu jasnu promenu?
-- Da li preview može jasno da pokaže tu promenu?
-- Da li bih mogao glasom da objasnim baš ovaj step bez skakanja?
-- Da li je ovo prirodan sledeći korak za čoveka koji uči?
+- Does this step make one clear change?
+- Can preview clearly show that change?
+- Could I explain this step by voice without jumping around?
+- Is this a natural next step for a learning human?
 
-Ako odgovor nije `da`, step treba razbiti ili pomeriti.
+If the answer is not `yes`, the step should be broken or moved.
 
 === TODO.md ===
 # Production Code Review: Lessons 07-08
@@ -1555,9 +1615,9 @@ content/documents/files/
 === animator/agents.md ===
 # Animator Architecture
 
-## Svrha
+## Purpose
 
-Ova dokumentacija definiše kanonsku arhitekturu za player runtime u `animator/` folderu.
+This document defines the canonical architecture for the player runtime in the `animator/` folder.
 
 ---
 
@@ -1625,92 +1685,92 @@ animator/
 ## Flow Responsibility
 
 ### `01-start-lesson/`
-Inicijalizuje lesson context:
-- `findLessonParts()` - pronalazi DOM elemente
-- `createLessonProgress()` - kreira progress state
-- `showLessonShell()` - renderuje lesson UI
+Initializes lesson context:
+- `findLessonParts()` - finds DOM elements
+- `createLessonProgress()` - creates progress state
+- `showLessonShell()` - renders lesson UI
 
 ### `02-follow-lesson/`
-Upravlja step navigacijom:
+Manages step navigation:
 - `listenForLessonKeys()` - keyboard input
 - `showActiveLessonPanel()` - panel visibility
 - `showCurrentStep()` - step content
 - `showStepTimeline()` - progress bar
 
 ### `03-watch-code/`
-Upravlja code editor panelom:
-- `showGrowingCode()` - prikazuje kumulativni kod
-- `scrollToAddedLine()` - scroll na novu liniju
+Manages code editor panel:
+- `showGrowingCode()` - displays cumulative code
+- `scrollToAddedLine()` - scroll to new line
 - `compareCodeLines()` - diff highlighting
 - `describeCssLineRole()` - code annotations
 
 ### `04-watch-preview/`
-Upravlja live preview-om:
-- `showCurrentPreview()` - renderuje kumulativni output
+Manages live preview:
+- `showCurrentPreview()` - renders cumulative output
 
 ### `05-download-lesson-files/`
-Upravlja download-om:
-- `downloadLessonFiles()` - generiše i preuzima fajlove
+Manages download:
+- `downloadLessonFiles()` - generates and downloads files
 
 ### `find-step/`
-Step pretraga:
-- `presentStepFinder()` - modal za pretragu
+Step search:
+- `presentStepFinder()` - search modal
 
 ### `save-step/`
 Bookmarks:
-- `readSavedStepNumbers()` - čita sačuvane step-ove
-- `writeSavedStepNumbers()` - piše sačuvane step-ove
-- `showSavedStepList()` - prikazuje listu
-- `rememberSavedSteps()` - logika čuvanja
+- `readSavedStepNumbers()` - reads saved steps
+- `writeSavedStepNumbers()` - writes saved steps
+- `showSavedStepList()` - displays list
+- `rememberSavedSteps()` - save logic
 
 ### `choose-theme/`
-Temiranje:
-- `chooseTheme()` - menja izgled
+Theming:
+- `chooseTheme()` - changes appearance
 
 ### `listen-to-step/`
-Naracija:
-- `composeStepNarrationText()` - priprema tekst
-- `presentStepNarration()` - prikazuje naraciju
+Narration:
+- `composeStepNarrationText()` - prepares text
+- `presentStepNarration()` - displays narration
 - `speakWithBrowserVoice()` - TTS
-- `readStepNarrationPreferences()` - čita preferencije
-- `writeStepNarrationPreferences()` - piše preferencije
+- `readStepNarrationPreferences()` - reads preferences
+- `writeStepNarrationPreferences()` - writes preferences
 
 ---
 
 ## Pipeline Responsibility
 
-`play-lesson.pipeline.js` je composition root. Ne sme da:
-- sadrži business logiku
-- direktno manipuliše DOM-om
-- parsira lesson content
+`play-lesson.pipeline.js` is the composition root. It must not:
+- contain business logic
+- directly manipulate DOM
+- parse lesson content
 
-Samo orkestrira tok i prosleđuje dependencies.
+Only orchestrates flow and passes dependencies.
 
 ---
 
 ## Document Tooling Responsibility
 
-`lesson-documents/` moduli su read-only pipeline:
-- Čitaju Markdown fajlove
-- Parsiraju timeline i rule blokove
-- Vraćaju struktuirane podatke
+`lesson-documents/` modules are read-only pipeline:
+- Read Markdown files
+- Parse timeline and rule blocks
+- Return structured data
 
-Ne mutiraju fajlove direktno. `sync-lesson-documents.js` je build script, ne runtime.
+They don't mutate files directly. `sync-lesson-documents.js` is a build script, not runtime.
 
 ---
 
 ## Prohibited Patterns
 
-- Ne dodavati nove brojeve folderima bez jasnog toka
-- Ne koristiti `manager`, `handler`, `service` kao imena
-- Ne mešati orchestration sa business logic
-- Ne koristiti globalne `window`, `document` u dubljim modulima
+- Don't add new numbers to folders without clear flow
+- Don't use `manager`, `handler`, `service` as names
+- Don't mix orchestration with business logic
+- Don't use global `window`, `document` in deeper modules
 
 ---
 
 ## Dependency Injection
 
-Svi moduli primaju dependencies kao parametre:
+All modules receive dependencies as parameters:
 
 ```javascript
 export function showCurrentPreview({ ownerDocument, ownerWindow, lessonParts, lessonContract, currentStep }) {
@@ -1718,7 +1778,7 @@ export function showCurrentPreview({ ownerDocument, ownerWindow, lessonParts, le
 }
 ```
 
-Izuzeci za low-level primitives (fetch, URL parsing) moraju biti eksplicitno dokumentovani.
+Exceptions for low-level primitives (fetch, URL parsing) must be explicitly documented.
 
 === animator/choose-lesson/present-lesson-picker.js ===
 export function presentLessonPicker({
@@ -6635,166 +6695,185 @@ export function writeSavedStepNumbers({ lessonId, savedStepNumbers }) {
 }
 
 === arch-greske.md ===
-# Arhitektonske greške u Step By Step Animator sistemu
+# Architectural Issues in Step By Step Animator System
 
-## 1. Masovno dupliranje koda (Copy-Paste Architecture)
+## 1. Mass Code Duplication (Copy-Paste Architecture)
 
-Datoteke `build-css-at-step.js` i `build-html-at-step.js` su identične u gotovo svim lekcijama. To je direktno kršenje DRY principa – svaka promena u logici generisanja zahteva izmene na osam različitih mesta.
+Files `build-css-at-step.js` and `build-html-at-step.js` are identical in almost all lessons. This is a direct violation of the DRY principle - every change in generation logic requires modifications in eight different places.
 
-## 2. Mešanje sadržaja i infrastrukture
+## 2. Mixing Content and Infrastructure
 
-Folder `lessons/` sadrži i podatke (Markdown, SVG) i logiku procesiranja. Bolja arhitektura bi podrazumevala da su lekcije "pasivni" podaci, dok bi motor u `animator/` bio zadužen za njihovu interpretaciju.
+The `lessons/` folder contains both data (Markdown, SVG) and processing logic. A better architecture would imply that lessons are "passive" data, while the engine in `animator/` would be responsible for their interpretation.
 
-## 3. Manuelna registracija lekcija (Bottleneck)
+## 3. Manual Lesson Registration (Bottleneck)
 
-`lessons/register-lessons.js` zahteva ručni unos svake nove lekcije, što otežava skaliranje i povećava rizik od grešaka pri spajanju koda.
+`lessons/register-lessons.js` requires manual entry of every new lesson, which hinders scaling and increases the risk of errors during code merging.
 
-## 4. Nedostatak formalne šeme
+## 4. Lack of Formal Schema
 
-Lekcije su definisane kao labavi objekti bez stroge validacije, pa je lako izostaviti obavezna polja (poput `tag` ili `id`).
+Lessons are defined as loose objects without strict validation, making it easy to omit required fields (such as `tag` or `id`).
 
-## 5. Rigidna struktura pajplajna
+## 5. Rigid Pipeline Structure
 
-Organizacija `play-lesson.pipeline.js` u numerisane foldere (01-05) sugeriše fiksni tok, što otežava dodavanje novih funkcionalnosti ili promenu redosleda bez "lomljenja" strukture.
+Organizing `play-lesson.pipeline.js` into numbered folders (01-05) suggests a fixed flow, making it difficult to add new functionality or change the order without "breaking" the structure.
 
-## 6. Redundantna transformacija
+## 6. Redundant Transformation
 
-Logika poput `stepNumberById` se ponavlja u svakoj lekciji, iako je to generička funkcija koja pripada motoru aplikacije.
+Logic like `stepNumberById` is repeated in every lesson, although it is a generic function that belongs in the application engine.
 
-## Preporuke
+## Recommendations
 
-- Centralizovati logiku bildera u `animator/`
-- Automatizovati učitavanje lekcija preko dinamičkih importa
-- Razdvojiti čiste podatke lekcija od koda koji ih izvršava
-
----
-
-# Dodatne arhitektonske greške (nezavisno od AGENTS pravila)
-
-## 1. `playLesson()` je centralni "god orchestrator"
-
-U jednom mestu radi composition root, state management, event wiring, playback policy, render refresh, bookmarks, theme i naraciju. To znači da je flow jasan na papiru, ali u praksi je veliki deo sistema zbijen u jednu funkciju koja zna previše i upravlja skoro svime. To je prvi kandidat za pucanje kad dodaš još capability-ja.
-
-## 2. Preview sloj nije čist runtime, nego string-based pseudo bundler
-
-`showCurrentPreview()` i pomoćne funkcije rade regex i string surgery nad JS-om: inline-uju shadow CSS import, prepravljaju `export const` u `const`, uklanjaju template import i onda sve guraju u `srcdoc`. To radi dok je shape koda "poslušan", ali je krhko i arhitektonski znači da preview nije isti execution model kao stvarni fajlovi, nego reinterpretacija istih. To je ozbiljan integrity risk.
-
-## 3. `showLessonShell()` ima previše odgovornosti
-
-Taj modul ne prikazuje samo shell. On odlučuje koje fajl pane-ove lekcija ima, gradi IDE file tab model, menja aktivne pane-ove, puni intro/goal/homework, menja labels i title dokumenta, i još veže tab switching ponašanje. To je mešanje projection logike, capability detection-a i view behavior-a u jednom mestu.
-
-## 4. Pedagoški metadata curi u runtime kontrolu
-
-`showGrowingCode()` bira aktivni editor pane na osnovu `step.tag`, i to preko `step.tag.split(':')[0]` i `TAG_TO_PANE` mape. Znači `tag` više nije samo opisni teaching signal, nego upravlja UI state-om. To je tihi coupling između authoring sloja i playback UI-a. Kasnije će ti svaka promena step tag vokabulara imati i behavioral side effect.
-
-## 5. Arhitektura glumi dependency injection, ali browser globali cure svuda
-
-U vrhu sistema lepo prosleđuješ `ownerDocument`, `ownerWindow` i `ownerLocation`, ali onda niži moduli koriste direktno globalni `window`, `document`, `URL` i `localStorage`. To se vidi u scroll helper-u, downloader-u, theme storage-u, saved-steps storage-u i narration preferences storage-u. To ruši konzistentnost boundary-ja i otežava testiranje, iframe/embedded scenarije i eventualni portability.
-
-## 6. Granica između "shipped", "draft" i "broken" lekcija ne postoji
-
-`TODO.md` eksplicitno kaže da je Lesson 07 "Content Broken", da su markdown fajlovi truncated/broken i da je `07_more_separation_of_code.md` generičan/stale. Istovremeno, stvarni metadata za lesson 07 već kaže da je to `UI User Avatar`, a u istom folderu i dalje postoji generated dokument za staru lekciju `07-more-separation-of-code`. Uz to, `register-lessons.js` tu lekciju normalno registruje kao deo aktivnog lesson seta. To znači da runtime nema release gate, a document pipeline ne čisti obsolete generated output.
-
-## 7. `sync-lesson-documents.js` generiše output, ali nema strategiju za uklanjanje zastarelih generated fajlova
-
-Skripta samo uzima ime foldera i upisuje odgovarajući generated markdown. Ne vidi se nikakav cleanup legacy generated dokumenata. Zato ti je sasvim moguće da posle rename-a ili promene identiteta lekcije u folderu ostane i novi i stari generated artifact, što se ovde već desilo.
-
-## 8. Shell DOM contract je previše rigidan i centralizovan u jednom ogromnom "parts bag"-u
-
-`findLessonParts()` vraća ogromnu kolekciju gotovo svih elemenata iz cele aplikacije. To je praktično implicitni schema contract između HTML shell-a i ostatka runtime-a. Problem nije samo veličina, nego to što svaki novi UI capability širi isti shared object i povećava coupling kroz ceo player.
+- Centralize builder logic in `animator/`
+- Automate lesson loading via dynamic imports
+- Separate pure lesson data from the code that executes them
 
 ---
 
-## Zaključak
+# Additional Architectural Issues (independent of AGENTS rules)
 
-Arhitektura ima dobru **nameru** i dobar **naming sloj**, ali ispod toga već kreće da se pojavljuje nekoliko tipičnih pucanja:
+## 1. `playLesson()` is the central "god orchestrator"
 
-- orchestration se sabija u jedan centar
-- authoring metadata počinje da upravlja runtime-om
-- preview radi preko string trikova umesto stabilnog execution modela
-- boundaries prema browser okruženju nisu dosledne
-- content pipeline nema status model ni cleanup disciplinu
+In one place it does composition root, state management, event wiring, playback policy, render refresh, bookmarks, theme and narration. This means the flow is clear on paper, but in practice a large part of the system is crammed into one function that knows too much and controls almost everything. This is the first candidate to break when you add more capabilities.
 
-**Najkritičniji problemi nisu estetski.** To su **preview transpilation hack**, **nedefinisana granica draft/shipped content-a** i **centralizovani `playLesson()`**.
+## 2. Preview layer is not a clean runtime, but a string-based pseudo bundler
+
+`showCurrentPreview()` and helper functions do regex and string surgery on JS: inlining shadow CSS imports, rewriting `export const` to `const`, removing template imports and then pushing everything to `srcdoc`. This works as long as the code shape is "obedient", but it's fragile and architecturally means that preview is not the same execution model as real files, but a reinterpretation of them. This is a serious integrity risk.
+
+## 3. `showLessonShell()` has too many responsibilities
+
+That module doesn't just display the shell. It decides which file panes the lesson has, builds the IDE file tab model, switches active panes, fills intro/goal/homework, changes labels and document title, and also ties tab switching behavior. This is mixing projection logic, capability detection and view behavior in one place.
+
+## 4. Pedagogical metadata leaks into runtime control
+
+`showGrowingCode()` selects the active editor pane based on `step.tag`, via `step.tag.split(':')[0]` and `TAG_TO_PANE` map. This means `tag` is no longer just a descriptive teaching signal, but controls UI state. This is a silent coupling between the authoring layer and playback UI. Later, every change in step tag vocabulary will also have a behavioral side effect.
+
+## 5. Architecture pretends dependency injection, but browser globals leak everywhere
+
+At the top of the system you nicely pass `ownerDocument`, `ownerWindow` and `ownerLocation`, but then lower modules directly use global `window`, `document`, `URL` and `localStorage`. This is seen in scroll helper, downloader, theme storage, saved-steps storage and narration preferences storage. This breaks boundary consistency and makes testing, iframe/embedded scenarios and eventual portability difficult.
+
+## 6. Boundary between "shipped", "draft" and "broken" lessons does not exist
+
+`TODO.md` explicitly says that Lesson 07 is "Content Broken", that markdown files are truncated/broken and that `07_more_separation_of_code.md` is generic/stale. At the same time, actual metadata for lesson 07 already says it is `UI User Avatar`, and in the same folder there still exists a generated document for the old lesson `07-more-separation-of-code`. Additionally, `register-lessons.js` normally registers that lesson as part of the active lesson set. This means runtime has no release gate, and the document pipeline does not clean obsolete generated output.
+
+## 7. `sync-lesson-documents.js` generates output, but has no strategy for removing obsolete generated files
+
+The script just takes the folder name and writes the corresponding generated markdown. No cleanup of legacy generated documents is visible. This makes it entirely possible that after a rename or change of lesson identity in the folder, both new and old generated artifacts remain, which has already happened here.
+
+## 8. Shell DOM contract is too rigid and centralized in one huge "parts bag"
+
+`findLessonParts()` returns a huge collection of almost all elements from the entire application. This is practically an implicit schema contract between the HTML shell and the rest of the runtime. The problem is not just the size, but that every new UI capability expands the same shared object and increases coupling throughout the player.
+
+---
+
+## Conclusion
+
+The architecture has good **intent** and good **naming layer**, but below that several typical cracks are starting to appear:
+
+- orchestration is crammed into one center
+- authoring metadata starts to control runtime
+- preview works via string tricks instead of a stable execution model
+- boundaries to the browser environment are not consistent
+- content pipeline has no status model or cleanup discipline
+
+**The most critical problems are not aesthetic.** They are **preview transpilation hack**, **undefined draft/shipped content boundary** and **centralized `playLesson()`**.
 
 === architecture-standard.md ===
 # Universal Architecture Standard
 
-## Svrha
+## Purpose
 
-Ovaj dokument definiše pragmatična arhitektonska pravila za organizaciju koda, foldera, fajlova i funkcija tako da repo bude prediktivan, čitljiv i održiv u bilo kom jeziku, framework-u ili projektu.
+This document defines pragmatic architectural rules for organizing code, folders, files and functions so that the repo is predictable, readable and maintainable in any language, framework or project.
 
-Cilj nije da arhitektura izgleda pametno.
-Cilj je da bude banalno jasna, stabilna i laka za razvoj kroz vreme.
+The goal is not for the architecture to look smart.
+The goal is for it to be banally clear, stable and easy to develop over time.
 
-Najkraće rečeno:
+In the shortest terms:
 
-- **folder kaže tok ili capability**
-- **file kaže odgovornost**
-- **function kaže tačnu akciju**
+- **folder says flow or capability**
+- **file says responsibility**
+- **function says exact action**
 
-Repo treba da se čita kao priča sistema, a ne kao skladište tehničkih fioka.
+The repo should read like a story of the system, not like a warehouse of technical drawers.
 
-## Opseg
+This standard is intentionally vertical-slice and feature-first.
+It is designed to keep the surface absurdly simple while still carrying enterprise-grade quality underneath.
 
-Ovo je reusable baseline standard.
+## Scope
 
-- važi za bilo koji projekat, jezik ili framework
-- project-level architecture dokumenti mogu da ga suze i konkretizuju
-- project-level dokumenti ne smeju da ga oslabe
-- ako je potreban izuzetak, on mora da bude zapisan u repo-specifičnom architecture dokumentu
-- ovo nije workflow contract; workflow pripada repo-operativnim dokumentima
+This is a reusable baseline standard.
+
+- applies to any project, language or framework
+- project-level architecture documents may narrow and concretize it
+- project-level documents must not weaken it
+- if an exception is needed, it must be recorded in the repo-specific architecture document
+- this is not a workflow contract; workflow belongs in repo-operative documents
+
+## Vertical Slice Intent
+
+This standard treats the repo as a vertical slice system.
+
+- feature-first is the default orientation
+- the same reading model applies to business features and technical slices
+- each slice should be understandable from root entry to final effect
+- folder names should communicate business flow or technical capability
+- file names should communicate responsibility
+- function names should communicate exact action
+- a reader should be able to predict the purpose of a folder, file or function before opening it
+- the same flow-first reading order must work for the product app and for the technical runtime
+- the reader should be able to follow the business flow from the first feature to the last feature without changing the mental model
 
 ---
 
-## Osnovna ideja
+## Core Idea
 
-Arhitektura se organizuje po sledećem principu:
+The architecture is organized by the following principle:
 
 **flow -> feature slice -> file -> function**
 
-Ali ovo pravilo se primenjuje razumno, ne religiozno.
+But this rule is applied reasonably, not religiously.
 
-Tačnija verzija glasi:
+More accurate version:
 
-- **na nivou proizvoda ili aplikacije:** flow-first
-- **na nivou feature-a:** slice-first
-- **unutar feature-a:** responsibility-first
-- **na nivou funkcija i metoda:** action-first
+- **at product or application level:** flow-first
+- **at feature level:** slice-first
+- **within feature:** responsibility-first
+- **at function and method level:** action-first
 
-To znači da spolja vidiš tok sistema, a iznutra jasne odgovornosti.
-
----
-
-## Tri vrste pravila koje se ne smeju mešati
-
-### 1. Pravila strukture
-Kako repo izgleda i kako se čita.
-
-### 2. Pravila dizajna
-Kako se dele odgovornosti, zavisnosti, reuse i granice između modula.
-
-### 3. Pravila kvaliteta sistema
-Performanse, sigurnost, skaliranje, observability, interoperabilnost, cache, troškovi i slično.
-
-Ovo mora biti razdvojeno.
-
-Na primer:
-
-- SOLID, DRY, KISS, YAGNI su pravila dizajna
-- OWASP, auth, encryption, rate limiting, cache, CAP, consistency patterns su kvalitet i tehnički zahtevi
-- folder struktura je zasebna disciplina
-
-Ako se sve pomeša u jedno pravilo, dokument postaje preširok i prestaje da vodi.
+This means you see the system flow from the outside, and clear responsibilities from the inside.
+This also means the same mental model works for both product-facing slices and technical slices.
 
 ---
 
-## Glavna arhitektonska pravila
+## Three Types of Rules That Must Not Be Mixed
 
-### 1. Top-level struktura treba da viče šta sistem radi
-Ne organizovati repo po tehničkim slojevima kao podrazumevano pravilo.
+### 1. Structure Rules
+How the repo looks and how it reads.
 
-Dobar smer:
+### 2. Design Rules
+How responsibilities, dependencies, reuse and boundaries between modules are divided.
+
+### 3. System Quality Rules
+Performance, security, scaling, observability, interoperability, cache, costs and similar.
+
+These must be separated.
+
+For example:
+
+- SOLID, DRY, KISS, YAGNI are design rules
+- Composition over inheritance, Law of Demeter, clean code principles and LLD are design rules
+- OWASP, auth, authorization, encryption, vulnerability management, secure APIs, rate limiting, cache, CAP, consistency patterns, latency vs throughput trade-offs, long polling vs WebSockets, usability, flexibility, scalability and cost efficiency are quality and technical requirements
+- folder structure is a separate discipline
+
+If everything is mixed into one rule, the document becomes too broad and stops guiding.
+
+---
+
+## Main Architectural Rules
+
+### 1. Top-level structure should shout what the system does
+Do not organize the repo by technical layers as the default rule.
+
+Good direction:
 
 ```text
 product/
@@ -6802,7 +6881,7 @@ system/
 foundation/
 ```
 
-ili:
+or:
 
 ```text
 create/
@@ -6812,7 +6891,7 @@ deploy/
 inspect/
 ```
 
-Lošiji smer kao default:
+Worse direction as default:
 
 ```text
 controllers/
@@ -6822,38 +6901,42 @@ utils/
 helpers/
 ```
 
-Ovo drugo govori kako je sistem tehnički iseckan.
-Prvo govori šta sistem radi.
+The latter talks about how the system is technically sliced.
+The former talks about what the system does.
 
 ---
 
-### 2. Svaki feature slice mora da ima jednog vlasnika toka u root-u
-U root-u svakog feature slice-a mora da postoji jedan glavni ulaz koji zaokružuje celu celinu.
+### 2. Each feature slice must have one flow owner at the root
+At the root of each feature slice there must be one main entry that wraps the whole thing.
 
-To može biti:
+This can be:
 
-- `*.pipeline` kada je tok sekvencijalan
-- `*.facade` kada feature nudi jednostavan ulaz u složenu unutrašnjost
-- `*.orchestrator` kada koordinira više tokova, grana ili događaja
-- banalno glavno ime, ako je to čitljivije od pattern naziva
+- `*.pipeline` when the flow is sequential
+- `*.facade` when the feature provides a simple entry into a complex interior
+- `*.orchestrator` when coordinating multiple flows, branches or events
+- a single root function or single root file when that is the clearest composition root
+- a banal main name, if it's more readable than a pattern name
 
-Poenta nije da se pattern koristi radi pattern-a.
-Poenta je da postoji jedno mesto koje jasno kaže:
+The point is not to use a pattern for the pattern's sake.
+The point is to have one place that clearly says:
 
-**odavde počinje ovaj feature**
+**from here this feature begins**
+**from here this feature is fully owned**
+
+If none of the named patterns is the clearest answer, use the smallest construct that can still own the whole feature slice.
 
 ---
 
-### 3. Podfolder postoji samo ako predstavlja stvarni korak ili stvarni podfeature
-Podfolder se ne uvodi da bi arhitektura delovala ozbiljno.
+### 3. Subfolder exists only if it represents a real step or real subfeature
+Subfolder is not introduced to make the architecture look serious.
 
-Podfolder postoji samo kada:
+Subfolder exists only when:
 
-- predstavlja stvarni korak u toku
-- predstavlja stvarni pod-capability
-- zaista smanjuje mentalni šum
+- it represents a real step in a flow
+- it represents a real sub-capability
+- it genuinely reduces mental noise
 
-Dobar primer:
+Good example:
 
 ```text
 deploy/
@@ -6862,7 +6945,7 @@ deploy/
   release/
 ```
 
-Loš primer:
+Bad example:
 
 ```text
 deploy/
@@ -6871,54 +6954,54 @@ deploy/
   managers/
 ```
 
-Ako dodatni folder ne pomaže čitanju, ne treba da postoji.
+If an extra folder doesn't help reading, it shouldn't exist.
 
 ---
 
-### 4. Svaki file nosi jednu odgovornost
-File ne treba da bude tematska kanta.
-Treba da nosi jednu jasnu odgovornost.
+### 4. Each file carries one responsibility
+File should not be a thematic bucket.
+It should carry one clear responsibility.
 
-Dobro:
+Good:
 
 - `read_release_request`
 - `build_release_bundle`
 - `verify_runtime_checksum`
 - `publish_release_proof`
 
-Lošije:
+Worse:
 
 - `deploy_utils`
 - `release_manager`
 - `misc_helpers`
 
-Ako ime fajla ne objašnjava zašto postoji, ime je loše ili je file preširok.
+If the filename doesn't explain why it exists, the name is bad or the file is too broad.
 
 ---
 
-### 5. Svaka function radi jednu tačnu akciju
-Function ili method moraju da imaju glagolsko ime koje govori tačno šta rade.
+### 5. Each function does one exact action
+Function or method must have a verb name that tells exactly what they do.
 
-Dobro:
+Good:
 
 - `readRequestedProfile`
 - `planDatabaseChanges`
 - `writeRuntimeManifest`
 - `verifyReleaseChecksum`
 
-Lošije:
+Worse:
 
 - `handle`
 - `process`
 - `execute`
 - `doWork`
 
-Generična imena su dozvoljena samo kada je kontekst ekstremno jasan.
+Generic names are allowed only when the context is extremely clear.
 
 ---
 
-### 6. Shared je poslednja opcija, ne prva
-Najveći neprijatelj ove arhitekture je rano izvlačenje svega u:
+### 6. Shared is the last option, not the first
+The biggest enemy of this architecture is early extraction of everything into:
 
 ```text
 shared/
@@ -6928,16 +7011,16 @@ helpers/
 misc/
 ```
 
-Takva mesta skoro uvek postanu tehnički otpad.
+Such places almost always become technical waste.
 
-Zajednički kod sme da postoji samo kada je:
+Shared code may exist only when it is:
 
-- stabilan
-- generički
-- bez product značenja
-- dosadan, ali koristan svima
+- stable
+- generic
+- without product meaning
+- boring but useful to everyone
 
-Dobar kandidati za to su:
+Good candidates are:
 
 - checksum
 - filesystem primitives
@@ -6947,52 +7030,55 @@ Dobar kandidati za to su:
 - process execution
 - id generation
 
-Ako nešto i dalje nosi product značenje, ne spada u shared.
+If something still carries product meaning, it doesn't belong in shared.
 
 ---
 
-### 7. Root feature mora da bude mali i čitljiv
-Kada se otvori root feature folder, odmah mora da bude jasno:
+### 7. Root feature must be small and readable
+When you open a root feature folder, it must immediately be clear:
 
-- koji je glavni ulaz
-- koji su glavni koraci
-- gde ideš dalje
+- what is the main entry
+- what are the main steps
+- where do you go next
 
-Root feature ne sme da izgleda kao registry haos sa gomilom nepovezanih fajlova.
+Root feature must not look like a registry chaos with a bunch of unrelated files.
 
 ---
 
-### 8. Pattern se bira po prirodi toka, ne po modi
-Pattern nije cilj. Jasnoća je cilj.
+### 8. Pattern is chosen by the nature of the flow, not by fashion
+Pattern is not the goal. Clarity is the goal.
 
-Koristi:
+Use:
 
 #### `pipeline`
-Kada postoji jasan sled koraka:
+When there is a clear sequence of steps:
 
-- A pa B pa C
-- jedan korak hrani sledeći
-- failure flow je uglavnom sekvencijalan
+- A then B then C
+- one step feeds the next
+- failure flow is mostly sequential
 
 #### `facade`
-Kada feature nije jedan tok nego jedan stabilan javni ulaz u više unutrašnjih stvari.
+When the feature is not one flow but one stable public entry into multiple internal things.
 
 #### `orchestrator`
-Kada postoji koordinacija više grana, događaja, paralelnih tokova ili više podflow-ova.
+When there is coordination of multiple branches, events, parallel flows or multiple subflows.
 
-#### banalno glavno ime
-Kada je feature mali i jednostavniji naziv je bolji od pattern naziva.
+#### banal main name
+When the feature is small and a simpler name is better than a pattern name.
 
-Ako pattern pravi više šuma nego koristi, ne treba ga koristiti.
+If a pattern makes more noise than it helps, it shouldn't be used.
 
 ---
 
-## Naming konvencija
+## Naming Convention
 
 ### Folder
-Folder treba da bude capability, korak ili tok.
+Folder should be capability, step or flow.
 
-Primeri:
+Names should be banal, intuitive, descriptive and predictable.
+They should read like plain language explanations, as if you were explaining the system to a child at a table.
+
+Examples:
 
 - `deploy`
 - `prepare`
@@ -7003,9 +7089,11 @@ Primeri:
 - `runtime`
 
 ### File
-File treba da bude glagol plus predmet odgovornosti.
+File should be verb plus object of responsibility.
 
-Primeri:
+The filename should tell why the file exists, not merely what bucket it belongs to.
+
+Examples:
 
 - `read_release_request`
 - `build_release_bundle`
@@ -7013,16 +7101,18 @@ Primeri:
 - `write_gateway_config`
 
 ### Function
-Function ili method treba da bude tačna akcija.
+Function or method should be exact action.
 
-Primeri:
+The function name should make the action obvious without opening the file.
+
+Examples:
 
 - `readReleaseRequest`
 - `buildReleaseBundle`
 - `verifyBundleIntegrity`
 - `writeGatewayConfig`
 
-Izbegavati kad god postoji bolje ime:
+Avoid whenever there's a better name:
 
 - manager
 - handler
@@ -7031,228 +7121,288 @@ Izbegavati kad god postoji bolje ime:
 - helper
 - util
 
-Ova imena često skrivaju da odgovornost nije jasno definisana.
+These names often hide that the responsibility is not clearly defined.
 
 ---
 
-## Pravila modularnosti
+## Quality Goals
+
+These are first-class goals, not optional polish:
+
+- SOLID
+- DRY
+- KISS
+- YAGNI
+- Composition over inheritance
+- Law of Demeter / principle of least knowledge
+- clean code principles
+- low-level design (LLD) clarity
+- performance as a first-class requirement
+- security by default
+- OWASP
+- authentication
+- authorization
+- data encryption
+- vulnerability management
+- secure APIs
+- usability
+- cost efficiency
+- interoperability
+- flexibility
+- scalability
+- cache only where it solves a real problem
+- rate limiting where resources are expensive or externally exposed
+- checksum and integrity where relevant
+- latency vs throughput trade-offs chosen deliberately
+- CAP and consistency patterns made explicit
+- long polling vs WebSockets chosen deliberately when transport behavior matters
+
+The standard goal is simple-looking architecture with enterprise-grade quality behind it.
+If a rule improves quality but makes the structure harder to read, it must be justified explicitly.
+
+## Modularity Rules
 
 ### 1. Composition over inheritance
-Prednost dati kompoziciji i saradnji malih modula.
+Give preference to composition and collaboration of small modules.
 
 ### 2. Law of Demeter
-Modul treba da zna što manje o unutrašnjosti drugih modula.
+Module should know as little as possible about the internals of other modules.
 
-### 3. Tight coupling je zabranjen
-Feature ne sme da zavisi od tuđe unutrašnje implementacije.
+### 3. Tight coupling is prohibited
+Feature must not depend on another feature's internal implementation.
 
-### 4. Reuse ne sme biti preuranjen
-Prerano deljenje koda često proizvodi loše apstrakcije.
+### 4. Reuse must not be premature
+Premature code sharing often produces bad abstractions.
 
-### 5. Abstrakcija mora da smanjuje šum
-Ako apstrakcija nije jasnija od konkretnog koda koji menja, loša je.
+### 5. Abstraction must reduce noise
+If an abstraction is not clearer than the concrete code it replaces, it's bad.
 
-### 6. Over-engineering je kvar
-Svaki dodatni sloj mora da opravda postojanje.
+### 6. Over-engineering is a defect
+Every additional layer must justify its existence.
 
----
+### 7. Reusability must be deliberate
+Do not ignore reusability when a primitive is stable, generic and clearly useful in more than one place.
 
-## Pravila kvaliteta koja prate arhitekturu
-
-Ova pravila nisu pravila folder strukture, ali moraju da prate svaki feature:
-
-- sigurnost po načelima najmanjeg potrebnog pristupa
-- jasno odvojena autentikacija i autorizacija
-- zaštita podataka u tranzitu i mirovanju kada je relevantno
-- validacija ulaza i saniranje izlaza
-- observability: logovi, metrike, tragovi, dijagnostika
-- performanse: razuman balans latencije i throughput-a
-- cache samo gde rešava realan problem
-- rate limiting gde postoji spoljašnji ili skup resurs
-- checksum, integritet i reproducibilnost gde imaju smisla
-- cost efficiency i operativna jednostavnost
-- interoperabilnost i evolutivnost interfejsa
-
-Poenta je sledeća:
-
-**kvalitet mora da živi unutar feature-a, ali ne mora da određuje njegov naziv foldera**
+### 8. Abstraction must be sufficient
+Insufficient abstraction is also a problem when it forces the same coupling, duplication or branching to repeat across slices.
 
 ---
 
-## Kada pravilo ne sme da se forsira
+## Quality Rules That Follow Architecture
 
-Ovaj standard je opšti. Ne sme se primenjivati slepo kada radi protiv jezika, ekosistema ili framework-a.
+These are not folder structure rules, but must follow every feature:
 
-### Opšte pravilo izuzetka
-Ako je ekosistem veoma idiomatičan i ima jake konvencije koje olakšavaju čitanje, debuggovanje, tool support i onboarding, te konvencije imaju prednost nad nasilnim preimenovanjem svega.
+- security by least-privilege principles
+- clearly separated authentication and authorization
+- data protection in transit and at rest when relevant
+- input validation and output sanitization
+- observability: logs, metrics, traces, diagnostics
+- performance: reasonable balance of latency and throughput, with latency vs throughput chosen deliberately
+- cache only where it solves a real problem
+- rate limiting where there is external or expensive resource
+- checksum, integrity and reproducibility where they make sense
+- cost efficiency and operational simplicity
+- interoperability and evolvability of interfaces
 
-Drugim rečima:
+The point is:
 
-**ne kršiti idiome jezika samo da bi arhitektonska doktrina izgledala dosledno**
+**quality must live within the feature, but doesn't have to determine its folder name**
 
 ---
 
-## Jezički i ekosistemski izuzeci
+## When a Rule Must Not Be Forced
+
+This standard is general. It must not be applied blindly when it works against language, ecosystem or framework.
+
+### General Exception Rule
+If the ecosystem is very idiomatic and has strong conventions that make reading, debugging, tool support and onboarding easier, those conventions take precedence over forcibly renaming everything.
+
+In other words:
+
+**don't break language idioms just so the architectural doctrine looks consistent**
+
+---
+
+## Language and Ecosystem Exceptions
+
+### Functional Programming and Non-OOP Languages
+Some languages and ecosystems are not class-first.
+
+In those cases, low-level design does not disappear.
+It moves into functional design with the same clarity bar.
+
+Rules:
+
+- use pure functions as the smallest meaningful design unit when possible
+- keep inputs explicit and outputs deterministic
+- isolate side effects at the edges
+- prefer immutable data and data transformation pipelines
+- keep modules small, composable and easy to test
+- use composition, higher-order functions and explicit dependency passing instead of class-based patterns
+- if a feature slice is sequential, a pipeline root still owns the flow
+- if a feature slice is not sequential, use the smallest root composition unit that makes the whole slice obvious
+
+**In non-OOP environments, LLD becomes functional clarity, not a weaker version of architecture.**
 
 ### Go
-Go voli male pakete, kratka imena i jaku vezu između package granice i odgovornosti.
+Go likes small packages, short names and strong connection between package boundary and responsibility.
 
-Pravila:
+Rules:
 
-- ne praviti duboku hijerarhiju bez potrebe
-- package ime treba da ostane kratko i idiomatično
-- ne forsirati sufikse kao `.pipeline.go` ako ruše idiom i otežavaju package čitanje
-- ako je `deploy_pipeline.go` čitljivo u timu, koristi ga
-- ako idiomatičnije rešenje glasi `deploy.go` unutar paketa `deploy`, prednost ima čitljivost u Go svetu
+- don't create deep hierarchy without need
+- package name should stay short and idiomatic
+- don't force suffixes like `.pipeline.go` if they break idiom and make package reading difficult
+- if `deploy_pipeline.go` is readable in the team, use it
+- if more idiomatic solution says `deploy.go` inside package `deploy`, readability in Go world takes precedence
 
-**Za Go je package granica važnija od preterano opisnog imena fajla.**
+**For Go, package boundary is more important than overly descriptive filename.**
 
 ---
 
-### Java i C#
-Ovi ekosistemi vole jasan namespace, tipove i često jaču vezu između klase i fajla.
+### Java and C#
+These ecosystems like clear namespaces, types and often stronger connection between class and file.
 
-Pravila:
+Rules:
 
-- ne lomiti idiom jedan glavni tip po fajlu kada je to standard projekta
-- feature slice može da živi kroz package ili namespace granice
-- root feature vlasnik može biti klasa tipa `DeployPipeline`, `DeployFacade` ili `DeployOrchestrator`
-- ne pokušavati da sve izgleda kao script-like file struktura ako ekosistem prirodno vodi ka tipovima
+- don't break idiom of one main type per file when it's the project standard
+- feature slice can live across package or namespace boundaries
+- root feature owner can be a class like `DeployPipeline`, `DeployFacade` or `DeployOrchestrator`
+- don't try to make everything look like script-like file structure if the ecosystem naturally leads to types
 
-**Za Java i C# feature se često prirodnije organizuje kroz package i tip, ne samo kroz file naziv.**
+**For Java and C#, feature is often more naturally organized through package and type, not just through filename.**
 
 ---
 
 ### Python
-Python voli čitljive module, pakete i često jednostavniju hijerarhiju.
+Python likes readable modules, packages and often simpler hierarchy.
 
-Pravila:
+Rules:
 
-- ne praviti nepotrebno duboke pakete
-- koristiti module sa jasnim imenima i male package celine
-- ne uvoditi apstraktne slojeve samo da bi struktura delovala enterprise
-- ako `deploy_pipeline.py` pomaže, koristi ga
-- ako je jednostavnije `deploy.py` u `deploy/` paketu, to je validno
+- don't create unnecessarily deep packages
+- use modules with clear names and small package units
+- don't introduce abstract layers just so the structure looks enterprise
+- if `deploy_pipeline.py` helps, use it
+- if simpler `deploy.py` in `deploy/` package is valid, that's valid
 
-**U Python-u je važnije da import path ostane prirodan nego da naziv svakog fajla nosi maksimalnu količinu reči.**
+**In Python, it's more important that import path stays natural than that every filename carries maximum words.**
 
 ---
 
 ### Rust
-Rust snažno vezuje strukturu za module, crate granice i eksplicitnost.
+Rust strongly ties structure to modules, crate boundaries and explicitness.
 
-Pravila:
+Rules:
 
-- poštovati idiome `mod`, `lib`, `main`, `crate` granica
-- ne praviti strukturu koja se bori protiv module system-a
-- feature slice može da bude crate, modul ili podmodul, zavisno od težine feature-a
-- koristiti odgovorne module pre nego folder dubinu radi folder dubine
+- respect idioms of `mod`, `lib`, `main`, `crate` boundaries
+- don't create structure that fights against the module system
+- feature slice can be a crate, module or submodule, depending on feature complexity
+- use responsible modules rather than folder depth for folder depth's sake
 
-**U Rust-u je granica modula često važnija od priče koju priča sam folder.**
-
----
-
-### JavaScript i TypeScript
-Ovi ekosistemi lako odu u haos bez dobre strukture, pa ovaj standard ovde često radi veoma dobro.
-
-Pravila:
-
-- feature-first struktura je uglavnom dobar izbor
-- izbegavati rano `utils`, `helpers`, `services` kao kante
-- za UI i Web Components držati jasne granice između shell, state, view, events i effects
-- za framework projekte poštovati i lokalne idiome ako donose tooling korist
-
-**U JS/TS svetu ovaj standard je često najprirodniji, ali ne treba praviti dubinu koja povećava skakanje kroz fajlove.**
+**In Rust, module boundary is often more important than the story the folder itself tells.**
 
 ---
 
-### Ruby, Elixir, Phoenix, Rails i slični opinionated framework-i
-Ovi ekosistemi često dolaze sa jakim conventions-over-configuration pravilima.
+### JavaScript and TypeScript
+These ecosystems easily go into chaos without good structure, so this standard often works very well here.
 
-Pravila:
+Rules:
 
-- ne lomiti framework očekivanja bez jakog razloga
-- feature slice uvoditi tamo gde ne ubija framework ergonomiju
-- ako framework snažno očekuje određena mesta za controller, view, model, job ili channel, poštovati ih
-- screaming architecture se može uvoditi kroz module, namespace-e i feature grupe, ne nužno kroz potpuno rušenje framework rasporeda
+- feature-first structure is usually a good choice
+- avoid early `utils`, `helpers`, `services` as buckets
+- for UI and Web Components, keep clear boundaries between shell, state, view, events and effects
+- for framework projects, also respect local idioms if they bring tooling benefit
 
-**Kad framework ima jake operativne konvencije, prvo sačuvati produktivnost tima, pa tek onda uvoditi sopstvenu doktrinu.**
-
----
-
-### Frontend UI projekti i component sistemi
-Kod UI sistema i design system-a ne treba silom praviti poslovni flow gde prirodno postoji component capability.
-
-Pravila:
-
-- feature folder može biti component ili capability
-- unutar komponente pratiti realne granice: shell, state, render, events, effects
-- ne praviti mikro-foldere ako jedna komponenta to ne zaslužuje
-- root component file mora jasno da kaže gde počinje komponenta
-
-**Kod komponenti je bolje: feature spolja, odgovornost iznutra.**
+**In JS/TS world this standard is often the most natural, but don't create depth that increases file jumping.**
 
 ---
 
-## Kako izgleda zdrava odluka
+### Ruby, Elixir, Phoenix, Rails and similar opinionated frameworks
+These ecosystems often come with strong conventions-over-configuration rules.
 
-### Dobar obrazac razmišljanja
+Rules:
 
-- Da li ovaj top-level folder priča priču sistema?
-- Da li ovaj feature ima jednog vlasnika toka?
-- Da li je ovaj podfolder stvarni korak ili stvarni podfeature?
-- Da li ovaj file nosi jednu jasnu odgovornost?
-- Da li function radi jednu tačnu akciju?
-- Da li nova apstrakcija smanjuje mentalni šum?
-- Da li kršim idiome jezika ili framework-a bez jakog razloga?
+- don't break framework expectations without strong reason
+- introduce feature slice where it doesn't kill framework ergonomics
+- if framework strongly expects certain places for controller, view, model, job or channel, respect them
+- screaming architecture can be introduced through modules, namespaces and feature groups, not necessarily through completely breaking framework layout
 
-Ako su odgovori jasni, struktura je dobra.
+**When framework has strong operational conventions, first preserve team productivity, then introduce your own doctrine.**
 
 ---
 
-## Crvene zastavice
+### Frontend UI Projects and Component Systems
+For UI systems and design systems, you shouldn't force business flow where component capability naturally exists.
 
-Ako vidiš ovo, arhitektura verovatno truli:
+Rules:
 
-- previše `shared`, `common`, `utils`, `helpers`
-- root feature sa previše nepovezanih fajlova
-- generična imena kao `manager`, `processor`, `handler`
-- podfolderi koji ne predstavljaju stvarne korake
-- duboka hijerarhija koja ne smanjuje šum
-- pattern izabran zbog mode, ne zbog prirode toka
-- feature koji zavisi od unutrašnjosti drugog feature-a
-- apstrakcije koje kriju jednostavne stvari umesto da ih pojasne
+- feature folder can be component or capability
+- within component, follow real boundaries: shell, state, render, events, effects
+- don't create micro-folders if one component doesn't deserve it
+- root component file must clearly say where the component begins
 
----
-
-## Sažetak standarda
-
-1. Repo se organizuje po tokovima i capability-jima, ne po tehničkim slojevima kao default-u.
-2. Svaki feature slice ima jednog vlasnika toka u root-u.
-3. Root feature koristi pipeline, facade, orchestrator ili banalno glavno ime, zavisno od prirode toka.
-4. Podfolder postoji samo ako predstavlja stvarni korak ili stvarni podfeature.
-5. Svaki file ima jednu odgovornost.
-6. Svaka function radi jednu tačnu akciju i nosi glagolsko ime.
-7. Shared se izbegava i koristi samo za istinski generičke tehničke primitive.
-8. Product ili app sloj priča priču sistema. Tehnički slojevi pričaju priču izvršavanja. Foundation nosi dosadne primitive.
-9. Pattern se bira po prirodi toka, ne po modi.
-10. Ako dodatni folder, file ili apstrakcija ne smanjuje mentalni šum, ne uvodi se.
-11. Idiomi jezika i framework-a imaju prednost kada bi rigidna primena ovog standarda pogoršala čitljivost ili tooling.
-12. Krajnji cilj nije složenost. Krajnji cilj je jednostavnost vrhunskog kvaliteta.
+**For components: feature outside, responsibility inside.**
 
 ---
 
-## Jedna završna rečenica
+## What a Healthy Decision Looks Like
 
-Dobra arhitektura ne treba da impresionira iz daljine.
-Treba da bude toliko jasna da čovek može da otvori repo i odmah zna:
+### Good thinking pattern
 
-- gde se nalazi
-- šta se ovde dešava
-- kojim redom stvari teku
-- gde treba da ide dalje
+- Does this top-level folder tell the story of the system?
+- Does this feature have one flow owner?
+- Is this subfolder a real step or real subfeature?
+- Does this file carry one clear responsibility?
+- Does this function do one exact action?
+- Does new abstraction reduce mental noise?
+- Am I breaking language or framework idioms without strong reason?
 
-To je ceo standard.
+If the answers are clear, the structure is good.
+
+---
+
+## Red Flags
+
+If you see this, the architecture is probably rotting:
+
+- too much `shared`, `common`, `utils`, `helpers`
+- root feature with too many unrelated files
+- generic names like `manager`, `processor`, `handler`
+- subfolders that don't represent real steps
+- deep hierarchy that doesn't reduce noise
+- pattern chosen by fashion, not by nature of flow
+- feature that depends on another feature's internals
+- abstractions that hide simple things instead of clarifying them
+
+---
+
+## Standard Summary
+
+1. Repo is organized by flows and capabilities, not by technical layers as default.
+2. Each feature slice has one flow owner at the root.
+3. Root feature uses pipeline, facade, orchestrator or banal main name, depending on the nature of the flow.
+4. Subfolder exists only if it represents a real step or real subfeature.
+5. Each file has one responsibility.
+6. Each function does one exact action and carries a verb name.
+7. Shared is avoided and used only for truly generic technical primitives.
+8. Product or app layer tells the story of the system. Technical layers tell the story of execution. Foundation carries boring primitives.
+9. Pattern is chosen by the nature of the flow, not by fashion.
+10. If an extra folder, file or abstraction doesn't reduce mental noise, it is not introduced.
+11. Language and framework idioms take precedence when rigid application of this standard would worsen readability or tooling.
+12. The ultimate goal is not complexity. The ultimate goal is simplicity of top quality.
+
+---
+
+## One Final Sentence
+
+Good architecture doesn't need to impress from a distance.
+It needs to be so clear that a person can open the repo and immediately know:
+
+- where they are
+- what's happening here
+- what order things flow
+- where they should go next
+
+That's the whole standard.
 
 === index.html ===
 <!DOCTYPE html>
@@ -7572,62 +7722,60 @@ To je ceo standard.
 </html>
 
 === lesson-architecture.md ===
+# Lesson Architecture
 
-````md
-# Lesson Architecture Guidelines
+This document describes the full procedures and architecture for lessons in the `step-by-step-animator` repo.
 
-Ovaj dokument opisuje pune postupke i arhitekturu za lekcije u repo-u `step-by-step-animator`.
+Goal is for the structure to be:
 
-Cilj je da struktura bude:
-
-- flow-prvi (brojevi u folderima)
-- feature-slice (specifična lekcija)
-- file odgovornost (jasno razgraničene uloge)
-- funkcija precizna akcija
-- runtime animator engine za kadar-po-kadar playback
+- flow-first (numbers in folders)
+- feature-slice (specific lesson)
+- file responsibility (clearly delineated roles)
+- function precise action
+- runtime animator engine for frame-by-frame playback
 
 ---
 
-## 1. Osnovni princip: flow → feature → file → funkcija
+## 1. Core Principle: flow → feature → file → function
 
-1. `flow` folder u root `lessons/` drži sekvencijalni learning put, npr:
+1. `flow` folder in root `lessons/` holds sequential learning path, e.g:
    - `01-build-sidebar`
    - `02-build-top-navigation`
    - ...
    - `08-smell-of-enterprise`
 
-2. `feature` folder je pojedinačna lekcija ili component feature.
-   - koristi `feature-name.lesson.js` kao kanonski komponovani kontrakt
-   - opisuje title, metadata, preview, files i steps
+2. `feature` folder is an individual lesson or component feature.
+   - use `feature-name.lesson.js` as the canonical composed contract
+   - describes title, metadata, preview, files and steps
 
-3. `file` unutar feature slice-a
-   - `describe-steps.js`: business flow za svaki step + narration
-   - `build-html-at-step.js`: parser timeline za HTML
-   - `build-css-at-step.js`: parser rules za CSS
-   - `build-js-at-step.js`: parser timeline za JS
-   - `build-shadow-css-at-step.js`: parser za shadow CSS
-   - `build-template-js-at-step.js`: parser za component template module
+3. `file` within feature slice
+   - `describe-steps.js`: business flow for each step + narration
+   - `build-html-at-step.js`: timeline parser for HTML
+   - `build-css-at-step.js`: rules parser for CSS
+   - `build-js-at-step.js`: timeline parser for JS
+   - `build-shadow-css-at-step.js`: parser for shadow CSS
+   - `build-template-js-at-step.js`: parser for component template module
 
-4. `funkcija` u file-u
-   - mala i precizna odgovornost
-   - npr:
+4. `function` in file
+   - small and precise responsibility
+   - e.g:
      - `normalizeTierValue(value)`
      - `updatePrice()`
      - `cacheDom()`
-   - ime mora eksplicitno reći šta radi
-   - koristi `verb + object`
-   - izbegavati generičke nazive kao:
+   - name must explicitly say what it does
+   - use `verb + object`
+   - avoid generic names like:
      - `handle`
      - `run`
      - `manage`
 
 ---
 
-## 2. Lessons u praksi: feature setup i canonical contract
+## 2. Lessons in Practice: Feature Setup and Canonical Contract
 
-### 2.1 lesson file
+### 2.1 Lesson File
 
-`lessons/<feature>/feature-name.lesson.js` vraća:
+`lessons/<feature>/feature-name.lesson.js` returns:
 
 - `lessonId`
 - `lessonTitle`
@@ -7636,23 +7784,23 @@ Cilj je da struktura bude:
 - `previewTitle`
 - `htmlFileName`
 - `cssFileName`
-- `jsFileName` (ako ima JS)
-- `templateJsFileName` (ako ima template JS)
-- `shadowCssFileName` (ako ima shadow CSS)
+- `jsFileName` (if has JS)
+- `templateJsFileName` (if has template JS)
+- `shadowCssFileName` (if has shadow CSS)
 - `steps`
 - `buildHtmlAtStep`
 - `buildCssAtStep`
 - `buildJsAtStep`
 - `buildTemplateJsAtStep`
 - `buildShadowCssAtStep`
-- opcionalno:
+- optionally:
   - `goalTitle`
   - `goalImageSrc`
   - `goalImageAlt`
   - `homeworkTitle`
   - `homeworkItems`
 
-### 2.2 struktura `content/documents`
+### 2.2 `content/documents` Structure
 
 - `content/documents/files/lesson.sr.md`
 - `content/documents/files/html.timeline.md`
@@ -7661,9 +7809,9 @@ Cilj je da struktura bude:
 - `content/documents/files/template-js.timeline.md`
 - `content/documents/files/shadow-dom-style.css.md`
 
-Značenje:
+Meaning:
 
-- `lesson.sr.md` = meta + primarni autoring
+- `lesson.sr.md` = meta + primary authoring
 - `html.timeline.md` = cumulative HTML timeline
 - `css.rules.md` = property-by-property rule builder
 - `js.timeline.md` = cumulative JS timeline
@@ -7672,12 +7820,12 @@ Značenje:
 
 ---
 
-## 3. Kodeks imenovanja
+## 3. Naming Codex
 
 ### 3.1 Folder
 
-- koristi `01-...`, `02-...`, `03-...` po delivery flow-u
-- ne koristiti:
+- use `01-...`, `02-...`, `03-...` by delivery flow
+- don't use:
   - `utils`
   - `shared`
   - `common`
@@ -7686,36 +7834,36 @@ Značenje:
 
 ### 3.2 File
 
-- `build...AtStep.js` za generisanje stanja po koraku
-- `describe-steps.js` za narrative i step metadata
-- `feature-name.lesson.js` za finalni entry kontrakt
+- `build...AtStep.js` for generating state per step
+- `describe-steps.js` for narrative and step metadata
+- `feature-name.lesson.js` for final entry contract
 
-### 3.3 Funkcija
+### 3.3 Function
 
-Koristi glagole sa jasnim semantičkim značenjem:
+Use verbs with clear semantic meaning:
 
-- `build` — generiše derived output za editor ili preview
-- `show` — renderuje u postojeći DOM
-- `create` — inicijalizuje stanje
-- `find` — traži elemente
-- `read` — čita strukturirane podatke
-- `write` — zapisuje podatke
-- `present` — prikazuje UX ili flow stanje
-- `update` — menja reaktivan UI state
-- `start` — pokreće lifecycle proces
-- `stop` — zaustavlja lifecycle proces
+- `build` — generates derived output for editor or preview
+- `show` — renders into existing DOM
+- `create` — initializes state
+- `find` — searches elements
+- `read` — reads structured data
+- `write` — writes data
+- `present` — shows UX or flow state
+- `update` — changes reactive UI state
+- `start` — starts lifecycle process
+- `stop` — stops lifecycle process
 
 ---
 
-## 4. Timeline authoring format
+## 4. Timeline Authoring Format
 
-U timeline markdown fajlovima koristi se fluent i human-readable kontrakt:
+In timeline markdown files, use fluent and human-readable contract:
 
-- `when` — kada se blok primenjuje
-- `into` — gde se ubacuje u finalni output
-- `code` — koje linije se ubacuju
+- `when` — when block applies
+- `into` — where it's inserted in final output
+- `code` — which lines are inserted
 
-Primer:
+Example:
 
 ```json
 {
@@ -7728,51 +7876,51 @@ Primer:
     ""
   ]
 }
-````
+```
 
-### 4.1 Zašto ovi ključevi?
+### 4.1 Why These Keys?
 
-* `when` je prirodnije za learning flow nego `from`
-* `into` je jasnije autoru nego `target`
-* `code` je prirodnije od `lines` kada se gradi JS ili template modul
+- `when` is more natural for learning flow than `from`
+- `into` is clearer to author than `target`
+- `code` is more natural than `lines` when building JS or template module
 
-### 4.2 Pravilo
+### 4.2 Rule
 
-Timeline blok opisuje:
+Timeline block describes:
 
-* step boundary
-* insertion slot
-* konkretan delta sadržaj
+- step boundary
+- insertion slot
+- concrete delta content
 
-Ne opisuje kompletan fajl.
-
----
-
-## 5. Build model: cumulative, ne overwrite
-
-Svaki build file radi cumulative composition.
-
-To znači:
-
-* step 1 gradi minimalni output
-* step 2 zadržava step 1 i dodaje novo
-* step 3 zadržava prethodno i dodaje novo
-* ne radi se full rewrite po step-u
-
-Build sloj uvek radi:
-
-* read structured markdown
-* normalize blokove
-* build lines at step
-* vrati finalan source za editor i preview
+Does not describe complete file.
 
 ---
 
-## 6. CSS rules model
+## 5. Build Model: Cumulative, Not Overwrite
 
-Za CSS koristi property-by-property rule blocks.
+Each build file does cumulative composition.
 
-Primer shape:
+This means:
+
+- step 1 builds minimal output
+- step 2 keeps step 1 and adds new
+- step 3 keeps previous and adds new
+- no full rewrite per step
+
+Build layer always does:
+
+- read structured markdown
+- normalize blocks
+- build lines at step
+- return final source for editor and preview
+
+---
+
+## 6. CSS Rules Model
+
+For CSS use property-by-property rule blocks.
+
+Example shape:
 
 ```json
 [
@@ -7788,157 +7936,151 @@ Primer shape:
 ]
 ```
 
-### Pravila
+### Rules
 
-* `header` opisuje selector ili at-rule blok
-* `showFrom` opisuje kada ceo blok postaje vidljiv
-* `entries` su inkrementalne linije u tom bloku
-* svaka entry može imati:
+- `header` describes selector or at-rule block
+- `showFrom` describes when entire block becomes visible
+- `entries` are incremental lines in that block
+- each entry can have:
+  - `from`
+  - `untilBefore`
+  - `line`
 
-  * `from`
-  * `untilBefore`
-  * `line`
-
-Ovo omogućava granularni CSS teaching flow bez full dupliciranja.
+This enables granular CSS teaching flow without full duplication.
 
 ---
 
-## 7. Parser i normalizacija dokumenta
+## 7. Parser and Document Normalization
 
-Repo treba da zadrži male document utility-je sa jasnom odgovornošću:
+Repo should keep small document utilities with clear responsibility:
 
-* `parseFrontmatter(markdown)`
-* `readFencedJsonValue(markdown)`
-* `readTimelineBlocks(markdown)`
-* `readRuleBlocks(markdown)`
-* `renderMarkdown(markdown)`
+- `parseFrontmatter(markdown)`
+- `readFencedJsonValue(markdown)`
+- `readTimelineBlocks(markdown)`
+- `readRuleBlocks(markdown)`
+- `renderMarkdown(markdown)`
 
-### Pravilo parser sloja
+### Parser Layer Rule
 
 Parser:
 
-* čita
-* validira
-* normalizuje
+- reads
+- validates
+- normalizes
 
-Parser ne zna ništa o preview playback-u.
-
----
-
-## 8. Slot marker build strategija
-
-Za cumulative composition koristi slot marker pristup.
-
-Primer ideje:
-
-* root slot se kreira jednom
-* timeline blokovi se ubacuju u named slotove
-* posle build-a slot markeri se uklanjaju
-
-Pravila:
-
-* svaki `into` slot mora postojati
-* ako slot ne postoji, baciti jasan error
-* build rezultat ne sme sadržati preostale slot markere
+Parser knows nothing about preview playback.
 
 ---
 
-## 9. Describe-steps kao teaching contract
+## 8. Slot Marker Build Strategy
 
-`describe-steps.js` ne treba da bude parser helper, nego teaching contract.
+For cumulative composition use slot marker approach.
 
-On opisuje:
+Example idea:
 
-* step id
-* step title
-* step summary
-* narration
-* teaching intent
-* eventualne UI reference
+- root slot created once
+- timeline blocks inserted into named slots
+- after build, slot markers are removed
 
-Ovo je izvor istine za:
+Rules:
 
-* step list UI
-* lesson summary
-* progress logiku
-* narrator panel
+- each `into` slot must exist
+- if slot doesn't exist, throw clear error
+- build result must not contain remaining slot markers
 
 ---
 
-## 10. Lesson contract mora ostati čist
+## 9. Describe-Steps as Teaching Contract
 
-`feature-name.lesson.js` je kanonski entry.
+`describe-steps.js` should not be a parser helper, but a teaching contract.
 
-On ne treba da sadrži business logiku parsera, nego da povezuje:
+It describes:
 
-* metadata
-* files
-* step descriptions
-* build funkcije
+- step id
+- step title
+- step summary
+- narration
+- teaching intent
+- eventual UI references
 
-Dakle:
+This is the source of truth for:
 
-* parser utilities ostaju odvojeni
-* build functions ostaju odvojene
-* lesson file samo kompozira kontrakt
+- step list UI
+- lesson summary
+- progress logic
+- narrator panel
 
 ---
 
-## 11. Animator engine kao runtime contract
+## 10. Lesson Contract Must Stay Clean
 
-Lesson architecture ne završava se na build/parser sloju. Potreban je i runtime animator engine koji prikazuje lekciju kadar-po-kadar.
+`feature-name.lesson.js` is the canonical entry.
 
-Animator engine mora imati 4 jasna sloja:
+It should not contain parser business logic, but should connect:
+
+- metadata
+- files
+- step descriptions
+- build functions
+
+So:
+
+- parser utilities stay separate
+- build functions stay separate
+- lesson file only composes contract
+
+---
+
+## 11. Animator Engine as Runtime Contract
+
+Lesson architecture doesn't end at build/parser layer. Runtime animator engine is needed to display lesson frame-by-frame.
+
+Animator engine must have 4 clear layers:
 
 1. `steps[]`
-
-   * pedagoške celine
-   * makro learning flow
-   * source of truth za progression
+   - pedagogical units
+   - macro learning flow
+   - source of truth for progression
 
 2. `scenes[]`
-
-   * mikro-kadrovi unutar jednog stepa
-   * svaki scene opisuje samo promenu, ne kompletno stanje
-   * podržava:
-
-     * `next`
-     * `prev`
-     * `scrub`
-     * `autoplay`
+   - micro-frames within one step
+   - each scene describes only the change, not complete state
+   - supports:
+     - `next`
+     - `prev`
+     - `scrub`
+     - `autoplay`
 
 3. `code effects`
-
-   * šta se vizuelno naglašava u code editoru
-   * ne menjaju canonical source
-   * menjaju samo presentation layer
+   - what is visually emphasized in code editor
+   - don't change canonical source
+   - change only presentation layer
 
 4. `preview patches`
-
-   * šta se menja u live preview-u
-   * delta update model
-   * bez full rerender-a
-
----
-
-## 12. Source of truth pravilo
-
-* `player state` je jedini source of truth za aktivni `step` i `scene`
-* `GSAP` ili drugi animation layer služi samo za tranzicije
-* animacija nikad ne sme držati lesson state
-* `CodeMirror decorations` su vizuelni output, ne state model
-* `preview executor` primenjuje patch-eve, ali ne odlučuje koji je kadar aktivan
-
-Pravilo:
-
-* state vodi animaciju
-* animacija ne vodi state
+   - what changes in live preview
+   - delta update model
+   - without full rerender
 
 ---
 
-## 13. Minimalni runtime format
+## 12. Source of Truth Rule
 
-Svaka lekcija pored build/parser sloja treba da može vratiti i runtime-friendly shape:
+- `player state` is the only source of truth for active `step` and `scene`
+- `GSAP` or other animation layer serves only for transitions
+- animation must never hold lesson state
+- `CodeMirror decorations` are visual output, not state model
+- `preview executor` applies patches, but doesn't decide which frame is active
+
+Rule:
+
+- state leads animation
+- animation doesn't lead state
+
+---
+
+## 13. Minimal Runtime Format
+
+Each lesson besides build/parser layer should be able to return runtime-friendly shape:
 
 ```js
 const lesson = {
@@ -7954,13 +8096,13 @@ const lesson = {
   steps: [
     {
       id: "billing-toggle",
-      title: "Dodaj billing toggle",
-      goal: "Uvesti monthly/yearly switch",
+      title: "Add billing toggle",
+      goal: "Introduce monthly/yearly switch",
       scenes: [
         {
           id: "intro",
-          label: "Dodaj toggle u template",
-          narration: "Prvo uvodimo billing switch u markup.",
+          label: "Add toggle to template",
+          narration: "First we introduce billing switch in markup.",
           code: [],
           preview: [],
           ui: []
@@ -7973,12 +8115,12 @@ const lesson = {
 
 ---
 
-## 14. Shared patch contract
+## 14. Shared Patch Contract
 
-Animator engine mora koristiti jedan zajednički patch contract za oba preview moda:
+Animator engine must use one shared patch contract for both preview modes:
 
-* `dom mode`
-* `state mode`
+- `dom mode`
+- `state mode`
 
 Patch shape:
 
@@ -8004,473 +8146,466 @@ const patch = {
 };
 ```
 
-### 14.1 Code patch tipovi
+### 14.1 Code Patch Types
 
-* `focusLines`
-* `highlightRange`
-* `showCallout`
-* `insertLines`
-* `replaceRange`
-* `dimOthers`
+- `focusLines`
+- `highlightRange`
+- `showCallout`
+- `insertLines`
+- `replaceRange`
+- `dimOthers`
 
-### 14.2 Preview patch tipovi
+### 14.2 Preview Patch Types
 
-* `setProp`
-* `setText`
-* `toggleClass`
-* `setStyleVar`
-* `dispatch`
+- `setProp`
+- `setText`
+- `toggleClass`
+- `setStyleVar`
+- `dispatch`
 
-Pravilo:
+Rule:
 
-* isti scene payload
-* različit executor po modu
-* nikad dva različita DSL-a za DOM i state preview
-
----
-
-## 15. Scene execution flow
-
-`player.goTo(stepId, sceneId)` mora uvek raditi isti deterministički sled:
-
-1. očisti prethodne editor dekoracije
-2. očisti transient UI efekte
-3. primeni `scene.code`
-4. primeni `scene.preview`
-5. primeni `scene.ui`
-6. osveži narration
-7. osveži progress indikator
-8. opcionalno pokreni tranziciju
-
-Svaki scene mora biti replayable bez ručne intervencije.
+- same scene payload
+- different executor by mode
+- never two different DSLs for DOM and state preview
 
 ---
 
-## 16. Prev / next / scrub pravila
+## 15. Scene Execution Flow
+
+`player.goTo(stepId, sceneId)` must always do the same deterministic sequence:
+
+1. clear previous editor decorations
+2. clear transient UI effects
+3. apply `scene.code`
+4. apply `scene.preview`
+5. apply `scene.ui`
+6. refresh narration
+7. refresh progress indicator
+8. optionally start transition
+
+Each scene must be replayable without manual intervention.
+
+---
+
+## 16. Prev / Next / Scrub Rules
 
 ### 16.1 next
 
-* ide na sledeći scene u okviru tekućeg stepa
-* ako ne postoji, prelazi na prvi scene sledećeg stepa
+- go to next scene within current step
+- if doesn't exist, go to first scene of next step
 
 ### 16.2 prev
 
-* ide na prethodni scene
-* koristi snapshot ako postoji
-* inače replay od najbližeg snapshot-a
+- go to previous scene
+- use snapshot if it exists
+- otherwise replay from nearest snapshot
 
 ### 16.3 scrub
 
-* mora biti stabilan i determinističan
-* nikad ne zavisi od prethodnog animacionog frame-a
-* uvek ide preko state + patch replay modela
+- must be stable and deterministic
+- never depend on previous animation frame
+- always go via state + patch replay model
 
 ---
 
-## 17. Snapshot strategija
+## 17. Snapshot Strategy
 
-Zbog pouzdanog `prev()` i scrubbing-a, engine mora imati snapshot sistem.
+For reliable `prev()` and scrubbing, engine must have snapshot system.
 
-Snapshot se može praviti:
+Snapshot can be created:
 
-* na kraju svakog stepa
-* ili na svaka 2–4 scene
+- at end of each step
+- or every 2-4 scenes
 
-Snapshot čuva:
+Snapshot stores:
 
-* aktivni file view state
-* preview state
-* aktivne props i attributes
-* UI progress stanje
+- active file view state
+- preview state
+- active props and attributes
+- UI progress state
 
-Pravilo:
+Rule:
 
-* snapshot je optimization layer
-* replay ostaje canonical fallback
-
----
-
-## 18. Preview izvršavanje: DOM mode i state mode
-
-### 18.1 DOM mode
-
-Koristi se za brzi MVP.
-
-Prednosti:
-
-* brz proof-of-concept
-* manje apstrakcije
-* lako debugovanje
-
-Mane:
-
-* teže undo i replay ponašanje
-* krhkiji selektori
-
-### 18.2 State mode
-
-Koristi se za stabilniji i dugoročniji engine.
-
-Prednosti:
-
-* replayable
-* testable
-* pogodniji za snapshot
-* isti API za više preview komponenti
-
-Preporuka:
-
-* početi sa DOM mode executor-om
-* zadržati isti patch contract
-* kasnije dodati state executor bez menjanja lesson data formata
+- snapshot is optimization layer
+- replay remains canonical fallback
 
 ---
 
-## 19. Code editor odgovornost
+## 18. Preview Execution: DOM Mode and State Mode
 
-Code editor sloj ne menja source fajl, nego samo prezentuje fokus.
+### 18.1 DOM Mode
 
-Odgovornosti:
+Used for fast MVP.
 
-* highlight aktivnih linija
-* mark changed range
-* dim non-relevant code
-* widget i callout objašnjenja
-* multi-file switching
+Advantages:
 
-Pravilo:
+- fast proof-of-concept
+- less abstraction
+- easy debugging
 
-* canonical code ostaje build rezultat lekcije
-* editor efekti su samo didaktički overlay
+Disadvantages:
 
----
+- harder undo and replay behavior
+- more fragile selectors
 
-## 20. Animator engine file odgovornosti
+### 18.2 State Mode
 
-Preporučena struktura:
+Used for more stable and long-term engine.
 
-* `lesson-player.js`
+Advantages:
 
-  * drži state
-  * `goTo`
-  * `next`
-  * `prev`
-  * `scrubTo`
+- replayable
+- testable
+- more suitable for snapshot
+- same API for multiple preview components
 
-* `apply-code-effects.js`
+Recommendation:
 
-  * CodeMirror decorations
-  * line, range i callout efekti
-
-* `apply-preview-patches.js`
-
-  * shared patch executor
-  * DOM mode ili state mode
-
-* `create-snapshot-store.js`
-
-  * create i restore snapshot
-
-* `resolve-scene.js`
-
-  * pronalazi step i scene
-  * vraća normalized payload
-
-* `build-scene-runtime.js`
-
-  * priprema scene za izvršavanje
+- start with DOM mode executor
+- keep same patch contract
+- later add state executor without changing lesson data format
 
 ---
 
-## 21. Naming convention za runtime funkcije
+## 19. Code Editor Responsibility
 
-Koristi isti imperativni stil kao u ostatku repo-a:
+Code editor layer doesn't change source file, only presents focus.
 
-* `goToScene(stepId, sceneId)`
-* `showSceneNarration(scene)`
-* `applyCodeEffects(effects)`
-* `applyPreviewPatches(patches)`
-* `createSceneSnapshot(key)`
-* `restoreSceneSnapshot(key)`
-* `clearEditorDecorations()`
-* `syncPreviewComponent(target)`
-* `presentSceneProgress(stepIndex, sceneIndex)`
+Responsibilities:
 
-Izbegavati:
+- highlight active lines
+- mark changed range
+- dim non-relevant code
+- widget and callout explanations
+- multi-file switching
 
-* `handleEverything`
-* `runSceneStuff`
-* `managePreview`
+Rule:
+
+- canonical code remains build result of lesson
+- editor effects are only didactic overlay
 
 ---
 
-## 22. Lesson data validator proširenje
+## 20. Animator Engine File Responsibilities
 
-Pored postojećih validatora, dodati i animator validator koji proverava:
+Recommended structure:
 
-* da svaki `step` ima bar jedan `scene`
-* da `scene.id` bude jedinstven unutar stepa
-* da `scene.code` koristi dozvoljene code patch tipove
-* da `scene.preview` koristi dozvoljene preview patch tipove
-* da `file` reference u code efektima postoje u lesson file kontraktu
-* da `target` reference u preview patch-evima postoje u preview registru
-* da snapshot boundary ne pokazuje na nepostojeći scene
+- `lesson-player.js`
+  - holds state
+  - `goTo`
+  - `next`
+  - `prev`
+  - `scrubTo`
 
-Predložene komande:
+- `apply-code-effects.js`
+  - CodeMirror decorations
+  - line, range and callout effects
 
-* `npm run lint:lessons`
-* `npm run test:lesson-data`
-* `npm run test:lesson-runtime`
+- `apply-preview-patches.js`
+  - shared patch executor
+  - DOM mode or state mode
 
----
+- `create-snapshot-store.js`
+  - create and restore snapshot
 
-## 23. MVP preporuka
+- `resolve-scene.js`
+  - finds step and scene
+  - returns normalized payload
 
-Prvi vertical slice treba da bude samo jedan step:
-
-* `billing-toggle`
-* 3 do 5 scena
-* DOM mode executor
-* CodeMirror highlights
-* `next`
-* `prev`
-* `goTo`
-* 1 snapshot boundary
-
-Ne širiti scope pre nego što taj flow postane stabilan.
+- `build-scene-runtime.js`
+  - prepares scene for execution
 
 ---
 
-## 24. Product contract za autora lekcije
+## 21. Naming Convention for Runtime Functions
 
-Autor lekcije mora moći da napiše lesson bez menjanja engine koda.
+Use same imperative style as in rest of repo:
 
-To znači:
+- `goToScene(stepId, sceneId)`
+- `showSceneNarration(scene)`
+- `applyCodeEffects(effects)`
+- `applyPreviewPatches(patches)`
+- `createSceneSnapshot(key)`
+- `restoreSceneSnapshot(key)`
+- `clearEditorDecorations()`
+- `syncPreviewComponent(target)`
+- `presentSceneProgress(stepIndex, sceneIndex)`
 
-* scene payload mora biti čitljiv
-* patch nazivi moraju biti intuitivni
-* build output i runtime output moraju ostati sinhronizovani
-* svaka scena mora biti reproducibilna iz podataka
+Avoid:
 
-Cilj:
-
-* lesson author piše content
-* engine izvršava contract
-* preview ostaje veran source-u
-
----
-
-## 25. Preporučeni redosled implementacije
-
-### Faza 1 — cleanup postojećeg build sloja
-
-* zaključati `feature-name.lesson.js` kontrakt
-* standardizovati `when / into / code`
-* standardizovati CSS rule blocks
-* odvojiti parser utility-je od lesson entry fajlova
-
-### Faza 2 — validator sloj
-
-* validacija markdown frontmatter-a
-* validacija timeline blokova
-* validacija CSS rule blokova
-* validacija lesson contract-a
-
-### Faza 3 — runtime animator MVP
-
-* `lesson-player.js`
-* `apply-code-effects.js`
-* `apply-preview-patches.js`
-* snapshot store
-* support za jedan step i 3–5 scena
-
-### Faza 4 — prvi vertical slice
-
-Implementirati:
-
-* `billing-toggle`
-* scene intro
-* scene wire-events
-* scene sync-price
-* scene accessibility
-* scene summary
-
-### Faza 5 — stabilizacija
-
-* proveriti `next`
-* proveriti `prev`
-* proveriti replay
-* proveriti snapshot restore
-* proveriti scrub
-
-### Faza 6 — state preview executor
-
-* zadržati isti patch contract
-* dodati state mode bez promene lesson data shape-a
-* pripremiti engine za više preview komponenti
+- `handleEverything`
+- `runSceneStuff`
+- `managePreview`
 
 ---
 
-## 26. Engineering guardrails
+## 22. Lesson Data Validator Extension
 
-* GSAP nikad nije source of truth
-* preview patch contract je isti za DOM i state executor
-* replay mora raditi i bez snapshot-a
-* snapshot ubrzava, ali nije jedini mehanizam
-* scene uvek opisuju promenu, ne kompletan state
-* editor overlay ne sme menjati canonical source
-* build output i runtime output moraju ostati usklađeni
+Besides existing validators, add animator validator that checks:
 
----
+- that each `step` has at least one `scene`
+- that `scene.id` is unique within step
+- that `scene.code` uses allowed code patch types
+- that `scene.preview` uses allowed preview patch types
+- that `file` references in code effects exist in lesson file contract
+- that `target` references in preview patches exist in preview registry
+- that snapshot boundary doesn't point to non-existent scene
 
-## 27. Konačna vizija
+Proposed commands:
 
-Sistem treba da omogući da jedna lekcija ima:
-
-* jasan authoring format
-* jasan build pipeline
-* jasan runtime playback
-* stabilan `next / prev / scrub`
-* čitljiv code-focus prikaz
-* live preview koji prati isti source contract
-
-Drugim rečima:
-
-* markdown i lesson data opisuju sadržaj
-* build sloj pravi canonical source
-* animator engine prikazuje kadar-po-kadar progres
-* preview ostaje veran stvarnom kodu
-
+- `npm run lint:lessons`
+- `npm run test:lesson-data`
+- `npm run test:lesson-runtime`
 
 ---
 
-## 28. Preporučeni bibliotečki stack
+## 23. MVP Recommendation
 
-Za refactor i animator engine koristiti mali, namenski stack umesto jedne biblioteke koja pokušava da reši sve.
+First vertical slice should be just one step:
 
-### 28.1 Core biblioteke
+- `billing-toggle`
+- 3 to 5 scenes
+- DOM mode executor
+- CodeMirror highlights
+- `next`
+- `prev`
+- `goTo`
+- 1 snapshot boundary
+
+Don't expand scope before that flow becomes stable.
+
+---
+
+## 24. Product Contract for Lesson Author
+
+Lesson author must be able to write lesson without changing engine code.
+
+This means:
+
+- scene payload must be readable
+- patch names must be intuitive
+- build output and runtime output must stay synchronized
+- each scene must be reproducible from data
+
+Goal:
+
+- lesson author writes content
+- engine executes contract
+- preview stays faithful to source
+
+---
+
+## 25. Recommended Implementation Order
+
+### Phase 1 — Cleanup Existing Build Layer
+
+- lock `feature-name.lesson.js` contract
+- standardize `when / into / code`
+- standardize CSS rule blocks
+- separate parser utilities from lesson entry files
+
+### Phase 2 — Validator Layer
+
+- validate markdown frontmatter
+- validate timeline blocks
+- validate CSS rule blocks
+- validate lesson contract
+
+### Phase 3 — Runtime Animator MVP
+
+- `lesson-player.js`
+- `apply-code-effects.js`
+- `apply-preview-patches.js`
+- snapshot store
+- support for one step and 3-5 scenes
+
+### Phase 4 — First Vertical Slice
+
+Implement:
+
+- `billing-toggle`
+- scene intro
+- scene wire-events
+- scene sync-price
+- scene accessibility
+- scene summary
+
+### Phase 5 — Stabilization
+
+- check `next`
+- check `prev`
+- check replay
+- check snapshot restore
+- check scrub
+
+### Phase 6 — State Preview Executor
+
+- keep same patch contract
+- add state mode without changing lesson data shape
+- prepare engine for multiple preview components
+
+---
+
+## 26. Engineering Guardrails
+
+- GSAP is never the source of truth
+- preview patch contract is the same for DOM and state executor
+- replay must work even without snapshot
+- snapshot accelerates but is not the only mechanism
+- scene always describes change, not complete state
+- editor overlay must not change canonical source
+- build output and runtime output must stay synchronized
+
+---
+
+## 27. Final Vision
+
+System should enable one lesson to have:
+
+- clear authoring format
+- clear build pipeline
+- clear runtime playback
+- stable `next / prev / scrub`
+- readable code-focus display
+- live preview that follows same source contract
+
+In other words:
+
+- markdown and lesson data describe content
+- build layer makes canonical source
+- animator engine displays frame-by-frame progress
+- preview stays faithful to real code
+
+---
+
+## 28. Recommended Library Stack
+
+For refactor and animator engine use small, purpose-built stack instead of one library trying to solve everything.
+
+### 28.1 Core Libraries
 
 #### CodeMirror 6
-Koristi se za code editor sloj.
+Used for code editor layer.
 
-Odgovornosti:
-- highlight aktivnih linija
-- range dekoracije
+Responsibilities:
+- highlight active lines
+- range decorations
 - callout/widget overlay
-- dim neaktivnog koda
-- multi-file prikaz
+- dim inactive code
+- multi-file display
 
-Pravilo:
-- CodeMirror prikazuje fokus i promenu
-- ne čuva lesson state
-- ne menja canonical source
+Rule:
+- CodeMirror displays focus and change
+- doesn't store lesson state
+- doesn't change canonical source
 
 #### GSAP
-Koristi se za scene tranzicije i playback animaciju.
+Used for scene transitions and playback animation.
 
-Odgovornosti:
+Responsibilities:
 - scene transition
-- progress animacija
-- labels i timeline sekvenciranje
-- autoplay i scrub animacija
+- progress animation
+- labels and timeline sequencing
+- autoplay and scrub animation
 
-Pravilo:
-- GSAP nije source of truth
-- player state vodi tok
-- GSAP samo animira ono što je player već odlučio
+Rule:
+- GSAP is not the source of truth
+- player state leads the flow
+- GSAP only animates what player already decided
 
 #### Zod
-Koristi se za validaciju lesson data kontrakta.
+Used for lesson data contract validation.
 
-Odgovornosti:
-- validacija lesson metadata
-- validacija `steps[]`
-- validacija `scenes[]`
-- validacija patch tipova
-- validacija build/runtime kontrakta
+Responsibilities:
+- validate lesson metadata
+- validate `steps[]`
+- validate `scenes[]`
+- validate patch types
+- validate build/runtime contract
 
-Pravilo:
-- lesson data mora biti validan pre build-a i pre runtime izvršavanja
+Rule:
+- lesson data must be valid before build and before runtime execution
 
 #### unified / remark
-Koristi se za parsing markdown authoring fajlova.
+Used for parsing markdown authoring files.
 
-Odgovornosti:
-- parsing `.md` fajlova
-- AST transformacije
-- čitanje frontmatter-a
-- čitanje fenced JSON blokova
-- normalizacija timeline sadržaja
+Responsibilities:
+- parse `.md` files
+- AST transformations
+- read frontmatter
+- read fenced JSON blocks
+- normalize timeline content
 
-Pravilo:
-- markdown je authoring source
-- parser ga prevodi u build/runtime podatke
+Rule:
+- markdown is authoring source
+- parser translates it to build/runtime data
 
 #### fast-glob
-Koristi se za discovery build ulaza i lesson fajlova.
+Used for build entry and lesson file discovery.
 
-Odgovornosti:
-- pronalaženje lesson foldera
-- pronalaženje `.md` source fajlova
+Responsibilities:
+- find lesson folders
+- find `.md` source files
 - build input discovery
 - batch sync utility
 
-Pravilo:
-- discovery sloj ostaje odvojen od parser i runtime sloja
+Rule:
+- discovery layer stays separate from parser and runtime layers
 
 ---
 
-## 29. Opcione biblioteke
+## 29. Optional Libraries
 
 ### 29.1 XState
-XState ostaje opcija za kasniju fazu, ali nije obavezan za prvi POC.
+XState remains an option for later phase, but is not required for first POC.
 
-Koristi se ako engine dobije:
-- složeniji player state
-- paralelne modove
-- keyboard režime
+Use if engine gets:
+- more complex player state
+- parallel modes
+- keyboard modes
 - export flow
-- kompleksniji undo/snapshot orchestration
+- more complex undo/snapshot orchestration
 
-Preporuka:
-- ne uvoditi u MVP
-- razmotriti u phase 2 kada plain JS player state postane tesan
+Recommendation:
+- don't introduce in MVP
+- consider in phase 2 when plain JS player state gets tight
 
 ### 29.2 Motion
-Može biti lakša zamena za GSAP u manjem MVP-u, ali nije prvi izbor dok god je cilj stabilan scrub/replay animator engine.
+Can be lighter replacement for GSAP in smaller MVP, but not first choice as long as goal is stable scrub/replay animator engine.
 
 ### 29.3 Slidev / reveal.js
-Nisu prioritet za lesson player unutar app-a.
+Not priority for lesson player within app.
 
-Imaju smisla samo ako se isti content želi koristiti i kao:
-- prezentacija
+Only make sense if same content is also wanted as:
+- presentation
 - slide deck
 - workshop demo
 
 ---
 
-## 30. Biblioteke po slojevima sistema
+## 30. Libraries by System Layers
 
-### 30.1 Authoring / build sloj
-Koristiti:
+### 30.1 Authoring / Build Layer
+Use:
 - `Zod`
 - `unified / remark`
 - `fast-glob`
 
-### 30.2 Runtime playback sloj
-Koristiti:
+### 30.2 Runtime Playback Layer
+Use:
 - `CodeMirror 6`
 - `GSAP`
 
-### 30.3 Phase 2 orchestration sloj
-Po potrebi dodati:
+### 30.3 Phase 2 Orchestration Layer
+Add if needed:
 - `XState`
 
 ---
 
-## 31. MVP stack odluka
+## 31. MVP Stack Decision
 
-Za prvi vertical slice koristiti:
+For first vertical slice use:
 
 - `CodeMirror 6`
 - `GSAP`
@@ -8478,10 +8613,10 @@ Za prvi vertical slice koristiti:
 - `unified / remark`
 - `fast-glob`
 
-Ne uvoditi dodatne biblioteke dok sledeće ne postane stabilno:
+Don't introduce additional libraries until the following becomes stable:
 
-- jedan step
-- 3 do 5 scena
+- one step
+- 3 to 5 scenes
 - `next`
 - `prev`
 - replay
@@ -8491,121 +8626,121 @@ Ne uvoditi dodatne biblioteke dok sledeće ne postane stabilno:
 
 ---
 
-## 32. Tehnološki guardrails
+## 32. Technology Guardrails
 
-- ne tražiti jednu biblioteku za ceo sistem
-- editor, parser, validator i animator ostaju odvojeni slojevi
-- runtime playback i authoring build ne smeju deliti nejasne odgovornosti
-- biblioteke birati po ulozi, ne po popularnosti
-- svaka biblioteka mora imati jasno ograničen scope u arhitekturi
-
----
-
-## 33. Polish i hardening sloj
-
-Nakon što MVP animator engine postane stabilan, sledeća faza nije širenje feature-a nego hardening sistema.
-
-Ova faza postoji da bi engine bio:
-
-- pouzdan pri `next`, `prev`, `goTo`, `scrub`
-- stabilan pri reconnect i replay scenarijima
-- čitljiv za autora lekcije
-- predvidiv za engine implementaciju
-- spreman za veći broj lekcija bez rasta neuređenosti
-
-Polish i hardening sloj ne menja osnovni model:
-
-- `player state` ostaje source of truth
-- `scene delta` ostaje deklarativni ulaz
-- `animations` ostaju vizuelni izlaz
-- `snapshot` i `inverse patch` ostaju mehanizmi za rewind, undo i recovery
-
-Drugim rečima:
-
-- state vodi sistem
-- delta opisuje promenu
-- animacija prikazuje promenu
-- undo i snapshot vraćaju sistem u konzistentno stanje
+- don't look for one library for the entire system
+- editor, parser, validator and animator remain separate layers
+- runtime playback and authoring build must not share unclear responsibilities
+- choose libraries by role, not by popularity
+- each library must have clearly limited scope in architecture
 
 ---
 
-## 34. Ključne invarijante sistema
+## 33. Polish and Hardening Layer
 
-Pre bilo kakvog polisha, engine mora čuvati sledeće invarijante:
+After MVP animator engine becomes stable, next phase is not feature expansion but hardening the system.
 
-### 34.1 Jedan source of truth (Copy-on-Write)
+This phase exists so engine is:
 
-Aktivni lesson state mora živeti samo u player sloju koristeći copy-on-write mehanizam.
+- reliable at `next`, `prev`, `goTo`, `scrub`
+- stable at reconnect and replay scenarios
+- readable for lesson author
+- predictable for engine implementation
+- ready for larger number of lessons without growing disorder
 
-Pravilo:
-- Scene authoring podaci su strogo immutable.
-- Runtime nikada ne menja originalni lesson objekat.
-- Svaka promena se vrši nad normalizovanom kopijom ili reaktivnim state objektom.
+Polish and hardening layer doesn't change the core model:
 
-To uključuje:
+- `player state` remains source of truth
+- `scene delta` remains declarative input
+- `animations` remain visual output
+- `snapshot` and `inverse patch` remain mechanisms for rewind, undo and recovery
 
-- aktivni step
-- aktivni scene
-- aktivni file panel
+In other words:
+
+- state leads system
+- delta describes change
+- animation displays change
+- undo and snapshot return system to consistent state
+
+---
+
+## 34. Key System Invariants
+
+Before any polish, engine must preserve the following invariants:
+
+### 34.1 One Source of Truth (Copy-on-Write)
+
+Active lesson state must live only in player layer using copy-on-write mechanism.
+
+Rule:
+- Scene authoring data is strictly immutable.
+- Runtime never changes original lesson object.
+- Every change is made on normalized copy or reactive state object.
+
+This includes:
+
+- active step
+- active scene
+- active file panel
 - preview mode
 - replay / autoplay status
 - snapshot pointer
-- eventualni scrub progress
+- eventual scrub progress
 
-Ne smeju biti source of truth:
+Must not be source of truth:
 
 - GSAP timeline
 - CodeMirror decorations
-- DOM preview stanje
+- DOM preview state
 - progress bar
 - narrator panel
 
-Svi oni su output slojevi.
+All of these are output layers.
 
-### 34.2 Scene je delta, ne snapshot sveta
+### 34.2 Scene is Delta, Not Snapshot of World
 
-Svaki scene opisuje samo ono što se menja u odnosu na prethodno stanje.
+Each scene describes only what changes relative to previous state.
 
-Scene ne treba da nosi:
+Scene should not carry:
 
-- kompletan preview HTML
-- kompletan editor sadržaj
-- kompletan set aktivnih klasa
-- kompletan state preview komponente
+- complete preview HTML
+- complete editor content
+- complete set of active classes
+- complete state preview component
 
-Scene treba da nosi samo:
+Scene should carry only:
 
 - code effects
 - preview patches
-- UI efekte
+- UI effects
 - optional metadata
 
-### 34.3 Replay mora dati isti rezultat
+### 34.3 Replay Must Give Same Result
 
-Ako se isti scene pokrene više puta iz istog snapshot-a ili iz istog replay lanca, rezultat mora biti identičan.
+If same scene is run multiple times from same snapshot or same replay chain, result must be identical.
 
-Pravilo:
+Rule:
 
-- scene izvršavanje mora biti determinističko
-- ne sme zavisiti od prethodnog animation frame-a
-- ne sme zavisiti od slučajnog DOM stanja van contract-a
+- scene execution must be deterministic
+- must not depend on previous animation frame
+- must not depend on accidental DOM state outside contract
 
 ---
 
-## 35. `scene.ui` mora imati kontrolisan vocabular
+## 35. `scene.ui` Must Have Controlled Vocabulary
 
-`scene.ui` je koristan sloj, ali je i najlakši put ka haosu ako dobije previše slobodnih 0/1 flagova.
+`scene.ui` is a useful layer, but is also the easiest path to chaos if it gets too many free 0/1 flags.
 
-Zato ga treba držati kao ograničen vocabulary.
+So keep it as a limited vocabulary.
 
-Preporučene grupe:
+Recommended groups:
 
 - `popover`
 - `hidden`
 - `motion`
 - `css`
 
-### 35.1 Preporučeni shape
+### 35.1 Recommended Shape
 
 ```js
 scene.ui = [
@@ -8613,8 +8748,8 @@ scene.ui = [
     type: "popover",
     target: "code-panel",
     id: "price-period-note",
-    title: "Zašto menjamo i /mo i /yr?",
-    text: "Billing state utiče i na amount i na period label."
+    title: "Why are we changing both /mo and /yr?",
+    text: "Billing state affects both amount and period label."
   },
   {
     type: "hidden",
@@ -8635,37 +8770,37 @@ scene.ui = [
     value: "1"
   }
 ];
-````
+```
 
-### 35.2 Pravilo
+### 35.2 Rule
 
-`scene.ui` ne treba da postane paralelan preview DSL.
+`scene.ui` should not become a parallel preview DSL.
 
-Njegova uloga je:
+Its role is:
 
-* pomoćni teaching UX
-* fokus
-* objašnjenje
-* blagi vizuelni naglasak
+- auxiliary teaching UX
+- focus
+- explanation
+- light visual emphasis
 
-Ne treba da preuzme odgovornost preview patch-eva.
+Should not take over preview patch responsibilities.
 
 ---
 
-## 36. Patch metadata hardening
+## 36. Patch Metadata Hardening
 
-Sirov patch shape nije dovoljan kada engine dobije:
+Raw patch shape is not sufficient when engine gets:
 
-* reconnect
-* undo
-* snapshot restore
-* analytics
-* debug replay
-* future authoring lint
+- reconnect
+- undo
+- snapshot restore
+- analytics
+- debug replay
+- future authoring lint
 
-Zato svaki patch treba da podrži prošireni metadata sloj.
+So each patch should support extended metadata layer.
 
-### 36.1 Preporučena metadata polja
+### 36.1 Recommended Metadata Fields
 
 ```js
 const patch = {
@@ -8676,7 +8811,7 @@ const patch = {
   target: "pricing-card",
   name: "billing",
   value: "yearly",
-  debugLabel: "Prebaci pricing card na yearly billing",
+  debugLabel: "Switch pricing card to yearly billing",
   metadata: {
     reasons: ["User toggled yearly billing switch"],
     tags: ["billing", "preview", "important"]
@@ -8684,64 +8819,59 @@ const patch = {
 };
 ```
 
-### 36.2 Značenje polja
+### 36.2 Field Meanings
 
-* `id`
+- `id`
+  - unique patch identity within scene or lesson
+  - useful for logging, testing and tracing
 
-  * jedinstveni identitet patch-a u okviru scene ili lesson-a
-  * koristan za logging, testiranje i tracing
+- `undoId`
+  - reference to inverse or compatible rollback patch
+  - useful for `prev`, reconnect and controlled undo
 
-* `undoId`
+- `groupId`
+  - ties multiple patches into one logical change
+  - e.g. price amount + price period + toggle state
 
-  * referenca na inverse ili kompatibilan rollback patch
-  * koristan za `prev`, reconnect i controlled undo
+- `debugLabel`
+  - readable text for devtools, logs and debug panel
 
-* `groupId`
+- `metadata`
+  - carries `reasons` (descriptions why patch happens) and `tags` (for filtering, analytics and linting)
 
-  * veže više patch-eva u jednu logičku promenu
-  * npr. price amount + price period + toggle state
+### 36.3 Rule
 
-* `debugLabel`
+`undoId` doesn't mean every patch must have hard-coded inverse automatically.
 
-  * čitljiv tekst za devtools, logs i debug panel
+But engine must enable at least one of the following:
 
-* `metadata`
+- inverse patch model
+- snapshot restore model
+- combined model
 
-  * nosi `reasons` (opisi zašto se patch dešava) i `tags` (za filtriranje, analytics i linting)
+Healthiest approach:
 
-### 36.3 Pravilo
-
-`undoId` ne znači automatski da svaki patch mora imati hard-coded inverse.
-
-Ali engine mora omogućiti bar jedno od sledećeg:
-
-* inverse patch model
-* snapshot restore model
-* kombinovani model
-
-Najzdraviji pristup:
-
-* snapshot kao canonical optimization
-* inverse patch kao fine-grained rewind where useful
+- snapshot as canonical optimization
+- inverse patch as fine-grained rewind where useful
 
 ---
 
-## 37. `prereq` kao authoring i runtime guardrail
+## 37. `prereq` as Authoring and Runtime Guardrail
 
-Za veće lekcije i future-linked checks, `step` i eventualno `scene` mogu imati `prereq`.
+For larger lessons and future-linked checks, `step` and optionally `scene` can have `prereq`.
 
-### 37.1 Preporučeni shape
+### 37.1 Recommended Shape
 
 ```js
 const step = {
   id: "billing-toggle",
-  title: "Dodaj billing toggle",
+  title: "Add billing toggle",
   prereq: ["template-created", "shadow-css-ready"],
   scenes: []
 };
 ```
 
-Ili granularnije na scene nivou:
+Or more granular at scene level:
 
 ```js
 const scene = {
@@ -8753,36 +8883,36 @@ const scene = {
 };
 ```
 
-### 37.2 Šta `prereq` rešava
+### 37.2 What `prereq` Solves
 
-* authoring validaciju
-* future linked lessons
-* conditional playback
-* bolji error reporting
-* zaštitu od nekonzistentnog reorder-a scena
+- authoring validation
+- future linked lessons
+- conditional playback
+- better error reporting
+- protection from inconsistent scene reorder
 
-### 37.3 Pravilo
+### 37.3 Rule
 
-`prereq` ne treba da bude skriveni runtime branch sistem.
+`prereq` should not become a hidden runtime branch system.
 
-Njegova primarna uloga je:
+Its primary role is:
 
-* validacija
-* dokumentovanje zavisnosti
-* zaštita od lošeg authoring-a
+- validation
+- documenting dependencies
+- protection from bad authoring
 
 ---
 
-## 38. Enter / exit lifecycle za scene
+## 38. Enter / Exit Lifecycle for Scene
 
-Ako engine koristi GSAP ili sličan animation layer, `scene` može imati i blag enter/exit contract.
+If engine uses GSAP or similar animation layer, `scene` can also have mild enter/exit contract.
 
-### 38.1 Preporučeni shape
+### 38.1 Recommended Shape
 
 ```js
 const scene = {
   id: "wire-events",
-  label: "Bind evente",
+  label: "Bind events",
   duration: 0.4,
   enter: [
     { type: "motion", target: "code-panel", preset: "fade-in" },
@@ -8797,402 +8927,405 @@ const scene = {
 };
 ```
 
-### 38.2 Pravilo
+### 38.2 Rule
 
-`enter` i `exit` ne smeju menjati canonical lesson state.
+`enter` and `exit` must not change canonical lesson state.
 
-Njihova uloga je:
+Their role is:
 
-* tranzicija
-* ritam
-* osećaj kontinuiteta
-* micro polish
+- transition
+- rhythm
+- sense of continuity
+- micro polish
 
-Player i dalje određuje:
+Player still determines:
 
-* koji je scene aktivan
-* kada je scene gotov
-* šta je sledeći scene
-* kako radi `prev` i `scrub`
+- which scene is active
+- when scene is done
+- what is next scene
+- how `prev` and `scrub` work
 
-Animacioni sloj samo prati odluku player-a.
+Animation layer only follows player decision.
 
 ---
 
-## 39. Undo model: inverse patch + snapshot hibrid
+## 39. Undo Model: Inverse Patch + Snapshot Hybrid
 
-Za pouzdan rewind ne treba birati samo jedan pristup.
+For reliable rewind, don't choose only one approach.
 
-Najzdraviji model je hibrid:
+Healthiest model is hybrid:
 
-* snapshot restore za veće skokove
-* inverse patch za kratke lokalne korake
+- snapshot restore for larger jumps
+- inverse patch for short local steps
 
 ### 39.1 Runtime Inverse Generation
 
-Inverse patch ne mora biti hardkodovan u lesson fajlu. Engine može (i treba) da generiše inverse u trenutku primene patch-a ("runtime pre-state").
+Inverse patch doesn't need to be hardcoded in lesson file. Engine can (and should) generate inverse at moment of applying patch ("runtime pre-state").
 
-* `setProp(new)` → engine pamti `setProp(old)`
-* `toggleClass(cls)` → engine pamti `toggleClass(!cls)`
+- `setProp(new)` → engine remembers `setProp(old)`
+- `toggleClass(cls)` → engine remembers `toggleClass(!cls)`
 
-### 39.2 Snapshot kada koristiti
+### 39.2 When to Use Snapshot
 
-Koristi snapshot kada:
+Use snapshot when:
 
-* prelaziš između step-ova
-* imaš teže DOM/state promene
-* scene ima mnogo patch-eva
-* želiš stabilan `scrub`
-* želiš brz recovery pri reconnect-u
+- transitioning between steps
+- having heavier DOM/state changes
+- scene has many patches
+- wanting stable `scrub`
+- wanting fast recovery on reconnect
 
-### 39.3 Inverse patch kada koristiti
+### 39.3 When to Use Inverse Patch
 
-Koristi inverse patch kada:
+Use inverse patch when:
 
-* patch ima trivijalan rollback
-* promena je mala i lokalna
-* želiš glatki `prev` bez punog restore-a
-* želiš precizniji debug
+- patch has trivial rollback
+- change is small and local
+- wanting smooth `prev` without full restore
+- wanting more precise debug
 
-### 39.4 Preporučeno pravilo
+### 39.4 Recommended Rule
 
-* snapshot na kraju svakog stepa
-* snapshot na svaka 2–4 scene
-* inverse patch se generiše iz runtime stanja pre primene
-* replay ostaje fallback ako nema snapshot-a ili inverse-a
-
----
-
-## 40. Reconnect i restore strategija
-
-Ako se preview reconnect-uje, iframe resetuje, ili live preview izgubi stanje, engine mora znati kako da se vrati u konzistentnu tačku.
-
-### 40.1 Pravilo reconnect-a
-
-Po reconnect-u:
-
-1. restore najbliži validni snapshot
-2. replay scene delta do aktivnog scene-a (deterministički)
-3. ponovo primeni code effects
-4. ponovo primeni UI overlay
-5. tek onda nastavi playback
-
-**Važno:** Ne koristiti "shortcut" metod matchovanja starih scena. Uvek preferirati deterministički replay od poznatog snapshot-a.
-
-### 40.2 Šta reconnect ne sme da radi
-
-* da “pogodi” stanje iz DOM-a
-* da pretpostavlja poslednju animaciju
-* da koristi GSAP progress kao state
-* da preskoči preview sync
-
-### 40.3 Zašto je ovo važno
-
-Bez ovog pravila:
-
-* `prev()` postaje nepouzdan
-* scrub postaje krhak
-* autoplay može da završi u polustanju
-* debug postaje težak
+- snapshot at end of each step
+- snapshot every 2-4 scenes
+- inverse patch generated from runtime state before applying
+- replay remains fallback if no snapshot or inverse
 
 ---
 
-## 41. Scene execution mora biti strogo faziran
+## 40. Reconnect and Restore Strategy
 
-Kako engine raste, važno je da scene execution ne bude jedna velika “runScene” funkcija bez discipline.
+If preview reconnects, iframe resets, or live preview loses state, engine must know how to return to consistent point.
 
-### 41.1 Preporučene faze
+### 40.1 Reconnect Rule
+
+After reconnect:
+
+1. restore nearest valid snapshot
+2. replay scene delta to active scene (deterministic)
+3. reapply code effects
+4. reapply UI overlays
+5. only then continue playback
+
+**Important:** Don't use "shortcut" method of matching old scenes. Always prefer deterministic replay from known snapshot.
+
+### 40.2 What Reconnect Must Not Do
+
+- "guess" state from DOM
+- assume last animation
+- use GSAP progress as state
+- skip preview sync
+
+### 40.3 Why This Matters
+
+Without this rule:
+
+- `prev()` becomes unreliable
+- scrub becomes fragile
+- autoplay can end in half-state
+- debug becomes harder
+
+---
+
+## 41. Scene Execution Must Be Strictly Phased
+
+As engine grows, it's important that scene execution is not one big "runScene" function without discipline.
+
+### 41.1 Recommended Phases
 
 1. resolve scene payload
-2. validiraj prereq i allowed patch types
-3. očisti prethodne transient efekte
-4. restore ili pripremi baseline state
-5. primeni code effects
-6. primeni preview patches
-7. primeni UI overlays
-8. odradi enter animacije
+2. validate prereq and allowed patch types
+3. clear previous transient effects
+4. restore or prepare baseline state
+5. apply code effects
+6. apply preview patches
+7. apply UI overlays
+8. do enter animations
 9. sync narration
 10. sync progress
-11. emit debug i analytics event
+11. emit debug and analytics event
 
-### 41.2 Zašto
+### 41.2 Why
 
-Ovaj redosled daje:
+This order gives:
 
-* predvidivost
-* manji broj race condition situacija
-* lakši debugging
-* lakše testiranje po fazama
-
----
-
-## 42. Performance guardrails
-
-Polish faza nije samo UX, nego i performanse.
-
-### 42.1 Šta kontrolisati
-
-* broj aktivnih CodeMirror decorations
-* broj DOM query poziva po sceni
-* broj repaint/reflow tačaka
-* veličinu replay lanca bez snapshot-a
-* broj simultanih animacija
-
-### 42.2 Preporuke
-
-* snapshot na fiksnim boundary-jima
-* cache preview target reference gde je moguće
-* grupisati patch-eve po target-u
-* ne raditi full preview reset pri svakom scene-u
-* gasiti stare UI overlay efekte pre novih
-
-### 42.3 Pravilo
-
-Polish ne sme da uvede “vizuelno lep, ali runtime skup” sistem.
+- predictability
+- fewer race condition situations
+- easier debugging
+- easier testing by phases
 
 ---
 
-## 43. Accessibility hardening
+## 42. Performance Guardrails
 
-Kadar-po-kadar engine mora ostati pristupačan.
+Polish phase is not just UX, but also performance.
 
-### 43.1 Obavezni smerovi
+### 42.1 What to Control
 
-* keyboard `next/prev`
-* fokus ne sme da se gubi pri scene promeni
-* narration panel treba da bude čitljiv assistive tech-u
-* autoplay mora moći da se pauzira
-* motion heavy scene mora imati reduced-motion fallback
+- number of active CodeMirror decorations
+- number of DOM query calls per scene
+- number of repaint/reflow points
+- size of replay chain without snapshot
+- number of simultaneous animations
 
-### 43.2 Za `scene.ui`
+### 42.2 Recommendations
 
-Ako koristiš popover/callout:
+- snapshot at fixed boundaries
+- cache preview target reference where possible
+- group patches by target
+- don't do full preview reset on every scene
+- turn off old UI overlay effects before new ones
 
-* mora imati jasan focus model
-* ne sme blokirati osnovni flow bez escape mehanizma
-* ne sme vizuelno postojati bez tekstualnog ekvivalenta gde je bitno
+### 42.3 Rule
 
-### 43.3 Pravilo
-
-Teaching polish ne sme doći po cenu pristupačnosti.
+Polish must not introduce "visually beautiful, but runtime expensive" system.
 
 ---
 
-## 44. Observability i debug sloj
+## 43. Accessibility Hardening
 
-Kako engine sazreva, treba mu interni debug pogled.
+Frame-by-frame engine must remain accessible.
+
+### 43.1 Required Directions
+
+- keyboard `next/prev`
+- focus must not be lost on scene change
+- narration panel should be readable by assistive tech
+- autoplay must be pausable
+- motion heavy scene must have reduced-motion fallback
+
+### 43.2 For `scene.ui`
+
+If using popover/callout:
+
+- must have clear focus model
+- must not block basic flow without escape mechanism
+- must not visually exist without textual equivalent where important
+
+### 43.3 Rule
+
+Teaching polish must not come at the cost of accessibility.
+
+---
+
+## 44. Observability and Debug Layer
+
+As engine matures, it needs internal debug view.
 
 ### 44.1 Lifecycle Hooks
 
-Engine treba da emituje evente na koje se mogu zakačiti external alati (analytics, debug UI, tests):
+Engine should emit events that external tools can hook into (analytics, debug UI, tests):
 
-* `onSceneEnter(sceneId)`
-* `onSceneExit(sceneId)`
-* `onPatchApplied(patch)`
-* `onSnapshotCreated(id)`
-* `onSnapshotRestored(id)`
+- `onSceneEnter(sceneId)`
+- `onSceneExit(sceneId)`
+- `onPatchApplied(patch)`
+- `onSnapshotCreated(id)`
+- `onSnapshotRestored(id)`
 
-### 44.2 Korisni debug output-i
+### 44.2 Useful Debug Outputs
 
-* aktivni `stepId`
-* aktivni `sceneId`
-* poslednji primenjeni patch IDs
-* snapshot key
-* replay source
-* preview mode
-* animation status
-* failed prereq log
+- active `stepId`
+- active `sceneId`
+- last applied patch IDs
+- snapshot key
+- replay source
+- preview mode
+- animation status
+- failed prereq log
 
-### 44.3 Korisni događaji
+### 44.3 Useful Events
 
-* `scene:enter`
-* `scene:exit`
-* `scene:replay`
-* `snapshot:create`
-* `snapshot:restore`
-* `patch:apply`
-* `patch:undo`
-* `prereq:fail`
+- `scene:enter`
+- `scene:exit`
+- `scene:replay`
+- `snapshot:create`
+- `snapshot:restore`
+- `patch:apply`
+- `patch:undo`
+- `prereq:fail`
 
-### 44.4 Zašto
+### 44.4 Why
 
-Ovo dramatično olakšava:
+This dramatically eases:
 
-* testiranje
-* reprodukciju bugova
-* authoring greške
-* perf istrage
+- testing
+- bug reproduction
+- authoring mistakes
+- perf investigations
 
 ---
 
-## 45. Playback Profili
+## 45. Playback Profiles
 
-Engine treba da podržava različite režime rada zavisno od konteksta (development, demo, test).
+Engine should support different operating modes depending on context (development, demo, test).
 
-### 45.1 Profili
+### 45.1 Profiles
 
 1. **Normal**
-   * Standardni user timing.
-   * Poštuje `duration` i animacije.
-   * Koristi se za krajnje korisnike.
+   - Standard user timing.
+   - Respects `duration` and animations.
+   - Used for end users.
 
 2. **Slow**
-   * Usporeni timing (npr. 0.5x ili fiksni delay).
-   * Naglašava tranzicije.
-   * Koristi se za prezentacije ili debugging brzih promena.
+   - Slowed timing (e.g. 0.5x or fixed delay).
+   - Emphasizes transitions.
+   - Used for presentations or debugging fast changes.
 
 3. **Instant (Headless)**
-   * `duration: 0` za sve tranzicije.
-   * Preskače vizuelne efekte (fade, slide).
-   * Koristi se za automated testing, fast-forward, ili inicijalni load stanja.
+   - `duration: 0` for all transitions.
+   - Skips visual effects (fade, slide).
+   - Used for automated testing, fast-forward, or initial load states.
 
 ---
 
-## 46. Lint pravila za authoring hardening
+## 46. Lint Rules for Authoring Hardening
 
-Kako lesson data raste, moraš rano sprečiti authoring drift.
+As lesson data grows, you must early prevent authoring drift.
 
-### 46.1 Predložena pravila
+### 46.1 Proposed Rules
 
-* svaki patch mora imati validan `type`
-* svaki `id` mora biti jedinstven bar unutar scene
-* `undoId` mora pokazivati na postojeći inverse ili dozvoljenu fallback strategiju
-* `groupId` ne sme mešati nepovezane promene
-* `prereq` mora pokazivati na definisane capability ili milestone vrednosti
-* `scene.ui` tip mora biti iz dozvoljenog vocabulara
-* `duration` mora biti numerički i u dozvoljenom opsegu
-* `enter` i `exit` ne smeju sadržati state mutation patch tipove
+- each patch must have valid `type`
+- each `id` must be unique at least within scene
+- `undoId` must point to existing inverse or allowed fallback strategy
+- `groupId` must not mix unrelated changes
+- `prereq` must point to defined capability or milestone values
+- `scene.ui` type must be from allowed vocabulary
+- `duration` must be numeric and in allowed range
+- `enter` and `exit` must not contain state mutation patch types
 
-### 46.2 Dobit
+### 46.2 Benefits
 
-* manje implicitnog ponašanja
-* manje ručnih pretpostavki
-* čitljiviji lesson files
-* sigurniji refactor
-
----
-
-## 47. Test strategija za hardening fazu
-
-Polish sloj mora biti pokriven testovima, ne samo manuelnim klikom.
-
-### 47.1 Jedinični testovi
-
-Pokriti:
-
-* patch normalizaciju
-* prereq validaciju
-* snapshot create/restore
-* inverse patch mapping
-* scene resolve redosled
-* replay determinističnost
-
-### 47.2 Integracioni testovi
-
-Pokriti:
-
-* `next` kroz ceo step
-* `prev` preko snapshot boundary-ja
-* `scrubTo(scene)` iz više pozicija
-* reconnect + restore
-* DOM mode i state mode sa istim lesson payload-om
-
-### 47.3 Regression testovi
-
-Za svaki ozbiljniji bug napraviti:
-
-* minimalni lesson fixture
-* očekivani scene sequence
-* očekivani preview outcome
-* očekivani debug log
+- less implicit behavior
+- less manual assumptions
+- more readable lesson files
+- safer refactor
 
 ---
 
-## 48. Definition of done za hardening fazu
+## 47. Test Strategy for Hardening Phase
 
-Polish i hardening faza je gotova tek kada sledeće važi:
+Polish layer must be covered by tests, not just manual clicking.
 
-* `next`, `prev`, `goTo`, `scrub` su deterministički
-* reconnect vraća konzistentno stanje
-* snapshot restore je pouzdan
-* inverse patch ne uvodi state drift
-* `scene.ui` ne raste nekontrolisano
-* `prereq` hvata authoring greške rano
-* GSAP je isključivo vizuelni sloj
-* debug panel jasno pokazuje scene execution
-* reduced-motion i keyboard flow rade
-* isti lesson payload može da radi u DOM i state preview modu
+### 47.1 Unit Tests
 
----
+Cover:
 
-## 49. Preporučeni redosled uvođenja hardening detalja
+- patch normalization
+- prereq validation
+- snapshot create/restore
+- inverse patch mapping
+- scene resolve order
+- replay determinism
 
-Ove stvari ne uvoditi sve odjednom.
+### 47.2 Integration Tests
 
-### Faza A — metadata i guardrails
+Cover:
 
-* dodati `id`
-* dodati `groupId`
-* dodati `debugLabel`
-* dodati ograničeni `scene.ui` vocabulary
+- `next` through entire step
+- `prev` over snapshot boundary
+- `scrubTo(scene)` from multiple positions
+- reconnect + restore
+- DOM mode and state mode with same lesson payload
 
-### Faza B — rollback stabilnost
+### 47.3 Regression Tests
 
-* dodati `undoId`
-* uvesti inverse patch map gde ima smisla
-* zaključati snapshot boundary pravila
+For each serious bug create:
 
-### Faza C — authoring pouzdanost
-
-* dodati `prereq`
-* dodati lint za `scene.ui`
-* dodati lint za `enter/exit`
-
-### Faza D — playback polish
-
-* dodati `duration`
-* dodati `enter`
-* dodati `exit`
-* dodati reduced-motion fallback
-
-### Faza E — observability
-
-* debug event log
-* scene execution inspector
-* snapshot inspector
-* patch trace panel
+- minimal lesson fixture
+- expected scene sequence
+- expected preview outcome
+- expected debug log
 
 ---
 
-## 50. Konačni hardening cilj
+## 48. Definition of Done for Hardening Phase
 
-Animator engine ne treba samo da “radi”.
+Polish and hardening phase is done only when the following holds:
 
-Treba da bude:
-
-* replayable
-* rewindable
-* authorable
-* testable
-* debuggable
-* performant
-* pristupačan
-
-Idealni završni model izgleda ovako:
-
-* `player state` odlučuje šta je aktivno
-* `scene delta` opisuje šta se menja
-* `code effects` i `preview patches` izvršavaju promenu
-* `scene.ui` pomaže učenju bez preuzimanja state odgovornosti
-* `GSAP` samo vizuelno prati tranziciju
-* `snapshot` i `inverse patch` obezbeđuju stabilan rewind i restore
-* `prereq` i lint pravila štite authoring sloj
-* debug sloj omogućava da svaki scene bude objašnjiv i proverljiv
+- `next`, `prev`, `goTo`, `scrub` are deterministic
+- reconnect returns consistent state
+- snapshot restore is reliable
+- inverse patch doesn't introduce state drift
+- `scene.ui` doesn't grow uncontrollably
+- `prereq` catches authoring mistakes early
+- GSAP is exclusively visual layer
+- debug panel clearly shows scene execution
+- reduced-motion and keyboard flow work
+- same lesson payload can work in DOM and state preview mode
 
 ---
 
-```
-```
+## 49. Recommended Introduction Order for Hardening Details
+
+Don't introduce these all at once.
+
+### Phase A — Metadata and Guardrails
+
+- add `id`
+- add `groupId`
+- add `debugLabel`
+- add limited `scene.ui` vocabulary
+
+### Phase B — Rollback Stability
+
+- add `undoId`
+- introduce inverse patch map where it makes sense
+- lock snapshot boundary rules
+
+### Phase C — Authoring Reliability
+
+- add `prereq`
+- add lint for `scene.ui`
+- add lint for `enter/exit`
+
+### Phase D — Playback Polish
+
+- add `duration`
+- add `enter`
+- add `exit`
+- add reduced-motion fallback
+
+### Phase E — Observability
+
+- debug event log
+- scene execution inspector
+- snapshot inspector
+- patch trace panel
+
+---
+
+## 50. Final Hardening Goal
+
+Animator engine shouldn't just "work".
+
+It should be:
+
+- replayable
+- rewindable
+- authorable
+- testable
+- debuggable
+- performant
+- accessible
+
+Ideal final model looks like this:
+
+- `player state` decides what is active
+- `scene delta` describes what changes
+- `code effects` and `preview patches` execute the change
+- `scene.ui` assists learning without taking over state responsibility
+- `GSAP` only visually follows transition
+- `snapshot` and `inverse patch` provide stable rewind and restore
+- `prereq` and lint rules protect authoring layer
+- debug layer enables every scene to be explainable and verifiable
+
+---
+
+## 51. Appendix: Existing Lesson Architecture
+
+For current lesson architecture details, see:
+- `lessons/lesson-architecture.md`
+- `animator/agents.md`
 
 === lessons/01-build-sidebar/build-css-at-step.js ===
 import cssRulesDocument from './content/documents/files/css.rules.md?raw';
@@ -9537,14 +9670,14 @@ Koraci po korak gradiš sidebar od osnove do gotove navigacije. Svaki korak uklj
 
 === lessons/01-build-sidebar/content/documents/files/lesson.sr.md ===
 ---
-title: 01 · Kako se pravi moderan sidebar
+title: 01 · How to Build a Modern Sidebar
 previewAddress: browser://01-build-sidebar-preview
 previewTitle: Live build sidebar preview
 htmlFileName: index.html
 cssFileName: style.css
 ---
 
-Koraci po korak gradiš sidebar od osnove do gotove navigacije. Svaki korak uključuje kod, savete i vizuelni prikaz.
+You build a sidebar from scratch, step by step. Each step includes code, tips and visual preview.
 
 === lessons/01-build-sidebar/describe-steps.js ===
 const focusHtmlNeedlesBySelector = {
@@ -10095,14 +10228,14 @@ Koraci po korak gradiš prvi navbar iz reference: logo levo, linkovi u sredini i
 
 === lessons/02-build-top-navigation/content/documents/files/lesson.sr.md ===
 ---
-title: 02 · Kako se pravi top navigation bar
+title: 02 · How to Build a Top Navigation Bar
 previewAddress: browser://02-build-top-navigation-preview
 previewTitle: Live top navigation preview
 htmlFileName: index.html
 cssFileName: style.css
 ---
 
-Koraci po korak gradiš prvi navbar iz reference: logo levo, linkovi u sredini i CTA dugme desno. Druga dva rasporeda iz iste slike ostaju kao domaći zadatak.
+You build your first navbar from a reference image: logo left, links in the middle and CTA button right. The other two layouts from the same reference remain as homework.
 
 === lessons/02-build-top-navigation/describe-steps.js ===
 const focusHtmlNeedlesBySelector = {
@@ -10586,7 +10719,7 @@ Prva Web Components lekcija namerno kreće bez shadow DOM-a. Tako prvo vidiš sa
 
 === lessons/03-build-custom-element/content/documents/files/lesson.sr.md ===
 ---
-title: 03 · Web Components 1/2 · Light DOM custom element
+title: 03 · Web Components 1/2 · Light DOM Custom Element
 previewAddress: browser://03-build-custom-element-preview
 previewTitle: Live custom element preview
 htmlFileName: index.html
@@ -10594,7 +10727,7 @@ cssFileName: style.css
 jsFileName: my-first-component.js
 ---
 
-Prva Web Components lekcija namerno kreće bez shadow DOM-a. Tako prvo vidiš samu osnovu platforme: custom tag sa crticom, registraciju preko `customElements.define`, atribute kao spoljašnji API i prvi render kroz `connectedCallback()`. Tek posle toga prelazimo na shadow DOM, template i slotove.
+The first Web Components lesson intentionally starts without shadow DOM. This way you first see the platform basics: custom tag with dash, registration via `customElements.define`, attributes as external API and first render through `connectedCallback()`. Only after that do we move to shadow DOM, template and slots.
 
 === lessons/03-build-custom-element/describe-steps.js ===
 const focusHtmlNeedlesBySelector = {
@@ -11624,7 +11757,7 @@ Druga Web Components lekcija nadograđuje osnove iz prve: isti nivo komponente s
 
 === lessons/04-build-web-component/content/documents/files/lesson.sr.md ===
 ---
-title: 04 · Web Components 2/2 · Shadow DOM my first component
+title: 04 · Web Components 2/2 · Shadow DOM My First Component
 previewAddress: browser://04-build-web-component-preview
 previewTitle: Live Web Component preview
 htmlFileName: index.html
@@ -11632,7 +11765,7 @@ cssFileName: style.css
 jsFileName: my-first-component.js
 ---
 
-Druga Web Components lekcija nadograđuje osnove iz prve: isti nivo komponente sada gradiš kroz template, shadow DOM, slotove i render lifecycle. Lekcija namerno ide detaljno, da jasno vidiš kada host HTML postaje pravi custom element, kako template ulazi u shadow root, kako spoljašnji CSS tokeni utiču na unutrašnji izgled komponente i kako završni polish uključuje cleanup, safe registraciju i izlazni custom event.
+The second Web Components lesson builds on the basics from the first one: the same level of component is now built through template, shadow DOM, slots and render lifecycle. The lesson intentionally goes into detail so you can clearly see when host HTML becomes a proper custom element, how template enters shadow root, how external CSS tokens affect the internal component appearance, and how final polish includes cleanup, safe registration and outgoing custom event.
 
 === lessons/04-build-web-component/describe-steps.js ===
 const focusHtmlNeedlesBySelector = {
@@ -12467,7 +12600,7 @@ jsFileName: my-first-component.js
 shadowCssFileName: shadow-dom-style.css
 ---
 
-Treća Web Components lekcija uzima isti my first component i čisti njegov unutrašnji styling tok. Umesto da CSS bude zbijen u `<style>` unutar `template.innerHTML`, sada ga držiš u posebnom `shadow-dom-style.css` fajlu, JavaScript ga uvozi kao tekst, puni `CSSStyleSheet` kroz `replaceSync()` i usvaja preko `shadowRoot.adoptedStyleSheets`. Suština lekcije je da CSS može da bude odvojen i od class logike i od template markup-a, dok host API, slotovi i lifecycle ostaju isti.
+The third Web Components lesson takes the same my first component and cleans its internal styling flow. Instead of CSS being crammed into `<style>` within `template.innerHTML`, you now keep it in a separate `shadow-dom-style.css` file, JavaScript imports it as text, fills `CSSStyleSheet` via `replaceSync()` and adopts it via `shadowRoot.adoptedStyleSheets`. The essence of the lesson is that CSS can be separated from both class logic and template markup, while host API, slots and lifecycle remain the same.
 
 === lessons/05-clean-web-component-with-adopted-stylesheets/content/documents/files/shadow-dom-style.css.md ===
 # Shadow DOM CSS Rule Blocks
@@ -13438,7 +13571,7 @@ jsFileName: my-first-component.js
 shadowCssFileName: shadow-dom-style.css
 ---
 
-Ova lekcija demonstrira novi IDE mode playera. Umesto da svi fajlovi budu vidljivi odjednom, koristiš file browser i automatsko prebacivanje fokusa na fajl koji se trenutno menja, dok ista Web Components komponenta i dalje raste kroz host HTML, component logic, shadow CSS i host CSS.
+This lesson demonstrates the new IDE mode of the player. Instead of all files being visible at once, you use the file browser and automatic focus switching to the file currently being changed, while the same Web Components component continues to grow through host HTML, component logic, shadow CSS and host CSS.
 
 === lessons/06-modular-web-components/content/documents/files/shadow-dom-style.css.md ===
 # Shadow DOM CSS Rule Blocks
@@ -14776,7 +14909,7 @@ templateJsFileName: ui-user-avatar.template.js
 shadowCssFileName: ui-user-avatar.shadow.css
 ---
 
-U ovoj lekciji gradimo `ui-user-avatar` — pravi enterprise dashboard widget koji prikazuje team member kartice sa statusom, tooltip-om, slotovima za inicijale ili sliku i punu klik interakciju ka profile modal-u. Koristimo custom element, shadow DOM, adoptedStyleSheets, namespaced event contract i status variant API.
+In this lesson we build `ui-user-avatar` — a real enterprise dashboard widget that displays team member cards with status, tooltip, slots for initials or image and full click interaction toward profile modal. We use custom element, shadow DOM, adoptedStyleSheets, namespaced event contract and status variant API.
 
 === lessons/07-build-ui-user-avatar/content/documents/files/shadow-dom-style.css.md ===
 # Shadow CSS Rule Blocks
@@ -16660,7 +16793,7 @@ templateJsFileName: ui-pricing-card.template.js
 shadowCssFileName: ui-pricing-card.shadow.css
 ---
 
-U ovoj lekciji gradimo `ui-pricing-card` — enterprise SaaS pricing table komponentu sa tier varijantama (starter/pro/enterprise), popular highlight stanjem, yearly/monthly toggle koji menja prikazanu cenu, CTA dugmetom sa urgency timerom i feature matrix slotovima. Komponenta ima precizan property API, granularni update tok i namespaced event contract.
+In this lesson we build `ui-pricing-card` — an enterprise SaaS pricing table component with tier variants (starter/pro/enterprise), popular highlight state, yearly/monthly toggle that changes displayed price, CTA button with urgency timer and feature matrix slots. The component has precise property API, granular update flow and namespaced event contract.
 
 === lessons/08-smell-of-enterprise/content/documents/files/shadow-dom-style.css.md ===
 # Shadow CSS Rule Blocks
@@ -17761,9 +17894,9 @@ export const stepNumberById = Object.fromEntries(
 === lessons/lesson-architecture.md ===
 # Lesson Architecture
 
-## Svrha
+## Purpose
 
-Ova dokumentacija definiše kanonsku arhitekturu za sve lesson feature slice-ove u `lessons/` folderu.
+This document defines the canonical architecture for all lesson feature slices in the `lessons/` folder.
 
 ---
 
@@ -17784,10 +17917,10 @@ lessons/
         feature-goal.svg        # goal image (optional)
       documents/
         files/
-          lesson.sr.md          # source of truth za metadata
-          html.timeline.md      # HTML teaching tok
-          css.rules.md          # CSS rule blokovi
-          js.timeline.md        # JS teaching tok (optional)
+          lesson.sr.md          # source of truth for metadata
+          html.timeline.md      # HTML teaching flow
+          css.rules.md          # CSS rule blocks
+          js.timeline.md        # JS teaching flow (optional)
           shadow-dom-style.css.md # shadow CSS (optional)
           template-js.timeline.md # template JS (optional)
         feature-name.md          # generated output
@@ -17797,7 +17930,7 @@ lessons/
 
 ## Lesson Contract
 
-Svaki `*.lesson.js` mora vratiti:
+Every `*.lesson.js` must return:
 
 ```javascript
 export function lessonContract() {
@@ -17832,14 +17965,14 @@ export function lessonContract() {
 
 ## Lesson Metadata Source
 
-`lesson.sr.md` je kanonski source za:
+`lesson.sr.md` is the canonical source for:
 
 - `lessonId` - unique identifier
-- `lessonTitle` - naslov
-- `lessonIntro` - uvod
-- `previewTitle` - naslov preview taba
-- `goal*` - opciono goal sekcija
-- `homework*` - opciono homework sekcija
+- `lessonTitle` - title
+- `lessonIntro` - intro
+- `previewTitle` - preview tab title
+- `goal*` - optional goal section
+- `homework*` - optional homework section
 
 Format:
 
@@ -17865,27 +17998,27 @@ homeworkItems:
 ## Builder Responsibility
 
 ### `build-html-at-step.js`
-- Čita `html.timeline.md`
-- Parsira timeline blokove
-- Vraća niz linija za dati step
+- Reads `html.timeline.md`
+- Parses timeline blocks
+- Returns array of lines for given step
 
 ### `build-css-at-step.js`
-- Čita `css.rules.md`
-- Parsira rule blokove (property by property)
-- Vraća niz linija za dati step
+- Reads `css.rules.md`
+- Parses rule blocks (property by property)
+- Returns array of lines for given step
 
 ### `build-js-at-step.js` (optional)
-- Čita `js.timeline.md`
-- Parsira JS timeline blokove
-- Vraća niz linija za dati step
+- Reads `js.timeline.md`
+- Parses JS timeline blocks
+- Returns array of lines for given step
 
 ### `build-shadow-css-at-step.js` (optional)
-- Čita `shadow-dom-style.css.md`
-- Vraća shadow DOM stylesheet linije
+- Reads `shadow-dom-style.css.md`
+- Returns shadow DOM stylesheet lines
 
 ### `build-template-js-at-step.js` (optional)
-- Čita `template-js.timeline.md`
-- Vraća template JS linije
+- Reads `template-js.timeline.md`
+- Returns template JS lines
 
 ---
 
@@ -17949,16 +18082,16 @@ customElements.define('my-element', MyElement);
 
 ## Prohibited Patterns
 
-- Ne koristiti `utils`, `helpers`, `shared` foldere
-- Ne mešati content sa logikom
-- Ne praviti custom builder logiku van definisanih adaptera
-- Ne duplicirati lesson contract logiku
+- Don't use `utils`, `helpers`, `shared` folders
+- Don't mix content with logic
+- Don't create custom builder logic outside defined adapters
+- Don't duplicate lesson contract logic
 
 ---
 
 ## Registration
 
-Svaka lesson mora biti registrovana u `lessons/register-lessons.js`:
+Every lesson must be registered in `lessons/register-lessons.js`:
 
 ```javascript
 import { lessonContract as sidebarContract } from './01-build-sidebar/feature-name.lesson.js';
