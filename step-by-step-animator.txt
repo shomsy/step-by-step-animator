@@ -14657,212 +14657,142 @@ export const stepNumberById = Object.fromEntries(
 === lessons/lesson-architecture.md ===
 # Lesson Architecture
 
-## Purpose
+This document is the repo-level governance for the lesson system.
 
-This document defines the canonical architecture for all lesson feature slices in the `lessons/` folder.
+## Target Model
 
----
+- `education/` is source-only.
+- `lesson-engine/` owns discovery, validation, parsing, normalization, projection, compilation, and generated documentation.
+- `animator-engine/` replays compiled lesson packages only.
+- `app/` mounts the runtime and presents the product shell.
+- `foundation/` holds shared primitives.
+- `generated/` holds derived outputs.
 
-## Folder Shape
+## Source Contract
 
-```
-lessons/
-  01-feature-name/
-    feature-name.lesson.js      # root lesson contract
-    describe-steps.js           # step descriptions
-    build-html-at-step.js       # HTML builder
-    build-css-at-step.js        # CSS builder
-    build-js-at-step.js         # JS builder (optional)
-    build-shadow-css-at-step.js # shadow CSS builder (optional)
-    build-template-js-at-step.js # template JS builder (optional)
-    content/
-      assets/
-        feature-goal.svg        # goal image (optional)
-      documents/
-        files/
-          lesson.sr.md          # source of truth for metadata
-          html.timeline.md      # HTML teaching flow
-          css.rules.md          # CSS rule blocks
-          js.timeline.md        # JS teaching flow (optional)
-          shadow-dom-style.css.md # shadow CSS (optional)
-          template-js.timeline.md # template JS (optional)
-        feature-name.md          # generated output
-```
+Each lesson slice lives under `education/lessons/<lesson-slug>/source/` and contains:
 
----
+- `lesson.md`
+- `theory.md`
+- `html.timeline.md`
+- `css.rules.md`
+- optional `js.timeline.md`
+- optional `template-js.timeline.md`
+- optional `shadow-dom-style.css.md`
+- `assets/` beside the source
 
-## Lesson Contract
+Education contains source only. No lesson build glue lives there.
 
-Every `*.lesson.js` must return:
+## Engine Contract
 
-```javascript
-export function lessonContract() {
-  return {
-    lessonId: 'unique-slug',
-    lessonTitle: 'Human readable title',
-    lessonIntro: 'Short intro text',
-    previewAddress: '/preview-path.html',
-    previewTitle: 'Preview tab title',
-    htmlFileName: 'index.html',
-    cssFileName: 'style.css',
-    jsFileName: null,              // optional
-    templateJsFileName: null,      // optional
-    shadowCssFileName: null,        // optional
-    steps: [],                      // from describe-steps.js
-    buildHtmlAtStep,
-    buildCssAtStep,
-    buildJsAtStep,                  // optional
-    buildShadowCssAtStep,           // optional
-    buildTemplateJsAtStep,           // optional
-    goalTitle: null,                // optional
-    goalImageSrc: null,             // optional
-    goalImageAlt: null,             // optional
-    goalImageCaption: null,         // optional
-    homeworkTitle: null,            // optional
-    homeworkItems: [],              // optional
-  };
-}
-```
+`lesson-engine/` is the content-to-lesson compiler.
 
----
+It owns:
 
-## Lesson Metadata Source
+- discovery
+- read / validate / parse / normalize
+- artifact projection by kind
+- lesson package compilation
+- documentation generation
+- compiled package registration
 
-`lesson.sr.md` is the canonical source for:
+Artifact projection is artifact-first. Supported kinds include:
 
-- `lessonId` - unique identifier
-- `lessonTitle` - title
-- `lessonIntro` - intro
-- `previewTitle` - preview tab title
-- `goal*` - optional goal section
-- `homework*` - optional homework section
+- `html`
+- `css`
+- `js`
+- `template-js`
+- `shadow-css`
+- `php`
+- `sql`
+- `yaml`
+- `readme`
+- future kinds through adapters
 
-Format:
+## Runtime Contract
 
-```markdown
----
-lessonId: 01-build-sidebar
-lessonTitle: Build Sidebar
-lessonIntro: In this lesson you will build a sidebar from scratch.
-previewTitle: Sidebar Preview
-goalTitle: What We're Building
-goalImageSrc: ./assets/sidebar-goal.svg
-goalImageAlt: Sidebar component
-goalImageCaption: The sidebar we'll build
-homeworkTitle: Homework
-homeworkItems:
-  - Add hover effects to sidebar items
-  - Add nested menu items
----
-```
+`animator-engine/` consumes only compiled lesson packages.
 
----
+It does not parse raw lesson source.
+It may present docs and playback UI, but it does not own source translation.
 
-## Builder Responsibility
+## Foundation Contract
 
-### `build-html-at-step.js`
-- Reads `html.timeline.md`
-- Parses timeline blocks
-- Returns array of lines for given step
+`foundation/` is allowed for:
 
-### `build-css-at-step.js`
-- Reads `css.rules.md`
-- Parses rule blocks (property by property)
-- Returns array of lines for given step
+- filesystem
+- markdown
+- frontmatter
+- validation
+- logging
+- storage
+- hashing
 
-### `build-js-at-step.js` (optional)
-- Reads `js.timeline.md`
-- Parses JS timeline blocks
-- Returns array of lines for given step
+Foundation must stay small and generic.
 
-### `build-shadow-css-at-step.js` (optional)
-- Reads `shadow-dom-style.css.md`
-- Returns shadow DOM stylesheet lines
+## Governance Rules
 
-### `build-template-js-at-step.js` (optional)
-- Reads `template-js.timeline.md`
-- Returns template JS lines
+- folder says flow
+- file says responsibility
+- function says exact action
+- `theory.md` is real and must not be implied without a file
+- source-only education is mandatory
+- generated docs are derived, not hand-edited
+- validation runs before compilation
+- the compiled lesson package is the single truth the animator needs
 
----
+## Representative Tree
 
-## Timeline Format
-
-### HTML Timeline (`html.timeline.md`)
-
-```markdown
-# HTML Timeline
-
-```html
-<!-- step:1 -->
-<div class="sidebar">
-</div>
+```txt
+step-by-step-animator/
+  AGENTS.md
+  app/
+    index.html
+    main.js
+  education/
+    lessons/
+      <lesson-slug>/
+        source/
+          lesson.md
+          theory.md
+          html.timeline.md
+          css.rules.md
+          js.timeline.md
+          template-js.timeline.md
+          shadow-dom-style.css.md
+        assets/
+  lesson-engine/
+    discover-education-content/
+    read-education-entry/
+    validate-education-entry/
+    parse-education-source/
+    normalize-lesson-source/
+    project-artifact-state/
+    compile-lesson-package/
+    documentation/
+    register-lesson-packages/
+    contracts/
+    adapters/
+  animator-engine/
+    choose-lesson/
+    play-lesson/
+  foundation/
+    filesystem/
+    markdown/
+    frontmatter/
+    validation/
+    logging/
+    storage/
+    hashing/
+  generated/
+    lesson-packages/
+    lesson-documents/
+    validation-reports/
 ```
 
-```html
-<!-- step:3 -->
-<div class="sidebar">
-  <nav class="sidebar-nav">
-  </nav>
-</div>
-```
-```
+## Migration Rule
 
-### CSS Rules (`css.rules.md`)
-
-```markdown
-# CSS Rules
-
-.sidebar {
-  /* step:1 */
-  width: 250px;
-
-  /* step:4 */
-  background: #1a1a1a;
-}
-```
-
-### JS Timeline (`js.timeline.md`)
-
-```markdown
-# JS Timeline
-
-```js
-// step:1
-class MyElement extends HTMLElement {
-  connectedCallback() {
-    this.innerHTML = '<p>Hello</p>';
-  }
-}
-```
-
-```js
-// step:3
-customElements.define('my-element', MyElement);
-```
-```
-
----
-
-## Prohibited Patterns
-
-- Don't use `utils`, `helpers`, `shared` folders
-- Don't mix content with logic
-- Don't create custom builder logic outside defined adapters
-- Don't duplicate lesson contract logic
-
----
-
-## Registration
-
-Every lesson must be registered in `lessons/register-lessons.js`:
-
-```javascript
-import { lessonContract as sidebarContract } from './01-build-sidebar/feature-name.lesson.js';
-
-export const registeredLessons = [
-  sidebarContract(),
-];
-```
+If a feature still needs executable lesson-specific glue, that glue belongs in `lesson-engine/` during migration. It does not belong under `education/`.
 
 === lessons/register-lessons.js ===
 import { buildSidebarLesson } from './01-build-sidebar/build-sidebar.lesson.js';
