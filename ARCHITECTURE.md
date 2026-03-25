@@ -1,11 +1,21 @@
 # Architecture
 
-This repo follows a business-first screaming architecture with two top-level areas:
+This document applies the reusable standard from `architecture-standard.md` to the Step By Step Animator repo.
+
+## Scope and Authority
+
+- `AGENTS.md` governs execution, delivery discipline, and collaboration.
+- `architecture-standard.md` defines the reusable architecture baseline.
+- This file binds that baseline to this repo and keeps it concrete.
+
+If a repo-specific exception is needed, it must be documented here and it must not lower the baseline quality bar.
+
+## Repo Shape
+
+This repo has two top-level areas:
 
 - `animator/` for technical runtime and document tooling
 - `lessons/` for business lesson slices
-
-## Shape
 
 Read the tree in this order:
 
@@ -14,7 +24,9 @@ Read the tree in this order:
 3. File responsibility
 4. Function action
 
-Current example:
+Representative example:
+
+This block is illustrative, not exhaustive. The live lesson set is tracked in `AGENTS.md` and registered in `lessons/register-lessons.js`.
 
 ```txt
 animator/
@@ -374,6 +386,13 @@ Do not introduce these unless there is a very strong reason:
 Use this sentence as the filter before every new file:
 
 > If the folder does not say the flow, the file does not say the responsibility, or the function does not say the exact action, the name is not good enough.
+
+## Change Policy
+
+- if a change affects repo shape, update this document in the same change
+- if a change affects the reusable standard, update `architecture-standard.md`
+- do not invent invisible exceptions
+- do not add a folder, file, or abstraction unless it reduces mental noise
 
 ## Lesson Authoring
 

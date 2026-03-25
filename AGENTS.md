@@ -34,11 +34,27 @@ Ovo nije showcase.
 Ovo nije fake storyboard.
 Ovo je teaching product.
 
+## 1.1 Document Authority
+
+Ovaj repo ima tri nivoa dokumenata:
+
+- `architecture-standard.md` je reusable arhitektonski baseline.
+- `ARCHITECTURE.md` je repo-specifična primena tog baseline-a.
+- `AGENTS.md` je operativni ugovor za rad, delivery i saradnju u ovom repo-u.
+
+Pravila:
+
+- ako menjamo strukturu, naming ili granice odgovornosti, menjamo owning document u istom work item-u
+- nema tihih izuzetaka
+- repo-specifično pravilo sme da suzi standard, ali ne sme da ga oslabi bez eksplicitnog zapisa
+
 ## 2. Technical Contract
 
 ### 2.1 Architecture Shape
 
 Repo prati business-first screaming architecture.
+
+Repo-level shape mora da ostane u skladu sa `architecture-standard.md`, a repo-specifična pravila se dokumentuju u `ARCHITECTURE.md`.
 
 Tree čitaš ovim redom:
 
@@ -421,6 +437,7 @@ npm run build
 ```
 
 Ako menjaš dokumentaciju ili flow tree, osveži i merge dump.
+Ako menjaš arhitektonsku strukturu, proveri da su `architecture-standard.md`, `ARCHITECTURE.md` i `AGENTS.md` i dalje usklađeni.
 
 ### 2.10 Delivery Discipline
 
@@ -428,10 +445,11 @@ Na kraju svakog većeg završenog rada obavezna je završna disciplina iz root-a
 
 To znači:
 
-1. pokreni `./merge-files.sh .` iz root-a
-2. uradi `git add -A`
-3. napravi normalan `git commit`
-4. uradi `git push`
+1. ako je promena dotakla arhitekturu ili naming, uskladi relevantne dokumente
+2. pokreni `./merge-files.sh .` iz root-a
+3. uradi `git add -A`
+4. napravi normalan `git commit`
+5. uradi `git push`
 
 Ne završavaj ozbiljan implementation pass bez ovog zatvaranja, osim ako korisnik eksplicitno traži da se ne commituje ili ne pushuje.
 
