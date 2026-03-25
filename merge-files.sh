@@ -112,7 +112,6 @@ const outputFile = path.join(rootDir, `${targetBasename}.txt`);
 const packageName = readPackageName(rootDir);
 
 const ignoredDirs = new Set([
-  '.agents',
   '.cache',
   '.git',
   '.idea',
