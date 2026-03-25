@@ -38,8 +38,8 @@ This is a teaching product.
 
 This repo has three levels of documents:
 
-- `.agents/architecture-standard.md` is the reusable architectural baseline.
-- `.agents/ARCHITECTURE.md` is the repo-specific application of that baseline.
+- `.agents/architecture/architecture-standard.md` is the reusable architectural baseline.
+- `.agents/architecture/ARCHITECTURE.md` is the repo-specific application of that baseline.
 - `AGENTS.md` is the operational contract for work, delivery and collaboration in this repo.
 
 Rules:
@@ -54,7 +54,10 @@ Rules:
 
 The repo follows business-first screaming architecture.
 
-Repo-level shape must stay in sync with `.agents/architecture-standard.md`, and repo-specific rules are documented in `.agents/ARCHITECTURE.md`.
+This repo is currently in a big-bang migration window toward the source-only lesson-engine model. New work must follow the target boundaries even while the legacy tree still exists.
+The execution order for that migration is defined in `.agents/architecture/big-bang-refactor-plan.md`.
+
+Repo-level shape must stay in sync with `.agents/architecture/architecture-standard.md`, and repo-specific rules are documented in `.agents/architecture/ARCHITECTURE.md`.
 
 Read the tree in this order:
 
@@ -68,7 +71,52 @@ Root is intentionally divided into two areas:
 - `animator/` is technical runtime, shell, playback and document tooling
 - `lessons/` are business lesson slices and their content
 
-Current canonical shape:
+Target canonical shape after migration:
+
+```txt
+app/
+  index.html
+  main.js
+  shell/
+education/
+  lessons/
+    <lesson-slug>/
+      source/
+        lesson.md
+        theory.md
+        scenes.md
+        artifacts/
+        assets/
+lesson-engine/
+  discover-education-content/
+  read-education-entry/
+  validate-education-entry/
+  parse-education-source/
+  normalize-lesson-source/
+  project-artifact-state/
+  compile-lesson-package/
+  documentation/
+  register-lesson-packages/
+  contracts/
+  adapters/
+animator-engine/
+  choose-lesson/
+  play-lesson/
+foundation/
+  filesystem/
+  markdown/
+  frontmatter/
+  validation/
+  logging/
+  storage/
+  hashing/
+generated/
+  lesson-packages/
+  lesson-documents/
+  validation-reports/
+```
+
+Legacy live shape until migration completes:
 
 ```txt
 animator/
@@ -444,7 +492,7 @@ npm run build
 ```
 
 If you change documentation or flow tree, also refresh the merge dump.
-If you change the architectural structure, check that `.agents/architecture-standard.md`, `.agents/ARCHITECTURE.md` and `AGENTS.md` are still in sync.
+If you change the architectural structure, check that `.agents/architecture/architecture-standard.md`, `.agents/architecture/ARCHITECTURE.md` and `AGENTS.md` are still in sync.
 
 ### 2.10 Delivery Discipline
 
@@ -462,7 +510,7 @@ Do not finish an implementation pass without this closing, unless the user expli
 
 ## 3. Feature Contract
 
-For making new animated lessons and AI prompt template, see [.agents/LESSON_AUTHORING.md](/home/shomsy/projects/step-by-step-animator/.agents/LESSON_AUTHORING.md).
+For making new animated lessons and AI prompt template, see [.agents/authoring/LESSON_AUTHORING.md](/home/shomsy/projects/step-by-step-animator/.agents/authoring/LESSON_AUTHORING.md).
 
 ### 3.1 Lesson Layout
 

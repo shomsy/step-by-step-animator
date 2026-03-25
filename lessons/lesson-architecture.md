@@ -35,6 +35,11 @@ Education contains source only. No lesson build glue lives there.
 - the lesson engine validates, normalizes, projects, and compiles this source into a canonical lesson package
 - the animator engine replays only the compiled package
 
+## Migration Note
+
+The execution plan lives in `.agents/architecture/big-bang-refactor-plan.md`.
+This tracked document keeps the repo-level target model and source contract only.
+
 ## Engine Contract
 
 `lesson-engine/` is the content-to-lesson compiler.
