@@ -292,79 +292,22 @@ lessons/
 
 ### 2.2 Lesson Contract
 
-Every new lesson slice must deliver one root lesson file:
+New lesson work must use the source-only contract from `.agents/authoring/LESSON_AUTHORING.md`.
 
-```txt
-feature-name.lesson.js
-```
+That means:
 
-That file must return the complete lesson contract:
-
-- `lessonId`
-- `lessonTitle`
-- `lessonIntro`
-- `previewAddress`
-- `previewTitle`
-- `htmlFileName`
-- `cssFileName`
-- `jsFileName` when the lesson actually has a JavaScript file
-- `templateJsFileName` when the lesson actually has a special template module like `component.html.js`
-- `shadowCssFileName` when the lesson actually has a special shadow DOM CSS file
-- `steps`
-- `buildHtmlAtStep`
-- `buildCssAtStep`
-- `buildJsAtStep` when the lesson requires live JavaScript in preview
-- `buildTemplateJsAtStep` when the lesson requires a special template JS editor and download file
-- `buildShadowCssAtStep` when the lesson requires a special shadow CSS editor and download file
-
-Optional lesson shell fields when you want to show visual goal and homework:
-
-- `goalTitle`
-- `goalImageSrc`
-- `goalImageAlt`
-- `goalImageCaption`
-- `homeworkTitle`
-- `homeworkItems`
-
-Do not introduce parallel lesson shapes.
+- source lives under `education/lessons/<lesson-slug>/source/`
+- the author writes `lesson.md`, `scenes.md`, optional `theory.md`, `artifacts/`, and `assets/`
+- `lesson-engine/` owns parsing, validation, normalization, projection, compilation and generated docs
+- the legacy `feature-name.lesson.js` lesson slice shape is frozen for migrated lessons only
+- do not introduce new `lesson.js`, `describe-steps.js`, or per-lesson `build-*` files for source-only lessons
+- if a lesson is not yet migrated, treat the legacy slice as read-only and add a source-only pilot instead of extending the old shape
 
 ### 2.3 Lesson Documents
 
-A lesson may have markdown source documents within:
+The exact source-only authoring contract is documented in `.agents/authoring/LESSON_AUTHORING.md`.
 
-```txt
-feature-name/
-  content/
-    documents/
-      files/
-        lesson.sr.md
-        html.timeline.md
-        css.rules.md
-        js.timeline.md
-        template-js.timeline.md
-        shadow-dom-style.css.md
-```
-
-If the lesson has a reference goal image, the asset goes here:
-
-```txt
-feature-name/
-  content/
-    assets/
-      feature-goal.svg
-```
-
-Rules:
-
-- `lesson.sr.md` is the canonical source for title, intro and lesson metadata
-- `html.timeline.md` is the canonical source for cumulative HTML teaching flow
-- `css.rules.md` is the canonical source for CSS rule blocks that grow property by property
-- `js.timeline.md` is the optional canonical source for cumulative JavaScript teaching flow
-- `template-js.timeline.md` is the optional canonical source for separated template JS module when lesson displays `component.html.js`
-- `shadow-dom-style.css.md` is the optional canonical source for shadow DOM CSS rule blocks when lesson separates inner stylesheet into a separate file
-- generated book output goes to `content/documents/<lesson_name>.md`
-- generated output is not manually edited
-- `build-html-at-step.js`, `build-css-at-step.js`, `build-js-at-step.js` and as needed `build-template-js-at-step.js` and `build-shadow-css-at-step.js` remain thin adapters that parse markdown DSL and return lines for a given step
+The legacy `content/documents/files/` shape still exists in migrated lessons until it is retired, but it is not the shape to extend for new work.
 
 ### 2.4 Runtime and Entry Rules
 
@@ -373,10 +316,11 @@ Rules:
 - `index.html` is generic lesson shell
 - `sidebar-step-by-step.html` is compatible alias for `01-build-sidebar`
 - build goes through Vite
-- repo is divided into `animator/` and `lessons/`
-- business lessons live under `lessons/`
-- technical player runtime and markdown tooling live under `animator/`
-- canonical player entry remains `animator/play-lesson/play-lesson.pipeline.js`
+- `animator-engine/` is the runtime boundary used by the app entrypoint
+- `lesson-engine/` owns source translation for source-only lessons
+- `animator/` remains the legacy runtime implementation area until migration completes
+- `lessons/` remains the legacy lesson slice area until each lesson is migrated into `education/`
+- the current pilot lesson is compiled from `education/lessons/02-build-top-navigation/source/`
 
 ### 2.5 Naming Rules
 
@@ -554,6 +498,7 @@ Right panel:
 
 - goal image showing what we're building
 - homework notes for variants we don't implement yet
+- the current pilot version is compiled from `education/lessons/02-build-top-navigation/source/` through `lesson-engine/`
 
 For it, special teaching rules still apply:
 
@@ -586,20 +531,15 @@ For it, special teaching rules still apply:
 
 For a new lesson:
 
-1. create new feature folder under `lessons/`
-2. add root `feature-name.lesson.js`
-3. add `describe-steps.js`
-4. add `build-html-at-step.js`
-5. add `build-css-at-step.js`
-6. when lesson requires JavaScript, add `build-js-at-step.js`
-7. add `content/documents/files/lesson.sr.md`
-8. add `content/documents/files/html.timeline.md`
-9. add `content/documents/files/css.rules.md`
-10. when lesson requires JavaScript, add `content/documents/files/js.timeline.md`
-11. when lesson requires special shadow CSS file, add `build-shadow-css-at-step.js`
-12. when lesson requires special shadow CSS file, add `content/documents/files/shadow-dom-style.css.md`
-13. optionally add `content/assets/feature-goal.svg`
-14. register lesson in `lessons/register-lessons.js`
+1. create new source folder under `education/lessons/<lesson-slug>/source/`
+2. add `lesson.md`
+3. add `scenes.md`
+4. add optional `theory.md` only if the lesson actually needs theory prose
+5. add `artifacts/` with the source artifacts declared in `lesson.md`
+6. add `assets/` if the lesson uses reference images or other authoring assets
+7. compile the lesson through `lesson-engine/`
+8. register the compiled package through the registry adapter, not through a new per-lesson build file
 
+Do not add new `lesson.js`, `describe-steps.js`, or per-lesson `build-*` files for new source-only lessons.
 Do not copy player runtime from `animator/play-lesson/`.
-New lesson should only add its contract and its content.
+New lesson should only add its source contract and its content.

@@ -2,4 +2,4 @@
 
 # 02-build-top-navigation
 
-Koraci po korak gradiš prvi navbar iz reference: logo levo, linkovi u sredini i CTA dugme desno. Druga dva rasporeda iz iste slike ostaju kao domaći zadatak.
+You build your first navbar from a reference image: logo left, links in the middle and CTA button right. The other two layouts from the same reference remain as homework.

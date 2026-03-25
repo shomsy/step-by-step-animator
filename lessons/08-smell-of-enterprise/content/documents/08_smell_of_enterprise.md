@@ -2,4 +2,4 @@
 
 # 08-smell-of-enterprise
 
-U ovoj lekciji gradimo `ui-pricing-card` — enterprise SaaS pricing table komponentu sa tier varijantama (starter/pro/enterprise), popular highlight stanjem, yearly/monthly toggle koji menja prikazanu cenu, CTA dugmetom sa urgency timerom i feature matrix slotovima. Komponenta ima precizan property API, granularni update tok i namespaced event contract.
+In this lesson we build `ui-pricing-card` — an enterprise SaaS pricing table component with tier variants (starter/pro/enterprise), popular highlight state, yearly/monthly toggle that changes displayed price, CTA button with urgency timer and feature matrix slots. The component has precise property API, granular update flow and namespaced event contract.

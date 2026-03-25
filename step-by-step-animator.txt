@@ -4026,20 +4026,6 @@ content/documents/files/
 === .agents/review/bugs.md ===
 
 
-=== .aider.input.history ===
-
-# 2026-03-22 23:12:37.889982
-+Y
-
-# 2026-03-22 23:17:00.783582
-+N
-
-# 2026-03-22 23:17:45.650032
-+/ask Explain this project structure and architecture. Focus on folder responsibilities, naming quality, and separation of concerns.
-
-# 2026-03-22 23:27:57.875821
-+exit
-
 === .gitignore ===
 node_modules/
 dist/
@@ -4359,79 +4345,22 @@ lessons/
 
 ### 2.2 Lesson Contract
 
-Every new lesson slice must deliver one root lesson file:
+New lesson work must use the source-only contract from `.agents/authoring/LESSON_AUTHORING.md`.
 
-```txt
-feature-name.lesson.js
-```
+That means:
 
-That file must return the complete lesson contract:
-
-- `lessonId`
-- `lessonTitle`
-- `lessonIntro`
-- `previewAddress`
-- `previewTitle`
-- `htmlFileName`
-- `cssFileName`
-- `jsFileName` when the lesson actually has a JavaScript file
-- `templateJsFileName` when the lesson actually has a special template module like `component.html.js`
-- `shadowCssFileName` when the lesson actually has a special shadow DOM CSS file
-- `steps`
-- `buildHtmlAtStep`
-- `buildCssAtStep`
-- `buildJsAtStep` when the lesson requires live JavaScript in preview
-- `buildTemplateJsAtStep` when the lesson requires a special template JS editor and download file
-- `buildShadowCssAtStep` when the lesson requires a special shadow CSS editor and download file
-
-Optional lesson shell fields when you want to show visual goal and homework:
-
-- `goalTitle`
-- `goalImageSrc`
-- `goalImageAlt`
-- `goalImageCaption`
-- `homeworkTitle`
-- `homeworkItems`
-
-Do not introduce parallel lesson shapes.
+- source lives under `education/lessons/<lesson-slug>/source/`
+- the author writes `lesson.md`, `scenes.md`, optional `theory.md`, `artifacts/`, and `assets/`
+- `lesson-engine/` owns parsing, validation, normalization, projection, compilation and generated docs
+- the legacy `feature-name.lesson.js` lesson slice shape is frozen for migrated lessons only
+- do not introduce new `lesson.js`, `describe-steps.js`, or per-lesson `build-*` files for source-only lessons
+- if a lesson is not yet migrated, treat the legacy slice as read-only and add a source-only pilot instead of extending the old shape
 
 ### 2.3 Lesson Documents
 
-A lesson may have markdown source documents within:
+The exact source-only authoring contract is documented in `.agents/authoring/LESSON_AUTHORING.md`.
 
-```txt
-feature-name/
-  content/
-    documents/
-      files/
-        lesson.sr.md
-        html.timeline.md
-        css.rules.md
-        js.timeline.md
-        template-js.timeline.md
-        shadow-dom-style.css.md
-```
-
-If the lesson has a reference goal image, the asset goes here:
-
-```txt
-feature-name/
-  content/
-    assets/
-      feature-goal.svg
-```
-
-Rules:
-
-- `lesson.sr.md` is the canonical source for title, intro and lesson metadata
-- `html.timeline.md` is the canonical source for cumulative HTML teaching flow
-- `css.rules.md` is the canonical source for CSS rule blocks that grow property by property
-- `js.timeline.md` is the optional canonical source for cumulative JavaScript teaching flow
-- `template-js.timeline.md` is the optional canonical source for separated template JS module when lesson displays `component.html.js`
-- `shadow-dom-style.css.md` is the optional canonical source for shadow DOM CSS rule blocks when lesson separates inner stylesheet into a separate file
-- generated book output goes to `content/documents/<lesson_name>.md`
-- generated output is not manually edited
-- `build-html-at-step.js`, `build-css-at-step.js`, `build-js-at-step.js` and as needed `build-template-js-at-step.js` and `build-shadow-css-at-step.js` remain thin adapters that parse markdown DSL and return lines for a given step
+The legacy `content/documents/files/` shape still exists in migrated lessons until it is retired, but it is not the shape to extend for new work.
 
 ### 2.4 Runtime and Entry Rules
 
@@ -4440,10 +4369,11 @@ Rules:
 - `index.html` is generic lesson shell
 - `sidebar-step-by-step.html` is compatible alias for `01-build-sidebar`
 - build goes through Vite
-- repo is divided into `animator/` and `lessons/`
-- business lessons live under `lessons/`
-- technical player runtime and markdown tooling live under `animator/`
-- canonical player entry remains `animator/play-lesson/play-lesson.pipeline.js`
+- `animator-engine/` is the runtime boundary used by the app entrypoint
+- `lesson-engine/` owns source translation for source-only lessons
+- `animator/` remains the legacy runtime implementation area until migration completes
+- `lessons/` remains the legacy lesson slice area until each lesson is migrated into `education/`
+- the current pilot lesson is compiled from `education/lessons/02-build-top-navigation/source/`
 
 ### 2.5 Naming Rules
 
@@ -4621,6 +4551,7 @@ Right panel:
 
 - goal image showing what we're building
 - homework notes for variants we don't implement yet
+- the current pilot version is compiled from `education/lessons/02-build-top-navigation/source/` through `lesson-engine/`
 
 For it, special teaching rules still apply:
 
@@ -4653,23 +4584,1658 @@ For it, special teaching rules still apply:
 
 For a new lesson:
 
-1. create new feature folder under `lessons/`
-2. add root `feature-name.lesson.js`
-3. add `describe-steps.js`
-4. add `build-html-at-step.js`
-5. add `build-css-at-step.js`
-6. when lesson requires JavaScript, add `build-js-at-step.js`
-7. add `content/documents/files/lesson.sr.md`
-8. add `content/documents/files/html.timeline.md`
-9. add `content/documents/files/css.rules.md`
-10. when lesson requires JavaScript, add `content/documents/files/js.timeline.md`
-11. when lesson requires special shadow CSS file, add `build-shadow-css-at-step.js`
-12. when lesson requires special shadow CSS file, add `content/documents/files/shadow-dom-style.css.md`
-13. optionally add `content/assets/feature-goal.svg`
-14. register lesson in `lessons/register-lessons.js`
+1. create new source folder under `education/lessons/<lesson-slug>/source/`
+2. add `lesson.md`
+3. add `scenes.md`
+4. add optional `theory.md` only if the lesson actually needs theory prose
+5. add `artifacts/` with the source artifacts declared in `lesson.md`
+6. add `assets/` if the lesson uses reference images or other authoring assets
+7. compile the lesson through `lesson-engine/`
+8. register the compiled package through the registry adapter, not through a new per-lesson build file
 
+Do not add new `lesson.js`, `describe-steps.js`, or per-lesson `build-*` files for new source-only lessons.
 Do not copy player runtime from `animator/play-lesson/`.
-New lesson should only add its contract and its content.
+New lesson should only add its source contract and its content.
+
+=== animator-engine/choose-lesson/select-lesson-from-location.js ===
+export { selectLessonFromLocation } from '../../animator/choose-lesson/select-lesson-from-location.js';
+
+=== animator-engine/play-lesson/lesson-player.css ===
+:root {
+  /* Dark Theme (Default) */
+  --bg: #0b1020;
+  --bg-2: #121a2e;
+  --bg-3: #1a2442;
+  --panel: rgba(255,255,255,0.08);
+  --panel-strong: rgba(255,255,255,0.12);
+  --border: rgba(255,255,255,0.12);
+  --text: #edf2ff;
+  --text-secondary: #9aa6c8;
+  --muted: #6b7394;
+  --accent: #6d73ff;
+  --accent-2: #8f5cff;
+  --accent-hover: #8b92ff;
+  --success: #36d399;
+  --warning: #f7b731;
+  --error: #ff6b6b;
+  --shadow: 0 24px 80px rgba(0,0,0,0.35);
+  --shadow-lg: 0 32px 64px rgba(0,0,0,0.4);
+  --radius: 24px;
+  --radius-sm: 14px;
+  --radius-xs: 10px;
+  --ease: 480ms cubic-bezier(.22,1,.36,1);
+  --ease-fast: 260ms ease;
+  --ease-bounce: 500ms cubic-bezier(0.34, 1.56, 0.64, 1);
+  --lesson-animation-duration-factor: 1;
+}
+
+[data-theme="light"] {
+  --bg: #f8fafc;
+  --bg-2: #ffffff;
+  --bg-3: #e2e8f0;
+  --panel: rgba(0,0,0,0.04);
+  --panel-strong: rgba(0,0,0,0.08);
+  --border: rgba(0,0,0,0.08);
+  --text: #1e293b;
+  --text-secondary: #64748b;
+  --muted: #94a3b8;
+  --accent: #6366f1;
+  --accent-2: #8b5cf6;
+  --accent-hover: #4f46e5;
+  --success: #10b981;
+  --warning: #f59e0b;
+  --error: #ef4444;
+  --shadow: 0 24px 80px rgba(0,0,0,0.12);
+  --shadow-lg: 0 32px 64px rgba(0,0,0,0.16);
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+html, body {
+  min-height: 100%;
+  transition: background var(--ease), color var(--ease);
+  background:
+    radial-gradient(circle at 20% 10%, rgba(109,115,255,0.22), transparent 24%),
+    radial-gradient(circle at 80% 15%, rgba(143,92,255,0.18), transparent 28%),
+    linear-gradient(180deg, var(--bg), #0e1324 70%, var(--bg));
+  color: var(--text);
+  font-family: 'Inter', ui-sans-serif, system-ui, -apple-system, sans-serif;
+}
+
+[data-theme="light"] body {
+  background:
+    radial-gradient(circle at 20% 10%, rgba(99,102,241,0.15), transparent 24%),
+    radial-gradient(circle at 80% 15%, rgba(139,92,246,0.12), transparent 28%),
+    linear-gradient(180deg, var(--bg), #f1f5f9 70%, var(--bg));
+}
+
+body { padding: 24px 0 24px 24px; }
+
+/* Header Controls */
+.header-controls {
+  position: fixed;
+  top: 20px;
+  right: 24px;
+  display: flex;
+  gap: 12px;
+  z-index: 1000;
+}
+
+.control-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  border-radius: var(--radius-sm);
+  background: var(--panel);
+  border: 1px solid var(--border);
+  color: var(--text);
+  cursor: pointer;
+  transition: var(--ease-fast);
+  backdrop-filter: blur(10px);
+}
+
+.control-btn:hover {
+  background: var(--panel-strong);
+  transform: translateY(-2px);
+}
+
+.control-btn svg {
+  width: 20px;
+  height: 20px;
+}
+
+/* Search Modal */
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.6);
+  backdrop-filter: blur(8px);
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  padding-top: 15vh;
+  z-index: 2000;
+  opacity: 0;
+  visibility: hidden;
+  transition: var(--ease);
+}
+
+.modal-overlay.active {
+  opacity: 1;
+  visibility: visible;
+}
+
+.modal {
+  background: var(--bg-2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  width: 90%;
+  max-width: 600px;
+  max-height: 70vh;
+  overflow: hidden;
+  transform: translateY(-20px) scale(0.95);
+  transition: var(--ease);
+  box-shadow: var(--shadow-lg);
+}
+
+.modal-overlay.active .modal {
+  transform: translateY(0) scale(1);
+}
+
+.modal-header {
+  padding: 20px 24px;
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.modal-header svg {
+  width: 20px;
+  height: 20px;
+  color: var(--accent);
+}
+
+.modal-search {
+  flex: 1;
+  background: transparent;
+  border: 0;
+  font-size: 16px;
+  color: var(--text);
+  outline: none;
+}
+
+.modal-search::placeholder {
+  color: var(--muted);
+}
+
+.modal-body {
+  max-height: 50vh;
+  overflow-y: auto;
+  padding: 12px;
+}
+
+.search-result {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 14px 16px;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: var(--ease-fast);
+}
+
+.search-result:hover, .search-result.active {
+  background: var(--panel);
+}
+
+.search-result-num {
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  background: var(--accent);
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 13px;
+  font-weight: 700;
+  flex-shrink: 0;
+}
+
+.search-result-info h4 {
+  font-size: 15px;
+  margin-bottom: 4px;
+}
+
+.search-result-info p {
+  font-size: 13px;
+  color: var(--text-secondary);
+}
+
+/* Page Layout */
+.page {
+  max-width: none;
+  margin: 0;
+  display: grid;
+  grid-template-columns: 372px 2.2fr 1.8fr;
+  gap: 32px;
+  align-items: start;
+}
+
+.panel {
+  background: linear-gradient(180deg, var(--panel-strong), var(--panel));
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  backdrop-filter: blur(14px);
+  box-shadow: var(--shadow);
+}
+
+.left-panel {
+  padding: 24px;
+  position: sticky;
+  top: 24px;
+}
+
+.live-editor-panel {
+  padding: 0;
+  position: sticky;
+  top: 24px;
+  height: calc(100vh - 48px);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+.live-editor-head {
+  padding: 18px 20px 16px;
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  background: linear-gradient(180deg, rgba(255,255,255,0.06), rgba(255,255,255,0.03));
+}
+
+.live-editor-copy h2 {
+  font-size: 18px;
+  margin-bottom: 6px;
+}
+
+.live-editor-copy p {
+  font-size: 13px;
+  line-height: 1.5;
+  color: var(--text-secondary);
+}
+
+.live-editor-step {
+  flex-shrink: 0;
+  padding: 8px 12px;
+  border-radius: 999px;
+  background: rgba(109,115,255,0.14);
+  color: var(--accent);
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.live-editor-body {
+  min-height: 0;
+  flex: 1;
+  display: grid;
+  grid-template-rows: minmax(0, 1fr) minmax(0, 1fr);
+}
+
+.live-editor-body[data-pane-count="3"] {
+  grid-template-rows: minmax(0, 1fr) minmax(0, 1fr) minmax(0, 1fr);
+}
+
+.live-editor-body[data-pane-count="4"] {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  grid-template-rows: repeat(2, minmax(0, 1fr));
+}
+
+.live-pane {
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.live-pane + .live-pane {
+  border-top: 1px solid var(--border);
+}
+
+.live-editor-body[data-pane-count="4"] .live-pane + .live-pane {
+  border-top: 0;
+}
+
+.live-editor-body[data-pane-count="4"] .live-pane:nth-child(2n) {
+  border-left: 1px solid var(--border);
+}
+
+.live-editor-body[data-pane-count="4"] .live-pane:nth-child(n + 3) {
+  border-top: 1px solid var(--border);
+}
+
+.live-pane-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 12px 16px;
+  background: var(--bg-2);
+  border-bottom: 1px solid var(--border);
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  font-weight: 700;
+  color: var(--text-secondary);
+}
+
+.live-pane-head span:last-child {
+  color: var(--muted);
+  font-size: 11px;
+  letter-spacing: 0.02em;
+  text-transform: none;
+  font-weight: 500;
+}
+
+.live-code-scroll {
+  min-height: 0;
+  flex: 1;
+  overflow: auto;
+  padding: 14px 0;
+  background: rgba(5,9,18,0.84);
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 12.5px;
+  line-height: 1.75;
+}
+
+[data-theme="light"] .live-code-scroll {
+  background: rgba(241,245,249,0.92);
+}
+
+/* IDE Mode Styles (Conditional) */
+.live-editor-panel.has-ide-mode .live-ide-layout {
+  display: grid;
+  grid-template-columns: 1fr 220px;
+  flex: 1;
+  min-height: 0;
+  background: var(--bg-2);
+}
+
+.live-editor-panel:not(.has-ide-mode) .live-ide-sidebar {
+  display: none;
+}
+
+.live-editor-panel:not(.has-ide-mode) .live-ide-layout {
+  display: contents;
+}
+
+.live-ide-sidebar {
+  background: var(--bg-2);
+  border-left: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+}
+
+.live-ide-sidebar-head {
+  padding: 14px 16px;
+  font-size: 11px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  color: var(--muted);
+  border-bottom: 1px solid var(--border);
+  background: rgba(255,255,255,0.02);
+}
+
+.live-ide-sidebar-list {
+  padding: 12px 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.ide-file-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 14px;
+  border-radius: 12px;
+  cursor: pointer;
+  transition: var(--ease-fast);
+  color: var(--text-secondary);
+  font-size: 13.5px;
+  font-weight: 600;
+  border: 1px solid transparent;
+}
+
+.ide-file-item:hover {
+  background: var(--panel);
+  color: var(--text);
+  transform: translateX(-2px);
+}
+
+.ide-file-item.active {
+  background: var(--panel-strong);
+  color: var(--accent);
+  border-color: rgba(109,115,255,0.24);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+}
+
+.ide-file-item.active .ide-file-icon {
+  color: var(--accent);
+}
+
+.ide-file-icon {
+  width: 16px;
+  height: 16px;
+  flex-shrink: 0;
+  color: var(--muted);
+  transition: var(--ease-fast);
+}
+
+.ide-file-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 999px;
+  background: var(--accent);
+  margin-left: auto;
+  opacity: 0;
+  transform: scale(0);
+  transition: var(--ease-bounce);
+}
+
+.ide-file-item.has-changes .ide-file-dot {
+  opacity: 1;
+  transform: scale(1);
+}
+
+/* Only apply single-pane switching when in IDE mode */
+.live-editor-panel.has-ide-mode .live-editor-body {
+  grid-template-columns: 1fr !important;
+  grid-template-rows: 1fr !important;
+}
+
+.live-editor-panel.has-ide-mode .live-pane {
+  display: none;
+}
+
+.live-editor-panel.has-ide-mode .live-pane.active {
+  display: flex;
+}
+
+.live-line {
+  display: grid;
+  grid-template-columns: 48px 1fr;
+  gap: 14px;
+  padding: 0 16px;
+  align-items: start;
+  transition: background var(--ease-fast);
+  opacity: 0.46;
+}
+
+.live-line:hover {
+  background: rgba(255,255,255,0.04);
+}
+
+[data-theme="light"] .live-line:hover {
+  background: rgba(0,0,0,0.03);
+}
+
+.live-line.is-added {
+  background:
+    linear-gradient(90deg, rgba(109,115,255,0.22), rgba(109,115,255,0.06) 60%, transparent);
+  box-shadow: inset 3px 0 0 rgba(109,115,255,0.65);
+  opacity: 1;
+}
+
+.live-line[data-pane="css"].is-added,
+.live-line[data-pane="js"].is-added {
+  opacity: 0;
+  transform: translateY(8px);
+  animation: liveLineReveal calc(0.42s * var(--lesson-animation-duration-factor, 1)) ease forwards;
+  animation-delay: calc(var(--reveal-order, 0) * 110ms * var(--lesson-animation-duration-factor, 1));
+}
+
+.live-line-number {
+  text-align: right;
+  color: var(--muted);
+  user-select: none;
+  padding-right: 2px;
+}
+
+.live-line.is-added .live-line-number {
+  color: var(--accent-hover);
+}
+
+.live-line-code {
+  color: rgba(237,242,255,0.56);
+  white-space: pre;
+  min-width: 0;
+  font-weight: 500;
+  letter-spacing: -0.01em;
+}
+
+[data-theme="light"] .live-line-code {
+  color: rgba(30,41,59,0.52);
+}
+
+.live-line.is-added .live-line-code {
+  color: var(--text);
+  font-weight: 700;
+  text-shadow: 0 0 18px rgba(109,115,255,0.14);
+}
+
+.live-line[data-pane="css"].is-added.is-css-selector .live-line-code,
+.live-line[data-pane="css"].is-added.is-css-brace .live-line-code {
+  color: color-mix(in srgb, var(--text) 74%, var(--muted));
+  font-weight: 600;
+  text-shadow: none;
+}
+
+.live-line[data-pane="css"].is-added.is-css-property .live-line-code {
+  color: var(--text);
+  font-weight: 800;
+  text-shadow: 0 0 18px rgba(109,115,255,0.18);
+}
+
+.live-line.is-added + .live-line:not(.is-added) {
+  opacity: 0.62;
+}
+
+.live-line.is-focus-target {
+  opacity: 1;
+  background:
+    linear-gradient(90deg, rgba(250, 204, 21, 0.26), rgba(250, 204, 21, 0.08) 65%, transparent);
+  box-shadow: inset 3px 0 0 rgba(250, 204, 21, 0.88);
+}
+
+.live-line.is-focus-target .live-line-number {
+  color: #facc15;
+}
+
+.live-line.is-focus-target .live-line-code {
+  color: #fff6bf;
+  font-weight: 700;
+  text-shadow: 0 0 14px rgba(250, 204, 21, 0.14);
+}
+
+.live-line.is-focus-target.is-added {
+  background:
+    linear-gradient(90deg, rgba(250, 204, 21, 0.34), rgba(250, 204, 21, 0.12) 65%, transparent);
+  box-shadow: inset 3px 0 0 rgba(250, 204, 21, 0.94);
+}
+
+.live-line.is-focus-target.is-added .live-line-number {
+  color: #fde68a;
+}
+
+[data-theme="light"] .live-line.is-focus-target {
+  background:
+    linear-gradient(90deg, rgba(245, 158, 11, 0.22), rgba(245, 158, 11, 0.08) 65%, transparent);
+  box-shadow: inset 3px 0 0 rgba(217, 119, 6, 0.85);
+}
+
+[data-theme="light"] .live-line.is-focus-target .live-line-number {
+  color: #b45309;
+}
+
+[data-theme="light"] .live-line.is-focus-target .live-line-code {
+  color: #7c2d12;
+  text-shadow: none;
+}
+
+.live-line.is-empty .live-line-code {
+  color: transparent;
+}
+
+[data-theme="light"] .live-line.is-added .live-line-code {
+  text-shadow: none;
+}
+
+@keyframes liveLineReveal {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Eyebrow & Title */
+.eyebrow {
+  display: inline-flex;
+  gap: 8px;
+  align-items: center;
+  padding: 8px 14px;
+  border-radius: 999px;
+  background: rgba(109,115,255,0.15);
+  color: var(--accent);
+  font-size: 12px;
+  font-weight: 600;
+  margin-bottom: 16px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.eyebrow svg {
+  width: 14px;
+  height: 14px;
+}
+
+h1 {
+  font-size: clamp(26px, 3.5vw, 38px);
+  line-height: 1.1;
+  margin-bottom: 14px;
+  letter-spacing: -0.03em;
+  background: linear-gradient(135deg, var(--text), var(--accent));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.intro {
+  color: var(--text-secondary);
+  line-height: 1.65;
+  margin-bottom: 24px;
+  font-size: 15px;
+}
+
+.lesson-picker {
+  margin-bottom: 20px;
+}
+
+.lesson-picker-label {
+  display: block;
+  margin-bottom: 8px;
+  color: var(--text-secondary);
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.lesson-picker-select {
+  width: 100%;
+  appearance: none;
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  background: var(--bg);
+  color: var(--text);
+  font: inherit;
+  font-size: 14px;
+  font-weight: 600;
+  padding: 14px 16px;
+  transition: var(--ease-fast);
+}
+
+.lesson-picker-select:hover,
+.lesson-picker-select:focus {
+  border-color: var(--accent);
+  outline: none;
+  box-shadow: 0 0 0 4px rgba(109,115,255,0.12);
+}
+
+.lesson-picker-select:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.goal-card {
+  margin-bottom: 24px;
+  padding: 18px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border);
+  background: linear-gradient(180deg, var(--bg), rgba(109,115,255,0.06));
+}
+
+.goal-head h2 {
+  font-size: 20px;
+  line-height: 1.2;
+  margin-top: 8px;
+}
+
+.goal-head p {
+  margin-top: 10px;
+  color: var(--text-secondary);
+  font-size: 14px;
+  line-height: 1.6;
+}
+
+.goal-image {
+  display: block;
+  width: 100%;
+  margin-top: 16px;
+  border-radius: 16px;
+  border: 1px solid var(--border);
+  background: rgba(255,255,255,0.04);
+  box-shadow: var(--shadow);
+}
+
+.goal-homework {
+  margin-top: 16px;
+  padding: 14px 16px;
+  border-radius: 14px;
+  border: 1px dashed rgba(109,115,255,0.28);
+  background: rgba(109,115,255,0.08);
+}
+
+.goal-homework strong {
+  display: block;
+  margin-bottom: 10px;
+  color: var(--text);
+  font-size: 14px;
+}
+
+.goal-homework ul {
+  margin: 0;
+  padding-left: 18px;
+  display: grid;
+  gap: 8px;
+}
+
+.goal-homework li {
+  color: var(--text-secondary);
+  font-size: 13px;
+  line-height: 1.55;
+}
+
+/* Tabs */
+.tabs {
+  display: flex;
+  gap: 6px;
+  margin-bottom: 16px;
+  background: var(--bg);
+  padding: 6px;
+  border-radius: var(--radius-sm);
+}
+
+.tab-btn {
+  flex: 1;
+  padding: 10px 16px;
+  border-radius: 10px;
+  border: 0;
+  background: transparent;
+  color: var(--text-secondary);
+  font-weight: 600;
+  font-size: 14px;
+  cursor: pointer;
+  transition: var(--ease-fast);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+.tab-btn:hover {
+  color: var(--text);
+}
+
+.tab-btn.active {
+  background: var(--accent);
+  color: white;
+}
+
+.tab-btn svg {
+  width: 16px;
+  height: 16px;
+}
+
+.panel-view[hidden] {
+  display: none;
+}
+
+/* Step Card */
+.step-card {
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 20px;
+  margin-bottom: 20px;
+  transition: var(--ease);
+}
+
+.step-card:hover {
+  border-color: var(--accent);
+}
+
+.step-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 12px;
+}
+
+.step-number {
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  color: var(--accent);
+  font-weight: 700;
+}
+
+.step-bookmark {
+  background: none;
+  border: none;
+  color: var(--muted);
+  cursor: pointer;
+  padding: 6px;
+  border-radius: 6px;
+  transition: var(--ease-fast);
+}
+
+.step-bookmark:hover, .step-bookmark.active {
+  color: var(--warning);
+  background: rgba(247,183,49,0.1);
+}
+
+.step-bookmark svg {
+  width: 18px;
+  height: 18px;
+}
+
+.step-title {
+  font-size: 20px;
+  margin-bottom: 10px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.step-title .badge {
+  font-size: 10px;
+  padding: 4px 8px;
+  border-radius: 6px;
+  background: var(--accent);
+  color: white;
+  font-weight: 700;
+}
+
+.step-desc {
+  color: var(--text-secondary);
+  line-height: 1.6;
+  margin-bottom: 14px;
+  min-height: 50px;
+}
+
+.pro-tip {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 12px 14px;
+  background: rgba(109,115,255,0.08);
+  border-radius: 10px;
+  border-left: 3px solid var(--accent);
+  margin-bottom: 14px;
+}
+
+.pro-tip svg {
+  width: 16px;
+  height: 16px;
+  color: var(--accent);
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
+.pro-tip p {
+  font-size: 13px;
+  color: var(--text-secondary);
+  line-height: 1.5;
+}
+
+.bookmarks-panel {
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 20px;
+  margin-bottom: 20px;
+}
+
+.bookmarks-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 18px;
+}
+
+.bookmarks-head h2 {
+  font-size: 20px;
+  line-height: 1.2;
+  margin-top: 6px;
+}
+
+.bookmarks-head p {
+  margin-top: 8px;
+  color: var(--text-secondary);
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+.bookmark-summary {
+  flex-shrink: 0;
+  padding: 8px 12px;
+  border-radius: 999px;
+  background: rgba(109,115,255,0.12);
+  color: var(--accent);
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.bookmark-list {
+  display: grid;
+  gap: 12px;
+}
+
+.bookmark-item {
+  display: flex;
+  gap: 12px;
+  align-items: stretch;
+}
+
+.bookmark-link {
+  flex: 1;
+  min-width: 0;
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  background: var(--panel);
+  padding: 14px 16px;
+  text-align: left;
+  display: block;
+}
+
+.bookmark-link:hover {
+  border-color: var(--accent);
+  background: var(--panel-strong);
+  transform: translateY(-2px);
+}
+
+.bookmark-item.current .bookmark-link {
+  border-color: rgba(109,115,255,0.4);
+  background: rgba(109,115,255,0.12);
+}
+
+.bookmark-link strong {
+  display: block;
+  font-size: 15px;
+  margin-bottom: 6px;
+  color: var(--text);
+}
+
+.bookmark-link p {
+  color: var(--text-secondary);
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.bookmark-meta {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--accent);
+  font-weight: 700;
+  margin-bottom: 10px;
+}
+
+.bookmark-tag {
+  color: var(--muted);
+}
+
+.bookmark-remove {
+  width: 44px;
+  height: 44px;
+  flex-shrink: 0;
+  padding: 0;
+  justify-content: center;
+  align-self: center;
+  background: transparent;
+  color: var(--muted);
+  border: 1px dashed var(--border);
+}
+
+.bookmark-remove:hover {
+  border-color: var(--warning);
+  background: rgba(247,183,49,0.12);
+  color: var(--warning);
+}
+
+.bookmark-remove svg {
+  width: 16px;
+  height: 16px;
+}
+
+.bookmark-empty {
+  border: 1px dashed var(--border);
+  border-radius: 14px;
+  padding: 18px;
+  background: var(--panel);
+  color: var(--text-secondary);
+  line-height: 1.6;
+}
+
+.bookmark-empty strong {
+  display: block;
+  color: var(--text);
+  margin-bottom: 8px;
+}
+
+/* Progress */
+.progress-container {
+  margin-bottom: 20px;
+}
+
+.progress-bar {
+  height: 8px;
+  border-radius: 999px;
+  background: var(--bg);
+  overflow: hidden;
+  margin-bottom: 10px;
+}
+
+.progress-bar-inner {
+  height: 100%;
+  width: 0;
+  background: linear-gradient(90deg, var(--accent), var(--accent-2));
+  transition: width var(--ease);
+  border-radius: 999px;
+}
+
+.progress-info {
+  display: flex;
+  justify-content: space-between;
+  font-size: 12px;
+  color: var(--text-secondary);
+}
+
+/* Controls */
+.controls {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin-bottom: 16px;
+}
+
+.playback-speed-panel {
+  margin-bottom: 20px;
+  padding: 16px 18px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border);
+  background: linear-gradient(180deg, rgba(255,255,255,0.05), rgba(255,255,255,0.02));
+}
+
+.playback-speed-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 14px;
+}
+
+.playback-speed-head h3 {
+  margin-top: 4px;
+  font-size: 15px;
+}
+
+.playback-speed-value {
+  flex-shrink: 0;
+  padding: 8px 10px;
+  border-radius: 999px;
+  background: rgba(109,115,255,0.14);
+  color: var(--accent);
+  font-size: 13px;
+  font-weight: 800;
+}
+
+.playback-speed-slider {
+  width: 100%;
+  appearance: none;
+  height: 6px;
+  border-radius: 999px;
+  background: linear-gradient(90deg, rgba(109,115,255,0.35), rgba(143,92,255,0.72));
+  outline: none;
+  cursor: pointer;
+}
+
+.playback-speed-slider::-webkit-slider-thumb {
+  appearance: none;
+  width: 18px;
+  height: 18px;
+  border-radius: 999px;
+  background: #ffffff;
+  border: 2px solid var(--accent);
+  box-shadow: 0 6px 16px rgba(0,0,0,0.18);
+}
+
+.playback-speed-slider::-moz-range-thumb {
+  width: 18px;
+  height: 18px;
+  border-radius: 999px;
+  background: #ffffff;
+  border: 2px solid var(--accent);
+  box-shadow: 0 6px 16px rgba(0,0,0,0.18);
+}
+
+.playback-speed-scale {
+  margin-top: 10px;
+  display: flex;
+  justify-content: space-between;
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.step-narration-panel {
+  margin-top: 18px;
+  padding: 16px;
+  border-radius: 18px;
+  border: 1px solid var(--border);
+  background: rgba(255,255,255,0.04);
+  display: grid;
+  gap: 14px;
+}
+
+.step-narration-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.step-narration-head-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.step-narration-head h3 {
+  margin-top: 4px;
+  font-size: 15px;
+}
+
+.step-narration-badge {
+  flex-shrink: 0;
+  padding: 6px 10px;
+  border-radius: 999px;
+  background: rgba(54,211,153,0.14);
+  color: var(--success);
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.step-narration-badge[data-state="ready"] {
+  background: rgba(54,211,153,0.14);
+  color: var(--success);
+}
+
+.step-narration-badge[data-state="auto"] {
+  background: rgba(109,115,255,0.16);
+  color: #bfc6ff;
+}
+
+.step-narration-badge[data-state="system"] {
+  background: rgba(56,189,248,0.14);
+  color: #7dd3fc;
+}
+
+.step-narration-badge[data-state="preparing"] {
+  background: rgba(247,183,49,0.14);
+  color: var(--warning);
+}
+
+.step-narration-badge[data-state="fallback"] {
+  background: rgba(255,107,107,0.14);
+  color: var(--error);
+}
+
+.step-narration-prepare {
+  padding: 8px 12px;
+  border-radius: 12px;
+  border: 1px solid var(--border);
+  background: rgba(255,255,255,0.04);
+  color: var(--text);
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.step-narration-copy {
+  color: var(--text-secondary);
+  font-size: 13px;
+  line-height: 1.6;
+}
+
+.step-narration-source {
+  display: grid;
+  gap: 8px;
+}
+
+.step-narration-source-label {
+  color: var(--text-secondary);
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.step-narration-source-select {
+  width: 100%;
+  appearance: none;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: var(--bg);
+  color: var(--text);
+  font: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  padding: 12px 14px;
+}
+
+.step-narration-source-select:hover,
+.step-narration-source-select:focus {
+  border-color: var(--accent);
+  outline: none;
+  box-shadow: 0 0 0 4px rgba(109,115,255,0.12);
+}
+
+.step-narration-source-select:disabled {
+  opacity: 0.58;
+  cursor: not-allowed;
+}
+
+.step-narration-controls {
+  display: grid;
+  grid-template-columns: 1.2fr 1fr 0.9fr;
+  gap: 10px;
+}
+
+.step-narration-controls button svg {
+  width: 18px;
+  height: 18px;
+  flex-shrink: 0;
+}
+
+.step-narration-toggle {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: var(--text-secondary);
+  font-size: 13px;
+  cursor: pointer;
+}
+
+.step-narration-toggle input {
+  width: 16px;
+  height: 16px;
+  accent-color: var(--accent);
+}
+
+.step-narration-speed-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  color: var(--text-secondary);
+  font-size: 13px;
+}
+
+.step-narration-speed-value {
+  color: var(--text);
+  font-weight: 800;
+}
+
+.step-narration-speed-slider {
+  width: 100%;
+  accent-color: var(--success);
+}
+
+.step-narration-status {
+  min-height: 42px;
+  padding: 12px 14px;
+  border-radius: 14px;
+  border: 1px solid rgba(54,211,153,0.16);
+  background: rgba(54,211,153,0.08);
+  color: var(--text);
+  font-size: 13px;
+  line-height: 1.55;
+}
+
+button {
+  appearance: none;
+  border: 0;
+  border-radius: var(--radius-sm);
+  padding: 12px 18px;
+  cursor: pointer;
+  font: inherit;
+  font-weight: 700;
+  font-size: 14px;
+  transition: var(--ease-fast);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.controls button svg {
+  width: 18px;
+  height: 18px;
+  flex-shrink: 0;
+}
+
+button:hover { transform: translateY(-2px); }
+button:active { transform: translateY(0); }
+button:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+
+.btn-primary {
+  background: linear-gradient(135deg, var(--accent), var(--accent-2));
+  color: white;
+  box-shadow: 0 8px 24px rgba(109,115,255,0.3);
+}
+
+.btn-primary:hover {
+  box-shadow: 0 12px 32px rgba(109,115,255,0.4);
+}
+
+.btn-secondary {
+  background: var(--panel);
+  color: var(--text);
+  border: 1px solid var(--border);
+}
+
+.btn-ghost {
+  background: transparent;
+  color: var(--text-secondary);
+  border: 1px dashed var(--border);
+}
+
+.btn-icon {
+  width: 40px;
+  height: 40px;
+  padding: 0;
+  justify-content: center;
+}
+
+.btn-icon svg {
+  width: 18px;
+  height: 18px;
+}
+
+/* Step Dots */
+.step-dots {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+  margin-top: 8px;
+}
+
+.dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 999px;
+  background: var(--panel-strong);
+  cursor: pointer;
+  transition: var(--ease-fast);
+}
+
+.dot:hover {
+  background: var(--accent);
+  transform: scale(1.2);
+}
+
+.dot.active {
+  width: 28px;
+  background: linear-gradient(90deg, var(--accent), var(--accent-2));
+}
+
+.dot.bookmarked {
+  background: var(--warning);
+}
+
+/* Keyboard Shortcuts */
+.shortcuts {
+  display: flex;
+  gap: 16px;
+  flex-wrap: wrap;
+  padding: 14px 18px;
+  background: var(--bg);
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border);
+}
+
+.shortcut {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  color: var(--text-secondary);
+}
+
+.kbd {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 24px;
+  height: 24px;
+  padding: 0 8px;
+  border-radius: 6px;
+  background: var(--panel-strong);
+  border: 1px solid var(--border);
+  color: var(--text);
+  font-size: 11px;
+  font-weight: 700;
+  font-family: 'JetBrains Mono', monospace;
+}
+
+/* Viewer */
+.viewer {
+  height: calc(100vh - 48px);
+  padding: 16px 0 16px 16px;
+  position: sticky;
+  top: 24px;
+  display: flex;
+}
+
+.tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 14px;
+  border-radius: 999px;
+  background: var(--panel);
+  border: 1px solid var(--border);
+  color: var(--text-secondary);
+  font-size: 13px;
+  font-weight: 500;
+}
+
+.tag.accent {
+  background: rgba(109,115,255,0.15);
+  border-color: rgba(109,115,255,0.3);
+  color: var(--accent);
+}
+
+.tag svg {
+  width: 14px;
+  height: 14px;
+}
+
+/* Stage */
+.stage {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  position: relative;
+  overflow: hidden;
+  border-radius: calc(var(--radius) - 8px);
+  border: 1px solid rgba(255,255,255,0.08);
+  background:
+    radial-gradient(circle at top left, rgba(109,115,255,0.12), transparent 30%),
+    linear-gradient(180deg, rgba(7,11,21,0.96), rgba(11,16,32,0.98));
+}
+
+.live-preview-shell {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  background: #0f172a;
+}
+
+.live-preview-head {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 14px;
+  border-bottom: 1px solid rgba(255,255,255,0.08);
+  background: linear-gradient(180deg, rgba(255,255,255,0.08), rgba(255,255,255,0.03));
+}
+
+.live-preview-controls {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.live-preview-dot {
+  width: 12px;
+  height: 12px;
+  border-radius: 999px;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.35);
+}
+
+.live-preview-dot-close {
+  background: #fb7185;
+}
+
+.live-preview-dot-minimize {
+  background: #fbbf24;
+}
+
+.live-preview-dot-expand {
+  background: #4ade80;
+}
+
+.live-preview-address {
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 14px;
+  border-radius: 999px;
+  border: 1px solid rgba(255,255,255,0.08);
+  background: rgba(7,11,21,0.42);
+  color: #b8c2e3;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.live-preview-address svg {
+  width: 16px;
+  height: 16px;
+  flex-shrink: 0;
+  color: #7dd3fc;
+}
+
+.live-preview-address span {
+  min-width: 0;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.live-preview-head .tag {
+  justify-self: end;
+  flex-shrink: 0;
+}
+
+.live-preview-frame {
+  flex: 1;
+  width: 100%;
+  min-height: 0;
+  border: 0;
+  background: white;
+}
+
+[data-theme="light"] .stage {
+  border-color: rgba(0,0,0,0.06);
+  background:
+    radial-gradient(circle at top left, rgba(99,102,241,0.12), transparent 30%),
+    linear-gradient(180deg, rgba(255,255,255,0.96), rgba(241,245,249,0.98));
+}
+
+[data-theme="light"] .live-preview-shell {
+  background: #e2e8f0;
+}
+
+[data-theme="light"] .live-preview-head {
+  border-color: rgba(15,23,42,0.08);
+  background: linear-gradient(180deg, rgba(255,255,255,0.94), rgba(248,250,252,0.92));
+}
+
+[data-theme="light"] .live-preview-address {
+  border-color: rgba(15,23,42,0.08);
+  background: rgba(255,255,255,0.76);
+  color: #475569;
+}
+
+[data-theme="light"] .live-preview-address svg {
+  color: #0f766e;
+}
+
+/* Responsive */
+@media (max-width: 1500px) {
+  .page { grid-template-columns: 1fr; }
+  .left-panel, .live-editor-panel, .viewer { position: relative; top: 0; }
+  .live-editor-panel { height: auto; }
+  .live-editor-body { grid-template-rows: 360px 360px; }
+  .live-editor-body[data-pane-count="3"] { grid-template-rows: 280px 280px 280px; }
+  .viewer {
+    height: auto;
+    min-height: auto;
+  }
+  .stage { min-height: 650px; }
+}
+
+@media (max-width: 800px) {
+  body { padding: 16px; }
+  .header-controls { top: 12px; right: 12px; }
+  .left-panel { padding: 18px; }
+  .viewer {
+    height: auto;
+    padding: 12px;
+  }
+  .live-editor-head { padding: 16px; flex-direction: column; align-items: flex-start; }
+  .live-editor-body { grid-template-rows: 320px 320px; }
+  .live-editor-body[data-pane-count="3"] { grid-template-rows: 240px 240px 240px; }
+  .live-pane-head { flex-direction: column; align-items: flex-start; }
+  .live-preview-head {
+    grid-template-columns: 1fr;
+    justify-items: start;
+  }
+  .live-preview-head .tag {
+    justify-self: start;
+  }
+  .stage { min-height: 550px; }
+  .bookmarks-head, .bookmark-item { flex-direction: column; }
+  .bookmark-summary { align-self: flex-start; }
+  .bookmark-remove { width: 100%; }
+  .step-narration-head,
+  .step-narration-head-actions { flex-direction: column; align-items: flex-start; }
+  .step-narration-controls { grid-template-columns: 1fr; }
+  .shortcuts { display: none; }
+}
+
+=== animator-engine/play-lesson/play-lesson.js ===
+export { playLesson } from '../../animator/play-lesson/play-lesson.pipeline.js';
 
 === animator/agents.md ===
 # Animator Architecture
@@ -9850,6 +11416,1378 @@ export function writeSavedStepNumbers({ lessonId, savedStepNumbers }) {
   }
 }
 
+=== education/lessons/02-build-top-navigation/source/assets/top-navigation-goal.svg ===
+<svg width="1280" height="720" viewBox="0 0 1280 720" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <rect width="1280" height="720" fill="#D6E1EB"/>
+
+  <g opacity="0.95">
+    <rect x="54" y="112" width="182" height="34" rx="17" fill="#0F172A"/>
+    <text x="145" y="134" text-anchor="middle" fill="#F8FAFC" font-size="14" font-family="Inter, Arial, sans-serif" font-weight="700">LESSON TARGET</text>
+  </g>
+
+  <g opacity="0.82">
+    <rect x="54" y="291" width="158" height="34" rx="17" fill="#64748B"/>
+    <text x="133" y="313" text-anchor="middle" fill="#F8FAFC" font-size="14" font-family="Inter, Arial, sans-serif" font-weight="700">HOMEWORK 1</text>
+  </g>
+
+  <g opacity="0.82">
+    <rect x="54" y="471" width="158" height="34" rx="17" fill="#64748B"/>
+    <text x="133" y="493" text-anchor="middle" fill="#F8FAFC" font-size="14" font-family="Inter, Arial, sans-serif" font-weight="700">HOMEWORK 2</text>
+  </g>
+
+  <g filter="url(#shadow)">
+    <rect x="40" y="150" width="1200" height="64" fill="#23242A"/>
+    <text x="132" y="190" fill="#FFFFFF" font-size="18" font-family="Inter, Arial, sans-serif" font-weight="800" letter-spacing="1.2">LOGOBAKERY</text>
+    <text x="544" y="189" fill="#FFFFFF" font-size="16" font-family="Inter, Arial, sans-serif">Services</text>
+    <text x="632" y="189" fill="#FFFFFF" font-size="16" font-family="Inter, Arial, sans-serif">Projects</text>
+    <text x="721" y="189" fill="#FFFFFF" font-size="16" font-family="Inter, Arial, sans-serif">About</text>
+    <rect x="1052" y="167" width="96" height="30" rx="15" fill="#11A4D3"/>
+    <text x="1100" y="187" text-anchor="middle" fill="#FFFFFF" font-size="15" font-family="Inter, Arial, sans-serif" font-weight="500">Contact</text>
+  </g>
+
+  <g filter="url(#shadowSoft)" opacity="0.92">
+    <rect x="40" y="329" width="1200" height="64" fill="#23242A"/>
+    <text x="132" y="369" fill="#FFFFFF" font-size="16" font-family="Inter, Arial, sans-serif">Services</text>
+    <text x="220" y="369" fill="#FFFFFF" font-size="16" font-family="Inter, Arial, sans-serif">Projects</text>
+    <text x="309" y="369" fill="#FFFFFF" font-size="16" font-family="Inter, Arial, sans-serif">About</text>
+    <rect x="385" y="346" width="98" height="30" rx="15" fill="#11A4D3"/>
+    <text x="434" y="366" text-anchor="middle" fill="#FFFFFF" font-size="15" font-family="Inter, Arial, sans-serif" font-weight="500">Contact</text>
+    <text x="1022" y="370" fill="#FFFFFF" font-size="18" font-family="Inter, Arial, sans-serif" font-weight="800" letter-spacing="1.2">LOGOBAKERY</text>
+  </g>
+
+  <g filter="url(#shadowSoft)" opacity="0.92">
+    <rect x="40" y="509" width="1200" height="64" fill="#23242A"/>
+    <text x="132" y="549" fill="#FFFFFF" font-size="18" font-family="Inter, Arial, sans-serif" font-weight="800" letter-spacing="1.2">LOGOBAKERY</text>
+    <text x="799" y="549" fill="#FFFFFF" font-size="16" font-family="Inter, Arial, sans-serif">Services</text>
+    <text x="887" y="549" fill="#FFFFFF" font-size="16" font-family="Inter, Arial, sans-serif">Projects</text>
+    <text x="976" y="549" fill="#FFFFFF" font-size="16" font-family="Inter, Arial, sans-serif">About</text>
+    <rect x="1052" y="526" width="96" height="30" rx="15" fill="#11A4D3"/>
+    <text x="1100" y="546" text-anchor="middle" fill="#FFFFFF" font-size="15" font-family="Inter, Arial, sans-serif" font-weight="500">Contact</text>
+  </g>
+
+  <defs>
+    <filter id="shadow" x="26" y="142" width="1228" height="92" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB">
+      <feFlood flood-opacity="0" result="BackgroundImageFix"/>
+      <feColorMatrix in="SourceAlpha" type="matrix" values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 127 0" result="hardAlpha"/>
+      <feOffset dy="8"/>
+      <feGaussianBlur stdDeviation="7"/>
+      <feComposite in2="hardAlpha" operator="out"/>
+      <feColorMatrix type="matrix" values="0 0 0 0 0.0941 0 0 0 0 0.1569 0 0 0 0 0.2275 0 0 0 0.22 0"/>
+      <feBlend mode="normal" in2="BackgroundImageFix" result="effect1_dropShadow_1_1"/>
+      <feBlend mode="normal" in="SourceGraphic" in2="effect1_dropShadow_1_1" result="shape"/>
+    </filter>
+    <filter id="shadowSoft" x="28" y="321" width="1224" height="280" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB">
+      <feFlood flood-opacity="0" result="BackgroundImageFix"/>
+      <feColorMatrix in="SourceAlpha" type="matrix" values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 127 0" result="hardAlpha"/>
+      <feOffset dy="8"/>
+      <feGaussianBlur stdDeviation="6"/>
+      <feComposite in2="hardAlpha" operator="out"/>
+      <feColorMatrix type="matrix" values="0 0 0 0 0.0941 0 0 0 0 0.1569 0 0 0 0 0.2275 0 0 0 0.18 0"/>
+      <feBlend mode="normal" in2="BackgroundImageFix" result="effect1_dropShadow_1_2"/>
+      <feBlend mode="normal" in="SourceGraphic" in2="effect1_dropShadow_1_2" result="shape"/>
+    </filter>
+  </defs>
+</svg>
+
+=== education/lessons/02-build-top-navigation/source/lesson.md ===
+---
+schemaVersion: 1
+lessonId: 02-build-top-navigation
+lessonTitle: How to Build a Top Navigation Bar
+lessonIntro: You build your first navbar from a reference image: logo left, links in the middle and CTA button right. The other two layouts from the same reference remain as homework.
+status: active
+courseId: web-components
+order: 2
+
+theory:
+  enabled: false
+
+scenes:
+  file: ./scenes.md
+
+artifacts:
+  - artifactId: html
+    file: ./artifacts/html.timeline.md
+    language: html
+    kind: timeline
+    label: index.html
+    isPrimary: true
+
+  - artifactId: css
+    file: ./artifacts/css.rules.md
+    language: css
+    kind: rules
+    label: style.css
+    isPrimary: false
+
+preview:
+  type: dom
+  title: Live top navigation preview
+  address: browser://02-build-top-navigation-preview
+
+goal:
+  title: What we are building
+  imageSrc: ./assets/top-navigation-goal.svg
+  imageAlt: Reference image with three navigation bars on a light background. In this lesson we build the first one: logo on the left, links in the middle, and a Contact CTA on the right.
+  imageCaption: In this lesson we build only the first layout from the reference: logo on the left, links in the middle, and a blue Contact CTA on the right.
+
+homework:
+  enabled: true
+  title: Homework
+  items:
+    - Build the second layout from the reference as a separate lesson or as your own practice: links on the left, CTA in the middle, logo on the right.
+    - Build the third layout from the reference as a second exercise: logo on the left, with the full navigation group and CTA button on the right.
+---
+
+You build your first navbar from a reference image: logo left, links in the middle and CTA button right. The other two layouts from the same reference remain as homework.
+
+=== education/lessons/02-build-top-navigation/source/scenes.md ===
+---
+schemaVersion: 1
+lessonId: 02-build-top-navigation
+steps:
+  - stepId: empty_shell
+    title: "Start: Empty App Shell"
+    summary: "Počinjemo od praznog `.app-shell` prostora. Goal slika iznad pokazuje tri varijante, ali u ovoj lekciji gradimo samo prvu."
+    intent: "Neutralan početak jasno odvaja ono što je postojalo od onoga što tek pravimo."
+    tag: "html:app-shell"
+    proTip: "Neutralan početak jasno odvaja ono što je postojalo od onoga što tek pravimo."
+    focusHtmlNeedles:
+      - "<div class=\"app-shell\">"
+  - stepId: topbar_html
+    title: "HTML: Topbar Shell"
+    summary: "Dodajemo `<header class=\"topbar\">` kao glavni wrapper buduće navigacije."
+    intent: "Kreni od glavnog semantic wrapper-a pa tek onda popunjavaj njegove zone."
+    tag: "html:topbar"
+    proTip: "Kreni od glavnog semantic wrapper-a pa tek onda popunjavaj njegove zone."
+    focusHtmlNeedles:
+      - "class=\"topbar\""
+  - stepId: shell_outline
+    title: "CSS: .app-shell / outline"
+    summary: "Dodajemo tanak helper outline za `.app-shell` i zadržavamo ga kroz celu lekciju, sve do završnog shell rezimea."
+    intent: "App shell ostaje stalni okvir cele demonstracije dok ne završimo ceo tutorijal."
+    tag: "css:shell-outline"
+    proTip: "App shell ostaje stalni okvir cele demonstracije dok ne završimo ceo tutorijal."
+    focusHtmlNeedles:
+      - "<div class=\"app-shell\">"
+  - stepId: shell_padding
+    title: "CSS: .app-shell / padding"
+    summary: "Dodajemo padding oko cele scene da navbar dobije vazduh i ne stoji zalepljen za ivice preview-a."
+    intent: "Jedan property po korak drži promenu malom, preglednom i lakom za objašnjavanje."
+    tag: "css:shell-padding"
+    proTip: "Jedan property po korak drži promenu malom, preglednom i lakom za objašnjavanje."
+    focusHtmlNeedles:
+      - "<div class=\"app-shell\">"
+  - stepId: shell_background
+    title: "CSS: .app-shell / background"
+    summary: "Svetla pozadina približava preview referentnoj slici i daje kontrast tamnom navbaru."
+    intent: "Jedan property po korak drži promenu malom, preglednom i lakom za objašnjavanje."
+    tag: "css:shell-background"
+    proTip: "Jedan property po korak drži promenu malom, preglednom i lakom za objašnjavanje."
+    focusHtmlNeedles:
+      - "<div class=\"app-shell\">"
+  - stepId: shell_min_height
+    title: "CSS: .app-shell / min-height"
+    summary: "Puna visina drži celu scenu stabilnom tokom lekcije."
+    intent: "Jedan property po korak drži promenu malom, preglednom i lakom za objašnjavanje."
+    tag: "css:shell-min-height"
+    proTip: "Jedan property po korak drži promenu malom, preglednom i lakom za objašnjavanje."
+    focusHtmlNeedles:
+      - "<div class=\"app-shell\">"
+  - stepId: topbar_outline
+    title: "CSS: .topbar / outline"
+    summary: "Dodajemo tanak pomoćni outline da footprint celog navbara ostane vidljiv kroz ceo tok. Skidamo ga tek u završnom rezime koraku za `.topbar`."
+    intent: "Outline ostaje aktivan dok ne završimo rezime za ovaj element."
+    tag: "css:topbar-outline"
+    proTip: "Outline ostaje aktivan dok ne završimo rezime za ovaj element."
+    focusHtmlNeedles:
+      - "class=\"topbar\""
+  - stepId: topbar_padding
+    title: "CSS: .topbar / padding"
+    summary: "Navbar dobija unutrašnji spacing, pa odmah izgleda kao realna UI traka."
+    intent: "Jedan property po korak drži promenu malom, preglednom i lakom za objašnjavanje."
+    tag: "css:topbar-padding"
+    proTip: "Jedan property po korak drži promenu malom, preglednom i lakom za objašnjavanje."
+    focusHtmlNeedles:
+      - "class=\"topbar\""
+  - stepId: topbar_background
+    title: "CSS: .topbar / background"
+    summary: "Dodajemo tamnu pozadinu, ali outline namerno ostaje do završnog rezimea za `.topbar`."
+    intent: "Jedan property po korak drži promenu malom, preglednom i lakom za objašnjavanje."
+    tag: "css:topbar-background"
+    proTip: "Jedan property po korak drži promenu malom, preglednom i lakom za objašnjavanje."
+    focusHtmlNeedles:
+      - "class=\"topbar\""
+  - stepId: topbar_border
+    title: "CSS: .topbar / border"
+    summary: "Tanka ivica pomaže da navbar bude čitljiv i na svetloj pozadini."
+    intent: "Jedan property po korak drži promenu malom, preglednom i lakom za objašnjavanje."
+    tag: "css:topbar-border"
+    proTip: "Jedan property po korak drži promenu malom, preglednom i lakom za objašnjavanje."
+    focusHtmlNeedles:
+      - "class=\"topbar\""
+  - stepId: topbar_shadow
+    title: "CSS: .topbar / box-shadow"
+    summary: "Shadow odvaja navbar od pozadine i približava ga referentnoj slici."
+    intent: "Jedan property po korak drži promenu malom, preglednom i lakom za objašnjavanje."
+    tag: "css:topbar-shadow"
+    proTip: "Jedan property po korak drži promenu malom, preglednom i lakom za objašnjavanje."
+    focusHtmlNeedles:
+      - "class=\"topbar\""
+  - stepId: topbar_display
+    title: "CSS: .topbar / display"
+    summary: "Flex uvodi horizontalni raspored elemenata."
+    intent: "Jedan property po korak drži promenu malom, preglednom i lakom za objašnjavanje."
+    tag: "css:topbar-display"
+    proTip: "Jedan property po korak drži promenu malom, preglednom i lakom za objašnjavanje."
+    focusHtmlNeedles:
+      - "class=\"topbar\""
+  - stepId: topbar_align_items
+    title: "CSS: .topbar / align-items"
+    summary: "Vertikalno centriramo sve delove navigacije."
+    intent: "Jedan property po korak drži promenu malom, preglednom i lakom za objašnjavanje."
+    tag: "css:topbar-align-items"
+    proTip: "Jedan property po korak drži promenu malom, preglednom i lakom za objašnjavanje."
+    focusHtmlNeedles:
+      - "class=\"topbar\""
+  - stepId: topbar_justify_content
+    title: "CSS: .topbar / justify-content"
+    summary: "Glavne zone dobijaju početno razdvajanje levo i desno."
+    intent: "Jedan property po korak drži promenu malom, preglednom i lakom za objašnjavanje."
+    tag: "css:topbar-justify-content"
+    proTip: "Jedan property po korak drži promenu malom, preglednom i lakom za objašnjavanje."
+    focusHtmlNeedles:
+      - "class=\"topbar\""
+  - stepId: logo_html
+    title: "HTML: Logo Link"
+    summary: "Dodajemo logo kao klikabilni `.topbar-logo` element na levom kraju navigacije."
+    intent: "Logo je navigacioni landmark i zato ga uvodimo pre linkova."
+    tag: "html:logo"
+    proTip: "Logo je navigacioni landmark i zato ga uvodimo pre linkova."
+    focusHtmlNeedles:
+      - "class=\"topbar-logo\""
+  - stepId: logo_outline
+    title: "CSS: .topbar-logo / outline"
+    summary: "Dodajemo tanak outline za logo i držimo ga do završnog rezime koraka za `.topbar-logo`."
+    intent: "Svaki važan element dobija svoj outline i zadržava ga do svog rezimea."
+    tag: "css:logo-outline"
+    proTip: "Svaki važan element dobija svoj outline i zadržava ga do svog rezimea."
+    focusHtmlNeedles:
+      - "class=\"topbar-logo\""
+  - stepId: logo_color
+    title: "CSS: .topbar-logo / color"
+    summary: "Boju loga postavljamo rano da odmah ima jasan kontrast na tamnoj traci."
+    intent: "Jedan property po korak drži promenu malom, preglednom i lakom za objašnjavanje."
+    tag: "css:logo-color"
+    proTip: "Jedan property po korak drži promenu malom, preglednom i lakom za objašnjavanje."
+    focusHtmlNeedles:
+      - "class=\"topbar-logo\""
+  - stepId: logo_font_size
+    title: "CSS: .topbar-logo / font-size"
+    summary: "Malo povećavamo logo da se odvoji od običnih linkova."
+    intent: "Jedan property po korak drži promenu malom, preglednom i lakom za objašnjavanje."
+    tag: "css:logo-font-size"
+    proTip: "Jedan property po korak drži promenu malom, preglednom i lakom za objašnjavanje."
+    focusHtmlNeedles:
+      - "class=\"topbar-logo\""
+  - stepId: logo_font_weight
+    title: "CSS: .topbar-logo / font-weight"
+    summary: "Težina fonta daje logo signalu identitet."
+    intent: "Jedan property po korak drži promenu malom, preglednom i lakom za objašnjavanje."
+    tag: "css:logo-font-weight"
+    proTip: "Jedan property po korak drži promenu malom, preglednom i lakom za objašnjavanje."
+    focusHtmlNeedles:
+      - "class=\"topbar-logo\""
+  - stepId: logo_letter_spacing
+    title: "CSS: .topbar-logo / letter-spacing"
+    summary: "Blagi spacing pojačava moderni, branded osećaj."
+    intent: "Jedan property po korak drži promenu malom, preglednom i lakom za objašnjavanje."
+    tag: "css:logo-letter-spacing"
+    proTip: "Jedan property po korak drži promenu malom, preglednom i lakom za objašnjavanje."
+    focusHtmlNeedles:
+      - "class=\"topbar-logo\""
+  - stepId: logo_text_decoration
+    title: "CSS: .topbar-logo / text-decoration"
+    summary: "Uklanjamo underline da logo izgleda kao deo UI-ja, ne kao sirov link."
+    intent: "Jedan property po korak drži promenu malom, preglednom i lakom za objašnjavanje."
+    tag: "css:logo-text-decoration"
+    proTip: "Jedan property po korak drži promenu malom, preglednom i lakom za objašnjavanje."
+    focusHtmlNeedles:
+      - "class=\"topbar-logo\""
+  - stepId: nav_html
+    title: "HTML: Navigation Links"
+    summary: "Dodajemo `<nav class=\"topbar-links\">` sa linkovima Services, Projects i About. I grupa linkova i sami linkovi dobijaju helper outline koji ostaje do završnog rezimea za navigaciju."
+    intent: "Najbolje je da sve centralne linkove uvedeš kao jednu celinu, pa tek onda doteruješ spacing i tipografiju."
+    tag: "html:nav-links"
+    proTip: "Najbolje je da sve centralne linkove uvedeš kao jednu celinu, pa tek onda doteruješ spacing i tipografiju."
+    focusHtmlNeedles:
+      - "class=\"topbar-links\""
+      - ">Services</a>"
+      - ">Projects</a>"
+      - ">About</a>"
+  - stepId: nav_outline
+    title: "CSS: .topbar-links / outline"
+    summary: "Dodajemo tanak helper outline za centralnu navigacionu zonu i držimo ga do završnog rezime koraka za link sekciju."
+    intent: "Centralna grupa ostaje obeležena dok ne završimo rezime za nju."
+    tag: "css:nav-outline"
+    proTip: "Centralna grupa ostaje obeležena dok ne završimo rezime za nju."
+    focusHtmlNeedles:
+      - "class=\"topbar-links\""
+  - stepId: nav_display
+    title: "CSS: .topbar-links / display"
+    summary: "Linkove slažemo u jedan red."
+    intent: "Jedan property po korak drži promenu malom, preglednom i lakom za objašnjavanje."
+    tag: "css:nav-display"
+    proTip: "Jedan property po korak drži promenu malom, preglednom i lakom za objašnjavanje."
+    focusHtmlNeedles:
+      - "class=\"topbar-links\""
+  - stepId: nav_gap
+    title: "CSS: .topbar-links / gap"
+    summary: "Gap daje istu vrstu razmaka kao na referentnoj slici."
+    intent: "Jedan property po korak drži promenu malom, preglednom i lakom za objašnjavanje."
+    tag: "css:nav-gap"
+    proTip: "Jedan property po korak drži promenu malom, preglednom i lakom za objašnjavanje."
+    focusHtmlNeedles:
+      - "class=\"topbar-links\""
+  - stepId: nav_margin_left
+    title: "CSS: .topbar-links / margin-left"
+    summary: "Navigacija se odvaja od loga i kreće ka sredini."
+    intent: "Jedan property po korak drži promenu malom, preglednom i lakom za objašnjavanje."
+    tag: "css:nav-margin-left"
+    proTip: "Jedan property po korak drži promenu malom, preglednom i lakom za objašnjavanje."
+    focusHtmlNeedles:
+      - "class=\"topbar-links\""
+  - stepId: nav_margin_right
+    title: "CSS: .topbar-links / margin-right"
+    summary: "Desni auto margin pomaže da grupa linkova ostane vizuelno centrirana."
+    intent: "Jedan property po korak drži promenu malom, preglednom i lakom za objašnjavanje."
+    tag: "css:nav-margin-right"
+    proTip: "Jedan property po korak drži promenu malom, preglednom i lakom za objašnjavanje."
+    focusHtmlNeedles:
+      - "class=\"topbar-links\""
+  - stepId: nav_link_outline
+    title: "CSS: .topbar-links a / outline"
+    summary: "Svaki navigacioni link dobija svoj tanak outline i zadržava ga do završnog rezimea za navigaciju."
+    intent: "I sama grupa i pojedinačni linkovi treba da ostanu vizuelno čitljivi dok traje objašnjenje."
+    tag: "css:nav-link-outline"
+    proTip: "I sama grupa i pojedinačni linkovi treba da ostanu vizuelno čitljivi dok traje objašnjenje."
+    focusHtmlNeedles:
+      - ">Services</a>"
+      - ">Projects</a>"
+      - ">About</a>"
+  - stepId: nav_link_color
+    title: "CSS: .topbar-links a / color"
+    summary: "Boja linkova prati logo i pravi konzistentan kontrast."
+    intent: "Jedan property po korak drži promenu malom, preglednom i lakom za objašnjavanje."
+    tag: "css:nav-link-color"
+    proTip: "Jedan property po korak drži promenu malom, preglednom i lakom za objašnjavanje."
+    focusHtmlNeedles:
+      - ">Services</a>"
+      - ">Projects</a>"
+      - ">About</a>"
+  - stepId: nav_link_font_size
+    title: "CSS: .topbar-links a / font-size"
+    summary: "Linkovi dobijaju čitljivu, ali nenametljivu veličinu."
+    intent: "Jedan property po korak drži promenu malom, preglednom i lakom za objašnjavanje."
+    tag: "css:nav-link-font-size"
+    proTip: "Jedan property po korak drži promenu malom, preglednom i lakom za objašnjavanje."
+    focusHtmlNeedles:
+      - ">Services</a>"
+      - ">Projects</a>"
+      - ">About</a>"
+  - stepId: nav_link_text_decoration
+    title: "CSS: .topbar-links a / text-decoration"
+    summary: "Čistimo default underline da linkovi izgledaju kao deo dizajna."
+    intent: "Jedan property po korak drži promenu malom, preglednom i lakom za objašnjavanje."
+    tag: "css:nav-link-text-decoration"
+    proTip: "Jedan property po korak drži promenu malom, preglednom i lakom za objašnjavanje."
+    focusHtmlNeedles:
+      - ">Services</a>"
+      - ">Projects</a>"
+      - ">About</a>"
+  - stepId: nav_link_transition
+    title: "CSS: .topbar-links a / transition"
+    summary: "Mala tranzicija omekšava hover promenu."
+    intent: "Jedan property po korak drži promenu malom, preglednom i lakom za objašnjavanje."
+    tag: "css:nav-link-transition"
+    proTip: "Jedan property po korak drži promenu malom, preglednom i lakom za objašnjavanje."
+    focusHtmlNeedles:
+      - ">Services</a>"
+      - ">Projects</a>"
+      - ">About</a>"
+  - stepId: nav_link_hover_color
+    title: "CSS: .topbar-links a:hover / color"
+    summary: "Hover ton blago menja boju, bez agresivnog skakanja."
+    intent: "Jedan property po korak drži promenu malom, preglednom i lakom za objašnjavanje."
+    tag: "css:nav-link-hover-color"
+    proTip: "Jedan property po korak drži promenu malom, preglednom i lakom za objašnjavanje."
+    focusHtmlNeedles:
+      - ">Services</a>"
+      - ">Projects</a>"
+      - ">About</a>"
+  - stepId: cta_html
+    title: "HTML: Contact CTA"
+    summary: "Dodajemo završni `.topbar-cta` link sa tekstom Contact. Dugme takođe dobija svoj helper outline koji ostaje do njegovog završnog rezimea."
+    intent: "CTA se uvodi na kraju, tek kada su logo i navigacija već stabilni."
+    tag: "html:cta"
+    proTip: "CTA se uvodi na kraju, tek kada su logo i navigacija već stabilni."
+    focusHtmlNeedles:
+      - "class=\"topbar-cta\""
+  - stepId: cta_outline
+    title: "CSS: .topbar-cta / outline"
+    summary: "Dodajemo tanak pomoćni outline za CTA i držimo ga do završnog rezime koraka za dugme."
+    intent: "Kod CTA dugmeta helper outline ostaje sve dok ne zaključimo ceo element."
+    tag: "css:cta-outline"
+    proTip: "Kod CTA dugmeta helper outline ostaje sve dok ne zaključimo ceo element."
+    focusHtmlNeedles:
+      - "class=\"topbar-cta\""
+  - stepId: cta_display
+    title: "CSS: .topbar-cta / display"
+    summary: "CTA prebacujemo u inline-flex da padding i centriranje rade kao na pravom dugmetu."
+    intent: "Jedan property po korak drži promenu malom, preglednom i lakom za objašnjavanje."
+    tag: "css:cta-display"
+    proTip: "Jedan property po korak drži promenu malom, preglednom i lakom za objašnjavanje."
+    focusHtmlNeedles:
+      - "class=\"topbar-cta\""
+  - stepId: cta_align_items
+    title: "CSS: .topbar-cta / align-items"
+    summary: "Tekst dugmeta centriramo po visini."
+    intent: "Jedan property po korak drži promenu malom, preglednom i lakom za objašnjavanje."
+    tag: "css:cta-align-items"
+    proTip: "Jedan property po korak drži promenu malom, preglednom i lakom za objašnjavanje."
+    focusHtmlNeedles:
+      - "class=\"topbar-cta\""
+  - stepId: cta_padding
+    title: "CSS: .topbar-cta / padding"
+    summary: "Padding daje CTA dugmetu njegov pravi footprint."
+    intent: "Jedan property po korak drži promenu malom, preglednom i lakom za objašnjavanje."
+    tag: "css:cta-padding"
+    proTip: "Jedan property po korak drži promenu malom, preglednom i lakom za objašnjavanje."
+    focusHtmlNeedles:
+      - "class=\"topbar-cta\""
+  - stepId: cta_radius
+    title: "CSS: .topbar-cta / border-radius"
+    summary: "Pil oblik odmah približava dugme referentnom primeru."
+    intent: "Jedan property po korak drži promenu malom, preglednom i lakom za objašnjavanje."
+    tag: "css:cta-radius"
+    proTip: "Jedan property po korak drži promenu malom, preglednom i lakom za objašnjavanje."
+    focusHtmlNeedles:
+      - "class=\"topbar-cta\""
+  - stepId: cta_background
+    title: "CSS: .topbar-cta / background"
+    summary: "Dodajemo završnu boju CTA dugmeta, ali outline i dalje ostaje do rezime koraka za `.topbar-cta`."
+    intent: "Jedan property po korak drži promenu malom, preglednom i lakom za objašnjavanje."
+    tag: "css:cta-background"
+    proTip: "Jedan property po korak drži promenu malom, preglednom i lakom za objašnjavanje."
+    focusHtmlNeedles:
+      - "class=\"topbar-cta\""
+  - stepId: cta_color
+    title: "CSS: .topbar-cta / color"
+    summary: "Beli tekst pravi čist kontrast preko plave pozadine."
+    intent: "Jedan property po korak drži promenu malom, preglednom i lakom za objašnjavanje."
+    tag: "css:cta-color"
+    proTip: "Jedan property po korak drži promenu malom, preglednom i lakom za objašnjavanje."
+    focusHtmlNeedles:
+      - "class=\"topbar-cta\""
+  - stepId: cta_text_decoration
+    title: "CSS: .topbar-cta / text-decoration"
+    summary: "Uklanjamo underline da CTA izgleda kao pravo dugme."
+    intent: "Jedan property po korak drži promenu malom, preglednom i lakom za objašnjavanje."
+    tag: "css:cta-text-decoration"
+    proTip: "Jedan property po korak drži promenu malom, preglednom i lakom za objašnjavanje."
+    focusHtmlNeedles:
+      - "class=\"topbar-cta\""
+  - stepId: cta_shadow
+    title: "CSS: .topbar-cta / box-shadow"
+    summary: "Shadow pojačava prisustvo CTA dugmeta i zatvara vizuelni match sa ciljem."
+    intent: "Jedan property po korak drži promenu malom, preglednom i lakom za objašnjavanje."
+    tag: "css:cta-shadow"
+    proTip: "Jedan property po korak drži promenu malom, preglednom i lakom za objašnjavanje."
+    focusHtmlNeedles:
+      - "class=\"topbar-cta\""
+  - stepId: topbar_summary
+    title: "Rezime: .topbar"
+    summary: "Završni rezime za `.topbar`: sada kada vidimo kompletan block CSS, uklanjamo helper outline sa glavnog wrapper-a."
+    intent: "Rezime korak je mesto gde helper outline odlazi i ostaje čist završni CSS za taj element."
+    tag: "summary:topbar-summary"
+    proTip: "Rezime korak je mesto gde helper outline odlazi i ostaje čist završni CSS za taj element."
+    focusHtmlNeedles:
+      - "class=\"topbar\""
+  - stepId: logo_summary
+    title: "Rezime: .topbar-logo"
+    summary: "Rezimiramo `.topbar-logo` i uklanjamo njegov helper outline tek sada, kada je sav CSS za logo već jasan i kompletan."
+    intent: "Logo outline ostaje sve do ovog trenutka da bi fokus bio čitljiv tokom cele lekcije."
+    tag: "summary:logo-summary"
+    proTip: "Logo outline ostaje sve do ovog trenutka da bi fokus bio čitljiv tokom cele lekcije."
+    focusHtmlNeedles:
+      - "class=\"topbar-logo\""
+  - stepId: navigation_summary
+    title: "Rezime: .topbar-links"
+    summary: "Rezimiramo navigacionu celinu i uklanjamo helper outline i sa wrapper-a i sa pojedinačnih linkova."
+    intent: "Kada završavaš celu navigacionu grupu, tek tada gasiš outline helpere za sve njene delove."
+    tag: "summary:navigation-summary"
+    proTip: "Kada završavaš celu navigacionu grupu, tek tada gasiš outline helpere za sve njene delove."
+    focusHtmlNeedles:
+      - "class=\"topbar-links\""
+  - stepId: cta_summary
+    title: "Rezime: .topbar-cta"
+    summary: "Rezime za CTA dugme: helper outline više nije potreban, jer završni stil već jasno govori šta je element i kako izgleda."
+    intent: "Outline služi učenju; kad je učenje za taj element završeno, može da nestane."
+    tag: "summary:cta-summary"
+    proTip: "Outline služi učenju; kad je učenje za taj element završeno, može da nestane."
+    focusHtmlNeedles:
+      - "class=\"topbar-cta\""
+  - stepId: shell_summary
+    title: "Rezime: .app-shell"
+    summary: "Završni shell rezime: tek sada uklanjamo helper outline sa `.app-shell`, jer je cela navigaciona lekcija kompletna i okvir više nije potreban."
+    intent: "App shell outline ostaje sve vreme kao teaching okvir, pa nestaje tek na samom kraju lekcije."
+    tag: "summary:shell-summary"
+    proTip: "App shell outline ostaje sve vreme kao teaching okvir, pa nestaje tek na samom kraju lekcije."
+    focusHtmlNeedles:
+      - "<div class=\"app-shell\">"
+  - stepId: done
+    title: "Done: Top Navigation"
+    summary: "Prvi navbar iz reference je gotov. Druga dva rasporeda iz goal slike ostaju kao domaći zadatak."
+    intent: "Kada završiš ovu varijantu, najbolji sledeći korak je da samostalno rekreiraš druga dva rasporeda iz iste reference."
+    tag: "success"
+    proTip: "Kada završiš ovu varijantu, najbolji sledeći korak je da samostalno rekreiraš druga dva rasporeda iz iste reference."
+    focusHtmlNeedles:
+      - ""
+---
+
+# Step: empty_shell
+
+## Scene: empty_shell
+
+narration:
+  Počinjemo od praznog `.app-shell` prostora. Goal slika iznad pokazuje tri varijante, ali u ovoj lekciji gradimo samo prvu.
+
+focus:
+  artifactId: html
+
+code:
+  activeArtifactId: html
+
+preview:
+  action: apply-state
+  target: dom
+
+# Step: topbar_html
+
+## Scene: topbar_html
+
+narration:
+  Dodajemo `<header class="topbar">` kao glavni wrapper buduće navigacije.
+
+focus:
+  artifactId: html
+
+code:
+  activeArtifactId: html
+
+preview:
+  action: apply-state
+  target: dom
+
+# Step: shell_outline
+
+## Scene: shell_outline
+
+narration:
+  Dodajemo tanak helper outline za `.app-shell` i zadržavamo ga kroz celu lekciju, sve do završnog shell rezimea.
+
+focus:
+  artifactId: css
+
+code:
+  activeArtifactId: css
+
+preview:
+  action: apply-state
+  target: dom
+
+# Step: shell_padding
+
+## Scene: shell_padding
+
+narration:
+  Dodajemo padding oko cele scene da navbar dobije vazduh i ne stoji zalepljen za ivice preview-a.
+
+focus:
+  artifactId: css
+
+code:
+  activeArtifactId: css
+
+preview:
+  action: apply-state
+  target: dom
+
+# Step: shell_background
+
+## Scene: shell_background
+
+narration:
+  Svetla pozadina približava preview referentnoj slici i daje kontrast tamnom navbaru.
+
+focus:
+  artifactId: css
+
+code:
+  activeArtifactId: css
+
+preview:
+  action: apply-state
+  target: dom
+
+# Step: shell_min_height
+
+## Scene: shell_min_height
+
+narration:
+  Puna visina drži celu scenu stabilnom tokom lekcije.
+
+focus:
+  artifactId: css
+
+code:
+  activeArtifactId: css
+
+preview:
+  action: apply-state
+  target: dom
+
+# Step: topbar_outline
+
+## Scene: topbar_outline
+
+narration:
+  Dodajemo tanak pomoćni outline da footprint celog navbara ostane vidljiv kroz ceo tok. Skidamo ga tek u završnom rezime koraku za `.topbar`.
+
+focus:
+  artifactId: css
+
+code:
+  activeArtifactId: css
+
+preview:
+  action: apply-state
+  target: dom
+
+# Step: topbar_padding
+
+## Scene: topbar_padding
+
+narration:
+  Navbar dobija unutrašnji spacing, pa odmah izgleda kao realna UI traka.
+
+focus:
+  artifactId: css
+
+code:
+  activeArtifactId: css
+
+preview:
+  action: apply-state
+  target: dom
+
+# Step: topbar_background
+
+## Scene: topbar_background
+
+narration:
+  Dodajemo tamnu pozadinu, ali outline namerno ostaje do završnog rezimea za `.topbar`.
+
+focus:
+  artifactId: css
+
+code:
+  activeArtifactId: css
+
+preview:
+  action: apply-state
+  target: dom
+
+# Step: topbar_border
+
+## Scene: topbar_border
+
+narration:
+  Tanka ivica pomaže da navbar bude čitljiv i na svetloj pozadini.
+
+focus:
+  artifactId: css
+
+code:
+  activeArtifactId: css
+
+preview:
+  action: apply-state
+  target: dom
+
+# Step: topbar_shadow
+
+## Scene: topbar_shadow
+
+narration:
+  Shadow odvaja navbar od pozadine i približava ga referentnoj slici.
+
+focus:
+  artifactId: css
+
+code:
+  activeArtifactId: css
+
+preview:
+  action: apply-state
+  target: dom
+
+# Step: topbar_display
+
+## Scene: topbar_display
+
+narration:
+  Flex uvodi horizontalni raspored elemenata.
+
+focus:
+  artifactId: css
+
+code:
+  activeArtifactId: css
+
+preview:
+  action: apply-state
+  target: dom
+
+# Step: topbar_align_items
+
+## Scene: topbar_align_items
+
+narration:
+  Vertikalno centriramo sve delove navigacije.
+
+focus:
+  artifactId: css
+
+code:
+  activeArtifactId: css
+
+preview:
+  action: apply-state
+  target: dom
+
+# Step: topbar_justify_content
+
+## Scene: topbar_justify_content
+
+narration:
+  Glavne zone dobijaju početno razdvajanje levo i desno.
+
+focus:
+  artifactId: css
+
+code:
+  activeArtifactId: css
+
+preview:
+  action: apply-state
+  target: dom
+
+# Step: logo_html
+
+## Scene: logo_html
+
+narration:
+  Dodajemo logo kao klikabilni `.topbar-logo` element na levom kraju navigacije.
+
+focus:
+  artifactId: html
+
+code:
+  activeArtifactId: html
+
+preview:
+  action: apply-state
+  target: dom
+
+# Step: logo_outline
+
+## Scene: logo_outline
+
+narration:
+  Dodajemo tanak outline za logo i držimo ga do završnog rezime koraka za `.topbar-logo`.
+
+focus:
+  artifactId: css
+
+code:
+  activeArtifactId: css
+
+preview:
+  action: apply-state
+  target: dom
+
+# Step: logo_color
+
+## Scene: logo_color
+
+narration:
+  Boju loga postavljamo rano da odmah ima jasan kontrast na tamnoj traci.
+
+focus:
+  artifactId: css
+
+code:
+  activeArtifactId: css
+
+preview:
+  action: apply-state
+  target: dom
+
+# Step: logo_font_size
+
+## Scene: logo_font_size
+
+narration:
+  Malo povećavamo logo da se odvoji od običnih linkova.
+
+focus:
+  artifactId: css
+
+code:
+  activeArtifactId: css
+
+preview:
+  action: apply-state
+  target: dom
+
+# Step: logo_font_weight
+
+## Scene: logo_font_weight
+
+narration:
+  Težina fonta daje logo signalu identitet.
+
+focus:
+  artifactId: css
+
+code:
+  activeArtifactId: css
+
+preview:
+  action: apply-state
+  target: dom
+
+# Step: logo_letter_spacing
+
+## Scene: logo_letter_spacing
+
+narration:
+  Blagi spacing pojačava moderni, branded osećaj.
+
+focus:
+  artifactId: css
+
+code:
+  activeArtifactId: css
+
+preview:
+  action: apply-state
+  target: dom
+
+# Step: logo_text_decoration
+
+## Scene: logo_text_decoration
+
+narration:
+  Uklanjamo underline da logo izgleda kao deo UI-ja, ne kao sirov link.
+
+focus:
+  artifactId: css
+
+code:
+  activeArtifactId: css
+
+preview:
+  action: apply-state
+  target: dom
+
+# Step: nav_html
+
+## Scene: nav_html
+
+narration:
+  Dodajemo `<nav class="topbar-links">` sa linkovima Services, Projects i About. I grupa linkova i sami linkovi dobijaju helper outline koji ostaje do završnog rezimea za navigaciju.
+
+focus:
+  artifactId: html
+
+code:
+  activeArtifactId: html
+
+preview:
+  action: apply-state
+  target: dom
+
+# Step: nav_outline
+
+## Scene: nav_outline
+
+narration:
+  Dodajemo tanak helper outline za centralnu navigacionu zonu i držimo ga do završnog rezime koraka za link sekciju.
+
+focus:
+  artifactId: css
+
+code:
+  activeArtifactId: css
+
+preview:
+  action: apply-state
+  target: dom
+
+# Step: nav_display
+
+## Scene: nav_display
+
+narration:
+  Linkove slažemo u jedan red.
+
+focus:
+  artifactId: css
+
+code:
+  activeArtifactId: css
+
+preview:
+  action: apply-state
+  target: dom
+
+# Step: nav_gap
+
+## Scene: nav_gap
+
+narration:
+  Gap daje istu vrstu razmaka kao na referentnoj slici.
+
+focus:
+  artifactId: css
+
+code:
+  activeArtifactId: css
+
+preview:
+  action: apply-state
+  target: dom
+
+# Step: nav_margin_left
+
+## Scene: nav_margin_left
+
+narration:
+  Navigacija se odvaja od loga i kreće ka sredini.
+
+focus:
+  artifactId: css
+
+code:
+  activeArtifactId: css
+
+preview:
+  action: apply-state
+  target: dom
+
+# Step: nav_margin_right
+
+## Scene: nav_margin_right
+
+narration:
+  Desni auto margin pomaže da grupa linkova ostane vizuelno centrirana.
+
+focus:
+  artifactId: css
+
+code:
+  activeArtifactId: css
+
+preview:
+  action: apply-state
+  target: dom
+
+# Step: nav_link_outline
+
+## Scene: nav_link_outline
+
+narration:
+  Svaki navigacioni link dobija svoj tanak outline i zadržava ga do završnog rezimea za navigaciju.
+
+focus:
+  artifactId: css
+
+code:
+  activeArtifactId: css
+
+preview:
+  action: apply-state
+  target: dom
+
+# Step: nav_link_color
+
+## Scene: nav_link_color
+
+narration:
+  Boja linkova prati logo i pravi konzistentan kontrast.
+
+focus:
+  artifactId: css
+
+code:
+  activeArtifactId: css
+
+preview:
+  action: apply-state
+  target: dom
+
+# Step: nav_link_font_size
+
+## Scene: nav_link_font_size
+
+narration:
+  Linkovi dobijaju čitljivu, ali nenametljivu veličinu.
+
+focus:
+  artifactId: css
+
+code:
+  activeArtifactId: css
+
+preview:
+  action: apply-state
+  target: dom
+
+# Step: nav_link_text_decoration
+
+## Scene: nav_link_text_decoration
+
+narration:
+  Čistimo default underline da linkovi izgledaju kao deo dizajna.
+
+focus:
+  artifactId: css
+
+code:
+  activeArtifactId: css
+
+preview:
+  action: apply-state
+  target: dom
+
+# Step: nav_link_transition
+
+## Scene: nav_link_transition
+
+narration:
+  Mala tranzicija omekšava hover promenu.
+
+focus:
+  artifactId: css
+
+code:
+  activeArtifactId: css
+
+preview:
+  action: apply-state
+  target: dom
+
+# Step: nav_link_hover_color
+
+## Scene: nav_link_hover_color
+
+narration:
+  Hover ton blago menja boju, bez agresivnog skakanja.
+
+focus:
+  artifactId: css
+
+code:
+  activeArtifactId: css
+
+preview:
+  action: apply-state
+  target: dom
+
+# Step: cta_html
+
+## Scene: cta_html
+
+narration:
+  Dodajemo završni `.topbar-cta` link sa tekstom Contact. Dugme takođe dobija svoj helper outline koji ostaje do njegovog završnog rezimea.
+
+focus:
+  artifactId: html
+
+code:
+  activeArtifactId: html
+
+preview:
+  action: apply-state
+  target: dom
+
+# Step: cta_outline
+
+## Scene: cta_outline
+
+narration:
+  Dodajemo tanak pomoćni outline za CTA i držimo ga do završnog rezime koraka za dugme.
+
+focus:
+  artifactId: css
+
+code:
+  activeArtifactId: css
+
+preview:
+  action: apply-state
+  target: dom
+
+# Step: cta_display
+
+## Scene: cta_display
+
+narration:
+  CTA prebacujemo u inline-flex da padding i centriranje rade kao na pravom dugmetu.
+
+focus:
+  artifactId: css
+
+code:
+  activeArtifactId: css
+
+preview:
+  action: apply-state
+  target: dom
+
+# Step: cta_align_items
+
+## Scene: cta_align_items
+
+narration:
+  Tekst dugmeta centriramo po visini.
+
+focus:
+  artifactId: css
+
+code:
+  activeArtifactId: css
+
+preview:
+  action: apply-state
+  target: dom
+
+# Step: cta_padding
+
+## Scene: cta_padding
+
+narration:
+  Padding daje CTA dugmetu njegov pravi footprint.
+
+focus:
+  artifactId: css
+
+code:
+  activeArtifactId: css
+
+preview:
+  action: apply-state
+  target: dom
+
+# Step: cta_radius
+
+## Scene: cta_radius
+
+narration:
+  Pil oblik odmah približava dugme referentnom primeru.
+
+focus:
+  artifactId: css
+
+code:
+  activeArtifactId: css
+
+preview:
+  action: apply-state
+  target: dom
+
+# Step: cta_background
+
+## Scene: cta_background
+
+narration:
+  Dodajemo završnu boju CTA dugmeta, ali outline i dalje ostaje do rezime koraka za `.topbar-cta`.
+
+focus:
+  artifactId: css
+
+code:
+  activeArtifactId: css
+
+preview:
+  action: apply-state
+  target: dom
+
+# Step: cta_color
+
+## Scene: cta_color
+
+narration:
+  Beli tekst pravi čist kontrast preko plave pozadine.
+
+focus:
+  artifactId: css
+
+code:
+  activeArtifactId: css
+
+preview:
+  action: apply-state
+  target: dom
+
+# Step: cta_text_decoration
+
+## Scene: cta_text_decoration
+
+narration:
+  Uklanjamo underline da CTA izgleda kao pravo dugme.
+
+focus:
+  artifactId: css
+
+code:
+  activeArtifactId: css
+
+preview:
+  action: apply-state
+  target: dom
+
+# Step: cta_shadow
+
+## Scene: cta_shadow
+
+narration:
+  Shadow pojačava prisustvo CTA dugmeta i zatvara vizuelni match sa ciljem.
+
+focus:
+  artifactId: css
+
+code:
+  activeArtifactId: css
+
+preview:
+  action: apply-state
+  target: dom
+
+# Step: topbar_summary
+
+## Scene: topbar_summary
+
+narration:
+  Završni rezime za `.topbar`: sada kada vidimo kompletan block CSS, uklanjamo helper outline sa glavnog wrapper-a.
+
+focus:
+  artifactId: css
+
+code:
+  activeArtifactId: css
+
+preview:
+  action: apply-state
+  target: dom
+
+# Step: logo_summary
+
+## Scene: logo_summary
+
+narration:
+  Rezimiramo `.topbar-logo` i uklanjamo njegov helper outline tek sada, kada je sav CSS za logo već jasan i kompletan.
+
+focus:
+  artifactId: css
+
+code:
+  activeArtifactId: css
+
+preview:
+  action: apply-state
+  target: dom
+
+# Step: navigation_summary
+
+## Scene: navigation_summary
+
+narration:
+  Rezimiramo navigacionu celinu i uklanjamo helper outline i sa wrapper-a i sa pojedinačnih linkova.
+
+focus:
+  artifactId: css
+
+code:
+  activeArtifactId: css
+
+preview:
+  action: apply-state
+  target: dom
+
+# Step: cta_summary
+
+## Scene: cta_summary
+
+narration:
+  Rezime za CTA dugme: helper outline više nije potreban, jer završni stil već jasno govori šta je element i kako izgleda.
+
+focus:
+  artifactId: css
+
+code:
+  activeArtifactId: css
+
+preview:
+  action: apply-state
+  target: dom
+
+# Step: shell_summary
+
+## Scene: shell_summary
+
+narration:
+  Završni shell rezime: tek sada uklanjamo helper outline sa `.app-shell`, jer je cela navigaciona lekcija kompletna i okvir više nije potreban.
+
+focus:
+  artifactId: css
+
+code:
+  activeArtifactId: css
+
+preview:
+  action: apply-state
+  target: dom
+
+# Step: done
+
+## Scene: done
+
+narration:
+  Prvi navbar iz reference je gotov. Druga dva rasporeda iz goal slike ostaju kao domaći zadatak.
+
+focus:
+  artifactId: html
+
+code:
+  activeArtifactId: html
+
+preview:
+  action: apply-state
+  target: dom
+
 === index.html ===
 <!DOCTYPE html>
 <html lang="sr" data-theme="dark">
@@ -10167,6 +13105,939 @@ export function writeSavedStepNumbers({ lessonId, savedStepNumbers }) {
 </body>
 </html>
 
+=== lesson-engine/build-lines-from-rule-blocks.js ===
+function readStepBoundary(stepReference, stepNumberById) {
+  if (typeof stepReference === 'number') {
+    return stepReference;
+  }
+
+  if (!stepReference) {
+    return Number.POSITIVE_INFINITY;
+  }
+
+  return stepNumberById[stepReference] ?? Number.POSITIVE_INFINITY;
+}
+
+function appendVisibleRuleBlock(lines, ruleBlock, stepNumber, stepNumberById) {
+  const activeEntries = ruleBlock.entries.filter(entry =>
+    stepNumber >= readStepBoundary(entry.from, stepNumberById) &&
+    (entry.untilBefore === undefined || stepNumber < readStepBoundary(entry.untilBefore, stepNumberById))
+  );
+
+  if (!activeEntries.length && stepNumber < readStepBoundary(ruleBlock.showFrom, stepNumberById)) {
+    return;
+  }
+
+  if (lines.length) {
+    lines.push('');
+  }
+
+  if (Array.isArray(ruleBlock.header)) {
+    ruleBlock.header.forEach(headerLine => lines.push(headerLine));
+  } else {
+    lines.push(ruleBlock.header);
+  }
+
+  activeEntries.forEach(entry => {
+    lines.push(`  ${entry.line}`);
+  });
+
+  lines.push('}');
+}
+
+export function buildLinesFromRuleBlocks({ ruleBlocks, stepNumberById, stepNumber }) {
+  const lines = [];
+
+  ruleBlocks.forEach(ruleBlock => {
+    appendVisibleRuleBlock(lines, ruleBlock, stepNumber, stepNumberById);
+  });
+
+  return lines;
+}
+
+=== lesson-engine/build-lines-from-timeline-blocks.js ===
+const ROOT_SLOT = 'root';
+
+function readStepBoundary(stepReference, stepNumberById) {
+  if (typeof stepReference === 'number') {
+    return stepReference;
+  }
+
+  if (!stepReference) {
+    return Number.POSITIVE_INFINITY;
+  }
+
+  return stepNumberById[stepReference] ?? Number.POSITIVE_INFINITY;
+}
+
+function createSlotMarker(slotName) {
+  return `@@slot:${slotName}@@`;
+}
+
+function isSlotMarker(line) {
+  return /^@@slot:[a-zA-Z0-9_-]+@@$/.test(line.trim());
+}
+
+function insertTimelineBlock(lines, timelineBlock) {
+  const slotMarker = createSlotMarker(timelineBlock.target);
+  const slotIndex = lines.findIndex(line => line.trim() === slotMarker);
+
+  if (slotIndex === -1) {
+    throw new Error(`Missing target slot "${timelineBlock.target}" while composing timeline lines.`);
+  }
+
+  lines.splice(slotIndex, 0, ...timelineBlock.lines);
+}
+
+export function buildLinesFromTimelineBlocks({ timelineBlocks, stepNumberById, stepNumber }) {
+  const lines = [createSlotMarker(ROOT_SLOT)];
+
+  timelineBlocks.forEach(timelineBlock => {
+    if (stepNumber >= readStepBoundary(timelineBlock.from, stepNumberById)) {
+      insertTimelineBlock(lines, timelineBlock);
+    }
+  });
+
+  return lines.filter(line => !isSlotMarker(line));
+}
+
+=== lesson-engine/compile-lesson-package.js ===
+import { parseFrontmatter } from './parse-frontmatter.js';
+import { renderMarkdown } from './render-markdown.js';
+import { readScenesContract } from './read-scenes-contract.js';
+import { readTimelineBlocks } from './read-timeline-blocks.js';
+import { buildLinesFromTimelineBlocks } from './build-lines-from-timeline-blocks.js';
+import { readRuleBlocks } from './read-rule-blocks.js';
+import { buildLinesFromRuleBlocks } from './build-lines-from-rule-blocks.js';
+
+function normalizeString(value) {
+  return typeof value === 'string' ? value.trim() : '';
+}
+
+function normalizeArtifactDeclaration(artifact) {
+  if (!artifact || typeof artifact !== 'object') {
+    throw new Error('Each artifact declaration must be an object.');
+  }
+
+  const artifactId = normalizeString(artifact.artifactId);
+  const file = normalizeString(artifact.file);
+  const language = normalizeString(artifact.language);
+  const kind = normalizeString(artifact.kind);
+  const label = normalizeString(artifact.label);
+
+  if (!artifactId) {
+    throw new Error('Each artifact declaration must define artifactId.');
+  }
+
+  if (!file) {
+    throw new Error(`Artifact "${artifactId}" must define file.`);
+  }
+
+  if (!language) {
+    throw new Error(`Artifact "${artifactId}" must define language.`);
+  }
+
+  if (!kind) {
+    throw new Error(`Artifact "${artifactId}" must define kind.`);
+  }
+
+  return {
+    artifactId,
+    file,
+    language,
+    kind,
+    label: label || file.split('/').pop(),
+    isPrimary: Boolean(artifact.isPrimary)
+  };
+}
+
+function deriveFocusArtifactId(step) {
+  const tagType = normalizeString(step.tag).split(':')[0];
+
+  if (tagType === 'css' || tagType === 'summary') {
+    return 'css';
+  }
+
+  if (tagType === 'js-style') {
+    return 'js';
+  }
+
+  if (tagType === 'template-js') {
+    return 'template-js';
+  }
+
+  if (tagType === 'shadow-css') {
+    return 'shadow-css';
+  }
+
+  return 'html';
+}
+
+function deriveStepTag(step) {
+  if (normalizeString(step.tag)) {
+    return normalizeString(step.tag);
+  }
+
+  const tagType = step.stepId.includes('css') || step.stepId.includes('summary') ? 'css' : 'html';
+
+  return `${tagType}:${step.stepId}`;
+}
+
+function normalizeLessonMeta(attributes, body, goalImageSrcOverride) {
+  const preview = attributes.preview || {};
+  const goal = attributes.goal || {};
+  const homework = attributes.homework || {};
+  const lessonIntro = normalizeString(attributes.lessonIntro) || normalizeString(body);
+
+  return {
+    schemaVersion: attributes.schemaVersion || 1,
+    lessonId: normalizeString(attributes.lessonId),
+    lessonTitle: normalizeString(attributes.lessonTitle),
+    lessonIntro,
+    status: normalizeString(attributes.status) || 'draft',
+    courseId: normalizeString(attributes.courseId),
+    order: Number(attributes.order || 0),
+    preview: {
+      type: normalizeString(preview.type) || 'dom',
+      title: normalizeString(preview.title) || normalizeString(attributes.previewTitle),
+      address: normalizeString(preview.address) || normalizeString(attributes.previewAddress)
+    },
+    goal: {
+      title: normalizeString(goal.title) || normalizeString(attributes.goalTitle),
+      imageSrc: normalizeString(goalImageSrcOverride || goal.imageSrc || attributes.goalImageSrc),
+      imageAlt: normalizeString(goal.imageAlt) || normalizeString(attributes.goalImageAlt),
+      imageCaption: normalizeString(goal.imageCaption) || normalizeString(attributes.goalImageCaption)
+    },
+    homework: {
+      enabled: Boolean(homework.enabled ?? Array.isArray(attributes.homeworkItems)),
+      title: normalizeString(homework.title) || normalizeString(attributes.homeworkTitle) || 'Homework',
+      items: Array.isArray(homework.items) ? homework.items.map(item => normalizeString(item)).filter(Boolean) : []
+    },
+    references: Array.isArray(attributes.references)
+      ? attributes.references.map(reference => {
+        if (!reference || typeof reference !== 'object') {
+          return null;
+        }
+
+        return {
+          title: normalizeString(reference.title),
+          href: normalizeString(reference.href)
+        };
+      }).filter(Boolean)
+      : [],
+    tags: Array.isArray(attributes.tags) ? attributes.tags.map(tag => normalizeString(tag)).filter(Boolean) : [],
+    difficulty: normalizeString(attributes.difficulty),
+    estimatedMinutes: Number(attributes.estimatedMinutes || 0) || undefined
+  };
+}
+
+function createArtifactBuilders({ artifactDeclarations, artifactMarkdownById, stepNumberById }) {
+  return artifactDeclarations.map(artifact => {
+    const sourceMarkdown = artifactMarkdownById[artifact.artifactId];
+
+    if (typeof sourceMarkdown !== 'string' || !sourceMarkdown.trim()) {
+      throw new Error(`Missing source markdown for artifact "${artifact.artifactId}".`);
+    }
+
+    if (artifact.kind === 'timeline') {
+      const timelineBlocks = readTimelineBlocks(sourceMarkdown);
+
+      return {
+        artifact,
+        buildAtStep(stepNumber) {
+          return buildLinesFromTimelineBlocks({ timelineBlocks, stepNumberById, stepNumber });
+        }
+      };
+    }
+
+    if (artifact.kind === 'rules') {
+      const ruleBlocks = readRuleBlocks(sourceMarkdown);
+
+      return {
+        artifact,
+        buildAtStep(stepNumber) {
+          return buildLinesFromRuleBlocks({ ruleBlocks, stepNumberById, stepNumber });
+        }
+      };
+    }
+
+    throw new Error(`Unsupported artifact kind "${artifact.kind}" for artifact "${artifact.artifactId}".`);
+  });
+}
+
+function createRuntimeStep(step, previewTarget, focusArtifactId) {
+  return {
+    id: step.stepId,
+    title: step.title,
+    desc: step.summary,
+    tag: deriveStepTag(step),
+    proTip: step.proTip || step.intent || step.summary,
+    focusHtmlNeedles: step.focusHtmlNeedles,
+    scenes: [
+      {
+        sceneId: `${step.stepId}-scene`,
+        narration: step.summary,
+        focus: {
+          artifactId: focusArtifactId
+        },
+        code: {
+          activeArtifactId: focusArtifactId
+        },
+        preview: {
+          action: 'apply-state',
+          target: previewTarget
+        }
+      }
+    ]
+  };
+}
+
+export function compileLessonPackage({
+  lessonMarkdown,
+  scenesMarkdown,
+  artifactMarkdownById = {},
+  goalImageSrc = ''
+}) {
+  const { attributes: lessonAttributes, body: lessonBody } = parseFrontmatter(lessonMarkdown);
+  const scenesContract = readScenesContract(scenesMarkdown);
+
+  if (normalizeString(lessonAttributes.lessonId) !== scenesContract.lessonId) {
+    throw new Error(`Lesson ID mismatch between lesson.md and scenes.md for "${lessonAttributes.lessonId}".`);
+  }
+
+  const lessonMeta = normalizeLessonMeta(lessonAttributes, lessonBody, goalImageSrc);
+  const sceneSteps = scenesContract.steps;
+  const stepNumberById = Object.fromEntries(sceneSteps.map((step, index) => [step.stepId, index]));
+  const artifactDeclarations = Array.isArray(lessonAttributes.artifacts)
+    ? lessonAttributes.artifacts.map(normalizeArtifactDeclaration)
+    : [];
+
+  if (!artifactDeclarations.length) {
+    throw new Error(`Lesson "${lessonMeta.lessonId}" must declare at least one artifact.`);
+  }
+
+  const artifactBuilders = createArtifactBuilders({
+    artifactDeclarations,
+    artifactMarkdownById,
+    stepNumberById
+  });
+
+  const statesByStep = sceneSteps.map((step, stepNumber) => ({
+    stepId: step.stepId,
+    artifacts: Object.fromEntries(
+      artifactBuilders.map(({ artifact, buildAtStep }) => [artifact.artifactId, buildAtStep(stepNumber)])
+    )
+  }));
+
+  const runtimeSteps = sceneSteps.map(step => {
+    const focusArtifactId = deriveFocusArtifactId(step);
+    return {
+      id: step.stepId,
+      title: step.title,
+      desc: step.summary,
+      tag: deriveStepTag(step),
+      proTip: step.proTip || step.intent || step.summary,
+      focusHtmlNeedles: step.focusHtmlNeedles
+    };
+  });
+
+  const teachingSteps = sceneSteps.map((step, index) => createRuntimeStep(step, lessonMeta.preview.type, deriveFocusArtifactId(step)));
+
+  const artifacts = artifactDeclarations.map(artifact => ({
+    artifactId: artifact.artifactId,
+    kind: artifact.kind,
+    language: artifact.language,
+    fileName: artifact.label || artifact.file.split('/').pop(),
+    sourceFile: artifact.file,
+    editorLabel: artifact.label || artifact.file.split('/').pop(),
+    runtimeTarget: artifact.isPrimary ? 'primary' : 'secondary',
+    isPrimary: artifact.isPrimary
+  }));
+
+  const htmlArtifact = artifacts.find(artifact => artifact.artifactId === 'html');
+  const cssArtifact = artifacts.find(artifact => artifact.artifactId === 'css');
+
+  function buildHtmlAtStep(stepNumber) {
+    return artifactBuilders.find(({ artifact }) => artifact.artifactId === 'html')?.buildAtStep(stepNumber) || [];
+  }
+
+  function buildCssAtStep(stepNumber) {
+    return artifactBuilders.find(({ artifact }) => artifact.artifactId === 'css')?.buildAtStep(stepNumber) || [];
+  }
+
+  const compiledLesson = {
+    schemaVersion: lessonMeta.schemaVersion,
+    meta: {
+      lessonId: lessonMeta.lessonId,
+      lessonTitle: lessonMeta.lessonTitle,
+      lessonIntro: lessonMeta.lessonIntro,
+      status: lessonMeta.status,
+      preview: lessonMeta.preview,
+      courseId: lessonMeta.courseId,
+      order: lessonMeta.order,
+      tags: lessonMeta.tags,
+      difficulty: lessonMeta.difficulty,
+      estimatedMinutes: lessonMeta.estimatedMinutes
+    },
+    teaching: {
+      steps: teachingSteps,
+      goal: lessonMeta.goal,
+      homework: lessonMeta.homework,
+      references: lessonMeta.references,
+      summary: lessonMeta.lessonIntro
+    },
+    artifacts,
+    statesByStep,
+    lessonId: lessonMeta.lessonId,
+    lessonTitle: lessonMeta.lessonTitle,
+    lessonIntro: lessonMeta.lessonIntro,
+    lessonIntroHtml: renderMarkdown(lessonBody) || (lessonMeta.lessonIntro ? `<p>${lessonMeta.lessonIntro}</p>` : ''),
+    previewAddress: lessonMeta.preview.address,
+    previewTitle: lessonMeta.preview.title,
+    htmlFileName: htmlArtifact?.fileName || 'index.html',
+    cssFileName: cssArtifact?.fileName || 'style.css',
+    goalTitle: lessonMeta.goal.title,
+    goalImageSrc: lessonMeta.goal.imageSrc,
+    goalImageAlt: lessonMeta.goal.imageAlt,
+    goalImageCaption: lessonMeta.goal.imageCaption,
+    homeworkTitle: lessonMeta.homework.title,
+    homeworkItems: lessonMeta.homework.items,
+    steps: runtimeSteps,
+    buildHtmlAtStep,
+    buildCssAtStep
+  };
+
+  return compiledLesson;
+}
+
+=== lesson-engine/parse-frontmatter.js ===
+import YAML from 'yaml';
+
+const FRONTMATTER_PATTERN = /^---\n([\s\S]*?)\n---(?:\n|$)/;
+
+export function parseFrontmatter(markdown) {
+  if (!markdown) {
+    return { attributes: {}, body: '' };
+  }
+
+  const source = String(markdown).replace(/\r\n/g, '\n').trim();
+
+  if (!source.startsWith('---\n')) {
+    return { attributes: {}, body: source };
+  }
+
+  const match = source.match(FRONTMATTER_PATTERN);
+
+  if (!match) {
+    return { attributes: {}, body: source };
+  }
+
+  let attributes = {};
+
+  try {
+    attributes = YAML.parse(match[1]) || {};
+  } catch (error) {
+    throw new Error(`Failed to parse frontmatter: ${error.message}`);
+  }
+
+  return {
+    attributes,
+    body: source.slice(match[0].length).trim()
+  };
+}
+
+=== lesson-engine/pilots/build-top-navigation-lesson.js ===
+import lessonMarkdown from '../../education/lessons/02-build-top-navigation/source/lesson.md?raw';
+import scenesMarkdown from '../../education/lessons/02-build-top-navigation/source/scenes.md?raw';
+import htmlArtifactMarkdown from '../../education/lessons/02-build-top-navigation/source/artifacts/html.timeline.md?raw';
+import cssArtifactMarkdown from '../../education/lessons/02-build-top-navigation/source/artifacts/css.rules.md?raw';
+import goalImage from '../../education/lessons/02-build-top-navigation/source/assets/top-navigation-goal.svg';
+import { compileLessonPackage } from '../compile-lesson-package.js';
+
+export const buildTopNavigationLesson = compileLessonPackage({
+  lessonMarkdown,
+  scenesMarkdown,
+  artifactMarkdownById: {
+    html: htmlArtifactMarkdown,
+    css: cssArtifactMarkdown
+  },
+  goalImageSrc: goalImage
+});
+
+=== lesson-engine/read-fenced-json-value.js ===
+export function readFencedJsonValue(markdown) {
+  const source = String(markdown || '').trim();
+  const fencedJsonMatch = source.match(/```json\s*([\s\S]*?)```/i);
+
+  if (!fencedJsonMatch) {
+    throw new Error('Expected one fenced ```json``` block in markdown document.');
+  }
+
+  try {
+    return JSON.parse(fencedJsonMatch[1].trim());
+  } catch (error) {
+    throw new Error(`Failed to parse fenced JSON block: ${error.message}`);
+  }
+}
+
+=== lesson-engine/read-rule-blocks.js ===
+import { readFencedJsonValue } from './read-fenced-json-value.js';
+
+function isValidHeader(header) {
+  return typeof header === 'string' || (
+    Array.isArray(header) &&
+    header.length > 0 &&
+    header.every(line => typeof line === 'string')
+  );
+}
+
+function normalizeRuleBlock(ruleBlock) {
+  if (!ruleBlock || typeof ruleBlock !== 'object') {
+    throw new Error('Each CSS rule block must be an object.');
+  }
+
+  if (!isValidHeader(ruleBlock.header)) {
+    throw new Error('Each CSS rule block must define a string header or an array of string header lines.');
+  }
+
+  if (!Array.isArray(ruleBlock.entries)) {
+    throw new Error('Each CSS rule block must define an entries array.');
+  }
+
+  return {
+    header: ruleBlock.header,
+    showFrom: ruleBlock.showFrom,
+    entries: ruleBlock.entries.map(entry => {
+      if (!entry || typeof entry !== 'object' || typeof entry.line !== 'string') {
+        throw new Error('Each CSS rule entry must be an object with a string line.');
+      }
+
+      return {
+        from: entry.from,
+        untilBefore: entry.untilBefore,
+        line: entry.line
+      };
+    })
+  };
+}
+
+export function readRuleBlocks(markdown) {
+  const parsedValue = readFencedJsonValue(markdown);
+
+  if (!Array.isArray(parsedValue)) {
+    throw new Error('CSS rules markdown must contain a JSON array of rule blocks.');
+  }
+
+  return parsedValue.map(normalizeRuleBlock);
+}
+
+=== lesson-engine/read-scenes-contract.js ===
+import { parseFrontmatter } from './parse-frontmatter.js';
+
+function normalizeString(value) {
+  return typeof value === 'string' ? value.trim() : '';
+}
+
+function normalizeSceneStep(step) {
+  if (!step || typeof step !== 'object') {
+    throw new Error('Each scenes.md step must be an object.');
+  }
+
+  const stepId = normalizeString(step.stepId);
+  const title = normalizeString(step.title);
+  const summary = normalizeString(step.summary);
+  const intent = normalizeString(step.intent);
+
+  if (!stepId) {
+    throw new Error('Each scenes.md step must define stepId.');
+  }
+
+  if (!title) {
+    throw new Error(`Step "${stepId}" must define title.`);
+  }
+
+  if (!summary) {
+    throw new Error(`Step "${stepId}" must define summary.`);
+  }
+
+  if (!intent) {
+    throw new Error(`Step "${stepId}" must define intent.`);
+  }
+
+  const focusHtmlNeedles = Array.isArray(step.focusHtmlNeedles)
+    ? step.focusHtmlNeedles.map(needle => normalizeString(needle)).filter(Boolean)
+    : [];
+
+  return {
+    stepId,
+    title,
+    summary,
+    intent,
+    tag: normalizeString(step.tag),
+    proTip: normalizeString(step.proTip),
+    focusHtmlNeedles
+  };
+}
+
+function readSectionHeadings(body) {
+  const stepHeadings = [];
+  const sceneHeadings = [];
+  const lines = String(body || '').split('\n');
+  let currentStepId = '';
+  let currentStepSceneCount = 0;
+  const sceneCountByStep = new Map();
+
+  lines.forEach(line => {
+    const stepMatch = line.match(/^# Step:\s*(.+)$/);
+
+    if (stepMatch) {
+      currentStepId = normalizeString(stepMatch[1]);
+      currentStepSceneCount = 0;
+      stepHeadings.push(currentStepId);
+      sceneCountByStep.set(currentStepId, 0);
+      return;
+    }
+
+    const sceneMatch = line.match(/^## Scene:\s*(.+)$/);
+
+    if (sceneMatch) {
+      if (!currentStepId) {
+        throw new Error(`Scene heading "${sceneMatch[1]}" appears before any step heading.`);
+      }
+
+      currentStepSceneCount += 1;
+      sceneHeadings.push({
+        stepId: currentStepId,
+        sceneId: normalizeString(sceneMatch[1])
+      });
+      sceneCountByStep.set(currentStepId, currentStepSceneCount);
+    }
+  });
+
+  return {
+    stepHeadings,
+    sceneHeadings,
+    sceneCountByStep
+  };
+}
+
+export function readScenesContract(markdown) {
+  const { attributes, body } = parseFrontmatter(markdown);
+  const steps = Array.isArray(attributes.steps) ? attributes.steps.map(normalizeSceneStep) : [];
+
+  if (!attributes.schemaVersion) {
+    throw new Error('scenes.md must define schemaVersion.');
+  }
+
+  if (normalizeString(attributes.lessonId) === '') {
+    throw new Error('scenes.md must define lessonId.');
+  }
+
+  if (!steps.length) {
+    throw new Error('scenes.md must declare at least one step.');
+  }
+
+  const { stepHeadings, sceneHeadings, sceneCountByStep } = readSectionHeadings(body);
+
+  if (stepHeadings.length !== steps.length) {
+    throw new Error('scenes.md body must list every declared step exactly once.');
+  }
+
+  steps.forEach((step, index) => {
+    if (stepHeadings[index] !== step.stepId) {
+      throw new Error(`Step order mismatch in scenes.md around "${step.stepId}".`);
+    }
+
+    if ((sceneCountByStep.get(step.stepId) || 0) === 0) {
+      throw new Error(`Step "${step.stepId}" must contain at least one scene.`);
+    }
+  });
+
+  return {
+    schemaVersion: attributes.schemaVersion,
+    lessonId: normalizeString(attributes.lessonId),
+    steps,
+    body,
+    stepHeadings,
+    sceneHeadings
+  };
+}
+
+=== lesson-engine/read-timeline-blocks.js ===
+import { readFencedJsonValue } from './read-fenced-json-value.js';
+
+function normalizeTimelineBlock(timelineBlock) {
+  if (!timelineBlock || typeof timelineBlock !== 'object') {
+    throw new Error('Each timeline block must be an object.');
+  }
+
+  if (typeof timelineBlock.target !== 'string' || !timelineBlock.target.trim()) {
+    throw new Error('Each timeline block must define a non-empty target slot.');
+  }
+
+  if (!Array.isArray(timelineBlock.lines) || timelineBlock.lines.some(line => typeof line !== 'string')) {
+    throw new Error('Each timeline block must define a lines array of strings.');
+  }
+
+  return {
+    from: timelineBlock.from,
+    target: timelineBlock.target.trim(),
+    lines: timelineBlock.lines
+  };
+}
+
+export function readTimelineBlocks(markdown) {
+  const parsedValue = readFencedJsonValue(markdown);
+
+  if (!Array.isArray(parsedValue)) {
+    throw new Error('Timeline markdown must contain a JSON array of timeline blocks.');
+  }
+
+  return parsedValue.map(normalizeTimelineBlock);
+}
+
+=== lesson-engine/render-markdown.js ===
+function escapeHtml(text) {
+  return String(text)
+    .replaceAll('&', '&amp;')
+    .replaceAll('<', '&lt;')
+    .replaceAll('>', '&gt;');
+}
+
+function escapeAttribute(text) {
+  return escapeHtml(text)
+    .replaceAll('"', '&quot;')
+    .replaceAll("'", '&#39;');
+}
+
+function stripMarkdownSyntax(text) {
+  return String(text)
+    .replace(/!\[([^\]]*)\]\(([^)]+)\)/g, '$1')
+    .replace(/\[([^\]]+)\]\(([^)]+)\)/g, '$1')
+    .replace(/[*_`~]/g, '')
+    .trim();
+}
+
+function createHeadingId(text, usedHeadingIds) {
+  const baseId = stripMarkdownSyntax(text)
+    .normalize('NFKD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '') || 'section';
+
+  const seenCount = usedHeadingIds.get(baseId) || 0;
+  usedHeadingIds.set(baseId, seenCount + 1);
+
+  return seenCount ? `${baseId}-${seenCount + 1}` : baseId;
+}
+
+function renderInlineMarkdown(text) {
+  const source = String(text || '');
+  const tokenPattern = /`([^`]+)`|!\[([^\]]*)\]\(([^)]+)\)|\[([^\]]+)\]\(([^)]+)\)/g;
+  const placeholders = [];
+  let renderedText = '';
+  let lastIndex = 0;
+
+  source.replace(tokenPattern, (match, codeText, imageAlt, imageSrc, linkLabel, linkHref, offset) => {
+    renderedText += escapeHtml(source.slice(lastIndex, offset));
+
+    const placeholder = `__INLINE_TOKEN_${placeholders.length}__`;
+
+    if (typeof codeText === 'string') {
+      placeholders.push({
+        placeholder,
+        html: `<code>${escapeHtml(codeText)}</code>`
+      });
+    } else if (typeof imageSrc === 'string') {
+      placeholders.push({
+        placeholder,
+        html: `<img class="lesson-markdown-image" src="${escapeAttribute(imageSrc)}" alt="${escapeAttribute(imageAlt)}">`
+      });
+    } else if (typeof linkHref === 'string') {
+      const safeHref = escapeAttribute(linkHref);
+
+      placeholders.push({
+        placeholder,
+        html: String(linkHref).startsWith('#')
+          ? `<a href="${safeHref}">${escapeHtml(linkLabel)}</a>`
+          : `<a href="${safeHref}" target="_blank" rel="noreferrer">${escapeHtml(linkLabel)}</a>`
+      });
+    }
+
+    renderedText += placeholder;
+    lastIndex = offset + match.length;
+    return match;
+  });
+
+  renderedText += escapeHtml(source.slice(lastIndex));
+
+  renderedText = renderedText
+    .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
+    .replace(/\*(.+?)\*/g, '<em>$1</em>');
+
+  return placeholders.reduce(
+    (currentText, placeholder) => currentText.replaceAll(placeholder.placeholder, placeholder.html),
+    renderedText
+  );
+}
+
+function flushParagraph(buffer, htmlParts) {
+  if (!buffer.length) {
+    return;
+  }
+
+  htmlParts.push(`<p>${renderInlineMarkdown(buffer.join(' '))}</p>`);
+  buffer.length = 0;
+}
+
+function flushList(listState, htmlParts) {
+  if (!listState.items.length) {
+    return;
+  }
+
+  const tagName = listState.type === 'ordered' ? 'ol' : 'ul';
+  htmlParts.push(`<${tagName}>${listState.items.map(item => `<li>${renderInlineMarkdown(item)}</li>`).join('')}</${tagName}>`);
+  listState.type = null;
+  listState.items = [];
+}
+
+function renderCodeBlock(code, language) {
+  const normalizedLanguage = (language || '').trim();
+  const languageClass = normalizedLanguage ? ` class="language-${escapeHtml(normalizedLanguage)}"` : '';
+
+  return `<pre class="lesson-code-block"><code${languageClass}>${escapeHtml(code)}</code></pre>`;
+}
+
+export function renderMarkdown(markdown) {
+  if (!markdown) {
+    return '';
+  }
+
+  const trimmedMarkdown = String(markdown).trim();
+
+  if (!trimmedMarkdown) {
+    return '';
+  }
+
+  const htmlParts = [];
+  const paragraphBuffer = [];
+  const listState = { type: null, items: [] };
+  const usedHeadingIds = new Map();
+  let inCodeBlock = false;
+  let codeFenceLanguage = '';
+  let codeBuffer = [];
+
+  trimmedMarkdown.split('\n').forEach(line => {
+    const trimmedLine = line.trim();
+
+    if (trimmedLine.startsWith('```')) {
+      flushParagraph(paragraphBuffer, htmlParts);
+      flushList(listState, htmlParts);
+
+      if (!inCodeBlock) {
+        inCodeBlock = true;
+        codeFenceLanguage = trimmedLine.slice(3).trim();
+        codeBuffer = [];
+        return;
+      }
+
+      htmlParts.push(renderCodeBlock(codeBuffer.join('\n'), codeFenceLanguage));
+      inCodeBlock = false;
+      codeFenceLanguage = '';
+      codeBuffer = [];
+      return;
+    }
+
+    if (inCodeBlock) {
+      codeBuffer.push(line);
+      return;
+    }
+
+    if (!trimmedLine) {
+      flushParagraph(paragraphBuffer, htmlParts);
+      flushList(listState, htmlParts);
+      return;
+    }
+
+    if (/^---+$/.test(trimmedLine)) {
+      flushParagraph(paragraphBuffer, htmlParts);
+      flushList(listState, htmlParts);
+      htmlParts.push('<hr>');
+      return;
+    }
+
+    if (trimmedLine.startsWith('# ')) {
+      flushParagraph(paragraphBuffer, htmlParts);
+      flushList(listState, htmlParts);
+      const headingText = trimmedLine.slice(2).trim();
+      const headingId = createHeadingId(headingText, usedHeadingIds);
+      htmlParts.push(`<h1 id="${escapeAttribute(headingId)}">${renderInlineMarkdown(headingText)}</h1>`);
+      return;
+    }
+
+    if (trimmedLine.startsWith('## ')) {
+      flushParagraph(paragraphBuffer, htmlParts);
+      flushList(listState, htmlParts);
+      const headingText = trimmedLine.slice(3).trim();
+      const headingId = createHeadingId(headingText, usedHeadingIds);
+      htmlParts.push(`<h2 id="${escapeAttribute(headingId)}">${renderInlineMarkdown(headingText)}</h2>`);
+      return;
+    }
+
+    if (trimmedLine.startsWith('### ')) {
+      flushParagraph(paragraphBuffer, htmlParts);
+      flushList(listState, htmlParts);
+      const headingText = trimmedLine.slice(4).trim();
+      const headingId = createHeadingId(headingText, usedHeadingIds);
+      htmlParts.push(`<h3 id="${escapeAttribute(headingId)}">${renderInlineMarkdown(headingText)}</h3>`);
+      return;
+    }
+
+    if (trimmedLine.startsWith('#### ')) {
+      flushParagraph(paragraphBuffer, htmlParts);
+      flushList(listState, htmlParts);
+      const headingText = trimmedLine.slice(5).trim();
+      const headingId = createHeadingId(headingText, usedHeadingIds);
+      htmlParts.push(`<h4 id="${escapeAttribute(headingId)}">${renderInlineMarkdown(headingText)}</h4>`);
+      return;
+    }
+
+    const orderedListMatch = trimmedLine.match(/^(\d+)\.\s+(.+)$/);
+    if (orderedListMatch) {
+      flushParagraph(paragraphBuffer, htmlParts);
+      if (listState.type !== 'ordered') {
+        flushList(listState, htmlParts);
+        listState.type = 'ordered';
+      }
+      listState.items.push(orderedListMatch[2]);
+      return;
+    }
+
+    const bulletListMatch = trimmedLine.match(/^[-*]\s+(.+)$/);
+    if (bulletListMatch) {
+      flushParagraph(paragraphBuffer, htmlParts);
+      if (listState.type !== 'unordered') {
+        flushList(listState, htmlParts);
+        listState.type = 'unordered';
+      }
+      listState.items.push(bulletListMatch[1]);
+      return;
+    }
+
+    paragraphBuffer.push(trimmedLine);
+  });
+
+  flushParagraph(paragraphBuffer, htmlParts);
+  flushList(listState, htmlParts);
+
+  if (inCodeBlock) {
+    htmlParts.push(renderCodeBlock(codeBuffer.join('\n'), codeFenceLanguage));
+  }
+
+  return htmlParts.join('\n');
+}
+
 === lessons/01-build-sidebar/build-css-at-step.js ===
 import cssRulesDocument from './content/documents/files/css.rules.md?raw';
 import { buildLinesFromRuleBlocks } from '../../animator/lesson-documents/build-lines-from-rule-blocks.js';
@@ -10234,7 +14105,7 @@ export const buildSidebarLesson = {
 
 # 01-build-sidebar
 
-Koraci po korak gradiš sidebar od osnove do gotove navigacije. Svaki korak uključuje kod, savete i vizuelni prikaz.
+You build a sidebar from scratch, step by step. Each step includes code, tips and visual preview.
 
 === lessons/01-build-sidebar/content/documents/files/css.rules.md ===
 # CSS Rule Blocks
@@ -10919,7 +14790,7 @@ export const buildTopNavigationLesson = {
 
 # 02-build-top-navigation
 
-Koraci po korak gradiš prvi navbar iz reference: logo levo, linkovi u sredini i CTA dugme desno. Druga dva rasporeda iz iste slike ostaju kao domaći zadatak.
+You build your first navbar from a reference image: logo left, links in the middle and CTA button right. The other two layouts from the same reference remain as homework.
 
 === lessons/02-build-top-navigation/content/documents/files/css.rules.md ===
 # CSS Rule Blocks
@@ -11376,7 +15247,7 @@ export function buildJsAtStep(stepNumber) {
 
 # 03-build-custom-element
 
-Prva Web Components lekcija namerno kreće bez shadow DOM-a. Tako prvo vidiš samu osnovu platforme: custom tag sa crticom, registraciju preko `customElements.define`, atribute kao spoljašnji API i prvi render kroz `connectedCallback()`. Tek posle toga prelazimo na shadow DOM, template i slotove.
+The first Web Components lesson intentionally starts without shadow DOM. This way you first see the platform basics: custom tag with dash, registration via `customElements.define`, attributes as external API and first render through `connectedCallback()`. Only after that do we move to shadow DOM, template and slots.
 
 === lessons/03-build-custom-element/content/documents/files/css.rules.md ===
 # CSS Rule Blocks
@@ -11887,7 +15758,7 @@ export const buildWebComponentLesson = {
 
 # 04-build-web-component
 
-Druga Web Components lekcija nadograđuje osnove iz prve: isti nivo komponente sada gradiš kroz template, shadow DOM, slotove i render lifecycle. Lekcija namerno ide detaljno, da jasno vidiš kada host HTML postaje pravi custom element, kako template ulazi u shadow root, kako spoljašnji CSS tokeni utiču na unutrašnji izgled komponente i kako završni polish uključuje cleanup, safe registraciju i izlazni custom event.
+The second Web Components lesson builds on the basics from the first one: the same level of component is now built through template, shadow DOM, slots and render lifecycle. The lesson intentionally goes into detail so you can clearly see when host HTML becomes a proper custom element, how template enters shadow root, how external CSS tokens affect the internal component appearance, and how final polish includes cleanup, safe registration and outgoing custom event.
 
 === lessons/04-build-web-component/content/documents/files/css.rules.md ===
 # CSS Rule Blocks
@@ -13101,7 +16972,7 @@ export const cleanWebComponentWithAdoptedStylesheetsLesson = {
 
 # 05-clean-web-component-with-adopted-stylesheets
 
-Treća Web Components lekcija uzima isti my first component i čisti njegov unutrašnji styling tok. Umesto da CSS bude zbijen u `<style>` unutar `template.innerHTML`, sada ga držiš u posebnom `shadow-dom-style.css` fajlu, JavaScript ga uvozi kao tekst, puni `CSSStyleSheet` kroz `replaceSync()` i usvaja preko `shadowRoot.adoptedStyleSheets`. Suština lekcije je da CSS može da bude odvojen i od class logike i od template markup-a, dok host API, slotovi i lifecycle ostaju isti.
+The third Web Components lesson takes the same my first component and cleans its internal styling flow. Instead of CSS being crammed into `<style>` within `template.innerHTML`, you now keep it in a separate `shadow-dom-style.css` file, JavaScript imports it as text, fills `CSSStyleSheet` via `replaceSync()` and adopts it via `shadowRoot.adoptedStyleSheets`. The essence of the lesson is that CSS can be separated from both class logic and template markup, while host API, slots and lifecycle remain the same.
 
 === lessons/05-clean-web-component-with-adopted-stylesheets/content/documents/files/css.rules.md ===
 # CSS Rule Blocks
@@ -14072,7 +17943,7 @@ export function buildShadowCssAtStep(stepNumber) {
 
 # 06-modular-web-components
 
-Ova lekcija demonstrira novi IDE mode playera. Umesto da svi fajlovi budu vidljivi odjednom, koristiš file browser i automatsko prebacivanje fokusa na fajl koji se trenutno menja, dok ista Web Components komponenta i dalje raste kroz host HTML, component logic, shadow CSS i host CSS.
+This lesson demonstrates the new IDE mode of the player. Instead of all files being visible at once, you use the file browser and automatic focus switching to the file currently being changed, while the same Web Components component continues to grow through host HTML, component logic, shadow CSS and host CSS.
 
 === lessons/06-modular-web-components/content/documents/files/css.rules.md ===
 # CSS Rule Blocks
@@ -15119,14 +18990,7 @@ export function buildTemplateJsAtStep(stepNumber) {
 
 # 07-build-ui-user-avatar
 
-U ovoj lekciji gradimo `ui-user-avatar` — pravi enterprise dashboard widget koji prikazuje team member kartice sa statusom, tooltip-om, slotovima za inicijale ili sliku i punu klik interakciju ka profile modal-u. Koristimo custom element, shadow DOM, adoptedStyleSheets, namespaced event contract i status variant API.
-
-=== lessons/07-build-ui-user-avatar/content/documents/07_more_separation_of_code.md ===
-<!-- Generated from the same markdown sources used by the web lesson. -->
-
-# 07-more-separation-of-code
-
-Četvrta Web Components lekcija podiže separation of concerns na production-ready nivo. Template markup seli u sopstveni modul `component.html.js`, `my-first-component.js` ostaje čist behavior fajl sa lifecycle metodama `constructor`, `connectedCallback`, `disconnectedCallback`, `cacheDom()`, `bindEvents()`, `unbindEvents()` i `render()`, `shadow-dom-style.css` stilizuje samo unutrašnjost, a `style.css` ostaje host/theme sloj. Tokom lekcije stalno porediš staro i novo stanje: raniji template izlazi iz class fajla, host/theme CSS ostaje spolja, shadow CSS ostaje unutra, a `render()` više ne rebuild-uje ceo DOM nego samo patch-uje već keširane dinamične delove.
+In this lesson we build `ui-user-avatar` — a real enterprise dashboard widget that displays team member cards with status, tooltip, slots for initials or image and full click interaction toward profile modal. We use custom element, shadow DOM, adoptedStyleSheets, namespaced event contract and status variant API.
 
 === lessons/07-build-ui-user-avatar/content/documents/files/css.rules.md ===
 # CSS Rule Blocks
@@ -16786,7 +20650,7 @@ export function buildTemplateJsAtStep(stepNumber) {
 
 # 08-smell-of-enterprise
 
-U ovoj lekciji gradimo `ui-pricing-card` — enterprise SaaS pricing table komponentu sa tier varijantama (starter/pro/enterprise), popular highlight stanjem, yearly/monthly toggle koji menja prikazanu cenu, CTA dugmetom sa urgency timerom i feature matrix slotovima. Komponenta ima precizan property API, granularni update tok i namespaced event contract.
+In this lesson we build `ui-pricing-card` — an enterprise SaaS pricing table component with tier variants (starter/pro/enterprise), popular highlight state, yearly/monthly toggle that changes displayed price, CTA button with urgency timer and feature matrix slots. The component has precise property API, granular update flow and namespaced event contract.
 
 === lessons/08-smell-of-enterprise/content/documents/files/css.rules.md ===
 # CSS Rule Blocks
@@ -18887,13 +22751,13 @@ If a feature still needs executable lesson-specific glue, that glue belongs in `
 
 === lessons/register-lessons.js ===
 import { buildSidebarLesson } from './01-build-sidebar/build-sidebar.lesson.js';
-import { buildTopNavigationLesson } from './02-build-top-navigation/build-top-navigation.lesson.js';
 import { buildCustomElementLesson } from './03-build-custom-element/build-custom-element.lesson.js';
 import { buildWebComponentLesson } from './04-build-web-component/build-web-component.lesson.js';
 import { cleanWebComponentWithAdoptedStylesheetsLesson } from './05-clean-web-component-with-adopted-stylesheets/clean-web-component-with-adopted-stylesheets.lesson.js';
 import { modularWebComponentsLesson } from './06-modular-web-components/06-modular-web-components.lesson.js';
 import { buildUIUserAvatarLesson } from './07-build-ui-user-avatar/07-build-ui-user-avatar.lesson.js';
 import { smellOfEnterpriseLesson } from './08-smell-of-enterprise/08-smell-of-enterprise.lesson.js';
+import { buildTopNavigationLesson } from '../lesson-engine/pilots/build-top-navigation-lesson.js';
 
 export const registeredLessons = [
   buildSidebarLesson,
@@ -18915,9 +22779,9 @@ export function findLesson(lessonId) {
 }
 
 === main.js ===
-import './animator/play-lesson/lesson-player.css';
-import { selectLessonFromLocation } from './animator/choose-lesson/select-lesson-from-location.js';
-import { playLesson } from './animator/play-lesson/play-lesson.pipeline.js';
+import './animator-engine/play-lesson/lesson-player.css';
+import { selectLessonFromLocation } from './animator-engine/choose-lesson/select-lesson-from-location.js';
+import { playLesson } from './animator-engine/play-lesson/play-lesson.js';
 import { registeredLessons } from './lessons/register-lessons.js';
 
 const selectedLesson = selectLessonFromLocation({
@@ -19180,7 +23044,8 @@ EOF
       "name": "step-by-step-animator",
       "dependencies": {
         "@mintplex-labs/piper-tts-web": "^1.0.4",
-        "onnxruntime-web": "^1.24.3"
+        "onnxruntime-web": "^1.24.3",
+        "yaml": "^2.8.3"
       },
       "devDependencies": {
         "vite": "^8.0.1"
@@ -20194,6 +24059,21 @@ EOF
           "optional": true
         }
       }
+    },
+    "node_modules/yaml": {
+      "version": "2.8.3",
+      "resolved": "https://registry.npmjs.org/yaml/-/yaml-2.8.3.tgz",
+      "integrity": "sha512-AvbaCLOO2Otw/lW5bmh9d/WEdcDFdQp2Z2ZUH3pX9U2ihyUY0nvLv7J6TrWowklRGPYbB/IuIMfYgxaCPg5Bpg==",
+      "license": "ISC",
+      "bin": {
+        "yaml": "bin.mjs"
+      },
+      "engines": {
+        "node": ">= 14.6"
+      },
+      "funding": {
+        "url": "https://github.com/sponsors/eemeli"
+      }
     }
   }
 }
@@ -20214,7 +24094,8 @@ EOF
   },
   "dependencies": {
     "@mintplex-labs/piper-tts-web": "^1.0.4",
-    "onnxruntime-web": "^1.24.3"
+    "onnxruntime-web": "^1.24.3",
+    "yaml": "^2.8.3"
   }
 }
 

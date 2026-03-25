@@ -2,4 +2,4 @@
 
 # 07-build-ui-user-avatar
 
-U ovoj lekciji gradimo `ui-user-avatar` — pravi enterprise dashboard widget koji prikazuje team member kartice sa statusom, tooltip-om, slotovima za inicijale ili sliku i punu klik interakciju ka profile modal-u. Koristimo custom element, shadow DOM, adoptedStyleSheets, namespaced event contract i status variant API.
+In this lesson we build `ui-user-avatar` — a real enterprise dashboard widget that displays team member cards with status, tooltip, slots for initials or image and full click interaction toward profile modal. We use custom element, shadow DOM, adoptedStyleSheets, namespaced event contract and status variant API.

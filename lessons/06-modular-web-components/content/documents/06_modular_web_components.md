@@ -2,4 +2,4 @@
 
 # 06-modular-web-components
 
-Ova lekcija demonstrira novi IDE mode playera. Umesto da svi fajlovi budu vidljivi odjednom, koristiš file browser i automatsko prebacivanje fokusa na fajl koji se trenutno menja, dok ista Web Components komponenta i dalje raste kroz host HTML, component logic, shadow CSS i host CSS.
+This lesson demonstrates the new IDE mode of the player. Instead of all files being visible at once, you use the file browser and automatic focus switching to the file currently being changed, while the same Web Components component continues to grow through host HTML, component logic, shadow CSS and host CSS.

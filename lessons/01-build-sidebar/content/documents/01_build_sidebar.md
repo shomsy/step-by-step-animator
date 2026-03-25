@@ -2,4 +2,4 @@
 
 # 01-build-sidebar
 
-Koraci po korak gradiš sidebar od osnove do gotove navigacije. Svaki korak uključuje kod, savete i vizuelni prikaz.
+You build a sidebar from scratch, step by step. Each step includes code, tips and visual preview.
