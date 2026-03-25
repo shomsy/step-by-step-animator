@@ -492,6 +492,7 @@ npm run build
 ```
 
 If you change documentation or flow tree, also refresh the merge dump.
+The merged `.txt` dump is a portable repository snapshot and may be used as a working backup during refactor passes.
 If you change the architectural structure, check that `.agents/architecture/architecture-standard.md`, `.agents/architecture/ARCHITECTURE.md` and `AGENTS.md` are still in sync.
 
 ### 2.10 Delivery Discipline

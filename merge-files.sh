@@ -109,6 +109,7 @@ if (!rootStat.isDirectory()) {
 
 const targetBasename = path.basename(rootDir);
 const outputFile = path.join(rootDir, `${targetBasename}.txt`);
+// The merged .txt dump is a portable repo snapshot and can serve as a working backup during refactors.
 const packageName = readPackageName(rootDir);
 
 const ignoredDirs = new Set([
