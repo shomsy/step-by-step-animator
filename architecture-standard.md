@@ -1,80 +1,99 @@
 # Universal Architecture Standard
 
-## Svrha
+## Purpose
 
-Ovaj dokument definiše pragmatična arhitektonska pravila za organizaciju koda, foldera, fajlova i funkcija tako da repo bude prediktivan, čitljiv i održiv u bilo kom jeziku, framework-u ili projektu.
+This document defines pragmatic architectural rules for organizing code, folders, files and functions so that the repo is predictable, readable and maintainable in any language, framework or project.
 
-Cilj nije da arhitektura izgleda pametno.
-Cilj je da bude banalno jasna, stabilna i laka za razvoj kroz vreme.
+The goal is not for the architecture to look smart.
+The goal is for it to be banally clear, stable and easy to develop over time.
 
-Najkraće rečeno:
+In the shortest terms:
 
-- **folder kaže tok ili capability**
-- **file kaže odgovornost**
-- **function kaže tačnu akciju**
+- **folder says flow or capability**
+- **file says responsibility**
+- **function says exact action**
 
-Repo treba da se čita kao priča sistema, a ne kao skladište tehničkih fioka.
+The repo should read like a story of the system, not like a warehouse of technical drawers.
 
-## Opseg
+This standard is intentionally vertical-slice and feature-first.
+It is designed to keep the surface absurdly simple while still carrying enterprise-grade quality underneath.
 
-Ovo je reusable baseline standard.
+## Scope
 
-- važi za bilo koji projekat, jezik ili framework
-- project-level architecture dokumenti mogu da ga suze i konkretizuju
-- project-level dokumenti ne smeju da ga oslabe
-- ako je potreban izuzetak, on mora da bude zapisan u repo-specifičnom architecture dokumentu
-- ovo nije workflow contract; workflow pripada repo-operativnim dokumentima
+This is a reusable baseline standard.
+
+- applies to any project, language or framework
+- project-level architecture documents may narrow and concretize it
+- project-level documents must not weaken it
+- if an exception is needed, it must be recorded in the repo-specific architecture document
+- this is not a workflow contract; workflow belongs in repo-operative documents
+
+## Vertical Slice Intent
+
+This standard treats the repo as a vertical slice system.
+
+- feature-first is the default orientation
+- the same reading model applies to business features and technical slices
+- each slice should be understandable from root entry to final effect
+- folder names should communicate business flow or technical capability
+- file names should communicate responsibility
+- function names should communicate exact action
+- a reader should be able to predict the purpose of a folder, file or function before opening it
+- the same flow-first reading order must work for the product app and for the technical runtime
+- the reader should be able to follow the business flow from the first feature to the last feature without changing the mental model
 
 ---
 
-## Osnovna ideja
+## Core Idea
 
-Arhitektura se organizuje po sledećem principu:
+The architecture is organized by the following principle:
 
 **flow -> feature slice -> file -> function**
 
-Ali ovo pravilo se primenjuje razumno, ne religiozno.
+But this rule is applied reasonably, not religiously.
 
-Tačnija verzija glasi:
+More accurate version:
 
-- **na nivou proizvoda ili aplikacije:** flow-first
-- **na nivou feature-a:** slice-first
-- **unutar feature-a:** responsibility-first
-- **na nivou funkcija i metoda:** action-first
+- **at product or application level:** flow-first
+- **at feature level:** slice-first
+- **within feature:** responsibility-first
+- **at function and method level:** action-first
 
-To znači da spolja vidiš tok sistema, a iznutra jasne odgovornosti.
-
----
-
-## Tri vrste pravila koje se ne smeju mešati
-
-### 1. Pravila strukture
-Kako repo izgleda i kako se čita.
-
-### 2. Pravila dizajna
-Kako se dele odgovornosti, zavisnosti, reuse i granice između modula.
-
-### 3. Pravila kvaliteta sistema
-Performanse, sigurnost, skaliranje, observability, interoperabilnost, cache, troškovi i slično.
-
-Ovo mora biti razdvojeno.
-
-Na primer:
-
-- SOLID, DRY, KISS, YAGNI su pravila dizajna
-- OWASP, auth, encryption, rate limiting, cache, CAP, consistency patterns su kvalitet i tehnički zahtevi
-- folder struktura je zasebna disciplina
-
-Ako se sve pomeša u jedno pravilo, dokument postaje preširok i prestaje da vodi.
+This means you see the system flow from the outside, and clear responsibilities from the inside.
+This also means the same mental model works for both product-facing slices and technical slices.
 
 ---
 
-## Glavna arhitektonska pravila
+## Three Types of Rules That Must Not Be Mixed
 
-### 1. Top-level struktura treba da viče šta sistem radi
-Ne organizovati repo po tehničkim slojevima kao podrazumevano pravilo.
+### 1. Structure Rules
+How the repo looks and how it reads.
 
-Dobar smer:
+### 2. Design Rules
+How responsibilities, dependencies, reuse and boundaries between modules are divided.
+
+### 3. System Quality Rules
+Performance, security, scaling, observability, interoperability, cache, costs and similar.
+
+These must be separated.
+
+For example:
+
+- SOLID, DRY, KISS, YAGNI are design rules
+- Composition over inheritance, Law of Demeter, clean code principles and LLD are design rules
+- OWASP, auth, authorization, encryption, vulnerability management, secure APIs, rate limiting, cache, CAP, consistency patterns, latency vs throughput trade-offs, long polling vs WebSockets, usability, flexibility, scalability and cost efficiency are quality and technical requirements
+- folder structure is a separate discipline
+
+If everything is mixed into one rule, the document becomes too broad and stops guiding.
+
+---
+
+## Main Architectural Rules
+
+### 1. Top-level structure should shout what the system does
+Do not organize the repo by technical layers as the default rule.
+
+Good direction:
 
 ```text
 product/
@@ -82,7 +101,7 @@ system/
 foundation/
 ```
 
-ili:
+or:
 
 ```text
 create/
@@ -92,7 +111,7 @@ deploy/
 inspect/
 ```
 
-Lošiji smer kao default:
+Worse direction as default:
 
 ```text
 controllers/
@@ -102,38 +121,42 @@ utils/
 helpers/
 ```
 
-Ovo drugo govori kako je sistem tehnički iseckan.
-Prvo govori šta sistem radi.
+The latter talks about how the system is technically sliced.
+The former talks about what the system does.
 
 ---
 
-### 2. Svaki feature slice mora da ima jednog vlasnika toka u root-u
-U root-u svakog feature slice-a mora da postoji jedan glavni ulaz koji zaokružuje celu celinu.
+### 2. Each feature slice must have one flow owner at the root
+At the root of each feature slice there must be one main entry that wraps the whole thing.
 
-To može biti:
+This can be:
 
-- `*.pipeline` kada je tok sekvencijalan
-- `*.facade` kada feature nudi jednostavan ulaz u složenu unutrašnjost
-- `*.orchestrator` kada koordinira više tokova, grana ili događaja
-- banalno glavno ime, ako je to čitljivije od pattern naziva
+- `*.pipeline` when the flow is sequential
+- `*.facade` when the feature provides a simple entry into a complex interior
+- `*.orchestrator` when coordinating multiple flows, branches or events
+- a single root function or single root file when that is the clearest composition root
+- a banal main name, if it's more readable than a pattern name
 
-Poenta nije da se pattern koristi radi pattern-a.
-Poenta je da postoji jedno mesto koje jasno kaže:
+The point is not to use a pattern for the pattern's sake.
+The point is to have one place that clearly says:
 
-**odavde počinje ovaj feature**
+**from here this feature begins**
+**from here this feature is fully owned**
+
+If none of the named patterns is the clearest answer, use the smallest construct that can still own the whole feature slice.
 
 ---
 
-### 3. Podfolder postoji samo ako predstavlja stvarni korak ili stvarni podfeature
-Podfolder se ne uvodi da bi arhitektura delovala ozbiljno.
+### 3. Subfolder exists only if it represents a real step or real subfeature
+Subfolder is not introduced to make the architecture look serious.
 
-Podfolder postoji samo kada:
+Subfolder exists only when:
 
-- predstavlja stvarni korak u toku
-- predstavlja stvarni pod-capability
-- zaista smanjuje mentalni šum
+- it represents a real step in a flow
+- it represents a real sub-capability
+- it genuinely reduces mental noise
 
-Dobar primer:
+Good example:
 
 ```text
 deploy/
@@ -142,7 +165,7 @@ deploy/
   release/
 ```
 
-Loš primer:
+Bad example:
 
 ```text
 deploy/
@@ -151,54 +174,54 @@ deploy/
   managers/
 ```
 
-Ako dodatni folder ne pomaže čitanju, ne treba da postoji.
+If an extra folder doesn't help reading, it shouldn't exist.
 
 ---
 
-### 4. Svaki file nosi jednu odgovornost
-File ne treba da bude tematska kanta.
-Treba da nosi jednu jasnu odgovornost.
+### 4. Each file carries one responsibility
+File should not be a thematic bucket.
+It should carry one clear responsibility.
 
-Dobro:
+Good:
 
 - `read_release_request`
 - `build_release_bundle`
 - `verify_runtime_checksum`
 - `publish_release_proof`
 
-Lošije:
+Worse:
 
 - `deploy_utils`
 - `release_manager`
 - `misc_helpers`
 
-Ako ime fajla ne objašnjava zašto postoji, ime je loše ili je file preširok.
+If the filename doesn't explain why it exists, the name is bad or the file is too broad.
 
 ---
 
-### 5. Svaka function radi jednu tačnu akciju
-Function ili method moraju da imaju glagolsko ime koje govori tačno šta rade.
+### 5. Each function does one exact action
+Function or method must have a verb name that tells exactly what they do.
 
-Dobro:
+Good:
 
 - `readRequestedProfile`
 - `planDatabaseChanges`
 - `writeRuntimeManifest`
 - `verifyReleaseChecksum`
 
-Lošije:
+Worse:
 
 - `handle`
 - `process`
 - `execute`
 - `doWork`
 
-Generična imena su dozvoljena samo kada je kontekst ekstremno jasan.
+Generic names are allowed only when the context is extremely clear.
 
 ---
 
-### 6. Shared je poslednja opcija, ne prva
-Najveći neprijatelj ove arhitekture je rano izvlačenje svega u:
+### 6. Shared is the last option, not the first
+The biggest enemy of this architecture is early extraction of everything into:
 
 ```text
 shared/
@@ -208,16 +231,16 @@ helpers/
 misc/
 ```
 
-Takva mesta skoro uvek postanu tehnički otpad.
+Such places almost always become technical waste.
 
-Zajednički kod sme da postoji samo kada je:
+Shared code may exist only when it is:
 
-- stabilan
-- generički
-- bez product značenja
-- dosadan, ali koristan svima
+- stable
+- generic
+- without product meaning
+- boring but useful to everyone
 
-Dobar kandidati za to su:
+Good candidates are:
 
 - checksum
 - filesystem primitives
@@ -227,52 +250,55 @@ Dobar kandidati za to su:
 - process execution
 - id generation
 
-Ako nešto i dalje nosi product značenje, ne spada u shared.
+If something still carries product meaning, it doesn't belong in shared.
 
 ---
 
-### 7. Root feature mora da bude mali i čitljiv
-Kada se otvori root feature folder, odmah mora da bude jasno:
+### 7. Root feature must be small and readable
+When you open a root feature folder, it must immediately be clear:
 
-- koji je glavni ulaz
-- koji su glavni koraci
-- gde ideš dalje
+- what is the main entry
+- what are the main steps
+- where do you go next
 
-Root feature ne sme da izgleda kao registry haos sa gomilom nepovezanih fajlova.
+Root feature must not look like a registry chaos with a bunch of unrelated files.
 
 ---
 
-### 8. Pattern se bira po prirodi toka, ne po modi
-Pattern nije cilj. Jasnoća je cilj.
+### 8. Pattern is chosen by the nature of the flow, not by fashion
+Pattern is not the goal. Clarity is the goal.
 
-Koristi:
+Use:
 
 #### `pipeline`
-Kada postoji jasan sled koraka:
+When there is a clear sequence of steps:
 
-- A pa B pa C
-- jedan korak hrani sledeći
-- failure flow je uglavnom sekvencijalan
+- A then B then C
+- one step feeds the next
+- failure flow is mostly sequential
 
 #### `facade`
-Kada feature nije jedan tok nego jedan stabilan javni ulaz u više unutrašnjih stvari.
+When the feature is not one flow but one stable public entry into multiple internal things.
 
 #### `orchestrator`
-Kada postoji koordinacija više grana, događaja, paralelnih tokova ili više podflow-ova.
+When there is coordination of multiple branches, events, parallel flows or multiple subflows.
 
-#### banalno glavno ime
-Kada je feature mali i jednostavniji naziv je bolji od pattern naziva.
+#### banal main name
+When the feature is small and a simpler name is better than a pattern name.
 
-Ako pattern pravi više šuma nego koristi, ne treba ga koristiti.
+If a pattern makes more noise than it helps, it shouldn't be used.
 
 ---
 
-## Naming konvencija
+## Naming Convention
 
 ### Folder
-Folder treba da bude capability, korak ili tok.
+Folder should be capability, step or flow.
 
-Primeri:
+Names should be banal, intuitive, descriptive and predictable.
+They should read like plain language explanations, as if you were explaining the system to a child at a table.
+
+Examples:
 
 - `deploy`
 - `prepare`
@@ -283,9 +309,11 @@ Primeri:
 - `runtime`
 
 ### File
-File treba da bude glagol plus predmet odgovornosti.
+File should be verb plus object of responsibility.
 
-Primeri:
+The filename should tell why the file exists, not merely what bucket it belongs to.
+
+Examples:
 
 - `read_release_request`
 - `build_release_bundle`
@@ -293,16 +321,18 @@ Primeri:
 - `write_gateway_config`
 
 ### Function
-Function ili method treba da bude tačna akcija.
+Function or method should be exact action.
 
-Primeri:
+The function name should make the action obvious without opening the file.
+
+Examples:
 
 - `readReleaseRequest`
 - `buildReleaseBundle`
 - `verifyBundleIntegrity`
 - `writeGatewayConfig`
 
-Izbegavati kad god postoji bolje ime:
+Avoid whenever there's a better name:
 
 - manager
 - handler
@@ -311,225 +341,266 @@ Izbegavati kad god postoji bolje ime:
 - helper
 - util
 
-Ova imena često skrivaju da odgovornost nije jasno definisana.
+These names often hide that the responsibility is not clearly defined.
 
 ---
 
-## Pravila modularnosti
+## Quality Goals
+
+These are first-class goals, not optional polish:
+
+- SOLID
+- DRY
+- KISS
+- YAGNI
+- Composition over inheritance
+- Law of Demeter / principle of least knowledge
+- clean code principles
+- low-level design (LLD) clarity
+- performance as a first-class requirement
+- security by default
+- OWASP
+- authentication
+- authorization
+- data encryption
+- vulnerability management
+- secure APIs
+- usability
+- cost efficiency
+- interoperability
+- flexibility
+- scalability
+- cache only where it solves a real problem
+- rate limiting where resources are expensive or externally exposed
+- checksum and integrity where relevant
+- latency vs throughput trade-offs chosen deliberately
+- CAP and consistency patterns made explicit
+- long polling vs WebSockets chosen deliberately when transport behavior matters
+
+The standard goal is simple-looking architecture with enterprise-grade quality behind it.
+If a rule improves quality but makes the structure harder to read, it must be justified explicitly.
+
+## Modularity Rules
 
 ### 1. Composition over inheritance
-Prednost dati kompoziciji i saradnji malih modula.
+Give preference to composition and collaboration of small modules.
 
 ### 2. Law of Demeter
-Modul treba da zna što manje o unutrašnjosti drugih modula.
+Module should know as little as possible about the internals of other modules.
 
-### 3. Tight coupling je zabranjen
-Feature ne sme da zavisi od tuđe unutrašnje implementacije.
+### 3. Tight coupling is prohibited
+Feature must not depend on another feature's internal implementation.
 
-### 4. Reuse ne sme biti preuranjen
-Prerano deljenje koda često proizvodi loše apstrakcije.
+### 4. Reuse must not be premature
+Premature code sharing often produces bad abstractions.
 
-### 5. Abstrakcija mora da smanjuje šum
-Ako apstrakcija nije jasnija od konkretnog koda koji menja, loša je.
+### 5. Abstraction must reduce noise
+If an abstraction is not clearer than the concrete code it replaces, it's bad.
 
-### 6. Over-engineering je kvar
-Svaki dodatni sloj mora da opravda postojanje.
+### 6. Over-engineering is a defect
+Every additional layer must justify its existence.
 
----
+### 7. Reusability must be deliberate
+Do not ignore reusability when a primitive is stable, generic and clearly useful in more than one place.
 
-## Pravila kvaliteta koja prate arhitekturu
-
-Ova pravila nisu pravila folder strukture, ali moraju da prate svaki feature:
-
-- sigurnost po načelima najmanjeg potrebnog pristupa
-- jasno odvojena autentikacija i autorizacija
-- zaštita podataka u tranzitu i mirovanju kada je relevantno
-- validacija ulaza i saniranje izlaza
-- observability: logovi, metrike, tragovi, dijagnostika
-- performanse: razuman balans latencije i throughput-a
-- cache samo gde rešava realan problem
-- rate limiting gde postoji spoljašnji ili skup resurs
-- checksum, integritet i reproducibilnost gde imaju smisla
-- cost efficiency i operativna jednostavnost
-- interoperabilnost i evolutivnost interfejsa
-
-Poenta je sledeća:
-
-**kvalitet mora da živi unutar feature-a, ali ne mora da određuje njegov naziv foldera**
+### 8. Abstraction must be sufficient
+Insufficient abstraction is also a problem when it forces the same coupling, duplication or branching to repeat across slices.
 
 ---
 
-## Kada pravilo ne sme da se forsira
+## Quality Rules That Follow Architecture
 
-Ovaj standard je opšti. Ne sme se primenjivati slepo kada radi protiv jezika, ekosistema ili framework-a.
+These are not folder structure rules, but must follow every feature:
 
-### Opšte pravilo izuzetka
-Ako je ekosistem veoma idiomatičan i ima jake konvencije koje olakšavaju čitanje, debuggovanje, tool support i onboarding, te konvencije imaju prednost nad nasilnim preimenovanjem svega.
+- security by least-privilege principles
+- clearly separated authentication and authorization
+- data protection in transit and at rest when relevant
+- input validation and output sanitization
+- observability: logs, metrics, traces, diagnostics
+- performance: reasonable balance of latency and throughput, with latency vs throughput chosen deliberately
+- cache only where it solves a real problem
+- rate limiting where there is external or expensive resource
+- checksum, integrity and reproducibility where they make sense
+- cost efficiency and operational simplicity
+- interoperability and evolvability of interfaces
 
-Drugim rečima:
+The point is:
 
-**ne kršiti idiome jezika samo da bi arhitektonska doktrina izgledala dosledno**
+**quality must live within the feature, but doesn't have to determine its folder name**
 
 ---
 
-## Jezički i ekosistemski izuzeci
+## When a Rule Must Not Be Forced
+
+This standard is general. It must not be applied blindly when it works against language, ecosystem or framework.
+
+### General Exception Rule
+If the ecosystem is very idiomatic and has strong conventions that make reading, debugging, tool support and onboarding easier, those conventions take precedence over forcibly renaming everything.
+
+In other words:
+
+**don't break language idioms just so the architectural doctrine looks consistent**
+
+---
+
+## Language and Ecosystem Exceptions
 
 ### Go
-Go voli male pakete, kratka imena i jaku vezu između package granice i odgovornosti.
+Go likes small packages, short names and strong connection between package boundary and responsibility.
 
-Pravila:
+Rules:
 
-- ne praviti duboku hijerarhiju bez potrebe
-- package ime treba da ostane kratko i idiomatično
-- ne forsirati sufikse kao `.pipeline.go` ako ruše idiom i otežavaju package čitanje
-- ako je `deploy_pipeline.go` čitljivo u timu, koristi ga
-- ako idiomatičnije rešenje glasi `deploy.go` unutar paketa `deploy`, prednost ima čitljivost u Go svetu
+- don't create deep hierarchy without need
+- package name should stay short and idiomatic
+- don't force suffixes like `.pipeline.go` if they break idiom and make package reading difficult
+- if `deploy_pipeline.go` is readable in the team, use it
+- if more idiomatic solution says `deploy.go` inside package `deploy`, readability in Go world takes precedence
 
-**Za Go je package granica važnija od preterano opisnog imena fajla.**
+**For Go, package boundary is more important than overly descriptive filename.**
 
 ---
 
-### Java i C#
-Ovi ekosistemi vole jasan namespace, tipove i često jaču vezu između klase i fajla.
+### Java and C#
+These ecosystems like clear namespaces, types and often stronger connection between class and file.
 
-Pravila:
+Rules:
 
-- ne lomiti idiom jedan glavni tip po fajlu kada je to standard projekta
-- feature slice može da živi kroz package ili namespace granice
-- root feature vlasnik može biti klasa tipa `DeployPipeline`, `DeployFacade` ili `DeployOrchestrator`
-- ne pokušavati da sve izgleda kao script-like file struktura ako ekosistem prirodno vodi ka tipovima
+- don't break idiom of one main type per file when it's the project standard
+- feature slice can live across package or namespace boundaries
+- root feature owner can be a class like `DeployPipeline`, `DeployFacade` or `DeployOrchestrator`
+- don't try to make everything look like script-like file structure if the ecosystem naturally leads to types
 
-**Za Java i C# feature se često prirodnije organizuje kroz package i tip, ne samo kroz file naziv.**
+**For Java and C#, feature is often more naturally organized through package and type, not just through filename.**
 
 ---
 
 ### Python
-Python voli čitljive module, pakete i često jednostavniju hijerarhiju.
+Python likes readable modules, packages and often simpler hierarchy.
 
-Pravila:
+Rules:
 
-- ne praviti nepotrebno duboke pakete
-- koristiti module sa jasnim imenima i male package celine
-- ne uvoditi apstraktne slojeve samo da bi struktura delovala enterprise
-- ako `deploy_pipeline.py` pomaže, koristi ga
-- ako je jednostavnije `deploy.py` u `deploy/` paketu, to je validno
+- don't create unnecessarily deep packages
+- use modules with clear names and small package units
+- don't introduce abstract layers just so the structure looks enterprise
+- if `deploy_pipeline.py` helps, use it
+- if simpler `deploy.py` in `deploy/` package is valid, that's valid
 
-**U Python-u je važnije da import path ostane prirodan nego da naziv svakog fajla nosi maksimalnu količinu reči.**
+**In Python, it's more important that import path stays natural than that every filename carries maximum words.**
 
 ---
 
 ### Rust
-Rust snažno vezuje strukturu za module, crate granice i eksplicitnost.
+Rust strongly ties structure to modules, crate boundaries and explicitness.
 
-Pravila:
+Rules:
 
-- poštovati idiome `mod`, `lib`, `main`, `crate` granica
-- ne praviti strukturu koja se bori protiv module system-a
-- feature slice može da bude crate, modul ili podmodul, zavisno od težine feature-a
-- koristiti odgovorne module pre nego folder dubinu radi folder dubine
+- respect idioms of `mod`, `lib`, `main`, `crate` boundaries
+- don't create structure that fights against the module system
+- feature slice can be a crate, module or submodule, depending on feature complexity
+- use responsible modules rather than folder depth for folder depth's sake
 
-**U Rust-u je granica modula često važnija od priče koju priča sam folder.**
-
----
-
-### JavaScript i TypeScript
-Ovi ekosistemi lako odu u haos bez dobre strukture, pa ovaj standard ovde često radi veoma dobro.
-
-Pravila:
-
-- feature-first struktura je uglavnom dobar izbor
-- izbegavati rano `utils`, `helpers`, `services` kao kante
-- za UI i Web Components držati jasne granice između shell, state, view, events i effects
-- za framework projekte poštovati i lokalne idiome ako donose tooling korist
-
-**U JS/TS svetu ovaj standard je često najprirodniji, ali ne treba praviti dubinu koja povećava skakanje kroz fajlove.**
+**In Rust, module boundary is often more important than the story the folder itself tells.**
 
 ---
 
-### Ruby, Elixir, Phoenix, Rails i slični opinionated framework-i
-Ovi ekosistemi često dolaze sa jakim conventions-over-configuration pravilima.
+### JavaScript and TypeScript
+These ecosystems easily go into chaos without good structure, so this standard often works very well here.
 
-Pravila:
+Rules:
 
-- ne lomiti framework očekivanja bez jakog razloga
-- feature slice uvoditi tamo gde ne ubija framework ergonomiju
-- ako framework snažno očekuje određena mesta za controller, view, model, job ili channel, poštovati ih
-- screaming architecture se može uvoditi kroz module, namespace-e i feature grupe, ne nužno kroz potpuno rušenje framework rasporeda
+- feature-first structure is usually a good choice
+- avoid early `utils`, `helpers`, `services` as buckets
+- for UI and Web Components, keep clear boundaries between shell, state, view, events and effects
+- for framework projects, also respect local idioms if they bring tooling benefit
 
-**Kad framework ima jake operativne konvencije, prvo sačuvati produktivnost tima, pa tek onda uvoditi sopstvenu doktrinu.**
-
----
-
-### Frontend UI projekti i component sistemi
-Kod UI sistema i design system-a ne treba silom praviti poslovni flow gde prirodno postoji component capability.
-
-Pravila:
-
-- feature folder može biti component ili capability
-- unutar komponente pratiti realne granice: shell, state, render, events, effects
-- ne praviti mikro-foldere ako jedna komponenta to ne zaslužuje
-- root component file mora jasno da kaže gde počinje komponenta
-
-**Kod komponenti je bolje: feature spolja, odgovornost iznutra.**
+**In JS/TS world this standard is often the most natural, but don't create depth that increases file jumping.**
 
 ---
 
-## Kako izgleda zdrava odluka
+### Ruby, Elixir, Phoenix, Rails and similar opinionated frameworks
+These ecosystems often come with strong conventions-over-configuration rules.
 
-### Dobar obrazac razmišljanja
+Rules:
 
-- Da li ovaj top-level folder priča priču sistema?
-- Da li ovaj feature ima jednog vlasnika toka?
-- Da li je ovaj podfolder stvarni korak ili stvarni podfeature?
-- Da li ovaj file nosi jednu jasnu odgovornost?
-- Da li function radi jednu tačnu akciju?
-- Da li nova apstrakcija smanjuje mentalni šum?
-- Da li kršim idiome jezika ili framework-a bez jakog razloga?
+- don't break framework expectations without strong reason
+- introduce feature slice where it doesn't kill framework ergonomics
+- if framework strongly expects certain places for controller, view, model, job or channel, respect them
+- screaming architecture can be introduced through modules, namespaces and feature groups, not necessarily through completely breaking framework layout
 
-Ako su odgovori jasni, struktura je dobra.
+**When framework has strong operational conventions, first preserve team productivity, then introduce your own doctrine.**
 
 ---
 
-## Crvene zastavice
+### Frontend UI Projects and Component Systems
+For UI systems and design systems, you shouldn't force business flow where component capability naturally exists.
 
-Ako vidiš ovo, arhitektura verovatno truli:
+Rules:
 
-- previše `shared`, `common`, `utils`, `helpers`
-- root feature sa previše nepovezanih fajlova
-- generična imena kao `manager`, `processor`, `handler`
-- podfolderi koji ne predstavljaju stvarne korake
-- duboka hijerarhija koja ne smanjuje šum
-- pattern izabran zbog mode, ne zbog prirode toka
-- feature koji zavisi od unutrašnjosti drugog feature-a
-- apstrakcije koje kriju jednostavne stvari umesto da ih pojasne
+- feature folder can be component or capability
+- within component, follow real boundaries: shell, state, render, events, effects
+- don't create micro-folders if one component doesn't deserve it
+- root component file must clearly say where the component begins
 
----
-
-## Sažetak standarda
-
-1. Repo se organizuje po tokovima i capability-jima, ne po tehničkim slojevima kao default-u.
-2. Svaki feature slice ima jednog vlasnika toka u root-u.
-3. Root feature koristi pipeline, facade, orchestrator ili banalno glavno ime, zavisno od prirode toka.
-4. Podfolder postoji samo ako predstavlja stvarni korak ili stvarni podfeature.
-5. Svaki file ima jednu odgovornost.
-6. Svaka function radi jednu tačnu akciju i nosi glagolsko ime.
-7. Shared se izbegava i koristi samo za istinski generičke tehničke primitive.
-8. Product ili app sloj priča priču sistema. Tehnički slojevi pričaju priču izvršavanja. Foundation nosi dosadne primitive.
-9. Pattern se bira po prirodi toka, ne po modi.
-10. Ako dodatni folder, file ili apstrakcija ne smanjuje mentalni šum, ne uvodi se.
-11. Idiomi jezika i framework-a imaju prednost kada bi rigidna primena ovog standarda pogoršala čitljivost ili tooling.
-12. Krajnji cilj nije složenost. Krajnji cilj je jednostavnost vrhunskog kvaliteta.
+**For components: feature outside, responsibility inside.**
 
 ---
 
-## Jedna završna rečenica
+## What a Healthy Decision Looks Like
 
-Dobra arhitektura ne treba da impresionira iz daljine.
-Treba da bude toliko jasna da čovek može da otvori repo i odmah zna:
+### Good thinking pattern
 
-- gde se nalazi
-- šta se ovde dešava
-- kojim redom stvari teku
-- gde treba da ide dalje
+- Does this top-level folder tell the story of the system?
+- Does this feature have one flow owner?
+- Is this subfolder a real step or real subfeature?
+- Does this file carry one clear responsibility?
+- Does this function do one exact action?
+- Does new abstraction reduce mental noise?
+- Am I breaking language or framework idioms without strong reason?
 
-To je ceo standard.
+If the answers are clear, the structure is good.
+
+---
+
+## Red Flags
+
+If you see this, the architecture is probably rotting:
+
+- too much `shared`, `common`, `utils`, `helpers`
+- root feature with too many unrelated files
+- generic names like `manager`, `processor`, `handler`
+- subfolders that don't represent real steps
+- deep hierarchy that doesn't reduce noise
+- pattern chosen by fashion, not by nature of flow
+- feature that depends on another feature's internals
+- abstractions that hide simple things instead of clarifying them
+
+---
+
+## Standard Summary
+
+1. Repo is organized by flows and capabilities, not by technical layers as default.
+2. Each feature slice has one flow owner at the root.
+3. Root feature uses pipeline, facade, orchestrator or banal main name, depending on the nature of the flow.
+4. Subfolder exists only if it represents a real step or real subfeature.
+5. Each file has one responsibility.
+6. Each function does one exact action and carries a verb name.
+7. Shared is avoided and used only for truly generic technical primitives.
+8. Product or app layer tells the story of the system. Technical layers tell the story of execution. Foundation carries boring primitives.
+9. Pattern is chosen by the nature of the flow, not by fashion.
+10. If an extra folder, file or abstraction doesn't reduce mental noise, it is not introduced.
+11. Language and framework idioms take precedence when rigid application of this standard would worsen readability or tooling.
+12. The ultimate goal is not complexity. The ultimate goal is simplicity of top quality.
+
+---
+
+## One Final Sentence
+
+Good architecture doesn't need to impress from a distance.
+It needs to be so clear that a person can open the repo and immediately know:
+
+- where they are
+- what's happening here
+- what order things flow
+- where they should go next
+
+That's the whole standard.
