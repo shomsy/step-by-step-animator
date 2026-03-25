@@ -332,6 +332,93 @@ Examples:
 - `verifyBundleIntegrity`
 - `writeGatewayConfig`
 
+### Operation Vocabulary
+Before you choose the exact file or function name, classify the work in this order:
+
+1. CRUD
+2. Query
+3. Business
+4. System
+5. State transition
+
+These buckets are the first filter for file and function names.
+
+Pick the narrowest honest bucket first. If a more specific business or state verb exists, prefer it over a generic `update` or `change`.
+
+#### CRUD
+Use this when the code creates, reads, updates or deletes one concrete record.
+
+This is the "I touch one record" bucket.
+
+Examples:
+
+- `create_user`
+- `read_user`
+- `update_user`
+- `delete_user`
+
+Use it for simple record work, admin panels, small modules and generic storage tasks.
+
+#### Query
+Use this when the code finds, filters, sorts, paginates, groups or aggregates data without changing it.
+
+This is the "I look at data" bucket.
+
+Examples:
+
+- `search_orders`
+- `filter_orders_by_status`
+- `sort_orders_by_created_at`
+- `paginate_orders`
+- `aggregate_revenue`
+
+Use it for listing screens, search screens, reports and read-only views.
+
+#### Business
+Use this when the code performs a domain action the business cares about.
+
+This is the "I do the real business thing" bucket.
+
+Examples:
+
+- `approve_invoice`
+- `publish_article`
+- `assign_task`
+- `archive_project`
+- `restore_document`
+
+Use it when the verb should sound like the business, not like the database.
+
+#### System
+Use this when the code imports, exports, syncs, retries, queues, validates, transforms, backs up, restores, logs or notifies around the system.
+
+This is the "I help the system move" bucket.
+
+Examples:
+
+- `import_users_from_csv`
+- `sync_products_from_api`
+- `retry_failed_webhook`
+- `export_invoices_to_pdf`
+- `validate_payload`
+
+Use it for integration jobs, background jobs, pipelines, adapters and maintenance flows.
+
+#### State transition
+Use this when the code moves an entity from one named state to another and that move matters to domain rules.
+
+This is the "I move the thing to the next state" bucket.
+
+Examples:
+
+- `issue_invoice`
+- `mark_invoice_as_paid`
+- `cancel_order`
+- `reopen_task`
+- `activate_user`
+
+Use it when `update_status` would hide the real meaning.
+
 Avoid whenever there's a better name:
 
 - manager

@@ -387,6 +387,13 @@ doStuff()
 
 Use verbs consistently by responsibility:
 
+- these buckets are the first filter for file and function names
+- before you pick the exact verb, classify the work in this order:
+  - CRUD: touch one record
+  - Query: look at data without changing it
+  - Business: do what the business wants
+  - System: help the system move, sync, validate or recover
+  - State transition: move a thing from one state to another
 - `build...` creates derived lesson code for a specific step.
 - `show...` writes current lesson content into already-found page parts.
 - `present...` owns an interactive user flow such as lesson picker or step finder.

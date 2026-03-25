@@ -1,16 +1,16 @@
 # AGENTS
 
-Ovaj fajl je kanonski operativni ugovor za rad nad ovim repo-om.
+This file is the canonical operational contract for working on this repo.
 
 ## 1. Product Intent
 
-Ovaj repo je `Step By Step Animator`.
+This repo is `Step By Step Animator`.
 
-To je lesson engine za interaktivne HTML/CSS/JS lekcije koje treba da izgledaju kao da gledaš programera preko share screen-a.
+It is a lesson engine for interactive HTML/CSS/JS lessons that should look like you're watching a programmer over share screen.
 
-Engine je generičan.
+The engine is generic.
 
-Trenutno isporučene lekcije su:
+Currently shipped lessons are:
 
 - `01-build-sidebar`
 - `02-build-top-navigation`
@@ -21,54 +21,54 @@ Trenutno isporučene lekcije su:
 - `07-more-separation-of-code`
 - `08-smell-of-enterprise`
 
-Svaka nova lekcija mora da koristi isti shell i isti teaching model:
+Every new lesson must use the same shell and the same teaching model:
 
-- HTML ide element po element
-- CSS ide property po property
-- kada lekcija to traži, JS ide akciju po akciju
-- preview prikazuje tačno isti kumulativni HTML/CSS/JS koji je trenutno napisan
-- promene moraju da budu jasne, predvidive i lake za verbalno objašnjavanje
-- kod Web Components lekcija, prvo JS mora da napravi stvarni renderovani DOM, pa tek onda CSS sme da stilizuje te delove
+- HTML goes element by element
+- CSS goes property by property
+- when the lesson requires it, JS goes action by action
+- preview shows exactly the same cumulative HTML/CSS/JS that is currently written
+- changes must be clear, predictable and easy to verbalize
+- for Web Components lessons, JS must first create the actual rendered DOM, only then CSS may style those parts
 
-Ovo nije showcase.
-Ovo nije fake storyboard.
-Ovo je teaching product.
+This is not a showcase.
+This is not a fake storyboard.
+This is a teaching product.
 
 ## 1.1 Document Authority
 
-Ovaj repo ima tri nivoa dokumenata:
+This repo has three levels of documents:
 
-- `architecture-standard.md` je reusable arhitektonski baseline.
-- `ARCHITECTURE.md` je repo-specifična primena tog baseline-a.
-- `AGENTS.md` je operativni ugovor za rad, delivery i saradnju u ovom repo-u.
+- `architecture-standard.md` is the reusable architectural baseline.
+- `ARCHITECTURE.md` is the repo-specific application of that baseline.
+- `AGENTS.md` is the operational contract for work, delivery and collaboration in this repo.
 
-Pravila:
+Rules:
 
-- ako menjamo strukturu, naming ili granice odgovornosti, menjamo owning document u istom work item-u
-- nema tihih izuzetaka
-- repo-specifično pravilo sme da suzi standard, ali ne sme da ga oslabi bez eksplicitnog zapisa
+- if we change structure, naming or responsibility boundaries, we change the owning document in the same work item
+- no silent exceptions
+- repo-specific rule may narrow the standard, but may not weaken it without explicit record
 
 ## 2. Technical Contract
 
 ### 2.1 Architecture Shape
 
-Repo prati business-first screaming architecture.
+The repo follows business-first screaming architecture.
 
-Repo-level shape mora da ostane u skladu sa `architecture-standard.md`, a repo-specifična pravila se dokumentuju u `ARCHITECTURE.md`.
+Repo-level shape must stay in sync with `architecture-standard.md`, and repo-specific rules are documented in `ARCHITECTURE.md`.
 
-Tree čitaš ovim redom:
+Read the tree in this order:
 
 1. flow
 2. feature slice
 3. file responsibility
 4. function action
 
-Root je namerno podeljen na dve celine:
+Root is intentionally divided into two areas:
 
-- `animator/` je tehnički runtime, shell, playback i document tooling
-- `lessons/` su business lesson slice-ovi i njihov sadržaj
+- `animator/` is technical runtime, shell, playback and document tooling
+- `lessons/` are business lesson slices and their content
 
-Aktuelni kanonski shape:
+Current canonical shape:
 
 ```txt
 animator/
@@ -244,13 +244,13 @@ lessons/
 
 ### 2.2 Lesson Contract
 
-Svaka nova lesson slice mora da isporuči jedan root lesson file:
+Every new lesson slice must deliver one root lesson file:
 
 ```txt
 feature-name.lesson.js
 ```
 
-Taj file mora da vrati kompletan lesson contract:
+That file must return the complete lesson contract:
 
 - `lessonId`
 - `lessonTitle`
@@ -259,17 +259,17 @@ Taj file mora da vrati kompletan lesson contract:
 - `previewTitle`
 - `htmlFileName`
 - `cssFileName`
-- `jsFileName` kada lekcija zaista ima JavaScript fajl
-- `templateJsFileName` kada lekcija zaista ima poseban template modul kao `component.html.js`
-- `shadowCssFileName` kada lekcija zaista ima poseban shadow DOM CSS fajl
+- `jsFileName` when the lesson actually has a JavaScript file
+- `templateJsFileName` when the lesson actually has a special template module like `component.html.js`
+- `shadowCssFileName` when the lesson actually has a special shadow DOM CSS file
 - `steps`
 - `buildHtmlAtStep`
 - `buildCssAtStep`
-- `buildJsAtStep` kada lekcija traži živi JavaScript u preview-u
-- `buildTemplateJsAtStep` kada lekcija traži poseban template JS editor i download fajl
-- `buildShadowCssAtStep` kada lekcija traži poseban shadow CSS editor i download fajl
+- `buildJsAtStep` when the lesson requires live JavaScript in preview
+- `buildTemplateJsAtStep` when the lesson requires a special template JS editor and download file
+- `buildShadowCssAtStep` when the lesson requires a special shadow CSS editor and download file
 
-Opciona lesson shell polja kada želiš da pokažeš vizuelni cilj i homework:
+Optional lesson shell fields when you want to show visual goal and homework:
 
 - `goalTitle`
 - `goalImageSrc`
@@ -278,11 +278,11 @@ Opciona lesson shell polja kada želiš da pokažeš vizuelni cilj i homework:
 - `homeworkTitle`
 - `homeworkItems`
 
-Ne uvoditi paralelne lesson shape-ove.
+Do not introduce parallel lesson shapes.
 
 ### 2.3 Lesson Documents
 
-Lekcija može da ima markdown source dokumente unutar:
+A lesson may have markdown source documents within:
 
 ```txt
 feature-name/
@@ -297,7 +297,7 @@ feature-name/
         shadow-dom-style.css.md
 ```
 
-Ako lesson ima referentnu sliku cilja, asset ide ovde:
+If the lesson has a reference goal image, the asset goes here:
 
 ```txt
 feature-name/
@@ -306,37 +306,37 @@ feature-name/
       feature-goal.svg
 ```
 
-Pravila:
+Rules:
 
-- `lesson.sr.md` je kanonski source za title, intro i lesson metadata
-- `html.timeline.md` je kanonski source za kumulativni HTML teaching tok
-- `css.rules.md` je kanonski source za CSS rule blokove koji rastu property po property
-- `js.timeline.md` je opcioni kanonski source za kumulativni JavaScript teaching tok
-- `template-js.timeline.md` je opcioni kanonski source za izdvojeni template JS modul kada lekcija prikazuje `component.html.js`
-- `shadow-dom-style.css.md` je opcioni kanonski source za shadow DOM CSS rule blokove kada lekcija odvaja unutrašnji stylesheet u poseban fajl
-- generated book output ide u `content/documents/<lesson_name>.md`
-- generated output se ne uređuje ručno
-- `build-html-at-step.js`, `build-css-at-step.js`, `build-js-at-step.js` i po potrebi `build-template-js-at-step.js` i `build-shadow-css-at-step.js` ostaju tanki adapteri koji parsiraju markdown DSL i vraćaju linije za dati step
+- `lesson.sr.md` is the canonical source for title, intro and lesson metadata
+- `html.timeline.md` is the canonical source for cumulative HTML teaching flow
+- `css.rules.md` is the canonical source for CSS rule blocks that grow property by property
+- `js.timeline.md` is the optional canonical source for cumulative JavaScript teaching flow
+- `template-js.timeline.md` is the optional canonical source for separated template JS module when lesson displays `component.html.js`
+- `shadow-dom-style.css.md` is the optional canonical source for shadow DOM CSS rule blocks when lesson separates inner stylesheet into a separate file
+- generated book output goes to `content/documents/<lesson_name>.md`
+- generated output is not manually edited
+- `build-html-at-step.js`, `build-css-at-step.js`, `build-js-at-step.js` and as needed `build-template-js-at-step.js` and `build-shadow-css-at-step.js` remain thin adapters that parse markdown DSL and return lines for a given step
 
 ### 2.4 Runtime and Entry Rules
 
-- nema `src/` foldera
-- `main.js` je root entry
-- `index.html` je generičan lesson shell
-- `sidebar-step-by-step.html` je kompatibilni alias za `01-build-sidebar`
-- build ide kroz Vite
-- repo je podeljen na `animator/` i `lessons/`
-- business lekcije žive pod `lessons/`
-- tehnički player runtime i markdown tooling žive pod `animator/`
-- kanonski player entry ostaje `animator/play-lesson/play-lesson.pipeline.js`
+- no `src/` folder
+- `main.js` is root entry
+- `index.html` is generic lesson shell
+- `sidebar-step-by-step.html` is compatible alias for `01-build-sidebar`
+- build goes through Vite
+- repo is divided into `animator/` and `lessons/`
+- business lessons live under `lessons/`
+- technical player runtime and markdown tooling live under `animator/`
+- canonical player entry remains `animator/play-lesson/play-lesson.pipeline.js`
 
 ### 2.5 Naming Rules
 
-Koristi ovaj filter pre svakog novog imena:
+Use this filter before every new name:
 
 > If the folder does not say the flow, the file does not say the responsibility, or the function does not say the exact action, the name is not good enough.
 
-Zabranjeni bucket nazivi:
+Prohibited bucket names:
 
 - `utils`
 - `helpers`
@@ -347,7 +347,7 @@ Zabranjeni bucket nazivi:
 - `service`
 - `controller`
 
-Zabranjeni glagoli:
+Prohibited verbs:
 
 - `handle`
 - `run`
@@ -357,24 +357,31 @@ Zabranjeni glagoli:
 
 ### 2.6 Vocabulary Rules
 
-U ovom repo-u glagoli imaju zaključano značenje:
+In this repo, verbs have locked meaning:
 
-- `build...` gradi izveden lesson output za konkretan step
-- `show...` upisuje trenutno stanje u već pronađene page parts
-- `present...` drži interaktivni user flow
-- `create...` inicijalizuje progress za tok
-- `find...` pronalazi postojeće page delove u DOM-u ili u listi
-- `read...` čita iz persistence sloja
-- `write...` upisuje u persistence sloj
-- `play...` orkestrira kompletan lesson flow
+- these buckets are the first filter for file and function names
+- before you pick the exact file or function name, classify the work in this order:
+  - CRUD: touch one record
+  - Query: look at data without changing it
+  - Business: do what the business wants
+  - System: help the system move, sync, validate or recover
+  - State transition: move a thing from one state to another
+- `build...` builds derived lesson output for a specific step
+- `show...` writes current state to already found page parts
+- `present...` holds an interactive user flow
+- `create...` initializes progress for a flow
+- `find...` finds existing page parts in DOM or in list
+- `read...` reads from persistence layer
+- `write...` writes to persistence layer
+- `play...` orchestrates the complete lesson flow
 
-Ne uvoditi novu sinonimsku generaciju ako postojeći glagol već pokriva odgovornost.
+Do not introduce new synonym generation if existing verb already covers the responsibility.
 
 ### 2.7 Numbering Rules
 
-Brojevi se koriste samo na flow folderima kada redosled zaista nosi značenje u product story-ju.
+Numbers are used only on flow folders when the order truly carries meaning in the product story.
 
-U `lessons/` to važi za shipped learning path:
+In `lessons/` this applies to shipped learning path:
 
 - `01-build-sidebar`
 - `02-build-top-navigation`
@@ -385,7 +392,7 @@ U `lessons/` to važi za shipped learning path:
 - `07-more-separation-of-code`
 - `08-smell-of-enterprise`
 
-U player runtime-u to važi za glavni lesson journey:
+In player runtime this applies to main lesson journey:
 
 - `01-start-lesson`
 - `02-follow-lesson`
@@ -393,41 +400,41 @@ U player runtime-u to važi za glavni lesson journey:
 - `04-watch-preview`
 - `05-download-lesson-files`
 
-Pomoćni tokovi ostaju bez brojeva:
+Support flows remain unnumbered:
 
 - `find-step`
 - `save-step`
 - `choose-theme`
 
-Ne numerisati responsibility fajlove.
+Do not number responsibility files.
 
 ### 2.8 Preview Integrity Rules
 
-Desni preview mora da bude stvarni render istog kumulativnog HTML/CSS/JS koda koji middle panel prikazuje.
+The right preview must be the actual render of the same cumulative HTML/CSS/JS code that the middle panel shows.
 
-To znači:
+This means:
 
-- nema ručno režiranog fake preview-a
-- nema posebnog preview DOM-a koji odstupa od lesson koda
-- preview mora da se hrani iz istih builder funkcija koje hrani lesson contract
-- HTML preview mora da pokaže sirov browser rezultat kada CSS još nije dodat
-- CSS preview mora da utiče samo onoliko koliko je trenutno napisano
-- JS preview mora da izvršava tačno isti kumulativni JavaScript koji middle panel trenutno prikazuje
+- no manually directed fake preview
+- no special preview DOM that deviates from lesson code
+- preview must be fed from the same builder functions that feed the lesson contract
+- HTML preview must show raw browser result when CSS is not yet added
+- CSS preview must affect only as much as currently written
+- JS preview must execute exactly the same cumulative JavaScript that the middle panel currently shows
 
 ### 2.8a Teaching Visibility Rules
 
-Ova pravila važe za sve lekcije, bez izuzetka:
+These rules apply to all lessons, without exception:
 
-- `.app-shell` mora da dobije svoj tanak helper outline i da ga zadrži kroz celu lekciju, sve do završnog shell rezimea
-- svaki važan HTML element ili teaching celina mora da dobije svoj tanak helper outline što ranije
-- taj outline ne skidaš odmah kada dodaš prvi završni stil
-- outline ostaje aktivan do završnog rezime koraka za taj element ili celinu
-- završni rezime korak za dati element treba da pokaže njegov kompletan CSS i tek tada ugasi helper outline
-- dok je aktivan CSS korak za određeni element, odgovarajući HTML target u editor panelu mora da bude jasno žuto označen
+- `.app-shell` must get its thin helper outline and keep it through the entire lesson, until the final shell summary
+- every important HTML element or teaching unit must get its thin helper outline as early as possible
+- that outline is not removed immediately when the first final style is added
+- outline stays active until the final summary step for that element or unit
+- the final summary step for a given element should show its complete CSS and only then turn off the helper outline
+- while a CSS step is active for a certain element, the corresponding HTML target in the editor panel must be clearly highlighted in yellow
 
 ### 2.9 Verification Rules
 
-Posle svake veće izmene obavezno pokreni:
+After every significant change, обязательно запустите:
 
 ```bash
 find animator lessons -name '*.js' -print0 | xargs -0 -n1 node --check && node --check main.js
@@ -436,114 +443,114 @@ npm run build
 ./merge-files.sh .
 ```
 
-Ako menjaš dokumentaciju ili flow tree, osveži i merge dump.
-Ako menjaš arhitektonsku strukturu, proveri da su `architecture-standard.md`, `ARCHITECTURE.md` i `AGENTS.md` i dalje usklađeni.
+If you change documentation or flow tree, also refresh the merge dump.
+If you change the architectural structure, check that `architecture-standard.md`, `ARCHITECTURE.md` and `AGENTS.md` are still in sync.
 
 ### 2.10 Delivery Discipline
 
-Na kraju svakog većeg završenog rada obavezna je završna disciplina iz root-a repoa.
+At the end of every significant finished work, mandatory final discipline from the repo root is required.
 
-To znači:
+This means:
 
-1. ako je promena dotakla arhitekturu ili naming, uskladi relevantne dokumente
-2. pokreni `./merge-files.sh .` iz root-a
-3. uradi `git add -A`
-4. napravi normalan `git commit`
-5. uradi `git push`
+1. if the change touched architecture or naming, sync relevant documents
+2. run `./merge-files.sh .` from repo root
+3. do `git add -A`
+4. make a normal `git commit`
+5. do `git push`
 
-Ne završavaj ozbiljan implementation pass bez ovog zatvaranja, osim ako korisnik eksplicitno traži da se ne commituje ili ne pushuje.
+Do not finish a serious implementation pass without this closing, unless the user explicitly asks not to commit or push.
 
 ## 3. Feature Contract
 
-Za pravljenje novih animiranih lekcija i AI prompt šablon pogledaj [LESSON_AUTHORING.md](/home/shomsy/projects/step-by-step-animator/LESSON_AUTHORING.md).
+For making new animated lessons and AI prompt template, see [LESSON_AUTHORING.md](/home/shomsy/projects/step-by-step-animator/LESSON_AUTHORING.md).
 
 ### 3.1 Lesson Layout
 
-Aplikacija ima tri glavna panela:
+The application has three main panels:
 
-1. levi lesson panel
-2. srednji live editor panel
-3. desni live preview panel
+1. left lesson panel
+2. middle live editor panel
+3. right live preview panel
 
-Levi panel:
+Left panel:
 
-- prikazuje trenutni korak
-- prikazuje opis i pro tip
-- prikazuje progress
-- sadrži bookmark tok
-- sadrži kontrole za navigaciju i playback
-- sadrži open-source naraciju trenutnog koraka sa auto-read i voice speed kontrolom
+- shows current step
+- shows description and pro tip
+- shows progress
+- contains bookmark flow
+- contains controls for navigation and playback
+- contains open-source narration of current step with auto-read and voice speed control
 
-Srednji panel:
+Middle panel:
 
-- prikazuje HTML fajl
-- prikazuje CSS fajl
-- kada lekcija to traži, prikazuje i JS fajl
-- svi prikazi su kumulativni
-- postojeće linije su muted
-- novo dodate linije su naglašene
-- kada je aktivan CSS korak, HTML deo za isti element mora da bude žuto istaknut
+- shows HTML file
+- shows CSS file
+- when the lesson requires it, shows JS file
+- all displays are cumulative
+- existing lines are muted
+- newly added lines are highlighted
+- when CSS step is active, the HTML part for the same element must be highlighted in yellow
 
-Desni panel:
+Right panel:
 
-- zauzima ceo viewer panel
-- imitira browser
-- renderuje stvarni kumulativni HTML/CSS/JS output
+- takes the entire viewer panel
+- imitates browser
+- renders the actual cumulative HTML/CSS/JS output
 
 ### 3.2 Current Shipped Lessons
 
-`01-build-sidebar` je referentna lekcija za engine.
+`01-build-sidebar` is the reference lesson for the engine.
 
-`02-build-top-navigation` pokazuje dodatni shell capability:
+`02-build-top-navigation` shows additional shell capability:
 
-- goal sliku koja pokazuje šta gradimo
-- homework napomene za varijante koje još ne implementiramo
+- goal image showing what we're building
+- homework notes for variants we don't implement yet
 
-Za nju i dalje važe posebna teaching pravila:
+For it, special teaching rules still apply:
 
-- počinje praznim `.app-shell` prostorom
-- sidebar se dodaje kao prva stvar
-- nema filler sadržaja van onoga što lekcija zaista objašnjava
-- helper linije i pomoćni borderi ostaju dok se ne završi cela vizuelna celina
-- outline helperi ostaju do završnog rezime koraka za dati element ili celinu, pa se tek tada uklanjaju
+- starts with empty `.app-shell` space
+- sidebar is added as the first thing
+- no filler content outside of what the lesson actually explains
+- helper lines and helper borders stay until the entire visual unit is finished
+- outline helpers stay until the final summary step for that element or unit, only then removed
 
-`03-build-custom-element` otvara Web Components put:
+`03-build-custom-element` opens the Web Components path:
 
-- host tag sa crticom
-- registraciju kroz `customElements.define`
-- atribut API
-- prvi render kroz light DOM
+- host tag with dash
+- registration through `customElements.define`
+- attribute API
+- first render through light DOM
 
-`04-build-web-component` je Web Components nastavak:
+`04-build-web-component` is the Web Components continuation:
 
-- treći, opcioni JS fajl u middle panelu
-- stvarni live preview koji izvršava isti kumulativni JavaScript
-- Web Components teaching tok kroz custom element, shadow DOM, slot i lifecycle
+- third, optional JS file in the middle panel
+- actual live preview that executes the same cumulative JavaScript
+- Web Components teaching flow through custom element, shadow DOM, slot and lifecycle
 
-`05-clean-web-component-with-adopted-stylesheets` zatvara cleanup priču:
+`05-clean-web-component-with-adopted-stylesheets` closes the cleanup story:
 
-- četvrti, opcioni shadow CSS fajl u middle panelu
-- JavaScript uvozi `shadow-dom-style.css` kao tekst preko `?raw`
-- shadow root usvaja odvojen stylesheet preko `adoptedStyleSheets`
+- fourth, optional shadow CSS file in the middle panel
+- JavaScript imports `shadow-dom-style.css` as text via `?raw`
+- shadow root adopts separated stylesheet via `adoptedStyleSheets`
 
 ### 3.3 How To Add A New Lesson
 
-Za novu lekciju:
+For a new lesson:
 
-1. napravi novi feature folder pod `lessons/`
-2. dodaj root `feature-name.lesson.js`
-3. dodaj `describe-steps.js`
-4. dodaj `build-html-at-step.js`
-5. dodaj `build-css-at-step.js`
-6. kada lekcija traži JavaScript, dodaj `build-js-at-step.js`
-7. dodaj `content/documents/files/lesson.sr.md`
-8. dodaj `content/documents/files/html.timeline.md`
-9. dodaj `content/documents/files/css.rules.md`
-10. kada lekcija traži JavaScript, dodaj `content/documents/files/js.timeline.md`
-11. kada lekcija traži poseban shadow CSS fajl, dodaj `build-shadow-css-at-step.js`
-12. kada lekcija traži poseban shadow CSS fajl, dodaj `content/documents/files/shadow-dom-style.css.md`
-13. po potrebi dodaj `content/assets/feature-goal.svg`
-14. registruj lekciju u `lessons/register-lessons.js`
+1. create new feature folder under `lessons/`
+2. add root `feature-name.lesson.js`
+3. add `describe-steps.js`
+4. add `build-html-at-step.js`
+5. add `build-css-at-step.js`
+6. when lesson requires JavaScript, add `build-js-at-step.js`
+7. add `content/documents/files/lesson.sr.md`
+8. add `content/documents/files/html.timeline.md`
+9. add `content/documents/files/css.rules.md`
+10. when lesson requires JavaScript, add `content/documents/files/js.timeline.md`
+11. when lesson requires special shadow CSS file, add `build-shadow-css-at-step.js`
+12. when lesson requires special shadow CSS file, add `content/documents/files/shadow-dom-style.css.md`
+13. optionally add `content/assets/feature-goal.svg`
+14. register lesson in `lessons/register-lessons.js`
 
-Ne kopirati player runtime iz `animator/play-lesson/`.
-Nova lekcija treba da doda samo svoj contract i svoj content.
+Do not copy player runtime from `animator/play-lesson/`.
+New lesson should only add its contract and its content.
