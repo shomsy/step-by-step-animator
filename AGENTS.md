@@ -448,7 +448,7 @@ If you change the architectural structure, check that `.agents/architecture-stan
 
 ### 2.10 Delivery Discipline
 
-At the end of every significant finished work, mandatory final discipline from the repo root is required.
+At the end of every iteration, mandatory final discipline from the repo root is required, even when the change is small.
 
 This means:
 
@@ -458,7 +458,7 @@ This means:
 4. make a normal `git commit`
 5. do `git push`
 
-Do not finish a serious implementation pass without this closing, unless the user explicitly asks not to commit or push.
+Do not finish an implementation pass without this closing, unless the user explicitly asks not to commit or push.
 
 ## 3. Feature Contract
 
