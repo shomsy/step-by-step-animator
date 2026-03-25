@@ -81,7 +81,11 @@ export function playLesson({ ownerDocument, ownerLocation, ownerWindow, lesson, 
   lessonParts.openStepFinderButton.addEventListener('click', stepFinder.openStepFinder);
   lessonParts.themeButton.addEventListener('click', themeChoice.toggleTheme);
   lessonParts.downloadFilesButton.addEventListener('click', () => {
-    downloadLessonFiles({ lesson });
+    downloadLessonFiles({
+      lesson,
+      ownerDocument,
+      ownerWindow
+    });
   });
 
   lessonParts.lessonPanelButtons.forEach(button => {

@@ -1,21 +1,21 @@
-function triggerFileDownload(fileName, mimeType, fileContent) {
-  const blob = new Blob([fileContent], { type: mimeType });
-  const downloadLink = document.createElement('a');
-  const objectUrl = URL.createObjectURL(blob);
+function triggerFileDownload({ ownerDocument, ownerWindow, fileName, mimeType, fileContent }) {
+  const blob = new ownerWindow.Blob([fileContent], { type: mimeType });
+  const downloadLink = ownerDocument.createElement('a');
+  const objectUrl = ownerWindow.URL.createObjectURL(blob);
 
   downloadLink.href = objectUrl;
   downloadLink.download = fileName;
   downloadLink.style.display = 'none';
-  document.body.append(downloadLink);
+  ownerDocument.body.append(downloadLink);
   downloadLink.click();
   downloadLink.remove();
 
-  window.setTimeout(() => {
-    URL.revokeObjectURL(objectUrl);
+  ownerWindow.setTimeout(() => {
+    ownerWindow.URL.revokeObjectURL(objectUrl);
   }, 1000);
 }
 
-export function downloadLessonFiles({ lesson }) {
+export function downloadLessonFiles({ lesson, ownerDocument, ownerWindow }) {
   const finalStep = lesson.steps.length - 1;
   const htmlCode = lesson.buildHtmlAtStep(finalStep).join('\n');
   const cssCode = lesson.buildCssAtStep(finalStep).join('\n');
@@ -31,31 +31,61 @@ export function downloadLessonFiles({ lesson }) {
 
   let delay = 0;
 
-  triggerFileDownload(lesson.htmlFileName, 'text/html', htmlCode);
+  triggerFileDownload({
+    ownerDocument,
+    ownerWindow,
+    fileName: lesson.htmlFileName,
+    mimeType: 'text/html',
+    fileContent: htmlCode
+  });
   delay += 500;
 
-  window.setTimeout(() => {
-    triggerFileDownload(lesson.cssFileName, 'text/css', cssCode);
+  ownerWindow.setTimeout(() => {
+    triggerFileDownload({
+      ownerDocument,
+      ownerWindow,
+      fileName: lesson.cssFileName,
+      mimeType: 'text/css',
+      fileContent: cssCode
+    });
   }, delay);
 
   if (jsCode) {
     delay += 500;
-    window.setTimeout(() => {
-      triggerFileDownload(lesson.jsFileName || 'component.js', 'text/javascript', jsCode);
+    ownerWindow.setTimeout(() => {
+      triggerFileDownload({
+        ownerDocument,
+        ownerWindow,
+        fileName: lesson.jsFileName || 'component.js',
+        mimeType: 'text/javascript',
+        fileContent: jsCode
+      });
     }, delay);
   }
 
   if (templateJsCode) {
     delay += 500;
-    window.setTimeout(() => {
-      triggerFileDownload(lesson.templateJsFileName || 'component.html.js', 'text/javascript', templateJsCode);
+    ownerWindow.setTimeout(() => {
+      triggerFileDownload({
+        ownerDocument,
+        ownerWindow,
+        fileName: lesson.templateJsFileName || 'component.html.js',
+        mimeType: 'text/javascript',
+        fileContent: templateJsCode
+      });
     }, delay);
   }
 
   if (shadowCssCode) {
     delay += 500;
-    window.setTimeout(() => {
-      triggerFileDownload(lesson.shadowCssFileName || 'shadow-dom-style.css', 'text/css', shadowCssCode);
+    ownerWindow.setTimeout(() => {
+      triggerFileDownload({
+        ownerDocument,
+        ownerWindow,
+        fileName: lesson.shadowCssFileName || 'shadow-dom-style.css',
+        mimeType: 'text/css',
+        fileContent: shadowCssCode
+      });
     }, delay);
   }
 }

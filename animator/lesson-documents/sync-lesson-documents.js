@@ -38,6 +38,24 @@ function stripFrontmatter(markdown) {
   return source.slice(match[0].length).trim();
 }
 
+function isGeneratedLessonBookFile(fileName) {
+  return /^\d{2}_.+\.md$/.test(fileName);
+}
+
+function removeObsoleteGeneratedFiles(outputFolder, currentOutputFileName) {
+  fs.readdirSync(outputFolder, { withFileTypes: true })
+    .filter(entry =>
+      entry.isFile() &&
+      entry.name.endsWith('.md') &&
+      entry.name !== currentOutputFileName &&
+      isGeneratedLessonBookFile(entry.name)
+    )
+    .forEach(entry => {
+      fs.unlinkSync(path.join(outputFolder, entry.name));
+      console.log(`Removed obsolete: ${path.relative(process.cwd(), path.join(outputFolder, entry.name))}`);
+    });
+}
+
 function buildLessonBook(documentsFolder) {
   const lessonFolder = path.basename(path.resolve(documentsFolder, '../../..'));
   const lessonPart = stripFrontmatter(readDocumentPart(documentsFolder, 'lesson.sr.md'));
@@ -51,6 +69,7 @@ function buildLessonBook(documentsFolder) {
   const outputFolder = path.resolve(documentsFolder, '..');
   const outputFile = path.join(outputFolder, `${lessonFolder.replace(/-/g, '_')}.md`);
 
+  removeObsoleteGeneratedFiles(outputFolder, path.basename(outputFile));
   fs.writeFileSync(outputFile, parts.join('\n\n') + '\n');
   return outputFile;
 }

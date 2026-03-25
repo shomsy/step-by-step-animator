@@ -1133,20 +1133,53 @@ function createHeadingId(text, usedHeadingIds) {
 }
 
 function renderInlineMarkdown(text) {
-  return text
-    .replace(/!\[([^\]]*)\]\(([^)]+)\)/g, (_, alt, src) => `<img class="lesson-markdown-image" src="${escapeAttribute(src)}" alt="${escapeAttribute(alt)}">`)
-    .replace(/\[([^\]]+)\]\(([^)]+)\)/g, (_, label, href) => {
-      const safeHref = escapeAttribute(href);
+  const source = String(text || '');
+  const tokenPattern = /`([^`]+)`|!\[([^\]]*)\]\(([^)]+)\)|\[([^\]]+)\]\(([^)]+)\)/g;
+  const placeholders = [];
+  let renderedText = '';
+  let lastIndex = 0;
 
-      if (String(href).startsWith('#')) {
-        return `<a href="${safeHref}">${label}</a>`;
-      }
+  source.replace(tokenPattern, (match, codeText, imageAlt, imageSrc, linkLabel, linkHref, offset) => {
+    renderedText += escapeHtml(source.slice(lastIndex, offset));
 
-      return `<a href="${safeHref}" target="_blank" rel="noreferrer">${label}</a>`;
-    })
+    const placeholder = `__INLINE_TOKEN_${placeholders.length}__`;
+
+    if (typeof codeText === 'string') {
+      placeholders.push({
+        placeholder,
+        html: `<code>${escapeHtml(codeText)}</code>`
+      });
+    } else if (typeof imageSrc === 'string') {
+      placeholders.push({
+        placeholder,
+        html: `<img class="lesson-markdown-image" src="${escapeAttribute(imageSrc)}" alt="${escapeAttribute(imageAlt)}">`
+      });
+    } else if (typeof linkHref === 'string') {
+      const safeHref = escapeAttribute(linkHref);
+
+      placeholders.push({
+        placeholder,
+        html: String(linkHref).startsWith('#')
+          ? `<a href="${safeHref}">${escapeHtml(linkLabel)}</a>`
+          : `<a href="${safeHref}" target="_blank" rel="noreferrer">${escapeHtml(linkLabel)}</a>`
+      });
+    }
+
+    renderedText += placeholder;
+    lastIndex = offset + match.length;
+    return match;
+  });
+
+  renderedText += escapeHtml(source.slice(lastIndex));
+
+  renderedText = renderedText
     .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
-    .replace(/\*(.+?)\*/g, '<em>$1</em>')
-    .replace(/`(.+?)`/g, '<code>$1</code>');
+    .replace(/\*(.+?)\*/g, '<em>$1</em>');
+
+  return placeholders.reduce(
+    (currentText, placeholder) => currentText.replaceAll(placeholder.placeholder, placeholder.html),
+    renderedText
+  );
 }
 
 function flushParagraph(buffer, htmlParts) {
@@ -1351,6 +1384,24 @@ function stripFrontmatter(markdown) {
   return source.slice(match[0].length).trim();
 }
 
+function isGeneratedLessonBookFile(fileName) {
+  return /^\d{2}_.+\.md$/.test(fileName);
+}
+
+function removeObsoleteGeneratedFiles(outputFolder, currentOutputFileName) {
+  fs.readdirSync(outputFolder, { withFileTypes: true })
+    .filter(entry =>
+      entry.isFile() &&
+      entry.name.endsWith('.md') &&
+      entry.name !== currentOutputFileName &&
+      isGeneratedLessonBookFile(entry.name)
+    )
+    .forEach(entry => {
+      fs.unlinkSync(path.join(outputFolder, entry.name));
+      console.log(`Removed obsolete: ${path.relative(process.cwd(), path.join(outputFolder, entry.name))}`);
+    });
+}
+
 function buildLessonBook(documentsFolder) {
   const lessonFolder = path.basename(path.resolve(documentsFolder, '../../..'));
   const lessonPart = stripFrontmatter(readDocumentPart(documentsFolder, 'lesson.sr.md'));
@@ -1364,6 +1415,7 @@ function buildLessonBook(documentsFolder) {
   const outputFolder = path.resolve(documentsFolder, '..');
   const outputFile = path.join(outputFolder, `${lessonFolder.replace(/-/g, '_')}.md`);
 
+  removeObsoleteGeneratedFiles(outputFolder, path.basename(outputFile));
   fs.writeFileSync(outputFile, parts.join('\n\n') + '\n');
   return outputFile;
 }
@@ -1864,8 +1916,10 @@ const TAG_TO_PANE = {
   'html': 'htmlPane',
   'css': 'cssPane',
   'js': 'jsPane',
+  'js-style': 'jsPane',
   'template-js': 'templateJsPane',
   'shadow-css': 'shadowCssPane',
+  'teaching': 'htmlPane',
   'summary': 'htmlPane',
   'success': 'htmlPane'
 };
@@ -1949,6 +2003,10 @@ function escapeTemplateLiteralText(text) {
     .replace(/\$\{/g, '\\${');
 }
 
+function escapeClosingHtmlTag(text, tagName) {
+  return String(text).replace(new RegExp(`</${tagName}`, 'gi'), `<\\/${tagName}`);
+}
+
 function readShadowCssMarkup(lesson, currentStepNumber) {
   if (typeof lesson.buildShadowCssAtStep !== 'function') {
     return '';
@@ -1963,11 +2021,14 @@ function inlineShadowCssTextImport(jsMarkup, lesson, shadowCssMarkup) {
   }
 
   const importPath = `./${lesson.shadowCssFileName || 'shadow-dom-style.css'}?raw`;
-  const importLine = `import shadowDomStyleCssText from '${importPath}';`;
+  const importLinePattern = new RegExp(
+    `^import\\s+shadowDomStyleCssText\\s+from\\s+['"]${escapeRegExp(importPath)}['"]\\s*;?\\s*$`,
+    'm'
+  );
 
-  if (jsMarkup.includes(importLine)) {
+  if (importLinePattern.test(jsMarkup)) {
     return jsMarkup.replace(
-      importLine,
+      importLinePattern,
       `const shadowDomStyleCssText = ${JSON.stringify(shadowCssMarkup)};`
     );
   }
@@ -1987,16 +2048,18 @@ function inlineTemplateModule({ lesson, currentStepNumber, jsMarkup, shadowCssMa
   }
 
   const templateFileName = lesson.templateJsFileName || 'component.html.js';
-  const exportedTemplateMatch = templateJsMarkup.match(/export const (\w+) = document\.createElement\('template'\);/);
+  const exportedTemplateMatch = templateJsMarkup.match(
+    /export\s+const\s+(\w+)\s*=\s*document\.createElement\(\s*['"]template['"]\s*\)\s*;/i
+  );
   const exportedTemplateName = exportedTemplateMatch?.[1] || 'componentTemplate';
-  const shadowCssStyleTag = `<style>${escapeTemplateLiteralText(shadowCssMarkup)}</style>`;
+  const shadowCssStyleTag = `<style>${escapeTemplateLiteralText(escapeClosingHtmlTag(shadowCssMarkup, 'style'))}</style>`;
   const templateImportPattern = new RegExp(
-    `^import\\s+\\{\\s*${escapeRegExp(exportedTemplateName)}\\s*\\}\\s+from\\s+['"]\\./${escapeRegExp(templateFileName)}['"];?\\n?`,
+    `^import\\s+\\{\\s*${escapeRegExp(exportedTemplateName)}\\s*\\}\\s+from\\s+['"]\\./${escapeRegExp(templateFileName)}['"]\\s*;?\\s*$\\n?`,
     'm'
   );
 
   templateJsMarkup = templateJsMarkup
-    .replace(/<link rel="stylesheet" href="\.\/[^"]+" \/>/, shadowCssStyleTag)
+    .replace(/<link\s+rel=(["'])stylesheet\1\s+href=(["'])\.\/[^"']+\2\s*\/?>/i, shadowCssStyleTag)
     .replace(/\bexport const\b/g, 'const');
 
   return `${templateJsMarkup}\n\n${jsMarkup.replace(templateImportPattern, '').trimStart()}`.trim();
@@ -2025,8 +2088,8 @@ function composeLivePreviewDocument(lesson, currentStepNumber) {
   const htmlMarkup = lesson.buildHtmlAtStep(currentStepNumber).join('\n');
   const cssMarkup = lesson.buildCssAtStep(currentStepNumber).join('\n');
   const jsMarkup = composePreviewJavaScript(lesson, currentStepNumber);
-  const cssBlock = cssMarkup ? `<style>${cssMarkup}</style>` : '';
-  const jsBlock = jsMarkup ? `<script>${jsMarkup}<\/script>` : '';
+  const cssBlock = cssMarkup ? `<style>${escapeClosingHtmlTag(cssMarkup, 'style')}</style>` : '';
+  const jsBlock = jsMarkup ? `<script>${escapeClosingHtmlTag(jsMarkup, 'script')}<\/script>` : '';
 
   return `<!DOCTYPE html>
 <html lang="${lesson.documentLanguage || 'sr'}">
@@ -2057,24 +2120,24 @@ export function showCurrentPreview({
 }
 
 === animator/play-lesson/05-download-lesson-files/download-lesson-files.js ===
-function triggerFileDownload(fileName, mimeType, fileContent) {
-  const blob = new Blob([fileContent], { type: mimeType });
-  const downloadLink = document.createElement('a');
-  const objectUrl = URL.createObjectURL(blob);
+function triggerFileDownload({ ownerDocument, ownerWindow, fileName, mimeType, fileContent }) {
+  const blob = new ownerWindow.Blob([fileContent], { type: mimeType });
+  const downloadLink = ownerDocument.createElement('a');
+  const objectUrl = ownerWindow.URL.createObjectURL(blob);
 
   downloadLink.href = objectUrl;
   downloadLink.download = fileName;
   downloadLink.style.display = 'none';
-  document.body.append(downloadLink);
+  ownerDocument.body.append(downloadLink);
   downloadLink.click();
   downloadLink.remove();
 
-  window.setTimeout(() => {
-    URL.revokeObjectURL(objectUrl);
+  ownerWindow.setTimeout(() => {
+    ownerWindow.URL.revokeObjectURL(objectUrl);
   }, 1000);
 }
 
-export function downloadLessonFiles({ lesson }) {
+export function downloadLessonFiles({ lesson, ownerDocument, ownerWindow }) {
   const finalStep = lesson.steps.length - 1;
   const htmlCode = lesson.buildHtmlAtStep(finalStep).join('\n');
   const cssCode = lesson.buildCssAtStep(finalStep).join('\n');
@@ -2090,31 +2153,61 @@ export function downloadLessonFiles({ lesson }) {
 
   let delay = 0;
 
-  triggerFileDownload(lesson.htmlFileName, 'text/html', htmlCode);
+  triggerFileDownload({
+    ownerDocument,
+    ownerWindow,
+    fileName: lesson.htmlFileName,
+    mimeType: 'text/html',
+    fileContent: htmlCode
+  });
   delay += 500;
 
-  window.setTimeout(() => {
-    triggerFileDownload(lesson.cssFileName, 'text/css', cssCode);
+  ownerWindow.setTimeout(() => {
+    triggerFileDownload({
+      ownerDocument,
+      ownerWindow,
+      fileName: lesson.cssFileName,
+      mimeType: 'text/css',
+      fileContent: cssCode
+    });
   }, delay);
 
   if (jsCode) {
     delay += 500;
-    window.setTimeout(() => {
-      triggerFileDownload(lesson.jsFileName || 'component.js', 'text/javascript', jsCode);
+    ownerWindow.setTimeout(() => {
+      triggerFileDownload({
+        ownerDocument,
+        ownerWindow,
+        fileName: lesson.jsFileName || 'component.js',
+        mimeType: 'text/javascript',
+        fileContent: jsCode
+      });
     }, delay);
   }
 
   if (templateJsCode) {
     delay += 500;
-    window.setTimeout(() => {
-      triggerFileDownload(lesson.templateJsFileName || 'component.html.js', 'text/javascript', templateJsCode);
+    ownerWindow.setTimeout(() => {
+      triggerFileDownload({
+        ownerDocument,
+        ownerWindow,
+        fileName: lesson.templateJsFileName || 'component.html.js',
+        mimeType: 'text/javascript',
+        fileContent: templateJsCode
+      });
     }, delay);
   }
 
   if (shadowCssCode) {
     delay += 500;
-    window.setTimeout(() => {
-      triggerFileDownload(lesson.shadowCssFileName || 'shadow-dom-style.css', 'text/css', shadowCssCode);
+    ownerWindow.setTimeout(() => {
+      triggerFileDownload({
+        ownerDocument,
+        ownerWindow,
+        fileName: lesson.shadowCssFileName || 'shadow-dom-style.css',
+        mimeType: 'text/css',
+        fileContent: shadowCssCode
+      });
     }, delay);
   }
 }
@@ -5325,7 +5418,11 @@ export function playLesson({ ownerDocument, ownerLocation, ownerWindow, lesson, 
   lessonParts.openStepFinderButton.addEventListener('click', stepFinder.openStepFinder);
   lessonParts.themeButton.addEventListener('click', themeChoice.toggleTheme);
   lessonParts.downloadFilesButton.addEventListener('click', () => {
-    downloadLessonFiles({ lesson });
+    downloadLessonFiles({
+      lesson,
+      ownerDocument,
+      ownerWindow
+    });
   });
 
   lessonParts.lessonPanelButtons.forEach(button => {
@@ -5642,7 +5739,7 @@ export function showSavedStepList({
   lessonParts.savedStepList.innerHTML = savedItems.map(({ stepNumber, step }) => `
     <div class="bookmark-item${stepNumber === currentStepNumber ? ' current' : ''}">
       <button type="button" class="bookmark-link" data-step-number="${stepNumber}">
-        <span class="bookmark-meta">Prizor ${stepNumber + 1}${readBookmarkTagMarkup(step)}</span></span>
+        <span class="bookmark-meta">Prizor ${stepNumber + 1}${readBookmarkTagMarkup(step)}</span>
         <strong>${escapeInlineText(typeof step.title === 'string' ? step.title : '')}</strong>
         <p>${escapeInlineText(typeof step.desc === 'string' ? step.desc : '')}</p>
       </button>

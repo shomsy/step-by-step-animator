@@ -34,20 +34,53 @@ function createHeadingId(text, usedHeadingIds) {
 }
 
 function renderInlineMarkdown(text) {
-  return text
-    .replace(/!\[([^\]]*)\]\(([^)]+)\)/g, (_, alt, src) => `<img class="lesson-markdown-image" src="${escapeAttribute(src)}" alt="${escapeAttribute(alt)}">`)
-    .replace(/\[([^\]]+)\]\(([^)]+)\)/g, (_, label, href) => {
-      const safeHref = escapeAttribute(href);
+  const source = String(text || '');
+  const tokenPattern = /`([^`]+)`|!\[([^\]]*)\]\(([^)]+)\)|\[([^\]]+)\]\(([^)]+)\)/g;
+  const placeholders = [];
+  let renderedText = '';
+  let lastIndex = 0;
 
-      if (String(href).startsWith('#')) {
-        return `<a href="${safeHref}">${label}</a>`;
-      }
+  source.replace(tokenPattern, (match, codeText, imageAlt, imageSrc, linkLabel, linkHref, offset) => {
+    renderedText += escapeHtml(source.slice(lastIndex, offset));
 
-      return `<a href="${safeHref}" target="_blank" rel="noreferrer">${label}</a>`;
-    })
+    const placeholder = `__INLINE_TOKEN_${placeholders.length}__`;
+
+    if (typeof codeText === 'string') {
+      placeholders.push({
+        placeholder,
+        html: `<code>${escapeHtml(codeText)}</code>`
+      });
+    } else if (typeof imageSrc === 'string') {
+      placeholders.push({
+        placeholder,
+        html: `<img class="lesson-markdown-image" src="${escapeAttribute(imageSrc)}" alt="${escapeAttribute(imageAlt)}">`
+      });
+    } else if (typeof linkHref === 'string') {
+      const safeHref = escapeAttribute(linkHref);
+
+      placeholders.push({
+        placeholder,
+        html: String(linkHref).startsWith('#')
+          ? `<a href="${safeHref}">${escapeHtml(linkLabel)}</a>`
+          : `<a href="${safeHref}" target="_blank" rel="noreferrer">${escapeHtml(linkLabel)}</a>`
+      });
+    }
+
+    renderedText += placeholder;
+    lastIndex = offset + match.length;
+    return match;
+  });
+
+  renderedText += escapeHtml(source.slice(lastIndex));
+
+  renderedText = renderedText
     .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
-    .replace(/\*(.+?)\*/g, '<em>$1</em>')
-    .replace(/`(.+?)`/g, '<code>$1</code>');
+    .replace(/\*(.+?)\*/g, '<em>$1</em>');
+
+  return placeholders.reduce(
+    (currentText, placeholder) => currentText.replaceAll(placeholder.placeholder, placeholder.html),
+    renderedText
+  );
 }
 
 function flushParagraph(buffer, htmlParts) {

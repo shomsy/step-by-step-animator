@@ -51,8 +51,10 @@ const TAG_TO_PANE = {
   'html': 'htmlPane',
   'css': 'cssPane',
   'js': 'jsPane',
+  'js-style': 'jsPane',
   'template-js': 'templateJsPane',
   'shadow-css': 'shadowCssPane',
+  'teaching': 'htmlPane',
   'summary': 'htmlPane',
   'success': 'htmlPane'
 };

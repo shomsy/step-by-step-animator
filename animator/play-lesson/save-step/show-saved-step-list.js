@@ -24,7 +24,7 @@ export function showSavedStepList({
   lessonParts.savedStepList.innerHTML = savedItems.map(({ stepNumber, step }) => `
     <div class="bookmark-item${stepNumber === currentStepNumber ? ' current' : ''}">
       <button type="button" class="bookmark-link" data-step-number="${stepNumber}">
-        <span class="bookmark-meta">Prizor ${stepNumber + 1}${readBookmarkTagMarkup(step)}</span></span>
+        <span class="bookmark-meta">Prizor ${stepNumber + 1}${readBookmarkTagMarkup(step)}</span>
         <strong>${escapeInlineText(typeof step.title === 'string' ? step.title : '')}</strong>
         <p>${escapeInlineText(typeof step.desc === 'string' ? step.desc : '')}</p>
       </button>

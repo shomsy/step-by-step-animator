@@ -9,6 +9,10 @@ function escapeTemplateLiteralText(text) {
     .replace(/\$\{/g, '\\${');
 }
 
+function escapeClosingHtmlTag(text, tagName) {
+  return String(text).replace(new RegExp(`</${tagName}`, 'gi'), `<\\/${tagName}`);
+}
+
 function readShadowCssMarkup(lesson, currentStepNumber) {
   if (typeof lesson.buildShadowCssAtStep !== 'function') {
     return '';
@@ -23,11 +27,14 @@ function inlineShadowCssTextImport(jsMarkup, lesson, shadowCssMarkup) {
   }
 
   const importPath = `./${lesson.shadowCssFileName || 'shadow-dom-style.css'}?raw`;
-  const importLine = `import shadowDomStyleCssText from '${importPath}';`;
+  const importLinePattern = new RegExp(
+    `^import\\s+shadowDomStyleCssText\\s+from\\s+['"]${escapeRegExp(importPath)}['"]\\s*;?\\s*$`,
+    'm'
+  );
 
-  if (jsMarkup.includes(importLine)) {
+  if (importLinePattern.test(jsMarkup)) {
     return jsMarkup.replace(
-      importLine,
+      importLinePattern,
       `const shadowDomStyleCssText = ${JSON.stringify(shadowCssMarkup)};`
     );
   }
@@ -47,16 +54,18 @@ function inlineTemplateModule({ lesson, currentStepNumber, jsMarkup, shadowCssMa
   }
 
   const templateFileName = lesson.templateJsFileName || 'component.html.js';
-  const exportedTemplateMatch = templateJsMarkup.match(/export const (\w+) = document\.createElement\('template'\);/);
+  const exportedTemplateMatch = templateJsMarkup.match(
+    /export\s+const\s+(\w+)\s*=\s*document\.createElement\(\s*['"]template['"]\s*\)\s*;/i
+  );
   const exportedTemplateName = exportedTemplateMatch?.[1] || 'componentTemplate';
-  const shadowCssStyleTag = `<style>${escapeTemplateLiteralText(shadowCssMarkup)}</style>`;
+  const shadowCssStyleTag = `<style>${escapeTemplateLiteralText(escapeClosingHtmlTag(shadowCssMarkup, 'style'))}</style>`;
   const templateImportPattern = new RegExp(
-    `^import\\s+\\{\\s*${escapeRegExp(exportedTemplateName)}\\s*\\}\\s+from\\s+['"]\\./${escapeRegExp(templateFileName)}['"];?\\n?`,
+    `^import\\s+\\{\\s*${escapeRegExp(exportedTemplateName)}\\s*\\}\\s+from\\s+['"]\\./${escapeRegExp(templateFileName)}['"]\\s*;?\\s*$\\n?`,
     'm'
   );
 
   templateJsMarkup = templateJsMarkup
-    .replace(/<link rel="stylesheet" href="\.\/[^"]+" \/>/, shadowCssStyleTag)
+    .replace(/<link\s+rel=(["'])stylesheet\1\s+href=(["'])\.\/[^"']+\2\s*\/?>/i, shadowCssStyleTag)
     .replace(/\bexport const\b/g, 'const');
 
   return `${templateJsMarkup}\n\n${jsMarkup.replace(templateImportPattern, '').trimStart()}`.trim();
@@ -85,8 +94,8 @@ function composeLivePreviewDocument(lesson, currentStepNumber) {
   const htmlMarkup = lesson.buildHtmlAtStep(currentStepNumber).join('\n');
   const cssMarkup = lesson.buildCssAtStep(currentStepNumber).join('\n');
   const jsMarkup = composePreviewJavaScript(lesson, currentStepNumber);
-  const cssBlock = cssMarkup ? `<style>${cssMarkup}</style>` : '';
-  const jsBlock = jsMarkup ? `<script>${jsMarkup}<\/script>` : '';
+  const cssBlock = cssMarkup ? `<style>${escapeClosingHtmlTag(cssMarkup, 'style')}</style>` : '';
+  const jsBlock = jsMarkup ? `<script>${escapeClosingHtmlTag(jsMarkup, 'script')}<\/script>` : '';
 
   return `<!DOCTYPE html>
 <html lang="${lesson.documentLanguage || 'sr'}">
