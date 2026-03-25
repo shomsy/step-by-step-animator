@@ -116,7 +116,6 @@ const ignoredDirs = new Set([
   '.cache',
   '.git',
   '.idea',
-  '.polymoly',
   '__pycache__',
   'artifacts',
   'build',
