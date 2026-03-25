@@ -38,8 +38,8 @@ This is a teaching product.
 
 This repo has three levels of documents:
 
-- `architecture-standard.md` is the reusable architectural baseline.
-- `ARCHITECTURE.md` is the repo-specific application of that baseline.
+- `.agents/architecture-standard.md` is the reusable architectural baseline.
+- `.agents/ARCHITECTURE.md` is the repo-specific application of that baseline.
 - `AGENTS.md` is the operational contract for work, delivery and collaboration in this repo.
 
 Rules:
@@ -54,7 +54,7 @@ Rules:
 
 The repo follows business-first screaming architecture.
 
-Repo-level shape must stay in sync with `architecture-standard.md`, and repo-specific rules are documented in `ARCHITECTURE.md`.
+Repo-level shape must stay in sync with `.agents/architecture-standard.md`, and repo-specific rules are documented in `.agents/ARCHITECTURE.md`.
 
 Read the tree in this order:
 
@@ -444,7 +444,7 @@ npm run build
 ```
 
 If you change documentation or flow tree, also refresh the merge dump.
-If you change the architectural structure, check that `architecture-standard.md`, `ARCHITECTURE.md` and `AGENTS.md` are still in sync.
+If you change the architectural structure, check that `.agents/architecture-standard.md`, `.agents/ARCHITECTURE.md` and `AGENTS.md` are still in sync.
 
 ### 2.10 Delivery Discipline
 
@@ -462,7 +462,7 @@ Do not finish a serious implementation pass without this closing, unless the use
 
 ## 3. Feature Contract
 
-For making new animated lessons and AI prompt template, see [LESSON_AUTHORING.md](/home/shomsy/projects/step-by-step-animator/LESSON_AUTHORING.md).
+For making new animated lessons and AI prompt template, see [.agents/LESSON_AUTHORING.md](/home/shomsy/projects/step-by-step-animator/.agents/LESSON_AUTHORING.md).
 
 ### 3.1 Lesson Layout
 
