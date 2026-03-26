@@ -50,6 +50,7 @@ Evidence ledger rules:
 
 - if the state of a feature, bug, TODO, or plan changes, update the ledger in the same work item
 - keep detailed docs in their owning folders; the ledger only tracks current state and links to the detail when useful
+- use `YYYY-MM-DD HH:MM` timestamps for new evidence and backlog entries so duration and aging can be estimated
 
 ## 1.3 Active Backlog
 
@@ -60,6 +61,7 @@ Backlog rules:
 - when a review or implementation pass leaves follow-up work, add it to `.agents/evidence/TODO.md`
 - when an item is completed, mark it there and mirror the state change in `.agents/evidence/CHANGELOG.md`
 - do not rely on memory or chat history as the source of truth for pending work
+- use `YYYY-MM-DD HH:MM` timestamps for new backlog entries so duration and aging can be estimated
 
 Document authority rules:
 

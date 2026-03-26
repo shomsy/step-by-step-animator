@@ -3101,6 +3101,7 @@ Update rules:
 - keep each item short and concrete
 - link to the owning doc or code when useful
 - if a status changes, update this file in the same work item
+- use `YYYY-MM-DD HH:MM` timestamps for new entries so duration and aging can be estimated
 
 ## Current Ledger
 
@@ -3110,10 +3111,10 @@ Update rules:
 4. `[feature][done] 2026-03-26 - Lesson source validation command added` - `lesson-engine/validate-source-lessons.js`, `package.json`, `AGENTS.md`
 5. `[governance][done] 2026-03-26 - Source-only migration governance completed` - `.agents/architecture/migration-governance.md`
 6. `[decision][done] 2026-03-26 - Merge dump kept as portable working backup` - `merge-files.sh`, `step-by-step-animator.txt`
-7. `[todo][active] 2026-03-26 - Active backlog lives in .agents/evidence/TODO.md` - `.agents/evidence/TODO.md`
-8. `[todo][archived] 2026-03-26 - Legacy TODO.md reflects old Lesson 07/08 recovery notes` - `.agents/planning/TODO.md`
-9. `[bug][done] 2026-03-26 - bugs.md has no open items` - `.agents/review/bugs.md`
-10. `[perf][follow-up] 2026-03-26 - Vite still warns about a large main chunk` - `npm run build`
+7. `[todo][active] 2026-03-26 01:45 - Active backlog lives in .agents/evidence/TODO.md` - `.agents/evidence/TODO.md`
+8. `[todo][archived] 2026-03-26 01:45 - Legacy TODO.md reflects old Lesson 07/08 recovery notes` - `.agents/planning/TODO.md`
+9. `[bug][done] 2026-03-26 01:45 - bugs.md has no open items` - `.agents/review/bugs.md`
+10. `[perf][follow-up] 2026-03-26 01:45 - Vite still warns about a large main chunk` - `npm run build`
 
 === .agents/evidence/TODO.md ===
 # Active TODO
@@ -3125,12 +3126,13 @@ Update rules:
 - keep newest items at the top
 - mark each item with a status tag
 - move completed items to the evidence ledger when they are closed
+- use `YYYY-MM-DD HH:MM` timestamps for new items so task age and cycle time can be estimated
 
 ## Current Items
 
-1. `[follow-up] 2026-03-26 - Split the large Vite main chunk` - the build still warns about `appIndex` chunk size because of `piper`/`onnxruntime` payloads
-2. `[follow-up] 2026-03-26 - Decide whether the legacy archive docs need one final banner sweep` - only if we want the frozen docs to be even more explicit
-3. `[done] 2026-03-26 - App shell moved under app/ with compatibility aliases` - closed in `app/index.html`, `app/main.js`, `index.html`, `main.js`
+1. `[follow-up] 2026-03-26 01:45 - Split the large Vite main chunk` - the build still warns about `appIndex` chunk size because of `piper`/`onnxruntime` payloads
+2. `[follow-up] 2026-03-26 01:45 - Decide whether the legacy archive docs need one final banner sweep` - only if we want the frozen docs to be even more explicit
+3. `[done] 2026-03-26 01:45 - App shell moved under app/ with compatibility aliases` - closed in `app/index.html`, `app/main.js`, `index.html`, `main.js`
 
 === .agents/planning/TODO.md ===
 # TODO
@@ -3218,6 +3220,7 @@ Evidence ledger rules:
 
 - if the state of a feature, bug, TODO, or plan changes, update the ledger in the same work item
 - keep detailed docs in their owning folders; the ledger only tracks current state and links to the detail when useful
+- use `YYYY-MM-DD HH:MM` timestamps for new evidence and backlog entries so duration and aging can be estimated
 
 ## 1.3 Active Backlog
 
@@ -3228,6 +3231,7 @@ Backlog rules:
 - when a review or implementation pass leaves follow-up work, add it to `.agents/evidence/TODO.md`
 - when an item is completed, mark it there and mirror the state change in `.agents/evidence/CHANGELOG.md`
 - do not rely on memory or chat history as the source of truth for pending work
+- use `YYYY-MM-DD HH:MM` timestamps for new backlog entries so duration and aging can be estimated
 
 Document authority rules:
 
