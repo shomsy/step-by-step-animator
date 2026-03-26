@@ -3101,6 +3101,8 @@ Update rules:
 - keep each item short and concrete
 - link to the owning doc or code when useful
 - if a status changes, update this file in the same work item
+- add `actual` when the effort is known and worth recording
+- add `owner` only when the closure needs accountability context
 - use `YYYY-MM-DD HH:MM` timestamps for new entries so duration and aging can be estimated
 
 ## Current Ledger
@@ -3127,6 +3129,7 @@ Update rules:
 
 - keep newest items at the top
 - mark each item with a status tag
+- add `owner`, `estimate`, and `blocked_by` when the follow-up is substantial
 - move completed items to the evidence ledger when they are closed
 - use `YYYY-MM-DD HH:MM` timestamps for new items so task age and cycle time can be estimated
 
@@ -3146,6 +3149,8 @@ Update rules:
 - keep newest items at the top
 - use `YYYY-MM-DD HH:MM` timestamps so duration and aging can be estimated
 - keep the plan high-level and outcome-oriented
+- add `owner`, `estimate`, and `acceptance` when the workstream is substantial
+- add `blocked_by` only when the workstream is waiting on an external dependency
 - when a plan item becomes actionable, move it into `.agents/evidence/TODO.md`
 - when an item closes, mirror it in `.agents/evidence/CHANGELOG.md`
 
@@ -3269,6 +3274,23 @@ Rules:
 - `CHANGELOG.md` captures closed evidence and final state
 - do not skip a layer when the item is substantial enough to merit tracking
 - keep the three layers aligned in the same work item when the state changes
+
+## 1.5 Work Item Metadata
+
+To keep project management professional and measurable, substantial items should carry lightweight metadata in the trackers:
+
+- `owner`: who is currently responsible for the item
+- `estimate`: rough time budget for the current phase
+- `blocked_by`: only when the item is waiting on something specific
+- `acceptance`: one-line definition of what done means for that item
+- `actual`: the real time spent, recorded when the item closes
+
+Rules:
+
+- use the same metadata language across `PLAN.md`, `TODO.md`, and `CHANGELOG.md`
+- do not create a new tracker file before using these fields
+- keep the metadata short and factual, not essay-like
+- if an item grows beyond a single work session, give it an estimate before starting
 
 Document authority rules:
 

@@ -9,6 +9,8 @@ Update rules:
 - keep each item short and concrete
 - link to the owning doc or code when useful
 - if a status changes, update this file in the same work item
+- add `actual` when the effort is known and worth recording
+- add `owner` only when the closure needs accountability context
 - use `YYYY-MM-DD HH:MM` timestamps for new entries so duration and aging can be estimated
 
 ## Current Ledger

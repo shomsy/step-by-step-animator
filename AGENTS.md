@@ -79,6 +79,23 @@ Rules:
 - do not skip a layer when the item is substantial enough to merit tracking
 - keep the three layers aligned in the same work item when the state changes
 
+## 1.5 Work Item Metadata
+
+To keep project management professional and measurable, substantial items should carry lightweight metadata in the trackers:
+
+- `owner`: who is currently responsible for the item
+- `estimate`: rough time budget for the current phase
+- `blocked_by`: only when the item is waiting on something specific
+- `acceptance`: one-line definition of what done means for that item
+- `actual`: the real time spent, recorded when the item closes
+
+Rules:
+
+- use the same metadata language across `PLAN.md`, `TODO.md`, and `CHANGELOG.md`
+- do not create a new tracker file before using these fields
+- keep the metadata short and factual, not essay-like
+- if an item grows beyond a single work session, give it an estimate before starting
+
 Document authority rules:
 
 - if we change structure, naming or responsibility boundaries, we change the owning document in the same work item
