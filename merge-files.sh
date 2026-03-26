@@ -207,9 +207,10 @@ for (const absPath of files) {
 
   console.log(`Merging: ${rel}`);
   const text = data.toString('utf8');
+  const normalizedText = text.replace(/[^\S\r\n]+$/gm, '');
   chunks.push(`=== ${rel} ===\n`);
-  chunks.push(text);
-  if (!text.endsWith('\n')) {
+  chunks.push(normalizedText);
+  if (!normalizedText.endsWith('\n')) {
     chunks.push('\n');
   }
   chunks.push('\n');

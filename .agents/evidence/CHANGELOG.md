@@ -15,6 +15,7 @@ Update rules:
 
 ## Current Ledger
 
+1. `[feature][done] 2026-03-26 02:44 - Remove all legacy trees completed` - `README.md`, `AGENTS.md`, `.agents/architecture/ARCHITECTURE.md`, `.agents/architecture/lesson-architecture.md`, `.agents/evidence/TODO.md`, `.agents/planning/PLAN.md`, `step-by-step-animator.txt`, `animator/`, `lessons/`
 1. `[feature][done] 2026-03-26 02:35 - Remove legacy app surface completed` - `vite.config.js`, `README.md`, `AGENTS.md`, `.agents/architecture/ARCHITECTURE.md`, `.agents/architecture/lesson-architecture.md`, `app/`, `index.html`, `main.js`, `sidebar-step-by-step.html`
 1. `[plan][done] 2026-03-26 02:26 - Expand root README folder map completed` - `README.md`, `.agents/planning/PLAN.md`, `.agents/evidence/TODO.md`
 2. `[todo][done] 2026-03-26 02:26 - Expand root README folder map completed` - `README.md`

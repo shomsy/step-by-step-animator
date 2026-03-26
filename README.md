@@ -16,11 +16,6 @@ These are the active runtime and lesson-system boundaries:
 
 The architecture documents also reserve a `foundation/` boundary for shared low-level primitives, but this checkout does not currently contain a populated root `foundation/` directory.
 
-### Legacy Archives
-
-- `animator/` is a frozen legacy archive and should not be extended
-- `lessons/` is a frozen legacy lesson archive and should not be extended
-
 ### Governance and Documentation
 
 - `.agents/` contains planning, evidence, architecture, authoring, and review records
@@ -68,6 +63,34 @@ Then open the app in your browser:
 - `http://localhost:5173/`
 
 Vite is rooted at `app/`, so the canonical shell is served from the server root.
+
+## Application Flow
+
+```mermaid
+flowchart TD
+  Browser[Browser]
+  AppIndex[app/index.html]
+  AppMain[app/main.js]
+  SelectLesson[selectLessonFromLocation]
+  Registry[lesson-engine/register-lesson-packages/index.js]
+  LessonPackage[Compiled lesson package]
+  PlayPipeline[animator-engine/play-lesson/play-lesson.pipeline.js]
+  LessonShell[Lesson shell]
+  CodePanel[Live code panels]
+  PreviewPanel[Live preview panel]
+
+  Browser --> AppIndex --> AppMain --> SelectLesson --> Registry --> LessonPackage --> PlayPipeline --> LessonShell
+  LessonShell --> CodePanel
+  LessonShell --> PreviewPanel
+```
+
+Source authoring flows in the opposite direction:
+
+- `education/lessons/<lesson-slug>/source/`
+- `lesson-engine/`
+- compiled lesson package
+- `animator-engine/`
+- `app/`
 
 ## Available Commands
 

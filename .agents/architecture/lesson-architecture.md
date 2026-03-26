@@ -11,8 +11,6 @@ Target boundaries:
 - `animator-engine/` replays the compiled package frame by frame
 - `app/` presents the product shell from the canonical `app/index.html` entry
 
-The repository still contains legacy `lessons/` and `animator/` archive trees, so this document also explains how the historical shape maps to the target shape.
-
 The quality baseline for every implementation decision still comes from `.agents/architecture/architecture-standard.md` and `.agents/architecture/ARCHITECTURE.md`.
 
 Goal is for the structure to be:
@@ -37,12 +35,6 @@ The lesson engine must take human-authored source files, validate them, normaliz
 - `lesson-engine/` compiles source into canonical lesson packages
 - `animator-engine/` plays compiled lesson packages
 - `app/` renders the product shell and mounts the animator
-
-Historical archive mapping:
-
-- `lessons/` maps historically to `education/lessons/`
-- `animator/` maps historically to `animator-engine/`
-- the live app surface does not use root compatibility aliases
 
 ### 0.2 What the Lesson Engine Is
 
@@ -235,14 +227,7 @@ The target tree is locked as follows:
 - `project-artifact-state` is artifact-first and expands by kind, not by UI language
 - `animator-engine/` consumes only compiled lesson packages
 - `foundation/` is the shared primitive layer for filesystem, markdown, validation, logging, storage, hashing, and frontmatter
-- `content/documents/files` is a legacy migration shape, not the target
 - `lesson.js`, `describe-steps.js`, and per-lesson `build-*` files do not belong in the source-only education tree
-
-Current repo names still map to that target like this:
-
-- `lessons/` maps to `education/lessons/`
-- `animator/` maps to `animator-engine/`
-- root shell files map to `app/`
 
 Target tree:
 
@@ -481,7 +466,6 @@ The remaining runtime notes are archived reference material from the pre-migrati
 - `app/` mounts the runtime and presents the product shell.
 - `foundation/` holds shared primitives.
 - `generated/` holds derived outputs.
-- `animator/` and `lessons/` are frozen legacy archive trees and do not define the live contract.
 
 ## 2. Source Contract
 
@@ -1256,5 +1240,5 @@ Ideal final model looks like this:
 ## 51. Appendix: Existing Lesson Architecture
 
 For current lesson architecture details, see:
-- `lessons/lesson-architecture.md`
-- `animator/agents.md`
+- `.agents/architecture/ARCHITECTURE.md`
+- `.agents/authoring/LESSON_AUTHORING.md`

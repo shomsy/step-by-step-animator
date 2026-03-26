@@ -12,12 +12,11 @@ If a repo-specific exception is needed, it must be documented here and it must n
 
 ## Migration Posture
 
-This repo is in a big-bang migration window.
+This repo follows the target canonical boundaries only.
 
-- `animator/` and `lessons/` are frozen legacy archive mappings and should not be extended
-- `app/`, `education/`, `lesson-engine/`, `animator-engine/`, `foundation/`, and `generated/` are the target canonical boundaries
-- the live app surface does not depend on root compatibility aliases
-- new work must follow the target boundaries even while legacy archive code still exists
+- `app/`, `education/`, `lesson-engine/`, `animator-engine/`, `foundation/`, and `generated/` are the live boundaries
+- the live app surface is rooted at `app/index.html`
+- new work must stay inside the target boundaries
 
 ## Vertical Slice Intent
 

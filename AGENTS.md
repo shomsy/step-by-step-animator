@@ -65,6 +65,17 @@ Backlog rules:
 - only `.agents/evidence/TODO.md` is the active TODO list; planning archive files are historical only
 - if `.agents/evidence/TODO.md` has no active work, it should say `No active items.`
 
+### Legacy Removal Governance
+
+When something is confirmed legacy and no longer part of the live contract, delete it from the repo surface instead of keeping a parallel compatibility layer.
+
+Rules:
+
+- delete legacy files and folders physically when they are no longer required by the live app
+- remove their active references from README, AGENTS, and architecture docs in the same work item
+- keep closed migration history only in `.agents/evidence/CHANGELOG.md`
+- do not leave a legacy surface in the product tree
+
 ## 1.4 Mandatory Work Flow
 
 Every substantial work item must flow through these three layers in order:
@@ -111,8 +122,6 @@ Document authority rules:
 ### 2.1 Architecture Shape
 
 The repo follows business-first screaming architecture.
-
-This repo is now past the active big-bang migration window and into locked source-only governance. New work must follow the target boundaries even while the legacy tree still exists.
 The completed migration governance record lives in `.agents/architecture/migration-governance.md`.
 
 Repo-level shape must stay in sync with `.agents/architecture/architecture-standard.md`, and repo-specific rules are documented in `.agents/architecture/ARCHITECTURE.md`.
@@ -169,11 +178,6 @@ generated/
   validation-reports/
 ```
 
-Frozen legacy archive, do not extend:
-
-- `animator/`
-- `lessons/`
-
 Current live lesson set is registered in `lesson-engine/register-lesson-packages/index.js`.
 
 ### 2.2 Lesson Contract
@@ -185,26 +189,22 @@ That means:
 - source lives under `education/lessons/<lesson-slug>/source/`
 - the author writes `lesson.md`, `scenes.md`, optional `theory.md`, `artifacts/`, and `assets/`
 - `lesson-engine/` owns parsing, validation, normalization, projection, compilation and generated docs
-- the legacy `feature-name.lesson.js` lesson slice shape is archive-only for already migrated lessons
 - do not introduce new `lesson.js`, `describe-steps.js`, or per-lesson `build-*` files for source-only lessons
-- if a lesson is not yet migrated, treat the legacy slice as read-only and add a source-only pilot instead of extending the old shape
+- all lessons are source-only; do not reintroduce the old per-lesson build-glue shape
 
 ### 2.3 Lesson Documents
 
 The exact source-only authoring contract is documented in `.agents/authoring/LESSON_AUTHORING.md`.
-
-The legacy `content/documents/files/` shape is archive-only and is not the shape to extend for new work.
 
 ### 2.4 Runtime and Entry Rules
 
 - no `src/` folder
 - `app/index.html` is the canonical lesson shell and Vite root entry
 - `app/main.js` is the canonical app entry
-- the live app surface does not use root compatibility aliases
+- the live app surface is rooted at `app/index.html`
 - build goes through Vite
 - `animator-engine/` is the runtime boundary used by the app entrypoint
 - `lesson-engine/` owns source translation for source-only lessons
-- `animator/` and `lessons/` are frozen legacy archive trees and are not the live contract
 - the current pilot lesson is compiled from `education/lessons/02-build-top-navigation/source/`
 
 ### 2.5 Naming Rules
@@ -269,8 +269,6 @@ In `education/lessons/` this applies to the shipped learning path:
 - `07-more-separation-of-code`
 - `08-smell-of-enterprise`
 
-The frozen legacy `lessons/` archive keeps historical numbering only as reference.
-
 In player runtime this applies to main lesson journey:
 
 - `01-start-lesson`
@@ -316,7 +314,7 @@ These rules apply to all lessons, without exception:
 After every significant change, обязательно запустите:
 
 ```bash
-find animator lessons app lesson-engine animator-engine -name '*.js' -print0 | xargs -0 -n1 node --check && node --check app/main.js
+find app education lesson-engine animator-engine tests scripts -name '*.js' -print0 | xargs -0 -n1 node --check && node --check app/main.js
 npm run validate:lessons
 npm run sync:lesson-documents
 npm run build
@@ -446,5 +444,5 @@ For a new lesson:
 8. register the compiled package through the registry adapter, not through a new per-lesson build file
 
 Do not add new `lesson.js`, `describe-steps.js`, or per-lesson `build-*` files for new source-only lessons.
-Do not copy player runtime from `animator/play-lesson/`.
+Do not copy player runtime code into lesson source folders.
 New lesson should only add its source contract and its content.
