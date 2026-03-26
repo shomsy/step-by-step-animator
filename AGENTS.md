@@ -42,7 +42,16 @@ This repo has three levels of documents:
 - `.agents/architecture/ARCHITECTURE.md` is the repo-specific application of that baseline.
 - `AGENTS.md` is the operational contract for work, delivery and collaboration in this repo.
 
-Rules:
+## 1.2 Evidence Ledger
+
+`.agents/evidence/CHANGELOG.md` is the single running evidence ledger for features, bugs, TODOs, plans, and major decisions.
+
+Evidence ledger rules:
+
+- if the state of a feature, bug, TODO, or plan changes, update the ledger in the same work item
+- keep detailed docs in their owning folders; the ledger only tracks current state and links to the detail when useful
+
+Document authority rules:
 
 - if we change structure, naming or responsibility boundaries, we change the owning document in the same work item
 - no silent exceptions
@@ -54,8 +63,8 @@ Rules:
 
 The repo follows business-first screaming architecture.
 
-This repo is currently in a big-bang migration window toward the source-only lesson-engine model. New work must follow the target boundaries even while the legacy tree still exists.
-The execution order for that migration is defined in `.agents/architecture/big-bang-refactor-plan.md`.
+This repo is now past the active big-bang migration window and into locked source-only governance. New work must follow the target boundaries even while the legacy tree still exists.
+The completed migration governance record lives in `.agents/architecture/migration-governance.md`.
 
 Repo-level shape must stay in sync with `.agents/architecture/architecture-standard.md`, and repo-specific rules are documented in `.agents/architecture/ARCHITECTURE.md`.
 
@@ -276,10 +285,11 @@ At the end of every iteration, mandatory final discipline from the repo root is 
 This means:
 
 1. if the change touched architecture or naming, sync relevant documents
-2. run `./merge-files.sh .` from repo root
-3. do `git add -A`
-4. make a normal `git commit`
-5. do `git push`
+2. update `.agents/evidence/CHANGELOG.md` if the work changed feature, bug, TODO, or plan state
+3. run `./merge-files.sh .` from repo root
+4. do `git add -A`
+5. make a normal `git commit`
+6. do `git push`
 
 Do not finish an implementation pass without this closing, unless the user explicitly asks not to commit or push.
 

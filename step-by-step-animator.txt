@@ -1155,56 +1155,6 @@ It needs to be so clear that a person can open the repo and immediately know:
 
 That's the whole standard.
 
-=== .agents/architecture/big-bang-refactor-plan.md ===
-# Big Bang Refactor Plan
-
-This file is the execution plan for the source-only lesson-engine migration.
-
-The goal is to move from the current legacy `lessons/` + `animator/` shape to the target `education/` + `lesson-engine/` + `animator-engine/` + `app/` + `foundation/` + `generated/` shape without mixing the two models.
-
-## Phase 0: Freeze The Contracts
-
-- lock `lesson.md`, `theory.md`, `scenes.md`, and `artifacts/` as the only source authoring contract
-- keep legacy `lessons/` and `animator/` readable, but do not expand them
-- align `AGENTS.md`, `.agents/architecture/ARCHITECTURE.md`, `.agents/architecture/lesson-architecture.md`, and `.agents/authoring/LESSON_AUTHORING.md`
-- do not introduce new lesson-specific glue in the legacy source tree
-
-## Phase 1: Pilot One Lesson
-
-- choose one lesson slice as the migration pilot
-- create the `education/lessons/<lesson-slug>/source/` layout
-- author `lesson.md`, `theory.md`, `scenes.md`, and `artifacts/`
-- make the lesson engine compile that lesson into a canonical lesson package
-- keep the animator consuming only the compiled package
-
-## Phase 2: Separate Compiler From Runtime
-
-- move translation logic into `lesson-engine/`
-- keep runtime playback in `animator-engine/`
-- remove raw lesson-source parsing from runtime entry points
-- introduce `foundation/` for shared primitives only when they are truly shared
-
-## Phase 3: Migrate The Remaining Lesson Slices
-
-- move each lesson slice using the same source-only contract
-- keep lesson authoring deterministic and boring
-- do not invent a second authoring style mid-migration
-- keep the same step and scene semantics across all lessons
-
-## Phase 4: Retire Legacy Glue
-
-- retire per-lesson build files from the source-only lesson tree
-- retire old document-generation paths that duplicate the compiler
-- delete migration-only adapters once they are no longer needed
-
-## Exit Criteria
-
-- lessons are authored source-only
-- the compiler owns translation
-- the runtime consumes only compiled lesson packages
-- the app shell is separate from lesson logic
-- the tree reads as one obvious story from flow to function
-
 === .agents/architecture/lesson-architecture-flow.md ===
 # Lesson Architecture Flow
 
@@ -1725,9 +1675,9 @@ It should provide:
 Generated docs are read-only outputs.
 Manual edits are not part of the contract.
 
-### 0.11 Migration Plan Reference
+### 0.11 Migration Governance Reference
 
-The detailed execution plan lives in `.agents/architecture/big-bang-refactor-plan.md`.
+The completed migration governance record lives in `.agents/architecture/migration-governance.md`.
 This document keeps the architectural spec and the canonical source contract.
 
 ### 0.12 Definition of Done
@@ -2540,6 +2490,59 @@ For current lesson architecture details, see:
 - `lessons/lesson-architecture.md`
 - `animator/agents.md`
 
+=== .agents/architecture/migration-governance.md ===
+# Migration Governance Record
+
+Status: completed.
+
+This document records the completed migration from the legacy `lessons/` + `animator/` shape to the source-only `education/` + `lesson-engine/` + `animator-engine/` + `app/` + `foundation/` + `generated/` shape.
+
+It is not an active plan.
+It is a historical governance record and a reference for the rules that remain in force after the migration.
+
+## Completed Checkpoints
+
+### Freeze The Contracts
+
+- locked `lesson.md`, `theory.md`, `scenes.md`, and `artifacts/` as the source-only authoring contract
+- kept legacy `lessons/` and `animator/` readable, but stopped extending them
+- aligned the owning documents that define architecture, authoring, and work discipline
+
+### Pilot One Lesson
+
+- created the source-only pilot lesson layout under `education/lessons/<lesson-slug>/source/`
+- authored lesson metadata, theory, scenes, and artifacts in the new contract
+- made the lesson engine compile the pilot into a canonical lesson package
+
+### Separate Compiler From Runtime
+
+- moved translation logic into `lesson-engine/`
+- kept runtime playback in `animator-engine/`
+- removed raw lesson-source parsing from runtime entry points
+- introduced `foundation/` for shared primitives where they are actually shared
+
+### Migrate The Remaining Lesson Slices
+
+- moved each lesson slice using the same source-only contract
+- kept lesson authoring deterministic and boring
+- avoided a second authoring style during migration
+- kept the same step and scene semantics across lessons
+
+### Retire Legacy Glue
+
+- retired per-lesson build files from the source-only lesson tree
+- retired old document-generation paths that duplicated the compiler
+- removed migration-only adapters once they were no longer needed
+
+## Governance That Remains In Force
+
+- lessons are authored source-only
+- the compiler owns translation
+- the runtime consumes only compiled lesson packages
+- the app shell stays separate from lesson logic
+- names must stay simple, predictable, and flow-first
+- the evidence ledger in `.agents/evidence/CHANGELOG.md` is the active running log for follow-up state
+
 === .agents/authoring/LESSON_AUTHORING.md ===
 # Lesson Authoring
 
@@ -3086,29 +3089,39 @@ Before keeping a scene, check:
 
 If the answer is not `yes`, the scene should be broken or moved.
 
+=== .agents/evidence/CHANGELOG.md ===
+# Evidence Log
+
+This is the single running list for feature work, bugs, TODOs, plans, decisions, and follow-up items.
+
+Update rules:
+
+- keep newest items at the top
+- use one line per item
+- keep each item short and concrete
+- link to the owning doc or code when useful
+- if a status changes, update this file in the same work item
+
+## Current Ledger
+
+1. `[feature][done] 2026-03-26 - Source-only lesson authoring contract locked` - `.agents/authoring/LESSON_AUTHORING.md`, `.agents/architecture/lesson-architecture.md`, `AGENTS.md`
+2. `[feature][done] 2026-03-26 - Lesson engine compiler boundary introduced` - `lesson-engine/compile-lesson-package.js`, `lesson-engine/read-scenes-contract.js`, `animator-engine/play-lesson/listen-to-step/compose-step-narration-text.js`
+3. `[feature][done] 2026-03-26 - Lesson source validation command added` - `lesson-engine/validate-source-lessons.js`, `package.json`, `AGENTS.md`
+4. `[governance][done] 2026-03-26 - Source-only migration governance completed` - `.agents/architecture/migration-governance.md`
+5. `[decision][done] 2026-03-26 - Merge dump kept as portable working backup` - `merge-files.sh`, `step-by-step-animator.txt`
+6. `[todo][stale] 2026-03-26 - Legacy TODO.md still reflects old Lesson 07/08 recovery notes` - `.agents/planning/TODO.md`
+7. `[bug][done] 2026-03-26 - bugs.md has no open items` - `.agents/review/bugs.md`
+8. `[perf][follow-up] 2026-03-26 - Vite still warns about a large main chunk` - `npm run build`
+
 === .agents/planning/TODO.md ===
-# Production Code Review: Lessons 07-08
-Status: 🔄 In Progress
+# TODO
 
-## Lesson 07: ui-user-avatar (60% - Content Broken)
-
-✅ lesson.js - Complete 6-step dashboard avatar widget
-❌ content/documents/files/*.md - TRUNCATED/BROKEN
-❌ describe-steps.js - my-first-component selectors
-❌ 07_more_separation_of_code.md - Generic title
-
-## Lesson 08: ui-pricing-card (0% - Untouched)
-
-## CRITICAL FIXES NEEDED:
-
-1. **Lesson 07 Content Recovery**
-```
-content/documents/files/
-├── css.rules.md - ui-user-avatar host tokens
-├── html.timeline.md
+This file is archived. Active tracking lives in `.agents/evidence/CHANGELOG.md`.
 
 === .agents/review/bugs.md ===
+# Bugs
 
+This file is archived. Active bug evidence lives in `.agents/evidence/CHANGELOG.md`.
 
 === .gitignore ===
 node_modules/
@@ -3117,7 +3130,6 @@ dist/
 .DS_Store
 .idea/
 .aider*
-/.agents/
 /agents.md
 
 === .vscode/tasks.json ===
@@ -3179,7 +3191,16 @@ This repo has three levels of documents:
 - `.agents/architecture/ARCHITECTURE.md` is the repo-specific application of that baseline.
 - `AGENTS.md` is the operational contract for work, delivery and collaboration in this repo.
 
-Rules:
+## 1.2 Evidence Ledger
+
+`.agents/evidence/CHANGELOG.md` is the single running evidence ledger for features, bugs, TODOs, plans, and major decisions.
+
+Evidence ledger rules:
+
+- if the state of a feature, bug, TODO, or plan changes, update the ledger in the same work item
+- keep detailed docs in their owning folders; the ledger only tracks current state and links to the detail when useful
+
+Document authority rules:
 
 - if we change structure, naming or responsibility boundaries, we change the owning document in the same work item
 - no silent exceptions
@@ -3191,8 +3212,8 @@ Rules:
 
 The repo follows business-first screaming architecture.
 
-This repo is currently in a big-bang migration window toward the source-only lesson-engine model. New work must follow the target boundaries even while the legacy tree still exists.
-The execution order for that migration is defined in `.agents/architecture/big-bang-refactor-plan.md`.
+This repo is now past the active big-bang migration window and into locked source-only governance. New work must follow the target boundaries even while the legacy tree still exists.
+The completed migration governance record lives in `.agents/architecture/migration-governance.md`.
 
 Repo-level shape must stay in sync with `.agents/architecture/architecture-standard.md`, and repo-specific rules are documented in `.agents/architecture/ARCHITECTURE.md`.
 
@@ -3413,10 +3434,11 @@ At the end of every iteration, mandatory final discipline from the repo root is 
 This means:
 
 1. if the change touched architecture or naming, sync relevant documents
-2. run `./merge-files.sh .` from repo root
-3. do `git add -A`
-4. make a normal `git commit`
-5. do `git push`
+2. update `.agents/evidence/CHANGELOG.md` if the work changed feature, bug, TODO, or plan state
+3. run `./merge-files.sh .` from repo root
+4. do `git add -A`
+5. make a normal `git commit`
+6. do `git push`
 
 Do not finish an implementation pass without this closing, unless the user explicitly asks not to commit or push.
 

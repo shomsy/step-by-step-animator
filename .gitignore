@@ -4,5 +4,4 @@ dist/
 .DS_Store
 .idea/
 .aider*
-/.agents/
 /agents.md
