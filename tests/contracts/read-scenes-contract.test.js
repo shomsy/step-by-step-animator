@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { readScenesContract } from '../../lesson-engine/read-scenes-contract.js';
+import { readScenesContract } from '../../system/lesson-engine/read-scenes-contract.js';
 import { createSourceOnlyLessonFixture } from '../fixtures/source-only-lesson-fixture.js';
 
 test('readScenesContract parses the canonical storyboard DSL', () => {

@@ -10,7 +10,7 @@ const currentDir = path.dirname(fileURLToPath(import.meta.url));
 const repoRoot = path.resolve(currentDir, '../../');
 
 test('validate-source-lessons passes on the shipped source-only lessons', async () => {
-  const { stdout } = await execFileAsync('node', ['lesson-engine/validate-source-lessons.js'], {
+  const { stdout } = await execFileAsync('node', ['system/lesson-engine/validate-source-lessons.js'], {
     cwd: repoRoot,
     maxBuffer: 1024 * 1024
   });

@@ -1,10 +1,10 @@
-import { parseFrontmatter } from './parse-frontmatter.js';
-import { renderMarkdown } from './render-markdown.js';
+import { parseFrontmatter } from '../foundation/frontmatter/parse-frontmatter.js';
+import { renderMarkdown } from '../foundation/markdown/render-markdown.js';
 import { readScenesContract } from './read-scenes-contract.js';
-import { readTimelineBlocks } from './read-timeline-blocks.js';
-import { buildLinesFromTimelineBlocks } from './build-lines-from-timeline-blocks.js';
-import { readRuleBlocks } from './read-rule-blocks.js';
-import { buildLinesFromRuleBlocks } from './build-lines-from-rule-blocks.js';
+import { readTimelineBlocks } from '../foundation/markdown/read-timeline-blocks.js';
+import { buildLinesFromTimelineBlocks } from '../foundation/markdown/build-lines-from-timeline-blocks.js';
+import { readRuleBlocks } from '../foundation/markdown/read-rule-blocks.js';
+import { buildLinesFromRuleBlocks } from '../foundation/markdown/build-lines-from-rule-blocks.js';
 
 function normalizeString(value) {
   return typeof value === 'string' ? value.trim() : '';

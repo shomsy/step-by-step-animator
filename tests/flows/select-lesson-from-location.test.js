@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { selectLessonFromLocation } from '../../animator-engine/choose-lesson/select-lesson-from-location.js';
+import { selectLessonFromLocation } from '../../system/animator-engine/choose-lesson/select-lesson-from-location.js';
 
 test('selectLessonFromLocation picks an explicit lesson when the query is present', async () => {
   const lessonDescriptors = [

@@ -55,8 +55,8 @@ flowchart LR
 ## What Each Layer Owns
 
 - `education/` writes source content only.
-- `lesson-engine/` validates, normalizes, projects, compiles, and generates documentation.
-- `foundation/` provides shared primitives for reading, parsing, logging, validation, and persistence.
+- `system/lesson-engine/` validates, normalizes, projects, compiles, and writes documentation to `system/lesson-engine/output/`.
+- `system/foundation/` provides shared frontmatter and markdown primitives.
 - `animator-engine/` replays the compiled lesson package.
 - `app/` mounts the runtime and presents the final product shell.
 
@@ -65,7 +65,7 @@ flowchart LR
 - Source files are not runtime state.
 - Education is source-only.
 - The compiler owns per-lesson translation logic.
-- Generated docs are derived, not hand-edited.
+- Generated docs are derived, not hand-edited, and live under `system/lesson-engine/output/`.
 - Validation happens before compilation.
 - The compiled lesson package is the only truth the animator needs.
 - The runtime never reparses raw markdown to decide lesson meaning.

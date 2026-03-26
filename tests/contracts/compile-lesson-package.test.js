@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { compileLessonPackage } from '../../lesson-engine/compile-lesson-package.js';
+import { compileLessonPackage } from '../../system/lesson-engine/compile-lesson-package.js';
 import { createSourceOnlyLessonFixture } from '../fixtures/source-only-lesson-fixture.js';
 
 test('compileLessonPackage compiles the canonical source-only lesson package', () => {

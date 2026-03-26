@@ -10,8 +10,8 @@
     "test:contracts": "node --test tests/contracts/*.test.js",
     "test:flows": "node --test tests/flows/*.test.js",
     "test:smoke": "node --test tests/smoke/*.test.js",
-    "validate:lessons": "node lesson-engine/validate-source-lessons.js",
-    "sync:lesson-documents": "node lesson-engine/documentation/sync-lesson-documents.js"
+    "validate:lessons": "node system/lesson-engine/validate-source-lessons.js",
+    "sync:lesson-documents": "node system/lesson-engine/documentation/sync-lesson-documents.js"
   },
   "devDependencies": {
     "vite": "^8.0.1"

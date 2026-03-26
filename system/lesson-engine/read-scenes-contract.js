@@ -1,5 +1,5 @@
 import YAML from 'yaml';
-import { parseFrontmatter } from './parse-frontmatter.js';
+import { parseFrontmatter } from '../foundation/frontmatter/parse-frontmatter.js';
 
 function normalizeString(value) {
   return typeof value === 'string' ? value.trim() : '';

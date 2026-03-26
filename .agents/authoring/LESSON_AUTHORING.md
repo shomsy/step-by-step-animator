@@ -43,7 +43,8 @@ Rules:
 
 - `product/education/` is source only
 - no per-lesson build glue lives in `product/education/`
-- `lesson-engine/` owns translation, validation, parsing, normalization, projection, and compilation
+- `system/lesson-engine/` owns translation, validation, parsing, normalization, projection, and compilation
+- `system/foundation/` owns shared frontmatter and markdown primitives
 - `source/` is the only place where the lesson author writes material
 - `assets/` stays beside the source and holds reference images or other authoring assets
 
@@ -508,7 +509,7 @@ Lesson goal:
 - Final result should look like [short description]
 
 Repo contract:
-- root split is `product/`, `lesson-engine/`, `system/`, and `generated/`
+- root split is `product/` and `system/`
 - add new lesson under `product/education/lessons/[feature-name]/source/`
 - make:
   - `lesson.md`

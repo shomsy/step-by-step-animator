@@ -1,12 +1,12 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { parseFrontmatter } from '../parse-frontmatter.js';
+import { parseFrontmatter } from '../../foundation/frontmatter/parse-frontmatter.js';
 import { readScenesContract } from '../read-scenes-contract.js';
 
 const currentDir = path.dirname(fileURLToPath(import.meta.url));
-const educationLessonsRoot = path.resolve(currentDir, '../../product/education/lessons');
-const generatedDocumentsRoot = path.resolve(currentDir, '../../generated/lesson-documents');
+const educationLessonsRoot = path.resolve(currentDir, '../../../product/education/lessons');
+const lessonDocumentsOutputRoot = path.resolve(currentDir, '../output');
 
 function ensureDir(directoryPath) {
   fs.mkdirSync(directoryPath, { recursive: true });
@@ -88,7 +88,7 @@ function writeLessonDocument(sourceFolder) {
   const lessonMarkdown = readText(path.join(sourceFolder, 'lesson.md'));
   const scenesMarkdown = readText(path.join(sourceFolder, 'scenes.md'));
   const outputFileName = `${lessonFolder}.md`;
-  const outputFilePath = path.join(generatedDocumentsRoot, outputFileName);
+  const outputFilePath = path.join(lessonDocumentsOutputRoot, outputFileName);
 
   fs.writeFileSync(
     outputFilePath,
@@ -103,14 +103,14 @@ function writeLessonDocument(sourceFolder) {
   return outputFileName;
 }
 
-ensureDir(generatedDocumentsRoot);
+ensureDir(lessonDocumentsOutputRoot);
 
 const currentFileNames = new Set(
   collectSourceLessonFolders().map(writeLessonDocument)
 );
 
-removeObsoleteGeneratedFiles(generatedDocumentsRoot, currentFileNames);
+removeObsoleteGeneratedFiles(lessonDocumentsOutputRoot, currentFileNames);
 
 currentFileNames.forEach(fileName => {
-  console.log(`Generated: ${path.relative(process.cwd(), path.join(generatedDocumentsRoot, fileName))}`);
+  console.log(`Generated: ${path.relative(process.cwd(), path.join(lessonDocumentsOutputRoot, fileName))}`);
 });

@@ -5,3 +5,4 @@ dist/
 .idea/
 .aider*
 /agents.md
+.agents/

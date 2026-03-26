@@ -8,7 +8,7 @@ Step By Step Animator is an interactive lesson engine for HTML, CSS, and JavaScr
 - `.agents/architecture/ARCHITECTURE.md` defines the repo-specific architecture.
 - `product/app/index.html` and `product/app/main.js` are the live app entry points.
 - `product/education/lessons/02-build-top-navigation/source/lesson.md` is the current pilot lesson source.
-- `lesson-engine/register-lesson-packages/index.js` registers the live lesson set.
+- `system/lesson-engine/register-lesson-packages/index.js` registers the live lesson set.
 
 ## Repository Map
 
@@ -19,11 +19,11 @@ The live repo is organized around these boundaries:
 - `product/` is the product surface
   - `product/app/` is the canonical browser shell and Vite root
   - `product/education/` is source-only lesson authoring
-- `lesson-engine/` translates lesson source into compiled lesson data and generated documents
+- `system/lesson-engine/` translates lesson source into compiled lesson data and writes derived docs to `system/lesson-engine/output/`
 - `system/` is the runtime boundary
   - `system/animator-engine/` plays compiled lesson packages
-  - `system/foundation/` is reserved for shared low-level primitives
-- `generated/` holds derived output
+- `system/foundation/` contains shared frontmatter and markdown primitives
+- `system/lesson-engine/output/` holds derived output
 
 ### Governance And Documentation
 
@@ -76,7 +76,7 @@ flowchart TD
   AppIndex[product/app/index.html]
   AppMain[product/app/main.js]
   SelectLesson[system/animator-engine/choose-lesson/select-lesson-from-location.js]
-  Registry[lesson-engine/register-lesson-packages/index.js]
+  Registry[system/lesson-engine/register-lesson-packages/index.js]
   LessonPackage[Compiled lesson package]
   PlayPipeline[system/animator-engine/play-lesson/play-lesson.pipeline.js]
   LessonShell[Lesson shell]
@@ -91,8 +91,8 @@ flowchart TD
 Source authoring flows in the opposite direction:
 
 - `product/education/lessons/<lesson-slug>/source/`
-- `lesson-engine/`
-- generated lesson documents
+- `system/lesson-engine/`
+- `system/lesson-engine/output/`
 - `system/animator-engine/`
 - `product/app/`
 
@@ -111,7 +111,7 @@ npm run sync:lesson-documents
 - `npm run preview` serves the production build locally
 - `npm test` runs the contract, flow, and smoke tests
 - `npm run validate:lessons` validates the shipped source-only lessons
-- `npm run sync:lesson-documents` regenerates lesson documents from source
+- `npm run sync:lesson-documents` regenerates lesson documents under `system/lesson-engine/output/`
 
 ## Lesson Source
 

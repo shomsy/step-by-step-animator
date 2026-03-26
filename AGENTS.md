@@ -41,6 +41,7 @@ This repo has three levels of documents:
 - `.agents/architecture/architecture-standard.md` is the reusable architectural baseline.
 - `.agents/architecture/ARCHITECTURE.md` is the repo-specific application of that baseline.
 - `AGENTS.md` is the operational contract for work, delivery and collaboration in this repo.
+- `.agents/` stays at the repository root, is gitignored, and must not be moved or duplicated.
 
 ## 1.2 Evidence Ledger
 
@@ -149,28 +150,30 @@ product/
           scenes.md
           artifacts/
           assets/
-lesson-engine/
-  discover-education-content/
-  read-education-entry/
-  validate-education-entry/
-  parse-education-source/
-  normalize-lesson-source/
-  project-artifact-state/
-  compile-lesson-package/
-  documentation/
-  register-lesson-packages/
-  contracts/
-  adapters/
 system/
   animator-engine/
     choose-lesson/
     play-lesson/
+  lesson-engine/
+    discover-education-content/
+    read-education-entry/
+    validate-education-entry/
+    parse-education-source/
+    normalize-lesson-source/
+    project-artifact-state/
+    compile-lesson-package/
+    documentation/
+    register-lesson-packages/
+    contracts/
+    adapters/
+    output/
+      lesson-documents/
   foundation/
-generated/
-  lesson-documents/
+    frontmatter/
+    markdown/
 ```
 
-Current live lesson set is registered in `lesson-engine/register-lesson-packages/index.js`.
+Current live lesson set is registered in `system/lesson-engine/register-lesson-packages/index.js`.
 
 ### 2.2 Lesson Contract
 
@@ -180,7 +183,7 @@ That means:
 
 - source lives under `product/education/lessons/<lesson-slug>/source/`
 - the author writes `lesson.md`, `scenes.md`, optional `theory.md`, `artifacts/`, and `assets/`
-- `lesson-engine/` owns parsing, validation, normalization, projection, compilation and generated docs
+- `system/lesson-engine/` owns parsing, validation, normalization, projection, compilation and generated docs
 - do not introduce new `lesson.js`, `describe-steps.js`, or per-lesson `build-*` files for source-only lessons
 - all lessons are source-only; do not reintroduce the old per-lesson build-glue shape
 
@@ -196,7 +199,7 @@ The exact source-only authoring contract is documented in `.agents/authoring/LES
 - the live app surface is rooted at `product/app/index.html`
 - build goes through Vite
 - `system/animator-engine/` is the runtime boundary used by the app entrypoint
-- `lesson-engine/` owns source translation for source-only lessons
+- `system/lesson-engine/` owns source translation for source-only lessons
 - the current pilot lesson is compiled from `product/education/lessons/02-build-top-navigation/source/`
 
 ### 2.5 Naming Rules
@@ -306,7 +309,7 @@ These rules apply to all lessons, without exception:
 After every significant change, обязательно запустите:
 
 ```bash
-find product system lesson-engine tests scripts -name '*.js' -print0 | xargs -0 -n1 node --check && node --check product/app/main.js
+find product system tests scripts -name '*.js' -print0 | xargs -0 -n1 node --check && node --check product/app/main.js
 npm run validate:lessons
 npm run sync:lesson-documents
 npm run build
@@ -393,7 +396,7 @@ Right panel:
 
 - goal image showing what we're building
 - homework notes for variants we don't implement yet
-- the current pilot version is compiled from `product/education/lessons/02-build-top-navigation/source/` through `lesson-engine/`
+- the current pilot version is compiled from `product/education/lessons/02-build-top-navigation/source/` through `system/lesson-engine/`
 
 For it, special teaching rules still apply:
 
@@ -432,7 +435,7 @@ For a new lesson:
 4. add optional `theory.md` only if the lesson actually needs theory prose
 5. add `artifacts/` with the source artifacts declared in `lesson.md`
 6. add `assets/` if the lesson uses reference images or other authoring assets
-7. compile the lesson through `lesson-engine/`
+7. compile the lesson through `system/lesson-engine/`
 8. register the compiled package through the registry adapter, not through a new per-lesson build file
 
 Do not add new `lesson.js`, `describe-steps.js`, or per-lesson `build-*` files for new source-only lessons.

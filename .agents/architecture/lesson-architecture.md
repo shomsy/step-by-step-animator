@@ -7,7 +7,7 @@ It is written as a production plan, not as a loose idea list.
 Target boundaries:
 
 - `product/education/` writes source content
-- `lesson-engine/` compiles source content into a canonical lesson package
+- `system/lesson-engine/` compiles source content into a canonical lesson package
 - `system/animator-engine/` replays the compiled package frame by frame
 - `product/app/` presents the product shell from the canonical `product/app/index.html` entry
 
@@ -32,7 +32,7 @@ The lesson engine must take human-authored source files, validate them, normaliz
 ### 0.1 Target System Boundaries
 
 - `product/education/` holds authoring source
-- `lesson-engine/` compiles source into canonical lesson packages
+- `system/lesson-engine/` compiles source into canonical lesson packages
 - `system/animator-engine/` plays compiled lesson packages
 - `product/app/` renders the product shell and mounts the animator
 
@@ -65,7 +65,7 @@ The engine accepts a small, explicit authoring contract.
 
 `product/education/lessons/<lesson-slug>/source/` is source only.
 It does not contain executable lesson glue.
-All translation logic lives in `lesson-engine/`.
+All translation logic lives in `system/lesson-engine/`.
 
 Canonical source files are:
 
@@ -220,13 +220,14 @@ Avoid generic buckets such as `utils`, `helpers`, `shared`, `common`, `manager`,
 
 The target tree is locked as follows:
 
-- top-level product areas are `product/`, `lesson-engine/`, `system/`, and `generated/`
+- top-level product areas are `product/` and `system/`
 - `product/education/lessons/<lesson-slug>/source/` contains only source docs and metadata
 - no executable lesson glue lives in `product/education/`
-- `lesson-engine/` owns discovery, parsing, validation, normalization, projection, compilation, and generated documentation
+- `system/lesson-engine/` owns discovery, parsing, validation, normalization, projection, compilation, and generated documentation
+- `system/lesson-engine/output/` holds the derived lesson documents
 - `project-artifact-state` is artifact-first and expands by kind, not by UI language
 - `system/animator-engine/` consumes only compiled lesson packages
-- `system/foundation/` is the shared primitive layer for filesystem, markdown, validation, logging, storage, hashing, and frontmatter
+- `system/foundation/` is the shared primitive layer for frontmatter and markdown
 - `lesson.js`, `describe-steps.js`, and per-lesson `build-*` files do not belong in the source-only education tree
 
 Representative tree:
@@ -248,25 +249,27 @@ step-by-step-animator/
             scenes.md
             artifacts/
             assets/
-  lesson-engine/
-    discover-education-content/
-    read-education-entry/
-    validate-education-entry/
-    parse-education-source/
-    normalize-lesson-source/
-    project-artifact-state/
-    compile-lesson-package/
-    documentation/
-    register-lesson-packages/
-    contracts/
-    adapters/
   system/
     animator-engine/
       choose-lesson/
       play-lesson/
+    lesson-engine/
+      discover-education-content/
+      read-education-entry/
+      validate-education-entry/
+      parse-education-source/
+      normalize-lesson-source/
+      project-artifact-state/
+      compile-lesson-package/
+      documentation/
+      register-lesson-packages/
+      contracts/
+      adapters/
+      output/
+        lesson-documents/
     foundation/
-  generated/
-    lesson-documents/
+      frontmatter/
+      markdown/
 ```
 
 This tree is intentionally source-only on the education side and compilation-only in the engine. The compiler owns the translation logic; the animator owns playback only.
@@ -282,7 +285,7 @@ This tree is intentionally source-only on the education side and compilation-onl
 ### 0.8c Foundation Rule
 
 - shared primitives belong in `system/foundation/`
-- foundation is allowed for filesystem, markdown, frontmatter, validation, logging, storage, and hashing
+- foundation is allowed for frontmatter and markdown
 - foundation must stay small and generic
 - foundation must not become a new dumping ground
 
@@ -356,11 +359,11 @@ The remaining runtime notes are archived reference material from the pre-migrati
 ## 1. Live Contract
 
 - `product/education/` is source-only.
-- `lesson-engine/` owns discovery, validation, parsing, normalization, projection, compilation, and generated documentation.
+- `system/lesson-engine/` owns discovery, validation, parsing, normalization, projection, compilation, and generated documentation.
 - `system/animator-engine/` replays compiled lesson packages only.
 - `product/app/` mounts the runtime and presents the product shell.
 - `system/foundation/` holds shared primitives.
-- `generated/` holds derived outputs.
+- `system/lesson-engine/output/` holds derived outputs.
 
 ## 2. Source Contract
 
@@ -388,7 +391,7 @@ The source contract is authoring-only. No per-lesson build glue belongs in `prod
 
 ## 4. Engine Contract
 
-`lesson-engine/` is the content-to-lesson compiler.
+`system/lesson-engine/` is the content-to-lesson compiler.
 
 It owns:
 
@@ -423,13 +426,8 @@ It may present docs and playback UI, but it does not own source translation.
 
 `system/foundation/` is allowed for:
 
-- filesystem
-- markdown
 - frontmatter
-- validation
-- logging
-- storage
-- hashing
+- markdown
 
 Foundation must stay small and generic.
 
@@ -463,7 +461,7 @@ step-by-step-animator/
             scenes.md
             artifacts/
             assets/
-  lesson-engine/
+  system/lesson-engine/
     discover-education-content/
     read-education-entry/
     validate-education-entry/
@@ -479,14 +477,17 @@ step-by-step-animator/
     animator-engine/
       choose-lesson/
       play-lesson/
+    lesson-engine/
+      output/
+        lesson-documents/
     foundation/
-  generated/
-    lesson-documents/
+      frontmatter/
+      markdown/
 ```
 
 ## 9. Migration Rule
 
-If a feature still needs executable lesson-specific glue, that glue belongs in `lesson-engine/` during migration. It does not belong under `product/education/`.
+If a feature still needs executable lesson-specific glue, that glue belongs in `system/lesson-engine/` during migration. It does not belong under `product/education/`.
 
 ## 10. Archived Runtime Notes
 

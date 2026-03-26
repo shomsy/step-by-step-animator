@@ -2,7 +2,7 @@
 
 Status: completed.
 
-This document records the completed migration from the legacy `lessons/` + `animator/` shape to the source-only `product/education/` + `lesson-engine/` + `system/animator-engine/` + `product/app/` + `system/foundation/` + `generated/` shape.
+This document records the completed migration from the legacy `lessons/` + `animator/` shape to the source-only `product/education/` + `system/lesson-engine/` + `system/animator-engine/` + `product/app/` + `system/foundation/` + `system/lesson-engine/output/` shape.
 
 It is not an active plan.
 It is a historical governance record and a reference for the rules that remain in force after the migration.
@@ -23,10 +23,10 @@ It is a historical governance record and a reference for the rules that remain i
 
 ### Separate Compiler From Runtime
 
-- moved translation logic into `lesson-engine/`
+- moved translation logic into `system/lesson-engine/`
 - kept runtime playback in `system/animator-engine/`
 - removed raw lesson-source parsing from runtime entry points
-- introduced `system/foundation/` for shared primitives where they are actually shared
+- introduced `system/foundation/` for frontmatter and markdown primitives where they are actually shared
 
 ### Migrate The Remaining Lesson Slices
 

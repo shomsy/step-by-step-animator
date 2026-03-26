@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { composeStepNarrationText } from '../../animator-engine/play-lesson/listen-to-step/compose-step-narration-text.js';
+import { composeStepNarrationText } from '../../system/animator-engine/play-lesson/listen-to-step/compose-step-narration-text.js';
 
 test('composeStepNarrationText prefers scene narration and appends the pro tip', () => {
   const text = composeStepNarrationText({

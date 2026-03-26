@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { registeredLessons, findLesson, getDefaultLessonId } from '../../lesson-engine/register-lesson-packages/index.js';
+import { registeredLessons, findLesson, getDefaultLessonId } from '../../system/lesson-engine/register-lesson-packages/index.js';
 
 test('lesson registry exposes lazy lesson descriptors', () => {
   assert.ok(Array.isArray(registeredLessons));

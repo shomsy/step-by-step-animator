@@ -1,11 +1,11 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { parseFrontmatter } from './parse-frontmatter.js';
+import { parseFrontmatter } from '../foundation/frontmatter/parse-frontmatter.js';
 import { compileLessonPackage } from './compile-lesson-package.js';
 
 const currentDir = path.dirname(fileURLToPath(import.meta.url));
-const lessonsRoot = path.resolve(currentDir, '../product/education/lessons');
+const lessonsRoot = path.resolve(currentDir, '../../product/education/lessons');
 
 function readText(filePath) {
   return fs.readFileSync(filePath, 'utf8');

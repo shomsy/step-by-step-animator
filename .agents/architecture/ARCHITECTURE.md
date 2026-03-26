@@ -14,7 +14,7 @@ If a repo-specific exception is needed, it must be documented here and it must n
 
 This repo follows the live canonical boundaries in the current product/system split.
 
-- `product/`, `system/`, `lesson-engine/`, and `generated/` are the live boundaries
+- `product/`, `system/`, `system/lesson-engine/`, and `system/lesson-engine/output/` are the live boundaries
 - the live app surface is rooted at `product/app/index.html`
 - new work must stay inside the target boundaries
 
@@ -36,8 +36,8 @@ The live repo is organized into these canonical areas:
 
 - `product/` for the host shell and source-only lesson authoring
 - `system/` for compiled lesson playback and shared primitives
-- `lesson-engine/` for translation, validation, normalization, projection and compilation
-- `generated/` for derived outputs
+- `system/lesson-engine/` for translation, validation, normalization, projection and compilation
+- `system/lesson-engine/output/` for derived outputs
 
 Read the tree in this order:
 
@@ -48,7 +48,7 @@ Read the tree in this order:
 
 Representative example:
 
-This block is illustrative, not exhaustive. The live lesson set is registered in `lesson-engine/register-lesson-packages/index.js`.
+This block is illustrative, not exhaustive. The live lesson set is registered in `system/lesson-engine/register-lesson-packages/index.js`.
 
 ```txt
 step-by-step-animator/
@@ -66,25 +66,27 @@ step-by-step-animator/
             scenes.md
             artifacts/
             assets/
-  lesson-engine/
-    discover-education-content/
-    read-education-entry/
-    validate-education-entry/
-    parse-education-source/
-    normalize-lesson-source/
-    project-artifact-state/
-    compile-lesson-package/
-    documentation/
-    register-lesson-packages/
-    contracts/
-    adapters/
   system/
     animator-engine/
       choose-lesson/
       play-lesson/
+    lesson-engine/
+      discover-education-content/
+      read-education-entry/
+      validate-education-entry/
+      parse-education-source/
+      normalize-lesson-source/
+      project-artifact-state/
+      compile-lesson-package/
+      documentation/
+      register-lesson-packages/
+      contracts/
+      adapters/
+      output/
+        lesson-documents/
     foundation/
-  generated/
-    lesson-documents/
+      frontmatter/
+      markdown/
 ```
 
 ## Naming Rules
@@ -98,7 +100,7 @@ Good:
 ```txt
 system/animator-engine/
 product/education/lessons/<lesson-slug>/source/
-lesson-engine/register-lesson-packages/
+system/lesson-engine/register-lesson-packages/
 review-progress/
 ```
 
@@ -175,7 +177,7 @@ Each feature slice must have one root owner that makes the whole slice obvious.
 
 If none of the named patterns is the clearest answer, use the smallest construct that can still own the whole feature slice.
 
-The same rule applies to runtime slices under `system/animator-engine/`, source-only lesson slices under `product/education/lessons/`, and compiler slices under `lesson-engine/`.
+The same rule applies to runtime slices under `system/animator-engine/`, source-only lesson slices under `product/education/lessons/`, and compiler slices under `system/lesson-engine/`.
 
 ### 4. Every other file owns one clear responsibility
 
