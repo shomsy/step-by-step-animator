@@ -3107,21 +3107,23 @@ Update rules:
 
 ## Current Ledger
 
-1. `[governance][done] 2026-03-26 02:11 - Review and test gate locked before git/push` - `AGENTS.md`, `.agents/planning/PLAN.md`
-2. `[plan][done] 2026-03-26 02:15 - Test harness and contract coverage completed` - `.agents/planning/PLAN.md`, `.agents/evidence/TODO.md`, `tests/contracts`, `tests/flows`, `tests/smoke`
-3. `[todo][done] 2026-03-26 02:15 - Add node:test harness completed` - `package.json`, `tests/contracts`, `tests/flows`, `tests/smoke`
-4. `[todo][done] 2026-03-26 02:15 - Cover lesson compiler contracts completed` - `lesson-engine/compile-lesson-package.js`, `tests/contracts`
-5. `[todo][done] 2026-03-26 02:15 - Cover runtime seams completed` - `animator-engine/choose-lesson/select-lesson-from-location.js`, `tests/flows`
-6. `[todo][done] 2026-03-26 01:58 - Active TODO emptied after closing current items` - `.agents/evidence/TODO.md`, `.agents/evidence/CHANGELOG.md`
-7. `[perf][done] 2026-03-26 01:58 - Split the large Vite main chunk` - `app/main.js`, `animator-engine/choose-lesson/select-lesson-from-location.js`, `lesson-engine/register-lesson-packages/index.js`
-8. `[governance][done] 2026-03-26 01:58 - Legacy archive docs banner sweep completed` - `animator/agents.md`, `lessons/lesson-architecture.md`
-9. `[feature][done] 2026-03-26 - App shell moved under app/ with root compatibility aliases` - `app/index.html`, `app/main.js`, `index.html`, `main.js`, `vite.config.js`, `sidebar-step-by-step.html`
-10. `[feature][done] 2026-03-26 - Source-only lesson authoring contract locked` - `.agents/authoring/LESSON_AUTHORING.md`, `.agents/architecture/lesson-architecture.md`, `AGENTS.md`
-11. `[feature][done] 2026-03-26 - Lesson engine compiler boundary introduced` - `lesson-engine/compile-lesson-package.js`, `lesson-engine/read-scenes-contract.js`, `animator-engine/play-lesson/listen-to-step/compose-step-narration-text.js`
-12. `[feature][done] 2026-03-26 - Lesson source validation command added` - `lesson-engine/validate-source-lessons.js`, `package.json`, `AGENTS.md`
-13. `[governance][done] 2026-03-26 - Source-only migration governance completed` - `.agents/architecture/migration-governance.md`
-14. `[decision][done] 2026-03-26 - Merge dump kept as portable working backup` - `merge-files.sh`, `step-by-step-animator.txt`
-15. `[governance][done] 2026-03-26 01:47 - Mandatory work flow locked as plan -> todo -> evidence` - `AGENTS.md`, `.agents/planning/PLAN.md`, `.agents/evidence/TODO.md`, `.agents/evidence/CHANGELOG.md`
+1. `[plan][done] 2026-03-26 02:22 - Root README and run instructions completed` - `README.md`, `.agents/planning/PLAN.md`, `.agents/evidence/TODO.md`
+2. `[todo][done] 2026-03-26 02:22 - Write root README completed` - `README.md`
+3. `[governance][done] 2026-03-26 02:11 - Review and test gate locked before git/push` - `AGENTS.md`, `.agents/planning/PLAN.md`
+4. `[plan][done] 2026-03-26 02:15 - Test harness and contract coverage completed` - `.agents/planning/PLAN.md`, `.agents/evidence/TODO.md`, `tests/contracts`, `tests/flows`, `tests/smoke`
+5. `[todo][done] 2026-03-26 02:15 - Add node:test harness completed` - `package.json`, `tests/contracts`, `tests/flows`, `tests/smoke`
+6. `[todo][done] 2026-03-26 02:15 - Cover lesson compiler contracts completed` - `lesson-engine/compile-lesson-package.js`, `tests/contracts`
+7. `[todo][done] 2026-03-26 02:15 - Cover runtime seams completed` - `animator-engine/choose-lesson/select-lesson-from-location.js`, `tests/flows`
+8. `[todo][done] 2026-03-26 01:58 - Active TODO emptied after closing current items` - `.agents/evidence/TODO.md`, `.agents/evidence/CHANGELOG.md`
+9. `[perf][done] 2026-03-26 01:58 - Split the large Vite main chunk` - `app/main.js`, `animator-engine/choose-lesson/select-lesson-from-location.js`, `lesson-engine/register-lesson-packages/index.js`
+10. `[governance][done] 2026-03-26 01:58 - Legacy archive docs banner sweep completed` - `animator/agents.md`, `lessons/lesson-architecture.md`
+11. `[feature][done] 2026-03-26 - App shell moved under app/ with root compatibility aliases` - `app/index.html`, `app/main.js`, `index.html`, `main.js`, `vite.config.js`, `sidebar-step-by-step.html`
+12. `[feature][done] 2026-03-26 - Source-only lesson authoring contract locked` - `.agents/authoring/LESSON_AUTHORING.md`, `.agents/architecture/lesson-architecture.md`, `AGENTS.md`
+13. `[feature][done] 2026-03-26 - Lesson engine compiler boundary introduced` - `lesson-engine/compile-lesson-package.js`, `lesson-engine/read-scenes-contract.js`, `animator-engine/play-lesson/listen-to-step/compose-step-narration-text.js`
+14. `[feature][done] 2026-03-26 - Lesson source validation command added` - `lesson-engine/validate-source-lessons.js`, `package.json`, `AGENTS.md`
+15. `[governance][done] 2026-03-26 - Source-only migration governance completed` - `.agents/architecture/migration-governance.md`
+16. `[decision][done] 2026-03-26 - Merge dump kept as portable working backup` - `merge-files.sh`, `step-by-step-animator.txt`
+17. `[governance][done] 2026-03-26 01:47 - Mandatory work flow locked as plan -> todo -> evidence` - `AGENTS.md`, `.agents/planning/PLAN.md`, `.agents/evidence/TODO.md`, `.agents/evidence/CHANGELOG.md`
 
 === .agents/evidence/TODO.md ===
 # Active TODO
@@ -3650,6 +3652,80 @@ For a new lesson:
 Do not add new `lesson.js`, `describe-steps.js`, or per-lesson `build-*` files for new source-only lessons.
 Do not copy player runtime from `animator/play-lesson/`.
 New lesson should only add its source contract and its content.
+
+=== README.md ===
+# Step By Step Animator
+
+Step By Step Animator is an interactive lesson engine for HTML, CSS, and JavaScript tutorials that feel like watching a developer work live over screen share.
+
+The repo is organized around a source-only lesson model:
+
+- `app/` is the canonical app shell and runtime entry
+- `education/` contains lesson source
+- `lesson-engine/` compiles lesson source into canonical lesson packages
+- `animator-engine/` plays compiled lesson packages
+- `foundation/` holds shared low-level primitives
+- `generated/` holds derived output
+
+## Install
+
+```bash
+npm install
+```
+
+## Run Locally
+
+Start the dev server:
+
+```bash
+npm run dev
+```
+
+Then open the app in your browser:
+
+- `http://localhost:5173/`
+- or directly `http://localhost:5173/app/index.html`
+
+The root `index.html` is a compatibility alias and redirects to the canonical app shell in `app/index.html`.
+
+## Available Commands
+
+```bash
+npm run dev
+npm run build
+npm run preview
+npm test
+npm run validate:lessons
+npm run sync:lesson-documents
+```
+
+- `npm run build` creates a production bundle with Vite
+- `npm run preview` serves the production build locally
+- `npm test` runs the contract, flow, and smoke tests
+- `npm run validate:lessons` validates the shipped source-only lessons
+- `npm run sync:lesson-documents` regenerates lesson documents from source
+
+## Lesson Source
+
+Source-only lessons live under:
+
+```txt
+education/lessons/<lesson-slug>/source/
+```
+
+Each lesson is authored through:
+
+- `lesson.md`
+- `scenes.md`
+- optional `theory.md`
+- `artifacts/`
+- `assets/`
+
+## Notes
+
+- Do not edit generated output by hand.
+- The legacy `animator/` and `lessons/` trees are frozen archives.
+- The canonical app entry is `app/main.js`.
 
 === animator-engine/choose-lesson/present-lesson-picker.js ===
 export function presentLessonPicker({
