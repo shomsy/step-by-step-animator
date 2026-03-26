@@ -14,6 +14,6 @@ Update rules:
 
 ## Current Workstreams
 
-No active workstreams right now.
+1. `[active] 2026-03-26 02:07 - Test harness and contract coverage | owner: codex | estimate: 2 sessions | acceptance: core compiler, registry, and runtime seams are covered by focused node:test suites without chasing 100% line coverage` - build a small, contract-first test harness for the lesson engine and runtime seams
 
 Closed workstreams are tracked in `.agents/evidence/CHANGELOG.md`.
