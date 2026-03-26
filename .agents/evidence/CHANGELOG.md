@@ -15,8 +15,9 @@ Update rules:
 
 ## Current Ledger
 
-1. `[plan][active] 2026-03-26 15:00 - Major Repository Reorganization (Product/System split) initiated` - `.agents/planning/PLAN.md`
-2. `[todo][active] 2026-03-26 15:00 - Major Repository Reorganization tasks added to backlog` - `.agents/evidence/TODO.md`
+1. `[docs][done] 2026-03-26 15:00 - Product/System docs and live path references realigned` - `README.md`, `AGENTS.md`, `.agents/architecture/ARCHITECTURE.md`, `.agents/architecture/lesson-architecture.md`, `.agents/authoring/LESSON_AUTHORING.md`, `.agents/architecture/migration-governance.md`, `product/app/main.js`, `system/animator-engine/choose-lesson/select-lesson-from-location.js`, `lesson-engine/validate-source-lessons.js`, `lesson-engine/documentation/sync-lesson-documents.js`, `lesson-engine/register-lesson-packages/*.js`, `vite.config.js`
+2. `[plan][active] 2026-03-26 15:00 - Product/System Refactor Realignment initiated` - `.agents/planning/PLAN.md`
+3. `[todo][active] 2026-03-26 15:00 - Product/System Refactor Backlog refreshed` - `.agents/evidence/TODO.md`
 3. `[feature][done] 2026-03-26 02:44 - Remove all legacy trees completed` - `README.md`, `AGENTS.md`, `.agents/architecture/ARCHITECTURE.md`, `.agents/architecture/lesson-architecture.md`, `.agents/evidence/TODO.md`, `.agents/planning/PLAN.md`, `step-by-step-animator.txt`, `animator/`, `lessons/`
 1. `[feature][done] 2026-03-26 02:35 - Remove legacy app surface completed` - `vite.config.js`, `README.md`, `AGENTS.md`, `.agents/architecture/ARCHITECTURE.md`, `.agents/architecture/lesson-architecture.md`, `app/`, `index.html`, `main.js`, `sidebar-step-by-step.html`
 1. `[plan][done] 2026-03-26 02:26 - Expand root README folder map completed` - `README.md`, `.agents/planning/PLAN.md`, `.agents/evidence/TODO.md`

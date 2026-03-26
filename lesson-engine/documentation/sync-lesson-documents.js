@@ -5,7 +5,7 @@ import { parseFrontmatter } from '../parse-frontmatter.js';
 import { readScenesContract } from '../read-scenes-contract.js';
 
 const currentDir = path.dirname(fileURLToPath(import.meta.url));
-const educationLessonsRoot = path.resolve(currentDir, '../../education/lessons');
+const educationLessonsRoot = path.resolve(currentDir, '../../product/education/lessons');
 const generatedDocumentsRoot = path.resolve(currentDir, '../../generated/lesson-documents');
 
 function ensureDir(directoryPath) {

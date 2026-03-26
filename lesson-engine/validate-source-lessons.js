@@ -5,7 +5,7 @@ import { parseFrontmatter } from './parse-frontmatter.js';
 import { compileLessonPackage } from './compile-lesson-package.js';
 
 const currentDir = path.dirname(fileURLToPath(import.meta.url));
-const lessonsRoot = path.resolve(currentDir, '../education/lessons');
+const lessonsRoot = path.resolve(currentDir, '../product/education/lessons');
 
 function readText(filePath) {
   return fs.readFileSync(filePath, 'utf8');

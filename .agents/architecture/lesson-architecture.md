@@ -6,10 +6,10 @@ It is written as a production plan, not as a loose idea list.
 
 Target boundaries:
 
-- `education/` writes source content
+- `product/education/` writes source content
 - `lesson-engine/` compiles source content into a canonical lesson package
-- `animator-engine/` replays the compiled package frame by frame
-- `app/` presents the product shell from the canonical `app/index.html` entry
+- `system/animator-engine/` replays the compiled package frame by frame
+- `product/app/` presents the product shell from the canonical `product/app/index.html` entry
 
 The quality baseline for every implementation decision still comes from `.agents/architecture/architecture-standard.md` and `.agents/architecture/ARCHITECTURE.md`.
 
@@ -31,10 +31,10 @@ The lesson engine must take human-authored source files, validate them, normaliz
 
 ### 0.1 Target System Boundaries
 
-- `education/` holds authoring source
+- `product/education/` holds authoring source
 - `lesson-engine/` compiles source into canonical lesson packages
-- `animator-engine/` plays compiled lesson packages
-- `app/` renders the product shell and mounts the animator
+- `system/animator-engine/` plays compiled lesson packages
+- `product/app/` renders the product shell and mounts the animator
 
 ### 0.2 What the Lesson Engine Is
 
@@ -63,7 +63,7 @@ It should not guess author intent, patch broken content silently, or hide string
 
 The engine accepts a small, explicit authoring contract.
 
-`education/lessons/<lesson-slug>/source/` is source only.
+`product/education/lessons/<lesson-slug>/source/` is source only.
 It does not contain executable lesson glue.
 All translation logic lives in `lesson-engine/`.
 
@@ -220,165 +220,60 @@ Avoid generic buckets such as `utils`, `helpers`, `shared`, `common`, `manager`,
 
 The target tree is locked as follows:
 
-- top-level product areas are `app/`, `education/`, `lesson-engine/`, `animator-engine/`, `foundation/`, and `generated/`
-- `education/lessons/<lesson-slug>/source/` contains only source docs and metadata
-- no executable lesson glue lives in `education/`
+- top-level product areas are `product/`, `lesson-engine/`, `system/`, and `generated/`
+- `product/education/lessons/<lesson-slug>/source/` contains only source docs and metadata
+- no executable lesson glue lives in `product/education/`
 - `lesson-engine/` owns discovery, parsing, validation, normalization, projection, compilation, and generated documentation
 - `project-artifact-state` is artifact-first and expands by kind, not by UI language
-- `animator-engine/` consumes only compiled lesson packages
-- `foundation/` is the shared primitive layer for filesystem, markdown, validation, logging, storage, hashing, and frontmatter
+- `system/animator-engine/` consumes only compiled lesson packages
+- `system/foundation/` is the shared primitive layer for filesystem, markdown, validation, logging, storage, hashing, and frontmatter
 - `lesson.js`, `describe-steps.js`, and per-lesson `build-*` files do not belong in the source-only education tree
 
-Target tree:
+Representative tree:
 
 ```txt
 step-by-step-animator/
   AGENTS.md
-  app/
-    index.html
-    main.js
-    shell/
-      boot-shell.js
-      show-shell-layout.js
-      mount-lesson-player.js
-  education/
-    lessons/
-      <lesson-slug>/
-        source/
-          lesson.md
-          theory.md
-          scenes.md
-          artifacts/
-            html.source.html
-            css.source.css
-            js.source.js
-            template-js.source.js
-            shadow-css.source.css
-        assets/
+  README.md
+  product/
+    app/
+      index.html
+      main.js
+    education/
+      lessons/
+        <lesson-slug>/
+          source/
+            lesson.md
+            theory.md
+            scenes.md
+            artifacts/
+            assets/
   lesson-engine/
     discover-education-content/
-      discover-education-content.js
     read-education-entry/
-      read-education-entry.js
-      read-lesson-metadata.js
-      read-artifact-sources.js
     validate-education-entry/
-      validate-education-entry.js
-      validate-lesson-metadata.js
-      validate-step-contract.js
-      validate-artifact-source.js
     parse-education-source/
-      parse-lesson-source.js
-      parse-theory-source.js
-      parse-timeline-source.js
-      parse-rules-source.js
     normalize-lesson-source/
-      normalize-lesson-source.js
     project-artifact-state/
-      project-artifact-state.js
-      by-kind/
-        html.js
-        css.js
-        js.js
-        template-js.js
-        shadow-css.js
-        php.js
-        sql.js
-        yaml.js
-        readme.js
     compile-lesson-package/
-      compile-lesson-package.js
     documentation/
-      build-lines-from-rule-blocks.js
-      build-lines-from-timeline-blocks.js
-      parse-frontmatter.js
-      read-fenced-json-value.js
-      render-markdown.js
-      read-lesson-metadata.js
-      read-rule-blocks.js
-      read-timeline-blocks.js
-      sync-lesson-documents.js
     register-lesson-packages/
-      register-lesson-packages.js
     contracts/
-      lesson-package/
-      lesson-status/
-      validation-report/
     adapters/
-      markdown/
-      timeline/
-      rules/
-      artifacts/
-  animator-engine/
-    choose-lesson/
-      select-lesson-from-location.js
-      present-lesson-picker.js
-    play-lesson/
-      play-lesson.pipeline.js
-      start-lesson/
-        find-lesson-parts.js
-        create-lesson-progress.js
-        show-lesson-shell.js
-      follow-lesson/
-        listen-for-lesson-keys.js
-        show-active-lesson-panel.js
-        show-current-step.js
-        show-step-timeline.js
-      watch-code/
-        compare-code-lines.js
-        describe-css-line-role.js
-        escape-code-text.js
-        scroll-to-added-line.js
-        show-growing-code.js
-      watch-preview/
-        show-current-preview.js
-      download-lesson-files/
-        download-lesson-files.js
-      listen-to-step/
-        compose-step-narration-text.js
-        present-step-narration.js
-        read-step-narration-preferences.js
-        speak-with-browser-voice.js
-        speak-with-open-source-voice.js
-        write-step-narration-preferences.js
-      find-step/
-        present-step-finder.js
-      save-step/
-        read-saved-step-numbers.js
-        write-saved-step-numbers.js
-        show-saved-step-list.js
-        remember-saved-steps.js
-      choose-theme/
-        choose-theme.js
-      runtime/
-        create-runtime-state.js
-        present-lesson-documents.js
-        apply-preview-patches.js
-        sync-step-narration.js
-  foundation/
-    filesystem/
-    markdown/
-    frontmatter/
-    validation/
-    logging/
-    storage/
-    hashing/
+  system/
+    animator-engine/
+      choose-lesson/
+      play-lesson/
+    foundation/
   generated/
-    lesson-packages/
     lesson-documents/
-    validation-reports/
-  merge-files.sh
-  package.json
-  package-lock.json
-  vite.config.js
-  step-by-step-animator.txt
 ```
 
 This tree is intentionally source-only on the education side and compilation-only in the engine. The compiler owns the translation logic; the animator owns playback only.
 
 ### 0.8b Source-Only Education Rule
 
-- education holds author intent, not executable build glue
+- product/education holds author intent, not executable build glue
 - lesson source is written as scenario and scene content
 - source files are allowed to describe the desired code result, the flow, and the teaching story
 - source files are not allowed to contain per-lesson compiler implementation
@@ -386,7 +281,7 @@ This tree is intentionally source-only on the education side and compilation-onl
 
 ### 0.8c Foundation Rule
 
-- shared primitives belong in `foundation/`
+- shared primitives belong in `system/foundation/`
 - foundation is allowed for filesystem, markdown, frontmatter, validation, logging, storage, and hashing
 - foundation must stay small and generic
 - foundation must not become a new dumping ground
@@ -444,9 +339,9 @@ The refactor is successful when:
 - generated docs can be recreated at any time
 - the same engine can support multiple domains
 - names remain simple, predictable, and flow-first
-- education slices stay source-only and never absorb build glue
+- product/education slices stay source-only and never absorb build glue
 - `theory.md` exists wherever the lesson needs explicit narrative content
-- `foundation/` stays small, shared, and generic
+- `system/foundation/` stays small, shared, and generic
 - artifact projection supports HTML, CSS, JS, template JS, shadow CSS, PHP, SQL, YAML, README, and future kinds
 - validation catches broken content before playback
 - compiled lesson packages become the only truth animator needs
@@ -460,16 +355,16 @@ The remaining runtime notes are archived reference material from the pre-migrati
 
 ## 1. Live Contract
 
-- `education/` is source-only.
+- `product/education/` is source-only.
 - `lesson-engine/` owns discovery, validation, parsing, normalization, projection, compilation, and generated documentation.
-- `animator-engine/` replays compiled lesson packages only.
-- `app/` mounts the runtime and presents the product shell.
-- `foundation/` holds shared primitives.
+- `system/animator-engine/` replays compiled lesson packages only.
+- `product/app/` mounts the runtime and presents the product shell.
+- `system/foundation/` holds shared primitives.
 - `generated/` holds derived outputs.
 
 ## 2. Source Contract
 
-Each lesson slice lives under `education/lessons/<lesson-slug>/source/` and contains:
+Each lesson slice lives under `product/education/lessons/<lesson-slug>/source/` and contains:
 
 - `lesson.md`
 - `theory.md`
@@ -477,7 +372,7 @@ Each lesson slice lives under `education/lessons/<lesson-slug>/source/` and cont
 - `artifacts/`
 - `assets/`
 
-The source contract is authoring-only. No per-lesson build glue belongs in `education/`.
+The source contract is authoring-only. No per-lesson build glue belongs in `product/education/`.
 
 ## 3. Authoring DSL
 
@@ -519,14 +414,14 @@ Artifact projection is artifact-first. Supported kinds include:
 
 ## 5. Runtime Contract
 
-`animator-engine/` consumes only compiled lesson packages.
+`system/animator-engine/` consumes only compiled lesson packages.
 
 It does not parse raw lesson source.
 It may present docs and playback UI, but it does not own source translation.
 
 ## 6. Foundation Contract
 
-`foundation/` is allowed for:
+`system/foundation/` is allowed for:
 
 - filesystem
 - markdown
@@ -554,18 +449,20 @@ Foundation must stay small and generic.
 ```txt
 step-by-step-animator/
   AGENTS.md
-  app/
-    index.html
-    main.js
-  education/
-    lessons/
-      <lesson-slug>/
-        source/
-          lesson.md
-          theory.md
-          scenes.md
-          artifacts/
-          assets/
+  README.md
+  product/
+    app/
+      index.html
+      main.js
+    education/
+      lessons/
+        <lesson-slug>/
+          source/
+            lesson.md
+            theory.md
+            scenes.md
+            artifacts/
+            assets/
   lesson-engine/
     discover-education-content/
     read-education-entry/
@@ -578,26 +475,18 @@ step-by-step-animator/
     register-lesson-packages/
     contracts/
     adapters/
-  animator-engine/
-    choose-lesson/
-    play-lesson/
-  foundation/
-    filesystem/
-    markdown/
-    frontmatter/
-    validation/
-    logging/
-    storage/
-    hashing/
+  system/
+    animator-engine/
+      choose-lesson/
+      play-lesson/
+    foundation/
   generated/
-    lesson-packages/
     lesson-documents/
-    validation-reports/
 ```
 
 ## 9. Migration Rule
 
-If a feature still needs executable lesson-specific glue, that glue belongs in `lesson-engine/` during migration. It does not belong under `education/`.
+If a feature still needs executable lesson-specific glue, that glue belongs in `lesson-engine/` during migration. It does not belong under `product/education/`.
 
 ## 10. Archived Runtime Notes
 

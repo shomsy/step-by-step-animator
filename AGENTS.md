@@ -18,7 +18,7 @@ Currently shipped lessons are:
 - `04-build-web-component`
 - `05-clean-web-component-with-adopted-stylesheets`
 - `06-modular-web-components`
-- `07-more-separation-of-code`
+- `07-build-ui-user-avatar`
 - `08-smell-of-enterprise`
 
 Every new lesson must use the same shell and the same teaching model:
@@ -136,19 +136,19 @@ Read the tree in this order:
 Live canonical shape:
 
 ```txt
-app/
-  index.html
-  main.js
-  shell/
-education/
-  lessons/
-    <lesson-slug>/
-      source/
-        lesson.md
-        theory.md
-        scenes.md
-        artifacts/
-        assets/
+product/
+  app/
+    index.html
+    main.js
+  education/
+    lessons/
+      <lesson-slug>/
+        source/
+          lesson.md
+          theory.md
+          scenes.md
+          artifacts/
+          assets/
 lesson-engine/
   discover-education-content/
   read-education-entry/
@@ -161,21 +161,13 @@ lesson-engine/
   register-lesson-packages/
   contracts/
   adapters/
-animator-engine/
-  choose-lesson/
-  play-lesson/
-foundation/
-  filesystem/
-  markdown/
-  frontmatter/
-  validation/
-  logging/
-  storage/
-  hashing/
+system/
+  animator-engine/
+    choose-lesson/
+    play-lesson/
+  foundation/
 generated/
-  lesson-packages/
   lesson-documents/
-  validation-reports/
 ```
 
 Current live lesson set is registered in `lesson-engine/register-lesson-packages/index.js`.
@@ -186,7 +178,7 @@ New lesson work must use the source-only contract from `.agents/authoring/LESSON
 
 That means:
 
-- source lives under `education/lessons/<lesson-slug>/source/`
+- source lives under `product/education/lessons/<lesson-slug>/source/`
 - the author writes `lesson.md`, `scenes.md`, optional `theory.md`, `artifacts/`, and `assets/`
 - `lesson-engine/` owns parsing, validation, normalization, projection, compilation and generated docs
 - do not introduce new `lesson.js`, `describe-steps.js`, or per-lesson `build-*` files for source-only lessons
@@ -199,13 +191,13 @@ The exact source-only authoring contract is documented in `.agents/authoring/LES
 ### 2.4 Runtime and Entry Rules
 
 - no `src/` folder
-- `app/index.html` is the canonical lesson shell and Vite root entry
-- `app/main.js` is the canonical app entry
-- the live app surface is rooted at `app/index.html`
+- `product/app/index.html` is the canonical lesson shell and Vite root entry
+- `product/app/main.js` is the canonical app entry
+- the live app surface is rooted at `product/app/index.html`
 - build goes through Vite
-- `animator-engine/` is the runtime boundary used by the app entrypoint
+- `system/animator-engine/` is the runtime boundary used by the app entrypoint
 - `lesson-engine/` owns source translation for source-only lessons
-- the current pilot lesson is compiled from `education/lessons/02-build-top-navigation/source/`
+- the current pilot lesson is compiled from `product/education/lessons/02-build-top-navigation/source/`
 
 ### 2.5 Naming Rules
 
@@ -258,7 +250,7 @@ Do not introduce new synonym generation if existing verb already covers the resp
 
 Numbers are used only on flow folders when the order truly carries meaning in the product story.
 
-In `education/lessons/` this applies to the shipped learning path:
+In `product/education/lessons/` this applies to the shipped learning path:
 
 - `01-build-sidebar`
 - `02-build-top-navigation`
@@ -314,7 +306,7 @@ These rules apply to all lessons, without exception:
 After every significant change, обязательно запустите:
 
 ```bash
-find app education lesson-engine animator-engine tests scripts -name '*.js' -print0 | xargs -0 -n1 node --check && node --check app/main.js
+find product system lesson-engine tests scripts -name '*.js' -print0 | xargs -0 -n1 node --check && node --check product/app/main.js
 npm run validate:lessons
 npm run sync:lesson-documents
 npm run build
@@ -401,7 +393,7 @@ Right panel:
 
 - goal image showing what we're building
 - homework notes for variants we don't implement yet
-- the current pilot version is compiled from `education/lessons/02-build-top-navigation/source/` through `lesson-engine/`
+- the current pilot version is compiled from `product/education/lessons/02-build-top-navigation/source/` through `lesson-engine/`
 
 For it, special teaching rules still apply:
 
@@ -434,7 +426,7 @@ For it, special teaching rules still apply:
 
 For a new lesson:
 
-1. create new source folder under `education/lessons/<lesson-slug>/source/`
+1. create new source folder under `product/education/lessons/<lesson-slug>/source/`
 2. add `lesson.md`
 3. add `scenes.md`
 4. add optional `theory.md` only if the lesson actually needs theory prose

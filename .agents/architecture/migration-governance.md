@@ -2,7 +2,7 @@
 
 Status: completed.
 
-This document records the completed migration from the legacy `lessons/` + `animator/` shape to the source-only `education/` + `lesson-engine/` + `animator-engine/` + `app/` + `foundation/` + `generated/` shape.
+This document records the completed migration from the legacy `lessons/` + `animator/` shape to the source-only `product/education/` + `lesson-engine/` + `system/animator-engine/` + `product/app/` + `system/foundation/` + `generated/` shape.
 
 It is not an active plan.
 It is a historical governance record and a reference for the rules that remain in force after the migration.
@@ -17,16 +17,16 @@ It is a historical governance record and a reference for the rules that remain i
 
 ### Pilot One Lesson
 
-- created the source-only pilot lesson layout under `education/lessons/<lesson-slug>/source/`
+- created the source-only pilot lesson layout under `product/education/lessons/<lesson-slug>/source/`
 - authored lesson metadata, theory, scenes, and artifacts in the new contract
 - made the lesson engine compile the pilot into a canonical lesson package
 
 ### Separate Compiler From Runtime
 
 - moved translation logic into `lesson-engine/`
-- kept runtime playback in `animator-engine/`
+- kept runtime playback in `system/animator-engine/`
 - removed raw lesson-source parsing from runtime entry points
-- introduced `foundation/` for shared primitives where they are actually shared
+- introduced `system/foundation/` for shared primitives where they are actually shared
 
 ### Migrate The Remaining Lesson Slices
 

@@ -12,10 +12,10 @@ If a repo-specific exception is needed, it must be documented here and it must n
 
 ## Migration Posture
 
-This repo follows the target canonical boundaries only.
+This repo follows the live canonical boundaries in the current product/system split.
 
-- `app/`, `education/`, `lesson-engine/`, `animator-engine/`, `foundation/`, and `generated/` are the live boundaries
-- the live app surface is rooted at `app/index.html`
+- `product/`, `system/`, `lesson-engine/`, and `generated/` are the live boundaries
+- the live app surface is rooted at `product/app/index.html`
 - new work must stay inside the target boundaries
 
 ## Vertical Slice Intent
@@ -34,11 +34,9 @@ This repo uses vertical-slice, feature-first architecture.
 
 The live repo is organized into these canonical areas:
 
-- `app/` for the host shell
-- `education/` for source-only lesson authoring
+- `product/` for the host shell and source-only lesson authoring
+- `system/` for compiled lesson playback and shared primitives
 - `lesson-engine/` for translation, validation, normalization, projection and compilation
-- `animator-engine/` for compiled lesson playback
-- `foundation/` for shared primitives
 - `generated/` for derived outputs
 
 Read the tree in this order:
@@ -55,18 +53,19 @@ This block is illustrative, not exhaustive. The live lesson set is registered in
 ```txt
 step-by-step-animator/
   AGENTS.md
-  app/
-    index.html
-    main.js
-  education/
-    lessons/
-      <lesson-slug>/
-        source/
-          lesson.md
-          theory.md
-          scenes.md
-          artifacts/
-          assets/
+  product/
+    app/
+      index.html
+      main.js
+    education/
+      lessons/
+        <lesson-slug>/
+          source/
+            lesson.md
+            theory.md
+            scenes.md
+            artifacts/
+            assets/
   lesson-engine/
     discover-education-content/
     read-education-entry/
@@ -79,21 +78,13 @@ step-by-step-animator/
     register-lesson-packages/
     contracts/
     adapters/
-  animator-engine/
-    choose-lesson/
-    play-lesson/
-  foundation/
-    filesystem/
-    markdown/
-    frontmatter/
-    validation/
-    logging/
-    storage/
-    hashing/
+  system/
+    animator-engine/
+      choose-lesson/
+      play-lesson/
+    foundation/
   generated/
-    lesson-packages/
     lesson-documents/
-    validation-reports/
 ```
 
 ## Naming Rules
@@ -105,8 +96,8 @@ Use a folder name that tells what the product is doing.
 Good:
 
 ```txt
-animator-engine/
-education/lessons/<lesson-slug>/source/
+system/animator-engine/
+product/education/lessons/<lesson-slug>/source/
 lesson-engine/register-lesson-packages/
 review-progress/
 ```
@@ -153,20 +144,20 @@ feature-name.pipeline.js
 If the feature is a source-only lesson contract, use:
 
 ```txt
-education/lessons/<lesson-slug>/source/lesson.md
+product/education/lessons/<lesson-slug>/source/lesson.md
 ```
 
 Markdown lesson documents live under the source contract:
 
 ```txt
-education/lessons/<lesson-slug>/source/lesson.md
-education/lessons/<lesson-slug>/source/theory.md
-education/lessons/<lesson-slug>/source/scenes.md
-education/lessons/<lesson-slug>/source/artifacts/html.timeline.md
-education/lessons/<lesson-slug>/source/artifacts/css.rules.md
-education/lessons/<lesson-slug>/source/artifacts/js.timeline.md
-education/lessons/<lesson-slug>/source/artifacts/template-js.timeline.md
-education/lessons/<lesson-slug>/source/artifacts/shadow-dom-style.css.md
+product/education/lessons/<lesson-slug>/source/lesson.md
+product/education/lessons/<lesson-slug>/source/theory.md
+product/education/lessons/<lesson-slug>/source/scenes.md
+product/education/lessons/<lesson-slug>/source/artifacts/html.timeline.md
+product/education/lessons/<lesson-slug>/source/artifacts/css.rules.md
+product/education/lessons/<lesson-slug>/source/artifacts/js.timeline.md
+product/education/lessons/<lesson-slug>/source/artifacts/template-js.timeline.md
+product/education/lessons/<lesson-slug>/source/artifacts/shadow-dom-style.css.md
 ```
 
 Source-only lesson docs are authored in markdown.
@@ -184,7 +175,7 @@ Each feature slice must have one root owner that makes the whole slice obvious.
 
 If none of the named patterns is the clearest answer, use the smallest construct that can still own the whole feature slice.
 
-The same rule applies to runtime slices under `animator-engine/`, source-only lesson slices under `education/lessons/`, and compiler slices under `lesson-engine/`.
+The same rule applies to runtime slices under `system/animator-engine/`, source-only lesson slices under `product/education/lessons/`, and compiler slices under `lesson-engine/`.
 
 ### 4. Every other file owns one clear responsibility
 
@@ -213,7 +204,7 @@ processor.js
 
 Use `01-...`, `02-...` only when the folder order itself carries product meaning without opening the pipeline.
 
-This repo uses numeric prefixes on ordered lesson flows in `education/lessons/` and on the generic lesson journey inside `animator-engine/play-lesson/`:
+This repo uses numeric prefixes on ordered lesson flows in `product/education/lessons/` and on the generic lesson journey inside `system/animator-engine/play-lesson/`:
 
 ```txt
 01-build-sidebar/

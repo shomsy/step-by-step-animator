@@ -14,28 +14,19 @@ Update rules:
 
 ## Current Workstreams
 
-### 2026-03-26 15:00 - Major Repository Reorganization (Product/System split)
+### 2026-03-26 15:00 - Product/System Refactor Realignment
 - **owner**: shomsy
-- **estimate**: 10h
-- **acceptance**: 02-build-top-navigation pilot lesson runs end-to-end using only compiled packages from the new system/ folder structure, all legacy folders removed.
+- **estimate**: 6h
+- **acceptance**: `product/app` boots from `product/app/main.js`, authoring docs and runtime code reference the `product/` and `system/` paths, and the remaining `lesson-engine` and generated-output migrations are isolated and explicit.
 
-#### Phase 1: Lock Repository Shape
-- **estimate**: 1h
-- **acceptance**: New top-level `product/` and `system/` folders created, all documents (README, AGENTS) updated to match the new tree.
-
-#### Phase 2: Lock Authoring Contract
-- **estimate**: 1h
-- **acceptance**: Clear standards for `lesson.md`, `scenes.md`, `theory.md`, and artifacts in `product/education/standards/`.
-
-#### Phase 3: Complete Lesson Engine Compiler
-- **estimate**: 3h
-- **acceptance**: Full compilation pipeline producing `compiled-lessons/`, `lesson-documents/`, and validation reports.
-
-#### Phase 4: Complete Animator Engine Runtime
-- **estimate**: 3h
-- **acceptance**: Animator consumes only compiled lesson packages, no direct source reading.
-
-#### Phase 5: Legacy Cleanup and Verification
+#### Phase 1: Keep Paths Truthful
 - **estimate**: 2h
-- **acceptance**: Old `animator/` and `lessons/` folders deleted, all tests passing.
+- **acceptance**: `README.md`, `AGENTS.md`, and the architecture docs use `product/` and `system/` paths consistently, including `product/education/lessons/` and `system/animator-engine/`.
 
+#### Phase 2: Finish Remaining Migration Targets
+- **estimate**: 3h
+- **acceptance**: `lesson-engine/` and generated output have explicit migration targets, with the remaining work named and tracked precisely.
+
+#### Phase 3: Verify And Clean Up
+- **estimate**: 1h
+- **acceptance**: validation, build, and merge snapshot pass with no stale root `app/` or `education/` references.

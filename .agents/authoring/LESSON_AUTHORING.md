@@ -22,26 +22,27 @@ If content cannot be broken into such small, readable steps, it is not ready for
 Every new lesson goes in its own folder under:
 
 ```txt
-education/
-  lessons/
-    feature-name/
-      source/
-        lesson.md
-        theory.md
-        scenes.md
-        artifacts/
-          html.timeline.md
-          css.rules.md
-          js.timeline.md
-          template-js.timeline.md
-          shadow-dom-style.css.md
-        assets/
+product/
+  education/
+    lessons/
+      feature-name/
+        source/
+          lesson.md
+          theory.md
+          scenes.md
+          artifacts/
+            html.timeline.md
+            css.rules.md
+            js.timeline.md
+            template-js.timeline.md
+            shadow-dom-style.css.md
+          assets/
 ```
 
 Rules:
 
-- `education/` is source only
-- no per-lesson build glue lives in `education/`
+- `product/education/` is source only
+- no per-lesson build glue lives in `product/education/`
 - `lesson-engine/` owns translation, validation, parsing, normalization, projection, and compilation
 - `source/` is the only place where the lesson author writes material
 - `assets/` stays beside the source and holds reference images or other authoring assets
@@ -507,8 +508,8 @@ Lesson goal:
 - Final result should look like [short description]
 
 Repo contract:
-- root split is `education/`, `lesson-engine/`, `animator-engine/`, `app/`, `foundation/`, and `generated/`
-- add new lesson under `education/lessons/[feature-name]/source/`
+- root split is `product/`, `lesson-engine/`, `system/`, and `generated/`
+- add new lesson under `product/education/lessons/[feature-name]/source/`
 - make:
   - `lesson.md`
   - `theory.md` when the lesson needs it

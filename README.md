@@ -2,43 +2,47 @@
 
 Step By Step Animator is an interactive lesson engine for HTML, CSS, and JavaScript tutorials that feel like watching a developer work live over screen share.
 
+## Where To Start
+
+- `AGENTS.md` defines the operational contract for work in this repo.
+- `.agents/architecture/ARCHITECTURE.md` defines the repo-specific architecture.
+- `product/app/index.html` and `product/app/main.js` are the live app entry points.
+- `product/education/lessons/02-build-top-navigation/source/lesson.md` is the current pilot lesson source.
+- `lesson-engine/register-lesson-packages/index.js` registers the live lesson set.
+
 ## Repository Map
 
 ### Canonical Live Shape
 
-These are the active runtime and lesson-system boundaries:
+The live repo is organized around these boundaries:
 
-- `app/` is the canonical app shell and runtime entry
-- `education/` contains source-only lesson authoring material
-- `lesson-engine/` compiles lesson source into canonical lesson packages
-- `animator-engine/` plays compiled lesson packages
+- `product/` is the product surface
+  - `product/app/` is the canonical browser shell and Vite root
+  - `product/education/` is source-only lesson authoring
+- `lesson-engine/` translates lesson source into compiled lesson data and generated documents
+- `system/` is the runtime boundary
+  - `system/animator-engine/` plays compiled lesson packages
+  - `system/foundation/` is reserved for shared low-level primitives
 - `generated/` holds derived output
 
-The architecture documents also reserve a `foundation/` boundary for shared low-level primitives, but this checkout does not currently contain a populated root `foundation/` directory.
-
-### Governance and Documentation
+### Governance And Documentation
 
 - `.agents/` contains planning, evidence, architecture, authoring, and review records
 - `AGENTS.md` is the canonical operational contract for the repo
-- `README.md` is the human-friendly start here document
+- `README.md` is the human-friendly start-here document
 
-### Tests and Tooling
+### Tests And Tooling
 
 - `tests/` contains the Node test harness
 - `scripts/` contains helper scripts
 - `merge-files.sh` creates the merged repository snapshot
 - `vite.config.js` configures the Vite build
 
-### Local and Generated Working Directories
+### Local Working Directories
 
 - `dist/` is the build output directory
 - `node_modules/` contains installed dependencies
 - `step-by-step-animator.txt` is the merged snapshot and working backup
-
-### Editor Metadata
-
-- `.vscode/` contains shared editor tasks and settings
-- `.idea/` contains local IDE metadata
 
 ### Git Metadata
 
@@ -62,19 +66,19 @@ Then open the app in your browser:
 
 - `http://localhost:5173/`
 
-Vite is rooted at `app/`, so the canonical shell is served from the server root.
+Vite is rooted at `product/app/`, so the canonical shell is served from the server root.
 
 ## Application Flow
 
 ```mermaid
 flowchart TD
   Browser[Browser]
-  AppIndex[app/index.html]
-  AppMain[app/main.js]
-  SelectLesson[selectLessonFromLocation]
+  AppIndex[product/app/index.html]
+  AppMain[product/app/main.js]
+  SelectLesson[system/animator-engine/choose-lesson/select-lesson-from-location.js]
   Registry[lesson-engine/register-lesson-packages/index.js]
   LessonPackage[Compiled lesson package]
-  PlayPipeline[animator-engine/play-lesson/play-lesson.pipeline.js]
+  PlayPipeline[system/animator-engine/play-lesson/play-lesson.pipeline.js]
   LessonShell[Lesson shell]
   CodePanel[Live code panels]
   PreviewPanel[Live preview panel]
@@ -86,11 +90,11 @@ flowchart TD
 
 Source authoring flows in the opposite direction:
 
-- `education/lessons/<lesson-slug>/source/`
+- `product/education/lessons/<lesson-slug>/source/`
 - `lesson-engine/`
-- compiled lesson package
-- `animator-engine/`
-- `app/`
+- generated lesson documents
+- `system/animator-engine/`
+- `product/app/`
 
 ## Available Commands
 
@@ -114,7 +118,7 @@ npm run sync:lesson-documents
 Source-only lessons live under:
 
 ```txt
-education/lessons/<lesson-slug>/source/
+product/education/lessons/<lesson-slug>/source/
 ```
 
 Each lesson is authored through:
@@ -128,4 +132,4 @@ Each lesson is authored through:
 ## Notes
 
 - Do not edit generated output by hand.
-- The canonical app entry is `app/main.js`, and the canonical shell file is `app/index.html`.
+- The canonical app entry is `product/app/main.js`, and the canonical shell file is `product/app/index.html`.
