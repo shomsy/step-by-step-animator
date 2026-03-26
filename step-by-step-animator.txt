@@ -3115,7 +3115,7 @@ Update rules:
 6. `[decision][done] 2026-03-26 - Merge dump kept as portable working backup` - `merge-files.sh`, `step-by-step-animator.txt`
 7. `[governance][done] 2026-03-26 01:47 - Mandatory work flow locked as plan -> todo -> evidence` - `AGENTS.md`, `.agents/planning/PLAN.md`, `.agents/evidence/TODO.md`, `.agents/evidence/CHANGELOG.md`
 8. `[todo][active] 2026-03-26 01:47 - Active backlog lives in .agents/evidence/TODO.md` - `.agents/evidence/TODO.md`
-9. `[todo][archived] 2026-03-26 01:47 - Legacy TODO.md reflects old Lesson 07/08 recovery notes` - `.agents/planning/TODO.md`
+9. `[archive][done] 2026-03-26 01:47 - Legacy planning notes archived outside TODO naming` - `.agents/planning/ARCHIVE.md`
 10. `[bug][done] 2026-03-26 01:47 - bugs.md has no open items` - `.agents/review/bugs.md`
 11. `[perf][follow-up] 2026-03-26 01:47 - Vite still warns about a large main chunk` - `npm run build`
 
@@ -3139,6 +3139,14 @@ Update rules:
 2. `[follow-up] 2026-03-26 01:45 - Decide whether the legacy archive docs need one final banner sweep` - only if we want the frozen docs to be even more explicit
 3. `[done] 2026-03-26 01:45 - App shell moved under app/ with compatibility aliases` - closed in `app/index.html`, `app/main.js`, `index.html`, `main.js`
 
+=== .agents/planning/ARCHIVE.md ===
+# Planning Archive
+
+This file keeps legacy planning notes that are no longer active work.
+The active plan lives in `.agents/planning/PLAN.md`.
+The active backlog lives in `.agents/evidence/TODO.md`.
+The evidence ledger lives in `.agents/evidence/CHANGELOG.md`.
+
 === .agents/planning/PLAN.md ===
 # Active Plan
 
@@ -3158,12 +3166,6 @@ Update rules:
 
 1. `[active] 2026-03-26 01:47 - Runtime stabilization and bundle splitting` - split the large Vite main chunk while keeping `app/` and `animator-engine/` aligned
 2. `[active] 2026-03-26 01:47 - Archive hygiene and documentation parity` - keep frozen docs clearly marked as reference only and remove any final split-brain wording
-
-=== .agents/planning/TODO.md ===
-# TODO
-
-This file is archived. Active planning lives in `.agents/planning/PLAN.md`.
-Active tracking lives in `.agents/evidence/TODO.md` and `.agents/evidence/CHANGELOG.md`.
 
 === .agents/review/bugs.md ===
 # Bugs
@@ -3258,6 +3260,7 @@ Backlog rules:
 - when an item is completed, mark it there and mirror the state change in `.agents/evidence/CHANGELOG.md`
 - do not rely on memory or chat history as the source of truth for pending work
 - use `YYYY-MM-DD HH:MM` timestamps for new backlog entries so duration and aging can be estimated
+- only `.agents/evidence/TODO.md` is the active TODO list; planning archive files are historical only
 
 ## 1.4 Mandatory Work Flow
 
@@ -3272,6 +3275,7 @@ Rules:
 - `PLAN.md` captures the current workstream and intent
 - `TODO.md` captures actionable follow-up work
 - `CHANGELOG.md` captures closed evidence and final state
+- `planning/ARCHIVE.md` may exist for legacy notes, but it is not an active TODO list
 - do not skip a layer when the item is substantial enough to merit tracking
 - keep the three layers aligned in the same work item when the state changes
 

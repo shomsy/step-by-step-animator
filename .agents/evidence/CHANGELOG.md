@@ -23,6 +23,6 @@ Update rules:
 6. `[decision][done] 2026-03-26 - Merge dump kept as portable working backup` - `merge-files.sh`, `step-by-step-animator.txt`
 7. `[governance][done] 2026-03-26 01:47 - Mandatory work flow locked as plan -> todo -> evidence` - `AGENTS.md`, `.agents/planning/PLAN.md`, `.agents/evidence/TODO.md`, `.agents/evidence/CHANGELOG.md`
 8. `[todo][active] 2026-03-26 01:47 - Active backlog lives in .agents/evidence/TODO.md` - `.agents/evidence/TODO.md`
-9. `[todo][archived] 2026-03-26 01:47 - Legacy TODO.md reflects old Lesson 07/08 recovery notes` - `.agents/planning/TODO.md`
+9. `[archive][done] 2026-03-26 01:47 - Legacy planning notes archived outside TODO naming` - `.agents/planning/ARCHIVE.md`
 10. `[bug][done] 2026-03-26 01:47 - bugs.md has no open items` - `.agents/review/bugs.md`
 11. `[perf][follow-up] 2026-03-26 01:47 - Vite still warns about a large main chunk` - `npm run build`

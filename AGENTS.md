@@ -62,6 +62,7 @@ Backlog rules:
 - when an item is completed, mark it there and mirror the state change in `.agents/evidence/CHANGELOG.md`
 - do not rely on memory or chat history as the source of truth for pending work
 - use `YYYY-MM-DD HH:MM` timestamps for new backlog entries so duration and aging can be estimated
+- only `.agents/evidence/TODO.md` is the active TODO list; planning archive files are historical only
 
 ## 1.4 Mandatory Work Flow
 
@@ -76,6 +77,7 @@ Rules:
 - `PLAN.md` captures the current workstream and intent
 - `TODO.md` captures actionable follow-up work
 - `CHANGELOG.md` captures closed evidence and final state
+- `planning/ARCHIVE.md` may exist for legacy notes, but it is not an active TODO list
 - do not skip a layer when the item is substantial enough to merit tracking
 - keep the three layers aligned in the same work item when the state changes
 
