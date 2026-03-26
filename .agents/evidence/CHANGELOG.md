@@ -15,6 +15,7 @@ Update rules:
 
 ## Current Ledger
 
+1. `[lesson][done] 2026-03-27 00:24 - Reworked 07 lesson into visual-first shell, then functionality phase` - `product/education/lessons/07-build-ui-user-avatar/source/lesson.md`, `product/education/lessons/07-build-ui-user-avatar/source/scenes.md`, `system/lesson-engine/output/07-build-ui-user-avatar.md`, `step-by-step-animator.txt`; `actual: 1h`
 1. `[lesson][done] 2026-03-26 19:14 - Applied visual-first sequencing to Web Components lesson intros and cleared trackers` - `product/education/lessons/03-build-custom-element/source/lesson.md`, `product/education/lessons/04-build-web-component/source/lesson.md`, `product/education/lessons/05-clean-web-component-with-adopted-stylesheets/source/lesson.md`, `product/education/lessons/06-modular-web-components/source/lesson.md`, `system/lesson-engine/output/03-build-custom-element.md`, `system/lesson-engine/output/04-build-web-component.md`, `system/lesson-engine/output/05-clean-web-component-with-adopted-stylesheets.md`, `system/lesson-engine/output/06-modular-web-components.md`
 1. `[doc][done] 2026-03-26 16:25 - Web Components visual-first sequencing rule added` - `AGENTS.md`, `.agents/authoring/LESSON_AUTHORING.md`, `.agents/planning/PLAN.md`, `.agents/evidence/TODO.md`
 1. `[review][done] 2026-03-26 15:34 - Production readiness review closed` - `system/lesson-engine/documentation/sync-lesson-documents.js`, `system/lesson-engine/register-lesson-packages/*.js`, `tests/flows/compose-step-narration-text.test.js`, `tests/flows/select-lesson-from-location.test.js`

@@ -2,10 +2,9 @@
 schemaVersion: 1
 lessonId: 07-build-ui-user-avatar
 lessonTitle: 07 · UI User Avatar — Dashboard Widget
-lessonIntro: Gradimo `ui-user-avatar` — enterprise dashboard widget koji
-  prikazuje team member kartice sa status badge-om (online/idle/away/offline),
-  tooltip-om, slotovima za inicijale ili sliku i klik interakcijom ka profile
-  modal-u.
+lessonIntro: "Gradimo `ui-user-avatar` u dve faze: prvo pravimo kompletnu
+  vizuelnu komponentu sa HTML, CSS i template JS delovima, a tek onda joj
+  uključujemo status, tooltip, property API i click behavior korak po korak."
 status: active
 courseId: step-by-step-animator
 order: 7
@@ -54,8 +53,8 @@ goal:
   imageSrc: ./assets/web-component-goal.svg
   imageAlt: Referentna slika ui-user-avatar dashboard widgeta sa status badge-om,
     tooltip-om i inizialima.
-  imageCaption: U ovoj lekciji gradimo enterprise team member card sa
-    deklarativnim status API-jem i namespaced event contract-om.
+  imageCaption: U ovoj lekciji prvo sklapamo kompletan vizuelni team member
+    widget, a tek onda osposobljavamo status, tooltip i event ponašanje.
 homework:
   enabled: true
   title: Varijante za samostalnu vežbu
@@ -70,4 +69,4 @@ homework:
       avatara kroz host CSS tokenе.
 ---
 
-Gradimo `ui-user-avatar` — enterprise dashboard widget koji prikazuje team member kartice sa status badge-om (online/idle/away/offline), tooltip-om, slotovima za inicijale ili sliku i klik interakcijom ka profile modal-u.
+Gradimo `ui-user-avatar` u dve faze: prvo pravimo kompletnu vizuelnu komponentu sa HTML, CSS i template JS delovima, a tek onda joj uključujemo status, tooltip, property API i click behavior korak po korak.
