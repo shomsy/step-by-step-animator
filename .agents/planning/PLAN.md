@@ -14,6 +14,28 @@ Update rules:
 
 ## Current Workstreams
 
-No active workstreams.
+### 2026-03-26 15:00 - Major Repository Reorganization (Product/System split)
+- **owner**: shomsy
+- **estimate**: 10h
+- **acceptance**: 02-build-top-navigation pilot lesson runs end-to-end using only compiled packages from the new system/ folder structure, all legacy folders removed.
 
-Closed workstreams are tracked in `.agents/evidence/CHANGELOG.md`.
+#### Phase 1: Lock Repository Shape
+- **estimate**: 1h
+- **acceptance**: New top-level `product/` and `system/` folders created, all documents (README, AGENTS) updated to match the new tree.
+
+#### Phase 2: Lock Authoring Contract
+- **estimate**: 1h
+- **acceptance**: Clear standards for `lesson.md`, `scenes.md`, `theory.md`, and artifacts in `product/education/standards/`.
+
+#### Phase 3: Complete Lesson Engine Compiler
+- **estimate**: 3h
+- **acceptance**: Full compilation pipeline producing `compiled-lessons/`, `lesson-documents/`, and validation reports.
+
+#### Phase 4: Complete Animator Engine Runtime
+- **estimate**: 3h
+- **acceptance**: Animator consumes only compiled lesson packages, no direct source reading.
+
+#### Phase 5: Legacy Cleanup and Verification
+- **estimate**: 2h
+- **acceptance**: Old `animator/` and `lessons/` folders deleted, all tests passing.
+

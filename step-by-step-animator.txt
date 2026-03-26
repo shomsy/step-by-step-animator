@@ -3091,7 +3091,9 @@ Update rules:
 
 ## Current Ledger
 
-1. `[feature][done] 2026-03-26 02:44 - Remove all legacy trees completed` - `README.md`, `AGENTS.md`, `.agents/architecture/ARCHITECTURE.md`, `.agents/architecture/lesson-architecture.md`, `.agents/evidence/TODO.md`, `.agents/planning/PLAN.md`, `step-by-step-animator.txt`, `animator/`, `lessons/`
+1. `[plan][active] 2026-03-26 15:00 - Major Repository Reorganization (Product/System split) initiated` - `.agents/planning/PLAN.md`
+2. `[todo][active] 2026-03-26 15:00 - Major Repository Reorganization tasks added to backlog` - `.agents/evidence/TODO.md`
+3. `[feature][done] 2026-03-26 02:44 - Remove all legacy trees completed` - `README.md`, `AGENTS.md`, `.agents/architecture/ARCHITECTURE.md`, `.agents/architecture/lesson-architecture.md`, `.agents/evidence/TODO.md`, `.agents/planning/PLAN.md`, `step-by-step-animator.txt`, `animator/`, `lessons/`
 1. `[feature][done] 2026-03-26 02:35 - Remove legacy app surface completed` - `vite.config.js`, `README.md`, `AGENTS.md`, `.agents/architecture/ARCHITECTURE.md`, `.agents/architecture/lesson-architecture.md`, `app/`, `index.html`, `main.js`, `sidebar-step-by-step.html`
 1. `[plan][done] 2026-03-26 02:26 - Expand root README folder map completed` - `README.md`, `.agents/planning/PLAN.md`, `.agents/evidence/TODO.md`
 2. `[todo][done] 2026-03-26 02:26 - Expand root README folder map completed` - `README.md`
@@ -3129,7 +3131,102 @@ Update rules:
 
 ## Current Items
 
-No active items.
+### 2026-03-26 15:00 - Major Repository Reorganization Tasks
+
+#### A. Repo shape
+- [ ] Uvedi `product/`
+- [ ] Premesti `app/` u `product/app/`
+- [ ] Premesti `education/` u `product/education/`
+- [ ] Uvedi `system/`
+- [ ] Premesti `lesson-engine/` u `system/lesson-engine/`
+- [ ] Premesti `animator-engine/` u `system/animator-engine/`
+- [ ] Uvedi `system/foundation/`
+- [ ] Premesti generated output u `system/lesson-engine/output/`
+- [ ] Ne uvoditi `scripts/` dok ne postoji realna potreba
+
+#### B. Dokumentacija
+- [ ] README uskladiti sa `product/` i `system/`
+- [ ] AGENTS uskladiti sa `product/` i `system/`
+- [ ] Sve stare tree primere obrisati ili označiti kao legacy
+- [ ] Dodati jasan “Where to start” deo u README
+- [ ] Jasno napisati da je `education` source-only
+
+#### C. Authoring contract
+- [ ] Zaključati `lesson.md` required fields
+- [ ] Zaključati `lesson.md` optional fields
+- [ ] Zaključati `scenes.md` DSL
+- [ ] Zaključati da svaki step ima `stepId`, `title`, `summary`, `intent`
+- [ ] Zaključati da svaka scena ima `sceneId`
+- [ ] Zaključati `theory.anchor` referenciranje
+- [ ] Zaključati kada je `preview.action: none` dozvoljen
+- [ ] Zaključati artifact source naming pravila
+- [ ] Zaključati allowed artifact kinds i languages
+
+#### D. Lesson engine
+- [ ] Dovršiti `discover-source-lessons`
+- [ ] Dovršiti `read-source-lesson`
+- [ ] Dovršiti `read-lesson-manifest`
+- [ ] Dovršiti `read-scenes-source`
+- [ ] Dovršiti `read-theory-source`
+- [ ] Dovršiti `read-artifact-sources`
+- [ ] Dovršiti `validate-source-lesson`
+- [ ] Dovršiti `validate-lesson-manifest`
+- [ ] Dovršiti `validate-scenes-contract`
+- [ ] Dovršiti `validate-theory-contract`
+- [ ] Dovršiti `validate-artifact-sources`
+- [ ] Dovršiti `parse-source-lesson`
+- [ ] Dovršiti `parse-scenes-source`
+- [ ] Dovršiti `parse-theory-source`
+- [ ] Dovršiti `parse-artifact-source`
+- [ ] Dovršiti `normalize-source-lesson`
+- [ ] Dovršiti `project-artifact-state`
+- [ ] Uvesti `by-kind` contract za projectore (html, css, js, template-js, shadow-css)
+- [ ] Dovršiti `compile-lesson-package`
+- [ ] Dovršiti `write-lesson-documents`
+- [ ] Dovršiti cleanup za stale generated docs
+- [ ] Dovršiti `register-compiled-lessons`
+
+#### E. Animator engine
+- [ ] `choose-lesson` da čita compiled registry
+- [ ] `select-lesson-from-location`
+- [ ] `play-lesson.pipeline.js` da prima compiled package
+- [ ] `start-playback`
+- [ ] `follow-step` da koristi normalized step model
+- [ ] `play-scene` da koristi normalized scene model
+- [ ] `show-code-focus` da koristi compiled artifact state
+- [ ] `show-preview-state` da koristi compiled preview state
+- [ ] `speak-step` da koristi compiled narration
+- [ ] `save-playback-state` da radi nad runtime state modelom
+- [ ] `present-lesson-documents`
+
+#### F. Foundation
+- [ ] Uvesti `filesystem/`
+- [ ] Uvesti `markdown/`
+- [ ] Uvesti `frontmatter/`
+- [ ] Uvesti `validation/`
+- [ ] Uvesti `logging/`
+- [ ] Uvesti `storage/`
+- [ ] Uvesti `hashing/`
+- [ ] Ne dozvoliti feature logiku u foundation
+
+#### G. Tests
+- [ ] Uvesti `tests/contracts/`
+- [ ] Uvesti `tests/flows/`
+- [ ] Uvesti `tests/smoke/`
+- [ ] Napisati `compile-valid-lesson-flow`
+- [ ] Napisati `reject-invalid-lesson-flow`
+- [ ] Napisati `broken-theory-anchor-flow`
+- [ ] Napisati `broken-artifact-reference-flow`
+- [ ] Napisati `register-compiled-lesson-flow`
+- [ ] Napisati `play-compiled-lesson-flow`
+- [ ] Napisati deterministic compiler output test
+
+#### H. Legacy cleanup
+- [ ] Označiti `animator/` kao delete candidate
+- [ ] Označiti `lessons/` kao delete candidate
+- [ ] Proveriti da nema live import-a iz legacy foldera
+- [ ] Napraviti git tag pre brisanja
+- [ ] Obrisati legacy foldere kad svi gates prođu
 
 === .agents/planning/ARCHIVE.md ===
 # Planning Archive
@@ -3156,9 +3253,31 @@ Update rules:
 
 ## Current Workstreams
 
-No active workstreams.
+### 2026-03-26 15:00 - Major Repository Reorganization (Product/System split)
+- **owner**: shomsy
+- **estimate**: 10h
+- **acceptance**: 02-build-top-navigation pilot lesson runs end-to-end using only compiled packages from the new system/ folder structure, all legacy folders removed.
 
-Closed workstreams are tracked in `.agents/evidence/CHANGELOG.md`.
+#### Phase 1: Lock Repository Shape
+- **estimate**: 1h
+- **acceptance**: New top-level `product/` and `system/` folders created, all documents (README, AGENTS) updated to match the new tree.
+
+#### Phase 2: Lock Authoring Contract
+- **estimate**: 1h
+- **acceptance**: Clear standards for `lesson.md`, `scenes.md`, `theory.md`, and artifacts in `product/education/standards/`.
+
+#### Phase 3: Complete Lesson Engine Compiler
+- **estimate**: 3h
+- **acceptance**: Full compilation pipeline producing `compiled-lessons/`, `lesson-documents/`, and validation reports.
+
+#### Phase 4: Complete Animator Engine Runtime
+- **estimate**: 3h
+- **acceptance**: Animator consumes only compiled lesson packages, no direct source reading.
+
+#### Phase 5: Legacy Cleanup and Verification
+- **estimate**: 2h
+- **acceptance**: Old `animator/` and `lessons/` folders deleted, all tests passing.
+
 
 === .agents/review/bugs.md ===
 # Bugs
@@ -36104,6 +36223,466 @@ console.log(`Merged files : ${merged}`);
 console.log(`Skipped files: ${skipped}`);
 console.log(`Output file  : ${finalOutputFile}`);
 EOF
+
+=== new-plan.md ===
+---
+
+# Moj predlog, finalna spoljašnja slika
+
+Ovo bih ja zaključao kao **jednostavno ali moćno**:
+
+```txt
+step-by-step-animator/
+  product/
+    app/
+      boot-app/
+        boot-app.js
+      route-lessons/
+        route-lessons.js
+      show-shell/
+        show-shell-layout.js
+        show-shell-sidebar.js
+        show-shell-panels.js
+      mount-lesson-player/
+        mount-lesson-player.js
+      index.html
+      main.js
+
+    education/
+      lessons/
+        01-build-sidebar/
+          source/
+            lesson.md
+            scenes.md
+            theory.md
+            artifacts/
+              html.timeline.md
+              css.rules.md
+            assets/
+        02-build-top-navigation/
+          source/
+            lesson.md
+            scenes.md
+            theory.md
+            artifacts/
+              html.timeline.md
+              css.rules.md
+            assets/
+        03-build-custom-element/
+          source/
+            lesson.md
+            scenes.md
+            theory.md
+            artifacts/
+              html.timeline.md
+              css.rules.md
+              js.timeline.md
+            assets/
+        04-build-web-component/
+          source/
+            lesson.md
+            scenes.md
+            theory.md
+            artifacts/
+              html.timeline.md
+              css.rules.md
+              js.timeline.md
+            assets/
+        05-clean-web-component-with-adopted-stylesheets/
+          source/
+            lesson.md
+            scenes.md
+            theory.md
+            artifacts/
+              html.timeline.md
+              css.rules.md
+              js.timeline.md
+              shadow-css.timeline.md
+            assets/
+        06-modular-web-components/
+          source/
+            lesson.md
+            scenes.md
+            theory.md
+            artifacts/
+              html.timeline.md
+              css.rules.md
+              js.timeline.md
+              shadow-css.timeline.md
+            assets/
+        07-more-separation-of-code/
+          source/
+            lesson.md
+            scenes.md
+            theory.md
+            artifacts/
+              html.timeline.md
+              css.rules.md
+              js.timeline.md
+              template-js.timeline.md
+              shadow-css.timeline.md
+            assets/
+        08-smell-of-enterprise/
+          source/
+            lesson.md
+            scenes.md
+            theory.md
+            artifacts/
+              html.timeline.md
+              css.rules.md
+              js.timeline.md
+              template-js.timeline.md
+              shadow-css.timeline.md
+            assets/
+
+      standards/
+        lesson-authoring-standard.md
+        lesson-manifest-contract.md
+        scenes-contract.md
+        theory-contract.md
+        artifact-source-contract.md
+
+  system/
+    lesson-engine/
+      compile-lessons/
+        compile-lessons.pipeline.js
+      discover-source-lessons/
+        discover-source-lessons.js
+      read-source-lesson/
+        read-source-lesson.js
+        read-lesson-manifest.js
+        read-scenes-source.js
+        read-theory-source.js
+        read-artifact-sources.js
+      validate-source-lesson/
+        validate-source-lesson.js
+        validate-lesson-manifest.js
+        validate-scenes-contract.js
+        validate-theory-contract.js
+        validate-artifact-sources.js
+      parse-source-lesson/
+        parse-scenes-source.js
+        parse-theory-source.js
+        parse-artifact-source.js
+      normalize-source-lesson/
+        normalize-source-lesson.js
+      project-artifact-state/
+        project-artifact-state.js
+        by-kind/
+          project-html-artifact-state.js
+          project-css-artifact-state.js
+          project-js-artifact-state.js
+          project-template-js-artifact-state.js
+          project-shadow-css-artifact-state.js
+      compile-lesson-package/
+        compile-lesson-package.js
+      write-lesson-documents/
+        write-lesson-documents.js
+        cleanup-stale-lesson-documents.js
+      register-compiled-lessons/
+        register-compiled-lessons.js
+      output/
+        compiled-lessons/
+        lesson-documents/
+        validation-reports/
+
+    animator-engine/
+      choose-lesson/
+        choose-lesson.js
+        select-lesson-from-location.js
+      play-lesson/
+        play-lesson.pipeline.js
+        start-playback/
+          start-playback.js
+        follow-step/
+          follow-step.js
+        play-scene/
+          play-scene.js
+        show-code-focus/
+          show-code-focus.js
+        show-preview-state/
+          show-preview-state.js
+        speak-step/
+          speak-step.js
+        save-playback-state/
+          save-playback-state.js
+      present-lesson-documents/
+        present-lesson-documents.js
+
+    foundation/
+      filesystem/
+      markdown/
+      frontmatter/
+      validation/
+      logging/
+      storage/
+      hashing/
+
+  tests/
+    contracts/
+    flows/
+    smoke/
+
+  .agents/
+  AGENTS.md
+  README.md
+  package.json
+  package-lock.json
+  vite.config.js
+```
+
+---
+
+# Zašto je ovo dobro
+
+## 1. Spolja imaš samo dve velike istine
+
+* `product/`
+* `system/`
+
+To odmah smanjuje šum.
+
+## 2. `product/` je svet autora i korisnika
+
+* `app/` je shell
+* `education/` je source authoring
+
+## 3. `system/` je mehanika
+
+* `lesson-engine/` kompajlira
+* `animator-engine/` playback-uje
+* `foundation/` drži dosadne primitive
+
+## 4. Output više nije random top-level
+
+`lesson-engine/output/` je baš tamo gde pripada.
+
+## 5. `tests/` ostaje spolja jer štiti ceo repo
+
+To je ok kao top-level.
+
+---
+
+# Plan
+
+Ovo bih radio u 5 faza.
+
+## Faza 1: zaključaš shape
+
+Cilj je da svi dokumenti i svi ljudi pričaju istu priču.
+
+### Uradi:
+
+* zaključaš top-level tree
+* zaključaš da `product/` i `system/` postaju glavne spoljne celine
+* zaključaš da `scripts/` ne postoji dok nema realnu potrebu
+* README i AGENTS uskladiš sa ovom slikom
+* legacy foldere jasno označiš kao privremene ili ih pripremiš za brisanje
+
+### Gotovo kada:
+
+* nema kontradiktornih tree primera
+* svi glavni dokumenti koriste isti shape
+
+---
+
+## Faza 2: zaključaš authoring contract
+
+Ovde zaključavaš šta autor piše.
+
+### Uradi:
+
+* zaključaš `lesson.md`
+* zaključaš `scenes.md`
+* zaključaš `theory.md`
+* zaključaš `artifacts/` source contract
+* napišeš kratke standarde u `product/education/standards/`
+
+### Gotovo kada:
+
+* jedan novi lesson može da se napiše bez gledanja u engine kod
+* validator može da proveri shape bez nagađanja
+
+---
+
+## Faza 3: dovršiš lesson-engine kao compiler
+
+Ovde praviš da compiler zaista bude glavni prevodilac.
+
+### Uradi:
+
+* `discover-source-lessons`
+* `read-source-lesson`
+* `validate-source-lesson`
+* `parse-source-lesson`
+* `normalize-source-lesson`
+* `project-artifact-state`
+* `compile-lesson-package`
+* `write-lesson-documents`
+* `register-compiled-lessons`
+
+### Gotovo kada:
+
+* source lesson daje compiled package
+* source lesson daje validation report
+* source lesson daje generated docs
+* isti input daje isti output
+
+---
+
+## Faza 4: dovršiš animator-engine da troši samo compiled package
+
+Ovo je najvažniji runtime rez.
+
+### Uradi:
+
+* `choose-lesson` bira compiled lesson
+* `play-lesson.pipeline.js` prima compiled package
+* step timeline čita normalized steps
+* scene playback čita normalized scenes
+* code focus čita compiled artifact state
+* preview čita compiled preview state ili patch payload
+* narration čita compiled narration
+
+### Gotovo kada:
+
+* animator ne čita raw source
+* animator ne zna ništa o authoring formatima
+* animator može da pusti pilot lesson samo iz compiled package-a
+
+---
+
+## Faza 5: očistiš legacy i zategneš repo
+
+Ovo je završno čišćenje.
+
+### Uradi:
+
+* migriraš još 1 do 2 lessons
+* brišeš `animator/`
+* brišeš `lessons/`
+* uklanjaš compatibility alias-e kada više nisu potrebni
+* očistiš dokumente da nema stare istine
+* uvodiš flow tests i contract tests
+
+### Gotovo kada:
+
+* nema live importa iz legacy foldera
+* nema legacy canonical docs
+* repo više nema dve istine
+
+---
+
+# ToDo
+
+Evo ga kao operativna lista.
+
+## A. Repo shape
+
+* [ ] Uvedi `product/`
+* [ ] Premesti `app/` u `product/app/`
+* [ ] Premesti `education/` u `product/education/`
+* [ ] Uvedi `system/`
+* [ ] Premesti `lesson-engine/` u `system/lesson-engine/`
+* [ ] Premesti `animator-engine/` u `system/animator-engine/`
+* [ ] Uvedi `system/foundation/`
+* [ ] Premesti generated output u `system/lesson-engine/output/`
+* [ ] Ne uvoditi `scripts/` dok ne postoji realna potreba
+
+## B. Dokumentacija
+
+* [ ] README uskladiti sa `product/` i `system/`
+* [ ] AGENTS uskladiti sa `product/` i `system/`
+* [ ] Sve stare tree primere obrisati ili označiti kao legacy
+* [ ] Dodati jasan “Where to start” deo u README
+* [ ] Jasno napisati da je `education` source-only
+
+## C. Authoring contract
+
+* [ ] Zaključati `lesson.md` required fields
+* [ ] Zaključati `lesson.md` optional fields
+* [ ] Zaključati `scenes.md` DSL
+* [ ] Zaključati da svaki step ima `stepId`, `title`, `summary`, `intent`
+* [ ] Zaključati da svaka scena ima `sceneId`
+* [ ] Zaključati `theory.anchor` referenciranje
+* [ ] Zaključati kada je `preview.action: none` dozvoljen
+* [ ] Zaključati artifact source naming pravila
+* [ ] Zaključati allowed artifact kinds i languages
+
+## D. Lesson engine
+
+* [ ] Dovršiti `discover-source-lessons`
+* [ ] Dovršiti `read-source-lesson`
+* [ ] Dovršiti `validate-source-lesson`
+* [ ] Dovršiti `parse-source-lesson`
+* [ ] Dovršiti `normalize-source-lesson`
+* [ ] Dovršiti `project-artifact-state`
+* [ ] Uvesti `by-kind` contract za projectore
+* [ ] Dovršiti `compile-lesson-package`
+* [ ] Dovršiti `write-lesson-documents`
+* [ ] Dovršiti cleanup za stale generated docs
+* [ ] Dovršiti `register-compiled-lessons`
+
+## E. Animator engine
+
+* [ ] `choose-lesson` da čita compiled registry
+* [ ] `play-lesson.pipeline.js` da prima compiled package
+* [ ] `follow-step` da koristi normalized step model
+* [ ] `play-scene` da koristi normalized scene model
+* [ ] `show-code-focus` da koristi compiled artifact state
+* [ ] `show-preview-state` da koristi compiled preview state
+* [ ] `speak-step` da koristi compiled narration
+* [ ] `save-playback-state` da radi nad runtime state modelom
+
+## F. Foundation
+
+* [ ] Uvesti `filesystem/`
+* [ ] Uvesti `markdown/`
+* [ ] Uvesti `frontmatter/`
+* [ ] Uvesti `validation/`
+* [ ] Uvesti `logging/`
+* [ ] Uvesti `storage/`
+* [ ] Uvesti `hashing/`
+* [ ] Ne dozvoliti feature logiku u foundation
+
+## G. Tests
+
+* [ ] Uvesti `tests/contracts/`
+* [ ] Uvesti `tests/flows/`
+* [ ] Uvesti `tests/smoke/`
+* [ ] Napisati `compile-valid-lesson-flow`
+* [ ] Napisati `reject-invalid-lesson-flow`
+* [ ] Napisati `broken-theory-anchor-flow`
+* [ ] Napisati `broken-artifact-reference-flow`
+* [ ] Napisati `register-compiled-lesson-flow`
+* [ ] Napisati `play-compiled-lesson-flow`
+* [ ] Napisati deterministic compiler output test
+
+## H. Legacy cleanup
+
+* [ ] Označiti `animator/` kao delete candidate
+* [ ] Označiti `lessons/` kao delete candidate
+* [ ] Proveriti da nema live import-a iz legacy foldera
+* [ ] Napraviti git tag pre brisanja
+* [ ] Obrisati legacy foldere kad svi gates prođu
+
+---
+
+# Najkraći mogući fokus
+
+Ako hoćeš samo **prvih 7 poteza**, ja bih išao ovim redom:
+
+1. zaključaš top-level `product/` + `system/`
+2. premestiš output u `system/lesson-engine/output/`
+3. uvedeš `system/foundation/`
+4. zaključaš `lesson.md`, `scenes.md`, `theory.md`
+5. dovršiš compiler da za pilot lesson daje compiled package
+6. dovršiš animator da pusti pilot lesson samo iz compiled package-a
+7. obrišeš legacy kada pilot + još jedna lesson prođu end-to-end
+
+Ovo je po meni najjednostavnije, a i dalje moćno.
+
+Ako hoćeš, sledeće ću ti ovo pretvoriti u **tačan GitHub backlog po epics i tasks**, da možeš odmah da kreneš redom.
 
 === package-lock.json ===
 {
