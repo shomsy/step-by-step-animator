@@ -26,6 +26,9 @@ function validateLessonSource({ lessonSlug, sourceRoot }) {
   const lessonMarkdown = readText(path.join(sourceRoot, 'lesson.md'));
   const scenesMarkdown = readText(path.join(sourceRoot, 'scenes.md'));
   const { attributes } = parseFrontmatter(lessonMarkdown);
+  const theoryMarkdown = attributes.theory?.enabled
+    ? readText(path.join(sourceRoot, normalizeString(attributes.theory.file)))
+    : '';
   const artifactMarkdownById = Object.fromEntries(
     (attributes.artifacts || []).map(artifact => [
       artifact.artifactId,
@@ -37,7 +40,8 @@ function validateLessonSource({ lessonSlug, sourceRoot }) {
     lessonMarkdown,
     scenesMarkdown,
     artifactMarkdownById,
-    goalImageSrc: attributes.goal?.imageSrc || ''
+    goalImageSrc: attributes.goal?.imageSrc || '',
+    theoryMarkdown
   });
 
   const sceneCount = compiledLesson.steps.reduce(
@@ -56,3 +60,7 @@ function main() {
 }
 
 main();
+
+function normalizeString(value) {
+  return typeof value === 'string' ? value.trim() : '';
+}

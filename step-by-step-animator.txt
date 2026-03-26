@@ -3107,18 +3107,21 @@ Update rules:
 
 ## Current Ledger
 
-1. `[plan][active] 2026-03-26 02:07 - Test harness and contract coverage opened` - `.agents/planning/PLAN.md`, `.agents/evidence/TODO.md`
-2. `[todo][active] 2026-03-26 02:07 - Test harness backlog created` - `.agents/evidence/TODO.md`
-3. `[todo][done] 2026-03-26 01:58 - Active TODO emptied after closing current items` - `.agents/evidence/TODO.md`, `.agents/evidence/CHANGELOG.md`
-4. `[perf][done] 2026-03-26 01:58 - Split the large Vite main chunk` - `app/main.js`, `animator-engine/choose-lesson/select-lesson-from-location.js`, `lesson-engine/register-lesson-packages/index.js`
-5. `[governance][done] 2026-03-26 01:58 - Legacy archive docs banner sweep completed` - `animator/agents.md`, `lessons/lesson-architecture.md`
-6. `[feature][done] 2026-03-26 - App shell moved under app/ with root compatibility aliases` - `app/index.html`, `app/main.js`, `index.html`, `main.js`, `vite.config.js`, `sidebar-step-by-step.html`
-7. `[feature][done] 2026-03-26 - Source-only lesson authoring contract locked` - `.agents/authoring/LESSON_AUTHORING.md`, `.agents/architecture/lesson-architecture.md`, `AGENTS.md`
-8. `[feature][done] 2026-03-26 - Lesson engine compiler boundary introduced` - `lesson-engine/compile-lesson-package.js`, `lesson-engine/read-scenes-contract.js`, `animator-engine/play-lesson/listen-to-step/compose-step-narration-text.js`
-9. `[feature][done] 2026-03-26 - Lesson source validation command added` - `lesson-engine/validate-source-lessons.js`, `package.json`, `AGENTS.md`
-10. `[governance][done] 2026-03-26 - Source-only migration governance completed` - `.agents/architecture/migration-governance.md`
-11. `[decision][done] 2026-03-26 - Merge dump kept as portable working backup` - `merge-files.sh`, `step-by-step-animator.txt`
-12. `[governance][done] 2026-03-26 01:47 - Mandatory work flow locked as plan -> todo -> evidence` - `AGENTS.md`, `.agents/planning/PLAN.md`, `.agents/evidence/TODO.md`, `.agents/evidence/CHANGELOG.md`
+1. `[governance][done] 2026-03-26 02:11 - Review and test gate locked before git/push` - `AGENTS.md`, `.agents/planning/PLAN.md`
+2. `[plan][done] 2026-03-26 02:15 - Test harness and contract coverage completed` - `.agents/planning/PLAN.md`, `.agents/evidence/TODO.md`, `tests/contracts`, `tests/flows`, `tests/smoke`
+3. `[todo][done] 2026-03-26 02:15 - Add node:test harness completed` - `package.json`, `tests/contracts`, `tests/flows`, `tests/smoke`
+4. `[todo][done] 2026-03-26 02:15 - Cover lesson compiler contracts completed` - `lesson-engine/compile-lesson-package.js`, `tests/contracts`
+5. `[todo][done] 2026-03-26 02:15 - Cover runtime seams completed` - `animator-engine/choose-lesson/select-lesson-from-location.js`, `tests/flows`
+6. `[todo][done] 2026-03-26 01:58 - Active TODO emptied after closing current items` - `.agents/evidence/TODO.md`, `.agents/evidence/CHANGELOG.md`
+7. `[perf][done] 2026-03-26 01:58 - Split the large Vite main chunk` - `app/main.js`, `animator-engine/choose-lesson/select-lesson-from-location.js`, `lesson-engine/register-lesson-packages/index.js`
+8. `[governance][done] 2026-03-26 01:58 - Legacy archive docs banner sweep completed` - `animator/agents.md`, `lessons/lesson-architecture.md`
+9. `[feature][done] 2026-03-26 - App shell moved under app/ with root compatibility aliases` - `app/index.html`, `app/main.js`, `index.html`, `main.js`, `vite.config.js`, `sidebar-step-by-step.html`
+10. `[feature][done] 2026-03-26 - Source-only lesson authoring contract locked` - `.agents/authoring/LESSON_AUTHORING.md`, `.agents/architecture/lesson-architecture.md`, `AGENTS.md`
+11. `[feature][done] 2026-03-26 - Lesson engine compiler boundary introduced` - `lesson-engine/compile-lesson-package.js`, `lesson-engine/read-scenes-contract.js`, `animator-engine/play-lesson/listen-to-step/compose-step-narration-text.js`
+12. `[feature][done] 2026-03-26 - Lesson source validation command added` - `lesson-engine/validate-source-lessons.js`, `package.json`, `AGENTS.md`
+13. `[governance][done] 2026-03-26 - Source-only migration governance completed` - `.agents/architecture/migration-governance.md`
+14. `[decision][done] 2026-03-26 - Merge dump kept as portable working backup` - `merge-files.sh`, `step-by-step-animator.txt`
+15. `[governance][done] 2026-03-26 01:47 - Mandatory work flow locked as plan -> todo -> evidence` - `AGENTS.md`, `.agents/planning/PLAN.md`, `.agents/evidence/TODO.md`, `.agents/evidence/CHANGELOG.md`
 
 === .agents/evidence/TODO.md ===
 # Active TODO
@@ -3136,9 +3139,7 @@ Update rules:
 
 ## Current Items
 
-1. `[follow-up] 2026-03-26 02:07 - Add node:test harness | owner: codex | estimate: 1 session | blocked_by: none` - introduce `tests/contracts`, `tests/flows`, and `tests/smoke` with a small package script wrapper
-2. `[follow-up] 2026-03-26 02:07 - Cover lesson compiler contracts | owner: codex | estimate: 1-2 sessions | blocked_by: test harness` - add deterministic compiler, manifest, scenes DSL, and cross-reference tests
-3. `[follow-up] 2026-03-26 02:07 - Cover runtime seams | owner: codex | estimate: 1 session | blocked_by: compiler contracts` - add registry selection, lazy lesson loading, and narration fallback smoke tests
+No active items.
 
 === .agents/planning/ARCHIVE.md ===
 # Planning Archive
@@ -3165,7 +3166,7 @@ Update rules:
 
 ## Current Workstreams
 
-1. `[active] 2026-03-26 02:07 - Test harness and contract coverage | owner: codex | estimate: 2 sessions | acceptance: core compiler, registry, and runtime seams are covered by focused node:test suites without chasing 100% line coverage` - build a small, contract-first test harness for the lesson engine and runtime seams
+No active workstreams.
 
 Closed workstreams are tracked in `.agents/evidence/CHANGELOG.md`.
 
@@ -3545,6 +3546,20 @@ This means:
 
 Do not finish an implementation pass without this closing, unless the user explicitly asks not to commit or push.
 
+### 2.11 Review and Test Gate
+
+Code review in this repo means iterative quality closure, not a one-shot comment pass.
+
+Rules:
+
+- keep fixing findings until the code matches the requested standards
+- relevant tests must pass before the work item can be closed
+- if tests fail, the work item stays open
+- if review finds a problem, fix it and rerun validation in the same work item
+- only after review and tests are green, run `./merge-files.sh .`, then `git add -A`, `git commit`, and `git push`
+- do not treat commit/push as a substitute for validation
+- do not leave a known-bad state in TODO as if it were done
+
 ## 3. Feature Contract
 
 For making new animated lessons and AI prompt template, see [.agents/authoring/LESSON_AUTHORING.md](/home/shomsy/projects/step-by-step-animator/.agents/authoring/LESSON_AUTHORING.md).
@@ -3665,12 +3680,12 @@ export function presentLessonPicker({
 }
 
 === animator-engine/choose-lesson/select-lesson-from-location.js ===
-export async function selectLessonFromLocation({ ownerLocation }) {
+export async function selectLessonFromLocation({ ownerLocation, lessonRegistry = null }) {
   const {
     registeredLessons,
     findLesson,
     getDefaultLessonId
-  } = await import('../../lesson-engine/register-lesson-packages/index.js');
+  } = lessonRegistry || await import('../../lesson-engine/register-lesson-packages/index.js');
   const selectedLessonId = new URL(ownerLocation.href).searchParams.get('lesson');
   const defaultLessonId = getDefaultLessonId();
   const selectedLesson = findLesson(selectedLessonId) || findLesson(defaultLessonId);
@@ -39309,6 +39324,54 @@ function normalizeArtifactDeclaration(artifact) {
   };
 }
 
+function slugifyHeading(value) {
+  return normalizeString(value)
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '');
+}
+
+function readTheoryAnchors(theoryMarkdown) {
+  const headings = String(theoryMarkdown || '')
+    .split('\n')
+    .map(line => line.match(/^#{1,6}\s+(.+?)\s*$/)?.[1])
+    .filter(Boolean)
+    .map(slugifyHeading)
+    .filter(Boolean);
+
+  return new Set(headings);
+}
+
+function validateSceneCrossReferences({ sceneSteps, artifactIds, theoryAnchors, theoryEnabled }) {
+  const hasTheoryScenes = sceneSteps.some(step => (step.scenes || []).some(scene => Boolean(scene.theory)));
+
+  if (hasTheoryScenes && !theoryEnabled) {
+    throw new Error('scenes.md references theory anchors, but lesson.md does not enable theory.md.');
+  }
+
+  sceneSteps.forEach(step => {
+    (step.scenes || []).forEach(scene => {
+      if (scene.focus && !artifactIds.has(scene.focus.artifactId)) {
+        throw new Error(`Scene "${scene.sceneId}" in step "${step.stepId}" references unknown artifact "${scene.focus.artifactId}".`);
+      }
+
+      if (scene.code && !artifactIds.has(scene.code.activeArtifactId)) {
+        throw new Error(`Scene "${scene.sceneId}" in step "${step.stepId}" references unknown active artifact "${scene.code.activeArtifactId}".`);
+      }
+
+      if (scene.theory) {
+        if (!theoryAnchors || !theoryAnchors.size) {
+          throw new Error(`Scene "${scene.sceneId}" in step "${step.stepId}" references theory.anchor "${scene.theory.anchor}" but theory.md was not provided.`);
+        }
+
+        if (!theoryAnchors.has(scene.theory.anchor)) {
+          throw new Error(`Scene "${scene.sceneId}" in step "${step.stepId}" references unknown theory.anchor "${scene.theory.anchor}".`);
+        }
+      }
+    });
+  });
+}
+
 function deriveFocusArtifactId(step) {
   const tagType = normalizeString(step.tag).split(':')[0];
 
@@ -39584,7 +39647,8 @@ export function compileLessonPackage({
   lessonMarkdown,
   scenesMarkdown,
   artifactMarkdownById = {},
-  goalImageSrc = ''
+  goalImageSrc = '',
+  theoryMarkdown = ''
 }) {
   const { attributes: lessonAttributes, body: lessonBody } = parseFrontmatter(lessonMarkdown);
   const scenesContract = readScenesContract(scenesMarkdown);
@@ -39601,10 +39665,25 @@ export function compileLessonPackage({
 
   const lessonMeta = normalizeLessonMeta(lessonAttributes, lessonBody, goalImageSrc);
   const sceneSteps = scenesContract.steps;
+  const theoryEnabled = Boolean(lessonAttributes.theory?.enabled);
   const stepNumberById = Object.fromEntries(sceneSteps.map((step, index) => [step.stepId, index]));
   const artifactDeclarations = Array.isArray(lessonAttributes.artifacts)
     ? lessonAttributes.artifacts.map(normalizeArtifactDeclaration)
     : [];
+  const artifactIds = new Set(artifactDeclarations.map(artifact => artifact.artifactId));
+
+  if (theoryEnabled && !normalizeString(theoryMarkdown)) {
+    throw new Error('lesson.md declares theory.enabled=true but no theoryMarkdown was provided.');
+  }
+
+  const theoryAnchors = theoryEnabled ? readTheoryAnchors(theoryMarkdown) : new Set();
+
+  validateSceneCrossReferences({
+    sceneSteps,
+    artifactIds,
+    theoryAnchors,
+    theoryEnabled
+  });
 
   const artifactBuilders = createArtifactBuilders({
     artifactDeclarations,
@@ -40820,6 +40899,9 @@ function validateLessonSource({ lessonSlug, sourceRoot }) {
   const lessonMarkdown = readText(path.join(sourceRoot, 'lesson.md'));
   const scenesMarkdown = readText(path.join(sourceRoot, 'scenes.md'));
   const { attributes } = parseFrontmatter(lessonMarkdown);
+  const theoryMarkdown = attributes.theory?.enabled
+    ? readText(path.join(sourceRoot, normalizeString(attributes.theory.file)))
+    : '';
   const artifactMarkdownById = Object.fromEntries(
     (attributes.artifacts || []).map(artifact => [
       artifact.artifactId,
@@ -40831,7 +40913,8 @@ function validateLessonSource({ lessonSlug, sourceRoot }) {
     lessonMarkdown,
     scenesMarkdown,
     artifactMarkdownById,
-    goalImageSrc: attributes.goal?.imageSrc || ''
+    goalImageSrc: attributes.goal?.imageSrc || '',
+    theoryMarkdown
   });
 
   const sceneCount = compiledLesson.steps.reduce(
@@ -40850,6 +40933,10 @@ function main() {
 }
 
 main();
+
+function normalizeString(value) {
+  return typeof value === 'string' ? value.trim() : '';
+}
 
 === lessons/01-build-sidebar/build-css-at-step.js ===
 import cssRulesDocument from './content/documents/files/css.rules.md?raw';
@@ -50862,6 +50949,10 @@ EOF
     "dev": "vite",
     "build": "vite build",
     "preview": "vite preview",
+    "test": "node --test tests/contracts/*.test.js tests/flows/*.test.js tests/smoke/*.test.js",
+    "test:contracts": "node --test tests/contracts/*.test.js",
+    "test:flows": "node --test tests/flows/*.test.js",
+    "test:smoke": "node --test tests/smoke/*.test.js",
     "validate:lessons": "node lesson-engine/validate-source-lessons.js",
     "sync:lesson-documents": "node lesson-engine/documentation/sync-lesson-documents.js"
   },
@@ -50891,6 +50982,424 @@ EOF
     <p>Otvori <a href="./app/index.html?lesson=01-build-sidebar">01-build-sidebar</a> lekciju.</p>
   </body>
 </html>
+
+=== tests/contracts/compile-lesson-package.test.js ===
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import { compileLessonPackage } from '../../lesson-engine/compile-lesson-package.js';
+import { createSourceOnlyLessonFixture } from '../fixtures/source-only-lesson-fixture.js';
+
+test('compileLessonPackage compiles the canonical source-only lesson package', () => {
+  const fixture = createSourceOnlyLessonFixture();
+  const compiled = compileLessonPackage({
+    lessonMarkdown: fixture.lessonMarkdown,
+    scenesMarkdown: fixture.scenesMarkdown,
+    artifactMarkdownById: fixture.artifactMarkdownById,
+    theoryMarkdown: fixture.theoryMarkdown
+  });
+
+  assert.equal(compiled.schemaVersion, 1);
+  assert.equal(compiled.meta.lessonId, '01-build-sidebar');
+  assert.equal(compiled.meta.lessonTitle, 'Build Sidebar');
+  assert.equal(compiled.previewTitle, 'Sidebar preview');
+  assert.equal(compiled.htmlFileName, 'index.html');
+  assert.equal(compiled.cssFileName, 'style.css');
+  assert.equal(compiled.teaching.steps.length, 2);
+  assert.equal(compiled.teaching.steps[0].scenes[0].sceneId, 'intro-shell');
+  assert.equal(compiled.teaching.steps[0].narration, 'First, we introduce the smallest possible sidebar shell.');
+  assert.equal(compiled.teaching.steps[1].narration, 'Now we add a navigation block inside the sidebar.');
+
+  assert.deepEqual(compiled.artifacts.map(artifact => artifact.artifactId), ['html', 'css']);
+  assert.deepEqual(compiled.statesByStep[0].artifacts.html, [
+    '<aside class="sidebar">',
+    '  <nav>',
+    '    <a href="#">Home</a>',
+    '  </nav>',
+    '</aside>'
+  ]);
+  assert.deepEqual(compiled.statesByStep[1].artifacts.html, [
+    '<aside class="sidebar">',
+    '  <nav>',
+    '    <a href="#">Home</a>',
+    '  </nav>',
+    '</aside>',
+    '<footer class="sidebar-footer">Footer</footer>'
+  ]);
+  assert.deepEqual(compiled.statesByStep[0].artifacts.css, [
+    '.sidebar {',
+    '  display: block;',
+    '}'
+  ]);
+  assert.ok(compiled.statesByStep[1].artifacts.css.some(line => line.includes('color: rebeccapurple;')));
+  assert.deepEqual(compiled.buildHtmlAtStep(1), compiled.statesByStep[1].artifacts.html);
+  assert.deepEqual(compiled.buildCssAtStep(1), compiled.statesByStep[1].artifacts.css);
+});
+
+test('compileLessonPackage rejects missing theory markdown when theory is enabled', () => {
+  const fixture = createSourceOnlyLessonFixture();
+
+  assert.throws(() => compileLessonPackage({
+    lessonMarkdown: fixture.lessonMarkdown,
+    scenesMarkdown: fixture.scenesMarkdown,
+    artifactMarkdownById: fixture.artifactMarkdownById
+  }), /theoryMarkdown/);
+});
+
+test('compileLessonPackage rejects unknown artifact and theory references', () => {
+  const fixture = createSourceOnlyLessonFixture();
+  const unknownArtifactScenes = fixture.scenesMarkdown.replace('artifactId: html', 'artifactId: missing-artifact');
+  const unknownTheoryScenes = fixture.scenesMarkdown.replace('why-shell-first', 'missing-theory-anchor');
+
+  assert.throws(() => compileLessonPackage({
+    lessonMarkdown: fixture.lessonMarkdown,
+    scenesMarkdown: unknownArtifactScenes,
+    artifactMarkdownById: fixture.artifactMarkdownById,
+    theoryMarkdown: fixture.theoryMarkdown
+  }), /unknown artifact/);
+
+  assert.throws(() => compileLessonPackage({
+    lessonMarkdown: fixture.lessonMarkdown,
+    scenesMarkdown: unknownTheoryScenes,
+    artifactMarkdownById: fixture.artifactMarkdownById,
+    theoryMarkdown: fixture.theoryMarkdown
+  }), /unknown theory\.anchor/);
+});
+
+=== tests/contracts/read-scenes-contract.test.js ===
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import { readScenesContract } from '../../lesson-engine/read-scenes-contract.js';
+import { createSourceOnlyLessonFixture } from '../fixtures/source-only-lesson-fixture.js';
+
+test('readScenesContract parses the canonical storyboard DSL', () => {
+  const fixture = createSourceOnlyLessonFixture();
+  const contract = readScenesContract(fixture.scenesMarkdown);
+
+  assert.equal(contract.schemaVersion, 1);
+  assert.equal(contract.lessonId, '01-build-sidebar');
+  assert.equal(contract.steps.length, 2);
+  assert.deepEqual(contract.stepHeadings, ['add-sidebar-shell', 'add-sidebar-navigation']);
+  assert.equal(contract.steps[0].scenes[0].sceneId, 'intro-shell');
+  assert.equal(contract.steps[0].scenes[1].sceneId, 'empty-css-state');
+  assert.equal(contract.steps[1].scenes[0].sceneId, 'add-nav-block');
+});
+
+test('readScenesContract rejects scenes before a declared step', () => {
+  const fixture = createSourceOnlyLessonFixture();
+  const brokenScenesMarkdown = fixture.scenesMarkdown.replace('# Step: add-sidebar-shell', '## Scene: orphan-scene');
+
+  assert.throws(() => readScenesContract(brokenScenesMarkdown), /before any step heading/);
+});
+
+=== tests/fixtures/source-only-lesson-fixture.js ===
+export function createSourceOnlyLessonFixture() {
+  return {
+    lessonMarkdown: `---
+schemaVersion: 1
+lessonId: 01-build-sidebar
+lessonTitle: Build Sidebar
+lessonIntro: Build a sidebar shell step by step.
+status: active
+courseId: step-by-step-animator
+order: 1
+theory:
+  enabled: true
+  file: ./theory.md
+scenes:
+  file: ./scenes.md
+artifacts:
+  - artifactId: html
+    file: ./artifacts/html.timeline.md
+    language: html
+    kind: timeline
+    label: index.html
+    isPrimary: true
+  - artifactId: css
+    file: ./artifacts/css.rules.md
+    language: css
+    kind: rules
+    label: style.css
+    isPrimary: false
+preview:
+  type: dom
+  title: Sidebar preview
+  address: browser://01-build-sidebar-preview
+---
+Build a sidebar shell step by step.
+`,
+    scenesMarkdown: `---
+schemaVersion: 1
+lessonId: 01-build-sidebar
+steps:
+  - stepId: add-sidebar-shell
+    title: Add sidebar shell
+    summary: Introduce the base sidebar container.
+    intent: Establish the minimum HTML structure before styling.
+  - stepId: add-sidebar-navigation
+    title: Add sidebar navigation
+    summary: Add a navigation block inside the sidebar.
+    intent: Introduce semantic navigation before visual refinement.
+---
+# Step: add-sidebar-shell
+
+## Scene: intro-shell
+
+narration:
+First, we introduce the smallest possible sidebar shell.
+
+focus:
+  artifactId: html
+  reveal:
+    from: 1
+    to: 3
+
+code:
+  activeArtifactId: html
+  highlightLines:
+    - from: 1
+      to: 3
+
+preview:
+  action: apply-state
+  target: dom
+
+theory:
+  anchor: why-shell-first
+
+## Scene: empty-css-state
+
+narration:
+CSS stays empty for now because structure comes before visual identity.
+
+focus:
+  artifactId: css
+  reveal:
+    from: 1
+    to: 1
+
+code:
+  activeArtifactId: css
+
+preview:
+  action: none
+
+# Step: add-sidebar-navigation
+
+## Scene: add-nav-block
+
+narration:
+Now we add a navigation block inside the sidebar.
+
+focus:
+  artifactId: html
+  reveal:
+    from: 1
+    to: 6
+
+code:
+  activeArtifactId: html
+  highlightLines:
+    - from: 2
+      to: 5
+
+preview:
+  action: apply-state
+  target: dom
+
+theory:
+  anchor: sidebar-as-navigation
+`,
+    theoryMarkdown: `# Why shell first
+
+We start with the smallest possible structure.
+
+## Sidebar as navigation
+
+Navigation comes before visual refinement.
+`,
+    artifactMarkdownById: {
+      html: `\`\`\`json
+[
+  {
+    "target": "root",
+    "from": "add-sidebar-shell",
+    "lines": [
+      "<aside class=\\"sidebar\\">",
+      "  <nav>",
+      "    <a href=\\"#\\">Home</a>",
+      "  </nav>",
+      "</aside>"
+    ]
+  },
+  {
+    "target": "root",
+    "from": "add-sidebar-navigation",
+    "lines": [
+      "<footer class=\\"sidebar-footer\\">Footer</footer>"
+    ]
+  }
+]
+\`\`\`
+`,
+      css: `\`\`\`json
+[
+  {
+    "header": ".sidebar {",
+    "entries": [
+      {
+        "from": "add-sidebar-shell",
+        "line": "display: block;"
+      }
+    ]
+  },
+  {
+    "header": ".sidebar a {",
+    "entries": [
+      {
+        "from": "add-sidebar-navigation",
+        "line": "color: rebeccapurple;"
+      }
+    ]
+  }
+]
+\`\`\`
+`
+    }
+  };
+}
+
+=== tests/flows/compose-step-narration-text.test.js ===
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import { composeStepNarrationText } from '../../animator-engine/play-lesson/listen-to-step/compose-step-narration-text.js';
+
+test('composeStepNarrationText prefers scene narration and appends the pro tip', () => {
+  const text = composeStepNarrationText({
+    step: {
+      title: 'Add sidebar shell',
+      narration: 'First, we introduce the smallest possible sidebar shell.',
+      proTip: 'Keep the first step as small as possible.'
+    },
+    currentStepNumber: 1,
+    totalSteps: 3
+  });
+
+  assert.equal(
+    text,
+    'Korak 2 od 3. Add sidebar shell First, we introduce the smallest possible sidebar shell. Pro tip. Keep the first step as small as possible.'
+  );
+});
+
+test('composeStepNarrationText falls back to the legacy description field', () => {
+  const text = composeStepNarrationText({
+    step: {
+      title: 'Add sidebar shell',
+      desc: 'Introduce the base sidebar container.'
+    },
+    currentStepNumber: 0,
+    totalSteps: 1
+  });
+
+  assert.equal(text, 'Korak 1 od 1. Add sidebar shell Introduce the base sidebar container.');
+});
+
+=== tests/flows/register-lesson-packages.test.js ===
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import { registeredLessons, findLesson, getDefaultLessonId } from '../../lesson-engine/register-lesson-packages/index.js';
+
+test('lesson registry exposes lazy lesson descriptors', () => {
+  assert.ok(Array.isArray(registeredLessons));
+  assert.ok(registeredLessons.length > 0);
+  assert.equal(getDefaultLessonId(), registeredLessons[0].lessonId);
+
+  const lesson = findLesson('02-build-top-navigation');
+
+  assert.ok(lesson);
+  assert.equal(lesson.lessonId, '02-build-top-navigation');
+  assert.equal(lesson.lessonTitle, 'Build Top Navigation');
+  assert.equal(typeof lesson.loadLesson, 'function');
+});
+
+=== tests/flows/select-lesson-from-location.test.js ===
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import { selectLessonFromLocation } from '../../animator-engine/choose-lesson/select-lesson-from-location.js';
+
+test('selectLessonFromLocation picks an explicit lesson when the query is present', async () => {
+  const lessonDescriptors = [
+    {
+      lessonId: 'alpha',
+      lessonTitle: 'Alpha',
+      loadLesson: async () => ({ lessonId: 'alpha' })
+    },
+    {
+      lessonId: 'beta',
+      lessonTitle: 'Beta',
+      loadLesson: async () => ({ lessonId: 'beta' })
+    }
+  ];
+
+  const selection = await selectLessonFromLocation({
+    ownerLocation: { href: 'https://example.test/?lesson=beta' },
+    lessonRegistry: {
+      registeredLessons: lessonDescriptors,
+      findLesson: lessonId => lessonDescriptors.find(lesson => lesson.lessonId === lessonId),
+      getDefaultLessonId: () => lessonDescriptors[0].lessonId
+    }
+  });
+
+  assert.equal(selection.lesson.lessonId, 'beta');
+  assert.equal(selection.lessons, lessonDescriptors);
+});
+
+test('selectLessonFromLocation falls back to the default lesson when no query is present', async () => {
+  const lessonDescriptors = [
+    {
+      lessonId: 'alpha',
+      lessonTitle: 'Alpha',
+      loadLesson: async () => ({ lessonId: 'alpha' })
+    },
+    {
+      lessonId: 'beta',
+      lessonTitle: 'Beta',
+      loadLesson: async () => ({ lessonId: 'beta' })
+    }
+  ];
+
+  const selection = await selectLessonFromLocation({
+    ownerLocation: { href: 'https://example.test/' },
+    lessonRegistry: {
+      registeredLessons: lessonDescriptors,
+      findLesson: lessonId => lessonDescriptors.find(lesson => lesson.lessonId === lessonId),
+      getDefaultLessonId: () => lessonDescriptors[0].lessonId
+    }
+  });
+
+  assert.equal(selection.lesson.lessonId, 'alpha');
+  assert.equal(selection.lessons, lessonDescriptors);
+});
+
+=== tests/smoke/validate-source-lessons.test.js ===
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import { execFile } from 'node:child_process';
+import { promisify } from 'node:util';
+import path from 'node:path';
+import { fileURLToPath } from 'node:url';
+
+const execFileAsync = promisify(execFile);
+const currentDir = path.dirname(fileURLToPath(import.meta.url));
+const repoRoot = path.resolve(currentDir, '../../');
+
+test('validate-source-lessons passes on the shipped source-only lessons', async () => {
+  const { stdout } = await execFileAsync('node', ['lesson-engine/validate-source-lessons.js'], {
+    cwd: repoRoot,
+    maxBuffer: 1024 * 1024
+  });
+
+  assert.match(stdout, /Validated \d+ lesson source packages\./);
+});
 
 === vite.config.js ===
 import { defineConfig } from 'vite';

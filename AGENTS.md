@@ -345,6 +345,20 @@ This means:
 
 Do not finish an implementation pass without this closing, unless the user explicitly asks not to commit or push.
 
+### 2.11 Review and Test Gate
+
+Code review in this repo means iterative quality closure, not a one-shot comment pass.
+
+Rules:
+
+- keep fixing findings until the code matches the requested standards
+- relevant tests must pass before the work item can be closed
+- if tests fail, the work item stays open
+- if review finds a problem, fix it and rerun validation in the same work item
+- only after review and tests are green, run `./merge-files.sh .`, then `git add -A`, `git commit`, and `git push`
+- do not treat commit/push as a substitute for validation
+- do not leave a known-bad state in TODO as if it were done
+
 ## 3. Feature Contract
 
 For making new animated lessons and AI prompt template, see [.agents/authoring/LESSON_AUTHORING.md](/home/shomsy/projects/step-by-step-animator/.agents/authoring/LESSON_AUTHORING.md).

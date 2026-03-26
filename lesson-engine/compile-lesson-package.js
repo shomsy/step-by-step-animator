@@ -71,6 +71,54 @@ function normalizeArtifactDeclaration(artifact) {
   };
 }
 
+function slugifyHeading(value) {
+  return normalizeString(value)
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '');
+}
+
+function readTheoryAnchors(theoryMarkdown) {
+  const headings = String(theoryMarkdown || '')
+    .split('\n')
+    .map(line => line.match(/^#{1,6}\s+(.+?)\s*$/)?.[1])
+    .filter(Boolean)
+    .map(slugifyHeading)
+    .filter(Boolean);
+
+  return new Set(headings);
+}
+
+function validateSceneCrossReferences({ sceneSteps, artifactIds, theoryAnchors, theoryEnabled }) {
+  const hasTheoryScenes = sceneSteps.some(step => (step.scenes || []).some(scene => Boolean(scene.theory)));
+
+  if (hasTheoryScenes && !theoryEnabled) {
+    throw new Error('scenes.md references theory anchors, but lesson.md does not enable theory.md.');
+  }
+
+  sceneSteps.forEach(step => {
+    (step.scenes || []).forEach(scene => {
+      if (scene.focus && !artifactIds.has(scene.focus.artifactId)) {
+        throw new Error(`Scene "${scene.sceneId}" in step "${step.stepId}" references unknown artifact "${scene.focus.artifactId}".`);
+      }
+
+      if (scene.code && !artifactIds.has(scene.code.activeArtifactId)) {
+        throw new Error(`Scene "${scene.sceneId}" in step "${step.stepId}" references unknown active artifact "${scene.code.activeArtifactId}".`);
+      }
+
+      if (scene.theory) {
+        if (!theoryAnchors || !theoryAnchors.size) {
+          throw new Error(`Scene "${scene.sceneId}" in step "${step.stepId}" references theory.anchor "${scene.theory.anchor}" but theory.md was not provided.`);
+        }
+
+        if (!theoryAnchors.has(scene.theory.anchor)) {
+          throw new Error(`Scene "${scene.sceneId}" in step "${step.stepId}" references unknown theory.anchor "${scene.theory.anchor}".`);
+        }
+      }
+    });
+  });
+}
+
 function deriveFocusArtifactId(step) {
   const tagType = normalizeString(step.tag).split(':')[0];
 
@@ -346,7 +394,8 @@ export function compileLessonPackage({
   lessonMarkdown,
   scenesMarkdown,
   artifactMarkdownById = {},
-  goalImageSrc = ''
+  goalImageSrc = '',
+  theoryMarkdown = ''
 }) {
   const { attributes: lessonAttributes, body: lessonBody } = parseFrontmatter(lessonMarkdown);
   const scenesContract = readScenesContract(scenesMarkdown);
@@ -363,10 +412,25 @@ export function compileLessonPackage({
 
   const lessonMeta = normalizeLessonMeta(lessonAttributes, lessonBody, goalImageSrc);
   const sceneSteps = scenesContract.steps;
+  const theoryEnabled = Boolean(lessonAttributes.theory?.enabled);
   const stepNumberById = Object.fromEntries(sceneSteps.map((step, index) => [step.stepId, index]));
   const artifactDeclarations = Array.isArray(lessonAttributes.artifacts)
     ? lessonAttributes.artifacts.map(normalizeArtifactDeclaration)
     : [];
+  const artifactIds = new Set(artifactDeclarations.map(artifact => artifact.artifactId));
+
+  if (theoryEnabled && !normalizeString(theoryMarkdown)) {
+    throw new Error('lesson.md declares theory.enabled=true but no theoryMarkdown was provided.');
+  }
+
+  const theoryAnchors = theoryEnabled ? readTheoryAnchors(theoryMarkdown) : new Set();
+
+  validateSceneCrossReferences({
+    sceneSteps,
+    artifactIds,
+    theoryAnchors,
+    theoryEnabled
+  });
 
   const artifactBuilders = createArtifactBuilders({
     artifactDeclarations,
