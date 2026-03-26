@@ -259,6 +259,7 @@ After every significant change, обязательно запустите:
 
 ```bash
 find animator lessons -name '*.js' -print0 | xargs -0 -n1 node --check && node --check main.js
+npm run validate:lessons
 npm run sync:lesson-documents
 npm run build
 ./merge-files.sh .

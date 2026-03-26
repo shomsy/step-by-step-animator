@@ -3396,6 +3396,7 @@ After every significant change, обязательно запустите:
 
 ```bash
 find animator lessons -name '*.js' -print0 | xargs -0 -n1 node --check && node --check main.js
+npm run validate:lessons
 npm run sync:lesson-documents
 npm run build
 ./merge-files.sh .
@@ -6118,10 +6119,12 @@ function readNarrationValue(value) {
 }
 
 export function composeStepNarrationText({ step, currentStepNumber, totalSteps }) {
+  const sceneNarrationText = readNarrationValue(step?.narration);
+  const stepDescriptionText = sceneNarrationText || readNarrationValue(step?.desc);
   const fragments = [
     `Korak ${currentStepNumber + 1} od ${totalSteps}.`,
     readNarrationValue(step?.title),
-    readNarrationValue(step?.desc)
+    stepDescriptionText
   ];
 
   const proTipText = readNarrationValue(step?.proTip);
@@ -39061,6 +39064,28 @@ function normalizeString(value) {
   return typeof value === 'string' ? value.trim() : '';
 }
 
+function isPlainObject(value) {
+  return Boolean(value) && typeof value === 'object' && !Array.isArray(value);
+}
+
+function assertKebabCase(value, label) {
+  if (!/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(value)) {
+    throw new Error(`${label} must use kebab-case. Received "${value}".`);
+  }
+}
+
+function assertOneOf(value, allowedValues, label) {
+  if (!allowedValues.has(value)) {
+    throw new Error(`${label} must be one of: ${Array.from(allowedValues).join(', ')}.`);
+  }
+}
+
+function assertPositiveInteger(value, label) {
+  if (!Number.isInteger(value) || value < 1) {
+    throw new Error(`${label} must be a positive integer.`);
+  }
+}
+
 function normalizeArtifactDeclaration(artifact) {
   if (!artifact || typeof artifact !== 'object') {
     throw new Error('Each artifact declaration must be an object.');
@@ -39087,6 +39112,8 @@ function normalizeArtifactDeclaration(artifact) {
   if (!kind) {
     throw new Error(`Artifact "${artifactId}" must define kind.`);
   }
+
+  assertKebabCase(artifactId, 'Artifact ID');
 
   return {
     artifactId,
@@ -39128,6 +39155,125 @@ function deriveStepTag(step) {
   const tagType = step.stepId.includes('css') || step.stepId.includes('summary') ? 'css' : 'html';
 
   return `${tagType}:${step.stepId}`;
+}
+
+function validateLessonManifest(attributes) {
+  const schemaVersion = Number(attributes.schemaVersion);
+  const lessonId = normalizeString(attributes.lessonId);
+  const lessonTitle = normalizeString(attributes.lessonTitle);
+  const lessonIntro = normalizeString(attributes.lessonIntro);
+  const status = normalizeString(attributes.status);
+  const courseId = normalizeString(attributes.courseId);
+  const preview = attributes.preview;
+  const scenes = attributes.scenes;
+  const artifacts = attributes.artifacts;
+  const theory = attributes.theory;
+
+  if (!Number.isInteger(schemaVersion) || schemaVersion < 1) {
+    throw new Error('lesson.md must define schemaVersion.');
+  }
+
+  if (!lessonId) {
+    throw new Error('lesson.md must define lessonId.');
+  }
+
+  assertKebabCase(lessonId, 'Lesson ID');
+
+  if (!lessonTitle) {
+    throw new Error('lesson.md must define lessonTitle.');
+  }
+
+  if (!lessonIntro) {
+    throw new Error('lesson.md must define lessonIntro.');
+  }
+
+  if (!status) {
+    throw new Error('lesson.md must define status.');
+  }
+
+  assertOneOf(status, new Set(['draft', 'active', 'broken', 'deprecated']), 'lesson.md status');
+
+  if (!courseId) {
+    throw new Error('lesson.md must define courseId.');
+  }
+
+  assertPositiveInteger(Number(attributes.order), 'lesson.md order');
+
+  if (!isPlainObject(preview)) {
+    throw new Error('lesson.md must define a preview object.');
+  }
+
+  const previewType = normalizeString(preview.type);
+  const previewTitle = normalizeString(preview.title);
+  const previewAddress = normalizeString(preview.address);
+
+  if (!previewType) {
+    throw new Error('lesson.md must define preview.type.');
+  }
+
+  assertOneOf(previewType, new Set(['dom', 'terminal', 'markdown', 'diagram', 'none']), 'lesson.md preview.type');
+
+  if (!previewTitle) {
+    throw new Error('lesson.md must define preview.title.');
+  }
+
+  if (!previewAddress) {
+    throw new Error('lesson.md must define preview.address.');
+  }
+
+  if (!isPlainObject(scenes) || !normalizeString(scenes.file)) {
+    throw new Error('lesson.md must define scenes.file.');
+  }
+
+  if (isPlainObject(theory) && theory.enabled === true && !normalizeString(theory.file)) {
+    throw new Error('lesson.md must define theory.file when theory.enabled is true.');
+  }
+
+  if (!Array.isArray(artifacts) || !artifacts.length) {
+    throw new Error('lesson.md must declare at least one artifact.');
+  }
+
+  const artifactIds = new Set();
+
+  artifacts.forEach((artifact, index) => {
+    if (!isPlainObject(artifact)) {
+      throw new Error(`Artifact declaration at index ${index} must be an object.`);
+    }
+
+    const artifactId = normalizeString(artifact.artifactId);
+    const file = normalizeString(artifact.file);
+    const kind = normalizeString(artifact.kind);
+    const language = normalizeString(artifact.language);
+
+    if (!artifactId) {
+      throw new Error(`Artifact declaration at index ${index} must define artifactId.`);
+    }
+
+    if (artifactIds.has(artifactId)) {
+      throw new Error(`Artifact "${artifactId}" is declared more than once.`);
+    }
+
+    artifactIds.add(artifactId);
+    assertKebabCase(artifactId, 'Artifact ID');
+
+    if (!file) {
+      throw new Error(`Artifact "${artifactId}" must define file.`);
+    }
+
+    if (!file.endsWith('.md')) {
+      throw new Error(`Artifact "${artifactId}" must point to a markdown source file.`);
+    }
+
+    if (!language) {
+      throw new Error(`Artifact "${artifactId}" must define language.`);
+    }
+
+    if (!kind) {
+      throw new Error(`Artifact "${artifactId}" must define kind.`);
+    }
+
+    assertOneOf(kind, new Set(['timeline', 'rules']), `Artifact "${artifactId}" kind`);
+  });
 }
 
 function normalizeLessonMeta(attributes, body, goalImageSrcOverride) {
@@ -39219,6 +39365,8 @@ function createArtifactBuilderLookup(artifactBuilders) {
 }
 
 function createRuntimeStep(step, previewTarget, focusArtifactId) {
+  const scenes = Array.isArray(step.scenes) ? step.scenes : [];
+
   return {
     id: step.stepId,
     title: step.title,
@@ -39226,22 +39374,25 @@ function createRuntimeStep(step, previewTarget, focusArtifactId) {
     tag: deriveStepTag(step),
     proTip: step.proTip || step.intent || step.summary,
     focusHtmlNeedles: step.focusHtmlNeedles,
-    scenes: [
-      {
-        sceneId: `${step.stepId}-scene`,
-        narration: step.summary,
-        focus: {
-          artifactId: focusArtifactId
-        },
-        code: {
-          activeArtifactId: focusArtifactId
-        },
-        preview: {
-          action: 'apply-state',
-          target: previewTarget
-        }
-      }
-    ]
+    narration: scenes[0]?.narration || step.summary,
+    scenes: scenes.length
+      ? scenes
+      : [
+          {
+            sceneId: `${step.stepId}-scene`,
+            narration: step.summary,
+            focus: {
+              artifactId: focusArtifactId
+            },
+            code: {
+              activeArtifactId: focusArtifactId
+            },
+            preview: {
+              action: 'apply-state',
+              target: previewTarget
+            }
+          }
+        ]
   };
 }
 
@@ -39254,9 +39405,15 @@ export function compileLessonPackage({
   const { attributes: lessonAttributes, body: lessonBody } = parseFrontmatter(lessonMarkdown);
   const scenesContract = readScenesContract(scenesMarkdown);
 
+  if (Number(lessonAttributes.schemaVersion) !== Number(scenesContract.schemaVersion)) {
+    throw new Error('schemaVersion must match between lesson.md and scenes.md.');
+  }
+
   if (normalizeString(lessonAttributes.lessonId) !== scenesContract.lessonId) {
     throw new Error(`Lesson ID mismatch between lesson.md and scenes.md for "${lessonAttributes.lessonId}".`);
   }
+
+  validateLessonManifest(lessonAttributes);
 
   const lessonMeta = normalizeLessonMeta(lessonAttributes, lessonBody, goalImageSrc);
   const sceneSteps = scenesContract.steps;
@@ -39265,10 +39422,6 @@ export function compileLessonPackage({
     ? lessonAttributes.artifacts.map(normalizeArtifactDeclaration)
     : [];
 
-  if (!artifactDeclarations.length) {
-    throw new Error(`Lesson "${lessonMeta.lessonId}" must declare at least one artifact.`);
-  }
-
   const artifactBuilders = createArtifactBuilders({
     artifactDeclarations,
     artifactMarkdownById,
@@ -39276,26 +39429,16 @@ export function compileLessonPackage({
   });
   const buildArtifactAtStepById = createArtifactBuilderLookup(artifactBuilders);
 
+  const teachingSteps = sceneSteps.map(step => createRuntimeStep(step, lessonMeta.preview.type, deriveFocusArtifactId(step)));
+  const scenesByStep = Object.fromEntries(sceneSteps.map(step => [step.stepId, step.scenes]));
+
   const statesByStep = sceneSteps.map((step, stepNumber) => ({
     stepId: step.stepId,
+    scenes: step.scenes,
     artifacts: Object.fromEntries(
       artifactBuilders.map(({ artifact, buildAtStep }) => [artifact.artifactId, buildAtStep(stepNumber)])
     )
   }));
-
-  const runtimeSteps = sceneSteps.map(step => {
-    const focusArtifactId = deriveFocusArtifactId(step);
-    return {
-      id: step.stepId,
-      title: step.title,
-      desc: step.summary,
-      tag: deriveStepTag(step),
-      proTip: step.proTip || step.intent || step.summary,
-      focusHtmlNeedles: step.focusHtmlNeedles
-    };
-  });
-
-  const teachingSteps = sceneSteps.map((step, index) => createRuntimeStep(step, lessonMeta.preview.type, deriveFocusArtifactId(step)));
 
   const artifacts = artifactDeclarations.map(artifact => ({
     artifactId: artifact.artifactId,
@@ -39344,7 +39487,7 @@ export function compileLessonPackage({
       tags: lessonMeta.tags,
       difficulty: lessonMeta.difficulty,
       estimatedMinutes: lessonMeta.estimatedMinutes,
-      ideMode: Boolean(attributes.ideMode)
+      ideMode: Boolean(lessonAttributes.ideMode)
     },
     teaching: {
       steps: teachingSteps,
@@ -39369,8 +39512,9 @@ export function compileLessonPackage({
     goalImageCaption: lessonMeta.goal.imageCaption,
     homeworkTitle: lessonMeta.homework.title,
     homeworkItems: lessonMeta.homework.items,
-    steps: runtimeSteps,
-    ideMode: Boolean(attributes.ideMode),
+    steps: teachingSteps,
+    scenesByStep,
+    ideMode: Boolean(lessonAttributes.ideMode),
     buildHtmlAtStep,
     buildCssAtStep,
     buildJsAtStep,
@@ -39603,10 +39747,17 @@ export function readRuleBlocks(markdown) {
 }
 
 === lesson-engine/read-scenes-contract.js ===
+import YAML from 'yaml';
 import { parseFrontmatter } from './parse-frontmatter.js';
 
 function normalizeString(value) {
   return typeof value === 'string' ? value.trim() : '';
+}
+
+function assertKebabCase(value, label) {
+  if (!/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(value)) {
+    throw new Error(`${label} must use kebab-case. Received "${value}".`);
+  }
 }
 
 function normalizeSceneStep(step) {
@@ -39635,6 +39786,8 @@ function normalizeSceneStep(step) {
     throw new Error(`Step "${stepId}" must define intent.`);
   }
 
+  assertKebabCase(stepId, 'Step ID');
+
   const focusHtmlNeedles = Array.isArray(step.focusHtmlNeedles)
     ? step.focusHtmlNeedles.map(needle => normalizeString(needle)).filter(Boolean)
     : [];
@@ -39650,22 +39803,197 @@ function normalizeSceneStep(step) {
   };
 }
 
+const SCENE_FIELD_NAMES = new Set(['narration', 'focus', 'code', 'preview', 'theory']);
+const PREVIEW_ACTIONS = new Set(['apply-state', 'none']);
+
+function parseSceneFieldFragment(fieldName, fieldLines, stepId, sceneId) {
+  const fragment = fieldLines.length
+    ? `${fieldName}:\n${fieldLines.join('\n')}`
+    : `${fieldName}:`;
+
+  let parsedValue;
+
+  try {
+    parsedValue = YAML.parse(fragment);
+  } catch (error) {
+    throw new Error(`Failed to parse "${fieldName}" block in scene "${sceneId}" of step "${stepId}": ${error.message}`);
+  }
+
+  return parsedValue?.[fieldName];
+}
+
+function normalizeSceneNarration(fieldValue, stepId, sceneId) {
+  const narration = Array.isArray(fieldValue)
+    ? fieldValue.map(line => normalizeString(line)).filter(Boolean).join('\n')
+    : normalizeString(fieldValue);
+
+  if (!narration) {
+    throw new Error(`Scene "${sceneId}" in step "${stepId}" must define narration.`);
+  }
+
+  return narration;
+}
+
+function normalizeSceneFieldObject(fieldName, fieldValue, stepId, sceneId) {
+  if (fieldName === 'preview' && typeof fieldValue === 'string') {
+    return { action: normalizeString(fieldValue) };
+  }
+
+  if (!fieldValue || typeof fieldValue !== 'object' || Array.isArray(fieldValue)) {
+    throw new Error(`Scene "${sceneId}" in step "${stepId}" must define a valid "${fieldName}" block.`);
+  }
+
+  return fieldValue;
+}
+
+function normalizeSceneBlock({ sceneId, lines }, stepId) {
+  assertKebabCase(sceneId, 'Scene ID');
+
+  const collectedFields = [];
+  let currentFieldName = '';
+  let currentFieldLines = [];
+
+  function flushCurrentField() {
+    if (!currentFieldName) {
+      return;
+    }
+
+    collectedFields.push({
+      fieldName: currentFieldName,
+      fieldLines: currentFieldLines
+    });
+
+    currentFieldName = '';
+    currentFieldLines = [];
+  }
+
+  lines.forEach(line => {
+    const topLevelFieldMatch = line.match(/^([a-z][\w-]*):\s*(.*)$/i);
+
+    if (topLevelFieldMatch && SCENE_FIELD_NAMES.has(topLevelFieldMatch[1])) {
+      flushCurrentField();
+      currentFieldName = topLevelFieldMatch[1];
+      currentFieldLines = topLevelFieldMatch[2] ? [topLevelFieldMatch[2]] : [];
+      return;
+    }
+
+    if (!currentFieldName) {
+      if (normalizeString(line)) {
+        throw new Error(`Scene "${sceneId}" in step "${stepId}" must start with a known field such as narration.`);
+      }
+
+      return;
+    }
+
+    currentFieldLines.push(line);
+  });
+
+  flushCurrentField();
+
+  const scene = { sceneId };
+  const seenFields = new Set();
+
+  collectedFields.forEach(({ fieldName, fieldLines }) => {
+    if (seenFields.has(fieldName)) {
+      throw new Error(`Scene "${sceneId}" in step "${stepId}" defines "${fieldName}" more than once.`);
+    }
+
+    seenFields.add(fieldName);
+
+    if (fieldName === 'narration') {
+      scene.narration = normalizeSceneNarration(fieldLines, stepId, sceneId);
+      return;
+    }
+
+    const fieldValue = normalizeSceneFieldObject(
+      fieldName,
+      parseSceneFieldFragment(fieldName, fieldLines, stepId, sceneId),
+      stepId,
+      sceneId
+    );
+
+    scene[fieldName] = fieldValue;
+  });
+
+  if (!scene.narration) {
+    throw new Error(`Scene "${sceneId}" in step "${stepId}" must define narration.`);
+  }
+
+  if (!scene.focus && !scene.code && !scene.preview && !scene.theory) {
+    throw new Error(`Scene "${sceneId}" in step "${stepId}" must define focus, code, preview, or theory.`);
+  }
+
+  if (scene.focus && !normalizeString(scene.focus.artifactId)) {
+    throw new Error(`Scene "${sceneId}" in step "${stepId}" must define focus.artifactId.`);
+  }
+
+  if (scene.code && !normalizeString(scene.code.activeArtifactId)) {
+    throw new Error(`Scene "${sceneId}" in step "${stepId}" must define code.activeArtifactId.`);
+  }
+
+  if (scene.preview) {
+    const previewAction = normalizeString(scene.preview.action);
+
+    if (!PREVIEW_ACTIONS.has(previewAction)) {
+      throw new Error(`Scene "${sceneId}" in step "${stepId}" must use a valid preview.action.`);
+    }
+
+    scene.preview.action = previewAction;
+    scene.preview.target = normalizeString(scene.preview.target);
+
+    if (previewAction !== 'none' && !scene.preview.target) {
+      throw new Error(`Scene "${sceneId}" in step "${stepId}" must define preview.target when preview.action is "${previewAction}".`);
+    }
+  }
+
+  if (scene.theory && !normalizeString(scene.theory.anchor)) {
+    throw new Error(`Scene "${sceneId}" in step "${stepId}" must define theory.anchor.`);
+  }
+
+  return scene;
+}
+
 function readSectionHeadings(body) {
   const stepHeadings = [];
   const sceneHeadings = [];
   const lines = String(body || '').split('\n');
   let currentStepId = '';
-  let currentStepSceneCount = 0;
-  const sceneCountByStep = new Map();
+  let currentScene = null;
+  let currentSceneLines = [];
+  const scenesByStep = new Map();
 
-  lines.forEach(line => {
+  function flushCurrentScene() {
+    if (!currentScene) {
+      return;
+    }
+
+    const parsedScene = normalizeSceneBlock({
+      sceneId: currentScene.sceneId,
+      lines: currentSceneLines
+    }, currentStepId);
+
+    scenesByStep.get(currentStepId).push(parsedScene);
+    currentScene = null;
+    currentSceneLines = [];
+  }
+
+  lines.forEach((line, index) => {
     const stepMatch = line.match(/^# Step:\s*(.+)$/);
 
     if (stepMatch) {
+      flushCurrentScene();
       currentStepId = normalizeString(stepMatch[1]);
-      currentStepSceneCount = 0;
+
+      if (!currentStepId) {
+        throw new Error('Each scenes.md step heading must define a step id.');
+      }
+
+      if (scenesByStep.has(currentStepId)) {
+        throw new Error(`scenes.md defines step "${currentStepId}" more than once.`);
+      }
+
       stepHeadings.push(currentStepId);
-      sceneCountByStep.set(currentStepId, 0);
+      scenesByStep.set(currentStepId, []);
       return;
     }
 
@@ -39676,39 +40004,76 @@ function readSectionHeadings(body) {
         throw new Error(`Scene heading "${sceneMatch[1]}" appears before any step heading.`);
       }
 
-      currentStepSceneCount += 1;
+      flushCurrentScene();
+      currentScene = {
+        sceneId: normalizeString(sceneMatch[1]),
+        lineNumber: index + 1
+      };
+      currentSceneLines = [];
       sceneHeadings.push({
         stepId: currentStepId,
-        sceneId: normalizeString(sceneMatch[1])
+        sceneId: currentScene.sceneId
       });
-      sceneCountByStep.set(currentStepId, currentStepSceneCount);
+      return;
     }
+
+    if (!currentStepId) {
+      if (normalizeString(line)) {
+        throw new Error('scenes.md body must start with a step heading.');
+      }
+      return;
+    }
+
+    if (!currentScene) {
+      if (normalizeString(line)) {
+        throw new Error(`Step "${currentStepId}" contains content before its first scene.`);
+      }
+      return;
+    }
+
+    currentSceneLines.push(line);
   });
+
+  flushCurrentScene();
 
   return {
     stepHeadings,
     sceneHeadings,
-    sceneCountByStep
+    scenesByStep
   };
 }
 
 export function readScenesContract(markdown) {
   const { attributes, body } = parseFrontmatter(markdown);
   const steps = Array.isArray(attributes.steps) ? attributes.steps.map(normalizeSceneStep) : [];
+  const schemaVersion = Number(attributes.schemaVersion);
+  const lessonId = normalizeString(attributes.lessonId);
 
-  if (!attributes.schemaVersion) {
+  if (!Number.isInteger(schemaVersion) || schemaVersion < 1) {
     throw new Error('scenes.md must define schemaVersion.');
   }
 
-  if (normalizeString(attributes.lessonId) === '') {
+  if (lessonId === '') {
     throw new Error('scenes.md must define lessonId.');
   }
+
+  assertKebabCase(lessonId, 'Lesson ID');
 
   if (!steps.length) {
     throw new Error('scenes.md must declare at least one step.');
   }
 
-  const { stepHeadings, sceneHeadings, sceneCountByStep } = readSectionHeadings(body);
+  const stepIds = new Set();
+
+  steps.forEach(step => {
+    if (stepIds.has(step.stepId)) {
+      throw new Error(`scenes.md declares step "${step.stepId}" more than once in frontmatter.`);
+    }
+
+    stepIds.add(step.stepId);
+  });
+
+  const { stepHeadings, sceneHeadings, scenesByStep } = readSectionHeadings(body);
 
   if (stepHeadings.length !== steps.length) {
     throw new Error('scenes.md body must list every declared step exactly once.');
@@ -39719,14 +40084,28 @@ export function readScenesContract(markdown) {
       throw new Error(`Step order mismatch in scenes.md around "${step.stepId}".`);
     }
 
-    if ((sceneCountByStep.get(step.stepId) || 0) === 0) {
+    const stepScenes = scenesByStep.get(step.stepId) || [];
+
+    if (!stepScenes.length) {
       throw new Error(`Step "${step.stepId}" must contain at least one scene.`);
     }
+
+    const sceneIds = new Set();
+    const normalizedScenes = stepScenes.map(scene => {
+      if (sceneIds.has(scene.sceneId)) {
+        throw new Error(`Step "${step.stepId}" defines scene "${scene.sceneId}" more than once.`);
+      }
+
+      sceneIds.add(scene.sceneId);
+      return scene;
+    });
+
+    step.scenes = normalizedScenes;
   });
 
   return {
-    schemaVersion: attributes.schemaVersion,
-    lessonId: normalizeString(attributes.lessonId),
+    schemaVersion,
+    lessonId,
     steps,
     body,
     stepHeadings,
@@ -40204,6 +40583,66 @@ export function renderMarkdown(markdown) {
 
   return htmlParts.join('\n');
 }
+
+=== lesson-engine/validate-source-lessons.js ===
+import fs from 'node:fs';
+import path from 'node:path';
+import { fileURLToPath } from 'node:url';
+import { parseFrontmatter } from './parse-frontmatter.js';
+import { compileLessonPackage } from './compile-lesson-package.js';
+
+const currentDir = path.dirname(fileURLToPath(import.meta.url));
+const lessonsRoot = path.resolve(currentDir, '../education/lessons');
+
+function readText(filePath) {
+  return fs.readFileSync(filePath, 'utf8');
+}
+
+function collectLessonFolders() {
+  if (!fs.existsSync(lessonsRoot)) {
+    return [];
+  }
+
+  return fs.readdirSync(lessonsRoot, { withFileTypes: true })
+    .filter(entry => entry.isDirectory())
+    .map(entry => ({ lessonSlug: entry.name, sourceRoot: path.join(lessonsRoot, entry.name, 'source') }))
+    .filter(entry => fs.existsSync(path.join(entry.sourceRoot, 'lesson.md')));
+}
+
+function validateLessonSource({ lessonSlug, sourceRoot }) {
+  const lessonMarkdown = readText(path.join(sourceRoot, 'lesson.md'));
+  const scenesMarkdown = readText(path.join(sourceRoot, 'scenes.md'));
+  const { attributes } = parseFrontmatter(lessonMarkdown);
+  const artifactMarkdownById = Object.fromEntries(
+    (attributes.artifacts || []).map(artifact => [
+      artifact.artifactId,
+      readText(path.join(sourceRoot, artifact.file))
+    ])
+  );
+
+  const compiledLesson = compileLessonPackage({
+    lessonMarkdown,
+    scenesMarkdown,
+    artifactMarkdownById,
+    goalImageSrc: attributes.goal?.imageSrc || ''
+  });
+
+  const sceneCount = compiledLesson.steps.reduce(
+    (count, step) => count + (Array.isArray(step.scenes) ? step.scenes.length : 0),
+    0
+  );
+
+  console.log(`${lessonSlug}: ok (${compiledLesson.steps.length} steps, ${sceneCount} scenes)`);
+}
+
+function main() {
+  const lessonFolders = collectLessonFolders();
+
+  lessonFolders.forEach(validateLessonSource);
+  console.log(`Validated ${lessonFolders.length} lesson source packages.`);
+}
+
+main();
 
 === lessons/01-build-sidebar/build-css-at-step.js ===
 import cssRulesDocument from './content/documents/files/css.rules.md?raw';
@@ -50225,6 +50664,7 @@ EOF
     "dev": "vite",
     "build": "vite build",
     "preview": "vite preview",
+    "validate:lessons": "node lesson-engine/validate-source-lessons.js",
     "sync:lesson-documents": "node lesson-engine/documentation/sync-lesson-documents.js"
   },
   "devDependencies": {

@@ -3,10 +3,12 @@ function readNarrationValue(value) {
 }
 
 export function composeStepNarrationText({ step, currentStepNumber, totalSteps }) {
+  const sceneNarrationText = readNarrationValue(step?.narration);
+  const stepDescriptionText = sceneNarrationText || readNarrationValue(step?.desc);
   const fragments = [
     `Korak ${currentStepNumber + 1} od ${totalSteps}.`,
     readNarrationValue(step?.title),
-    readNarrationValue(step?.desc)
+    stepDescriptionText
   ];
 
   const proTipText = readNarrationValue(step?.proTip);

@@ -10,6 +10,28 @@ function normalizeString(value) {
   return typeof value === 'string' ? value.trim() : '';
 }
 
+function isPlainObject(value) {
+  return Boolean(value) && typeof value === 'object' && !Array.isArray(value);
+}
+
+function assertKebabCase(value, label) {
+  if (!/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(value)) {
+    throw new Error(`${label} must use kebab-case. Received "${value}".`);
+  }
+}
+
+function assertOneOf(value, allowedValues, label) {
+  if (!allowedValues.has(value)) {
+    throw new Error(`${label} must be one of: ${Array.from(allowedValues).join(', ')}.`);
+  }
+}
+
+function assertPositiveInteger(value, label) {
+  if (!Number.isInteger(value) || value < 1) {
+    throw new Error(`${label} must be a positive integer.`);
+  }
+}
+
 function normalizeArtifactDeclaration(artifact) {
   if (!artifact || typeof artifact !== 'object') {
     throw new Error('Each artifact declaration must be an object.');
@@ -36,6 +58,8 @@ function normalizeArtifactDeclaration(artifact) {
   if (!kind) {
     throw new Error(`Artifact "${artifactId}" must define kind.`);
   }
+
+  assertKebabCase(artifactId, 'Artifact ID');
 
   return {
     artifactId,
@@ -77,6 +101,125 @@ function deriveStepTag(step) {
   const tagType = step.stepId.includes('css') || step.stepId.includes('summary') ? 'css' : 'html';
 
   return `${tagType}:${step.stepId}`;
+}
+
+function validateLessonManifest(attributes) {
+  const schemaVersion = Number(attributes.schemaVersion);
+  const lessonId = normalizeString(attributes.lessonId);
+  const lessonTitle = normalizeString(attributes.lessonTitle);
+  const lessonIntro = normalizeString(attributes.lessonIntro);
+  const status = normalizeString(attributes.status);
+  const courseId = normalizeString(attributes.courseId);
+  const preview = attributes.preview;
+  const scenes = attributes.scenes;
+  const artifacts = attributes.artifacts;
+  const theory = attributes.theory;
+
+  if (!Number.isInteger(schemaVersion) || schemaVersion < 1) {
+    throw new Error('lesson.md must define schemaVersion.');
+  }
+
+  if (!lessonId) {
+    throw new Error('lesson.md must define lessonId.');
+  }
+
+  assertKebabCase(lessonId, 'Lesson ID');
+
+  if (!lessonTitle) {
+    throw new Error('lesson.md must define lessonTitle.');
+  }
+
+  if (!lessonIntro) {
+    throw new Error('lesson.md must define lessonIntro.');
+  }
+
+  if (!status) {
+    throw new Error('lesson.md must define status.');
+  }
+
+  assertOneOf(status, new Set(['draft', 'active', 'broken', 'deprecated']), 'lesson.md status');
+
+  if (!courseId) {
+    throw new Error('lesson.md must define courseId.');
+  }
+
+  assertPositiveInteger(Number(attributes.order), 'lesson.md order');
+
+  if (!isPlainObject(preview)) {
+    throw new Error('lesson.md must define a preview object.');
+  }
+
+  const previewType = normalizeString(preview.type);
+  const previewTitle = normalizeString(preview.title);
+  const previewAddress = normalizeString(preview.address);
+
+  if (!previewType) {
+    throw new Error('lesson.md must define preview.type.');
+  }
+
+  assertOneOf(previewType, new Set(['dom', 'terminal', 'markdown', 'diagram', 'none']), 'lesson.md preview.type');
+
+  if (!previewTitle) {
+    throw new Error('lesson.md must define preview.title.');
+  }
+
+  if (!previewAddress) {
+    throw new Error('lesson.md must define preview.address.');
+  }
+
+  if (!isPlainObject(scenes) || !normalizeString(scenes.file)) {
+    throw new Error('lesson.md must define scenes.file.');
+  }
+
+  if (isPlainObject(theory) && theory.enabled === true && !normalizeString(theory.file)) {
+    throw new Error('lesson.md must define theory.file when theory.enabled is true.');
+  }
+
+  if (!Array.isArray(artifacts) || !artifacts.length) {
+    throw new Error('lesson.md must declare at least one artifact.');
+  }
+
+  const artifactIds = new Set();
+
+  artifacts.forEach((artifact, index) => {
+    if (!isPlainObject(artifact)) {
+      throw new Error(`Artifact declaration at index ${index} must be an object.`);
+    }
+
+    const artifactId = normalizeString(artifact.artifactId);
+    const file = normalizeString(artifact.file);
+    const kind = normalizeString(artifact.kind);
+    const language = normalizeString(artifact.language);
+
+    if (!artifactId) {
+      throw new Error(`Artifact declaration at index ${index} must define artifactId.`);
+    }
+
+    if (artifactIds.has(artifactId)) {
+      throw new Error(`Artifact "${artifactId}" is declared more than once.`);
+    }
+
+    artifactIds.add(artifactId);
+    assertKebabCase(artifactId, 'Artifact ID');
+
+    if (!file) {
+      throw new Error(`Artifact "${artifactId}" must define file.`);
+    }
+
+    if (!file.endsWith('.md')) {
+      throw new Error(`Artifact "${artifactId}" must point to a markdown source file.`);
+    }
+
+    if (!language) {
+      throw new Error(`Artifact "${artifactId}" must define language.`);
+    }
+
+    if (!kind) {
+      throw new Error(`Artifact "${artifactId}" must define kind.`);
+    }
+
+    assertOneOf(kind, new Set(['timeline', 'rules']), `Artifact "${artifactId}" kind`);
+  });
 }
 
 function normalizeLessonMeta(attributes, body, goalImageSrcOverride) {
@@ -168,6 +311,8 @@ function createArtifactBuilderLookup(artifactBuilders) {
 }
 
 function createRuntimeStep(step, previewTarget, focusArtifactId) {
+  const scenes = Array.isArray(step.scenes) ? step.scenes : [];
+
   return {
     id: step.stepId,
     title: step.title,
@@ -175,22 +320,25 @@ function createRuntimeStep(step, previewTarget, focusArtifactId) {
     tag: deriveStepTag(step),
     proTip: step.proTip || step.intent || step.summary,
     focusHtmlNeedles: step.focusHtmlNeedles,
-    scenes: [
-      {
-        sceneId: `${step.stepId}-scene`,
-        narration: step.summary,
-        focus: {
-          artifactId: focusArtifactId
-        },
-        code: {
-          activeArtifactId: focusArtifactId
-        },
-        preview: {
-          action: 'apply-state',
-          target: previewTarget
-        }
-      }
-    ]
+    narration: scenes[0]?.narration || step.summary,
+    scenes: scenes.length
+      ? scenes
+      : [
+          {
+            sceneId: `${step.stepId}-scene`,
+            narration: step.summary,
+            focus: {
+              artifactId: focusArtifactId
+            },
+            code: {
+              activeArtifactId: focusArtifactId
+            },
+            preview: {
+              action: 'apply-state',
+              target: previewTarget
+            }
+          }
+        ]
   };
 }
 
@@ -203,9 +351,15 @@ export function compileLessonPackage({
   const { attributes: lessonAttributes, body: lessonBody } = parseFrontmatter(lessonMarkdown);
   const scenesContract = readScenesContract(scenesMarkdown);
 
+  if (Number(lessonAttributes.schemaVersion) !== Number(scenesContract.schemaVersion)) {
+    throw new Error('schemaVersion must match between lesson.md and scenes.md.');
+  }
+
   if (normalizeString(lessonAttributes.lessonId) !== scenesContract.lessonId) {
     throw new Error(`Lesson ID mismatch between lesson.md and scenes.md for "${lessonAttributes.lessonId}".`);
   }
+
+  validateLessonManifest(lessonAttributes);
 
   const lessonMeta = normalizeLessonMeta(lessonAttributes, lessonBody, goalImageSrc);
   const sceneSteps = scenesContract.steps;
@@ -214,10 +368,6 @@ export function compileLessonPackage({
     ? lessonAttributes.artifacts.map(normalizeArtifactDeclaration)
     : [];
 
-  if (!artifactDeclarations.length) {
-    throw new Error(`Lesson "${lessonMeta.lessonId}" must declare at least one artifact.`);
-  }
-
   const artifactBuilders = createArtifactBuilders({
     artifactDeclarations,
     artifactMarkdownById,
@@ -225,26 +375,16 @@ export function compileLessonPackage({
   });
   const buildArtifactAtStepById = createArtifactBuilderLookup(artifactBuilders);
 
+  const teachingSteps = sceneSteps.map(step => createRuntimeStep(step, lessonMeta.preview.type, deriveFocusArtifactId(step)));
+  const scenesByStep = Object.fromEntries(sceneSteps.map(step => [step.stepId, step.scenes]));
+
   const statesByStep = sceneSteps.map((step, stepNumber) => ({
     stepId: step.stepId,
+    scenes: step.scenes,
     artifacts: Object.fromEntries(
       artifactBuilders.map(({ artifact, buildAtStep }) => [artifact.artifactId, buildAtStep(stepNumber)])
     )
   }));
-
-  const runtimeSteps = sceneSteps.map(step => {
-    const focusArtifactId = deriveFocusArtifactId(step);
-    return {
-      id: step.stepId,
-      title: step.title,
-      desc: step.summary,
-      tag: deriveStepTag(step),
-      proTip: step.proTip || step.intent || step.summary,
-      focusHtmlNeedles: step.focusHtmlNeedles
-    };
-  });
-
-  const teachingSteps = sceneSteps.map((step, index) => createRuntimeStep(step, lessonMeta.preview.type, deriveFocusArtifactId(step)));
 
   const artifacts = artifactDeclarations.map(artifact => ({
     artifactId: artifact.artifactId,
@@ -293,7 +433,7 @@ export function compileLessonPackage({
       tags: lessonMeta.tags,
       difficulty: lessonMeta.difficulty,
       estimatedMinutes: lessonMeta.estimatedMinutes,
-      ideMode: Boolean(attributes.ideMode)
+      ideMode: Boolean(lessonAttributes.ideMode)
     },
     teaching: {
       steps: teachingSteps,
@@ -318,8 +458,9 @@ export function compileLessonPackage({
     goalImageCaption: lessonMeta.goal.imageCaption,
     homeworkTitle: lessonMeta.homework.title,
     homeworkItems: lessonMeta.homework.items,
-    steps: runtimeSteps,
-    ideMode: Boolean(attributes.ideMode),
+    steps: teachingSteps,
+    scenesByStep,
+    ideMode: Boolean(lessonAttributes.ideMode),
     buildHtmlAtStep,
     buildCssAtStep,
     buildJsAtStep,
