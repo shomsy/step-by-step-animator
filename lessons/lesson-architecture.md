@@ -1,3 +1,9 @@
+# ARCHIVED LEGACY SHAPE
+
+DO NOT EXTEND.
+REFERENCE ONLY.
+LIVE CONTRACT IS `.agents/architecture/ARCHITECTURE.md`, `.agents/architecture/migration-governance.md`, and `AGENTS.md`.
+
 # Lesson Architecture
 
 This document is the repo-level governance for the lesson system.

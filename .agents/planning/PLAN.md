@@ -14,5 +14,6 @@ Update rules:
 
 ## Current Workstreams
 
-1. `[active] 2026-03-26 01:47 - Runtime stabilization and bundle splitting` - split the large Vite main chunk while keeping `app/` and `animator-engine/` aligned
-2. `[active] 2026-03-26 01:47 - Archive hygiene and documentation parity` - keep frozen docs clearly marked as reference only and remove any final split-brain wording
+No active workstreams right now.
+
+Closed workstreams are tracked in `.agents/evidence/CHANGELOG.md`.

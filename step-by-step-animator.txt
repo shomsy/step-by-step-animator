@@ -3107,17 +3107,18 @@ Update rules:
 
 ## Current Ledger
 
-1. `[feature][done] 2026-03-26 - App shell moved under app/ with root compatibility aliases` - `app/index.html`, `app/main.js`, `index.html`, `main.js`, `vite.config.js`, `sidebar-step-by-step.html`
-2. `[feature][done] 2026-03-26 - Source-only lesson authoring contract locked` - `.agents/authoring/LESSON_AUTHORING.md`, `.agents/architecture/lesson-architecture.md`, `AGENTS.md`
-3. `[feature][done] 2026-03-26 - Lesson engine compiler boundary introduced` - `lesson-engine/compile-lesson-package.js`, `lesson-engine/read-scenes-contract.js`, `animator-engine/play-lesson/listen-to-step/compose-step-narration-text.js`
-4. `[feature][done] 2026-03-26 - Lesson source validation command added` - `lesson-engine/validate-source-lessons.js`, `package.json`, `AGENTS.md`
-5. `[governance][done] 2026-03-26 - Source-only migration governance completed` - `.agents/architecture/migration-governance.md`
-6. `[decision][done] 2026-03-26 - Merge dump kept as portable working backup` - `merge-files.sh`, `step-by-step-animator.txt`
-7. `[governance][done] 2026-03-26 01:47 - Mandatory work flow locked as plan -> todo -> evidence` - `AGENTS.md`, `.agents/planning/PLAN.md`, `.agents/evidence/TODO.md`, `.agents/evidence/CHANGELOG.md`
-8. `[todo][active] 2026-03-26 01:47 - Active backlog lives in .agents/evidence/TODO.md` - `.agents/evidence/TODO.md`
-9. `[archive][done] 2026-03-26 01:47 - Legacy planning notes archived outside TODO naming` - `.agents/planning/ARCHIVE.md`
-10. `[bug][done] 2026-03-26 01:47 - bugs.md has no open items` - `.agents/review/bugs.md`
-11. `[perf][follow-up] 2026-03-26 01:47 - Vite still warns about a large main chunk` - `npm run build`
+1. `[perf][done] 2026-03-26 01:58 - Split the large Vite main chunk` - `app/main.js`, `animator-engine/choose-lesson/select-lesson-from-location.js`, `lesson-engine/register-lesson-packages/index.js`
+2. `[governance][done] 2026-03-26 01:58 - Legacy archive docs banner sweep completed` - `animator/agents.md`, `lessons/lesson-architecture.md`
+3. `[feature][done] 2026-03-26 - App shell moved under app/ with root compatibility aliases` - `app/index.html`, `app/main.js`, `index.html`, `main.js`, `vite.config.js`, `sidebar-step-by-step.html`
+4. `[feature][done] 2026-03-26 - Source-only lesson authoring contract locked` - `.agents/authoring/LESSON_AUTHORING.md`, `.agents/architecture/lesson-architecture.md`, `AGENTS.md`
+5. `[feature][done] 2026-03-26 - Lesson engine compiler boundary introduced` - `lesson-engine/compile-lesson-package.js`, `lesson-engine/read-scenes-contract.js`, `animator-engine/play-lesson/listen-to-step/compose-step-narration-text.js`
+6. `[feature][done] 2026-03-26 - Lesson source validation command added` - `lesson-engine/validate-source-lessons.js`, `package.json`, `AGENTS.md`
+7. `[governance][done] 2026-03-26 - Source-only migration governance completed` - `.agents/architecture/migration-governance.md`
+8. `[decision][done] 2026-03-26 - Merge dump kept as portable working backup` - `merge-files.sh`, `step-by-step-animator.txt`
+9. `[governance][done] 2026-03-26 01:47 - Mandatory work flow locked as plan -> todo -> evidence` - `AGENTS.md`, `.agents/planning/PLAN.md`, `.agents/evidence/TODO.md`, `.agents/evidence/CHANGELOG.md`
+10. `[todo][active] 2026-03-26 01:47 - Active backlog lives in .agents/evidence/TODO.md` - `.agents/evidence/TODO.md`
+11. `[archive][done] 2026-03-26 01:47 - Legacy planning notes archived outside TODO naming` - `.agents/planning/ARCHIVE.md`
+12. `[bug][done] 2026-03-26 01:47 - bugs.md has no open items` - `.agents/review/bugs.md`
 
 === .agents/evidence/TODO.md ===
 # Active TODO
@@ -3135,8 +3136,8 @@ Update rules:
 
 ## Current Items
 
-1. `[follow-up] 2026-03-26 01:45 - Split the large Vite main chunk` - the build still warns about `appIndex` chunk size because of `piper`/`onnxruntime` payloads
-2. `[follow-up] 2026-03-26 01:45 - Decide whether the legacy archive docs need one final banner sweep` - only if we want the frozen docs to be even more explicit
+1. `[done] 2026-03-26 01:58 - Split the large Vite main chunk` - the app bootstrap is split, the lesson registry is lightweight, and the warning is gone
+2. `[done] 2026-03-26 01:58 - Decide whether the legacy archive docs need one final banner sweep` - added archive banners to `animator/agents.md` and `lessons/lesson-architecture.md`
 3. `[done] 2026-03-26 01:45 - App shell moved under app/ with compatibility aliases` - closed in `app/index.html`, `app/main.js`, `index.html`, `main.js`
 
 === .agents/planning/ARCHIVE.md ===
@@ -3164,8 +3165,9 @@ Update rules:
 
 ## Current Workstreams
 
-1. `[active] 2026-03-26 01:47 - Runtime stabilization and bundle splitting` - split the large Vite main chunk while keeping `app/` and `animator-engine/` aligned
-2. `[active] 2026-03-26 01:47 - Archive hygiene and documentation parity` - keep frozen docs clearly marked as reference only and remove any final split-brain wording
+No active workstreams right now.
+
+Closed workstreams are tracked in `.agents/evidence/CHANGELOG.md`.
 
 === .agents/review/bugs.md ===
 # Bugs
@@ -3661,13 +3663,24 @@ export function presentLessonPicker({
 }
 
 === animator-engine/choose-lesson/select-lesson-from-location.js ===
-import { findLesson, getDefaultLessonId } from '../../lesson-engine/register-lesson-packages/index.js';
-
-export function selectLessonFromLocation({ ownerLocation }) {
+export async function selectLessonFromLocation({ ownerLocation }) {
+  const {
+    registeredLessons,
+    findLesson,
+    getDefaultLessonId
+  } = await import('../../lesson-engine/register-lesson-packages/index.js');
   const selectedLessonId = new URL(ownerLocation.href).searchParams.get('lesson');
   const defaultLessonId = getDefaultLessonId();
+  const selectedLesson = findLesson(selectedLessonId) || findLesson(defaultLessonId);
 
-  return findLesson(selectedLessonId) || findLesson(defaultLessonId);
+  if (!selectedLesson) {
+    throw new Error('No lesson package could be selected.');
+  }
+
+  return {
+    lesson: await selectedLesson.loadLesson(),
+    lessons: registeredLessons
+  };
 }
 
 === animator-engine/play-lesson/01-start-lesson/create-lesson-progress.js ===
@@ -8020,6 +8033,12 @@ export function writeSavedStepNumbers({ lessonId, savedStepNumbers }) {
 }
 
 === animator/agents.md ===
+# ARCHIVED LEGACY SHAPE
+
+DO NOT EXTEND.
+REFERENCE ONLY.
+LIVE CONTRACT IS `.agents/architecture/ARCHITECTURE.md`, `.agents/architecture/migration-governance.md`, and `AGENTS.md`.
+
 # Animator Architecture
 
 ## Purpose
@@ -13508,20 +13527,27 @@ export function writeSavedStepNumbers({ lessonId, savedStepNumbers }) {
 === app/main.js ===
 import '../animator-engine/play-lesson/lesson-player.css';
 import { selectLessonFromLocation } from '../animator-engine/choose-lesson/select-lesson-from-location.js';
-import { playLesson } from '../animator-engine/play-lesson/play-lesson.pipeline.js';
-import { registeredLessons } from '../lesson-engine/register-lesson-packages/index.js';
 
-const selectedLesson = selectLessonFromLocation({
-  ownerLocation: window.location
+void bootstrap().catch(error => {
+  console.error(error);
 });
 
-playLesson({
-  ownerDocument: document,
-  ownerLocation: window.location,
-  ownerWindow: window,
-  lessons: registeredLessons,
-  lesson: selectedLesson
-});
+async function bootstrap() {
+  const [{ playLesson }, lessonSelection] = await Promise.all([
+    import('../animator-engine/play-lesson/play-lesson.pipeline.js'),
+    selectLessonFromLocation({
+      ownerLocation: window.location
+    })
+  ]);
+
+  playLesson({
+    ownerDocument: document,
+    ownerLocation: window.location,
+    ownerWindow: window,
+    lessons: lessonSelection.lessons,
+    lesson: lessonSelection.lesson
+  });
+}
 
 === education/lessons/01-build-sidebar/source/lesson.md ===
 ---
@@ -40470,24 +40496,47 @@ export const SmellOfEnterpriseLesson = compileLessonPackage({
 });
 
 === lesson-engine/register-lesson-packages/index.js ===
-import { BuildSidebarLesson } from './01-build-sidebar-lesson.js';
-import { BuildTopNavigationLesson } from './02-build-top-navigation-lesson.js';
-import { BuildCustomElementLesson } from './03-build-custom-element-lesson.js';
-import { BuildWebComponentLesson } from './04-build-web-component-lesson.js';
-import { CleanWebComponentWithAdoptedStylesheetsLesson } from './05-clean-web-component-with-adopted-stylesheets-lesson.js';
-import { ModularWebComponentsLesson } from './06-modular-web-components-lesson.js';
-import { BuildUiUserAvatarLesson } from './07-build-ui-user-avatar-lesson.js';
-import { SmellOfEnterpriseLesson } from './08-smell-of-enterprise-lesson.js';
-
 export const registeredLessons = [
-  BuildSidebarLesson,
-  BuildTopNavigationLesson,
-  BuildCustomElementLesson,
-  BuildWebComponentLesson,
-  CleanWebComponentWithAdoptedStylesheetsLesson,
-  ModularWebComponentsLesson,
-  BuildUiUserAvatarLesson,
-  SmellOfEnterpriseLesson
+  {
+    lessonId: '01-build-sidebar',
+    lessonTitle: 'Build Sidebar',
+    loadLesson: () => import('./01-build-sidebar-lesson.js').then(module => module.BuildSidebarLesson)
+  },
+  {
+    lessonId: '02-build-top-navigation',
+    lessonTitle: 'Build Top Navigation',
+    loadLesson: () => import('./02-build-top-navigation-lesson.js').then(module => module.BuildTopNavigationLesson)
+  },
+  {
+    lessonId: '03-build-custom-element',
+    lessonTitle: 'Build Custom Element',
+    loadLesson: () => import('./03-build-custom-element-lesson.js').then(module => module.BuildCustomElementLesson)
+  },
+  {
+    lessonId: '04-build-web-component',
+    lessonTitle: 'Build Web Component',
+    loadLesson: () => import('./04-build-web-component-lesson.js').then(module => module.BuildWebComponentLesson)
+  },
+  {
+    lessonId: '05-clean-web-component-with-adopted-stylesheets',
+    lessonTitle: 'Clean Web Component With Adopted Stylesheets',
+    loadLesson: () => import('./05-clean-web-component-with-adopted-stylesheets-lesson.js').then(module => module.CleanWebComponentWithAdoptedStylesheetsLesson)
+  },
+  {
+    lessonId: '06-modular-web-components',
+    lessonTitle: 'Modular Web Components',
+    loadLesson: () => import('./06-modular-web-components-lesson.js').then(module => module.ModularWebComponentsLesson)
+  },
+  {
+    lessonId: '07-build-ui-user-avatar',
+    lessonTitle: 'Build UI User Avatar',
+    loadLesson: () => import('./07-build-ui-user-avatar-lesson.js').then(module => module.BuildUiUserAvatarLesson)
+  },
+  {
+    lessonId: '08-smell-of-enterprise',
+    lessonTitle: 'Smell Of Enterprise',
+    loadLesson: () => import('./08-smell-of-enterprise-lesson.js').then(module => module.SmellOfEnterpriseLesson)
+  }
 ];
 
 export function getDefaultLessonId() {
@@ -49358,6 +49407,12 @@ export const stepNumberById = Object.fromEntries(
 );
 
 === lessons/lesson-architecture.md ===
+# ARCHIVED LEGACY SHAPE
+
+DO NOT EXTEND.
+REFERENCE ONLY.
+LIVE CONTRACT IS `.agents/architecture/ARCHITECTURE.md`, `.agents/architecture/migration-governance.md`, and `AGENTS.md`.
+
 # Lesson Architecture
 
 This document is the repo-level governance for the lesson system.

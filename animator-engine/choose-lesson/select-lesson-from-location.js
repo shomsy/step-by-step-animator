@@ -1,8 +1,19 @@
-import { findLesson, getDefaultLessonId } from '../../lesson-engine/register-lesson-packages/index.js';
-
-export function selectLessonFromLocation({ ownerLocation }) {
+export async function selectLessonFromLocation({ ownerLocation }) {
+  const {
+    registeredLessons,
+    findLesson,
+    getDefaultLessonId
+  } = await import('../../lesson-engine/register-lesson-packages/index.js');
   const selectedLessonId = new URL(ownerLocation.href).searchParams.get('lesson');
   const defaultLessonId = getDefaultLessonId();
+  const selectedLesson = findLesson(selectedLessonId) || findLesson(defaultLessonId);
 
-  return findLesson(selectedLessonId) || findLesson(defaultLessonId);
+  if (!selectedLesson) {
+    throw new Error('No lesson package could be selected.');
+  }
+
+  return {
+    lesson: await selectedLesson.loadLesson(),
+    lessons: registeredLessons
+  };
 }
