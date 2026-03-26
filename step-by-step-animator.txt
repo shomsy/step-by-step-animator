@@ -3107,18 +3107,18 @@ Update rules:
 
 ## Current Ledger
 
-1. `[perf][done] 2026-03-26 01:58 - Split the large Vite main chunk` - `app/main.js`, `animator-engine/choose-lesson/select-lesson-from-location.js`, `lesson-engine/register-lesson-packages/index.js`
-2. `[governance][done] 2026-03-26 01:58 - Legacy archive docs banner sweep completed` - `animator/agents.md`, `lessons/lesson-architecture.md`
-3. `[feature][done] 2026-03-26 - App shell moved under app/ with root compatibility aliases` - `app/index.html`, `app/main.js`, `index.html`, `main.js`, `vite.config.js`, `sidebar-step-by-step.html`
-4. `[feature][done] 2026-03-26 - Source-only lesson authoring contract locked` - `.agents/authoring/LESSON_AUTHORING.md`, `.agents/architecture/lesson-architecture.md`, `AGENTS.md`
-5. `[feature][done] 2026-03-26 - Lesson engine compiler boundary introduced` - `lesson-engine/compile-lesson-package.js`, `lesson-engine/read-scenes-contract.js`, `animator-engine/play-lesson/listen-to-step/compose-step-narration-text.js`
-6. `[feature][done] 2026-03-26 - Lesson source validation command added` - `lesson-engine/validate-source-lessons.js`, `package.json`, `AGENTS.md`
-7. `[governance][done] 2026-03-26 - Source-only migration governance completed` - `.agents/architecture/migration-governance.md`
-8. `[decision][done] 2026-03-26 - Merge dump kept as portable working backup` - `merge-files.sh`, `step-by-step-animator.txt`
-9. `[governance][done] 2026-03-26 01:47 - Mandatory work flow locked as plan -> todo -> evidence` - `AGENTS.md`, `.agents/planning/PLAN.md`, `.agents/evidence/TODO.md`, `.agents/evidence/CHANGELOG.md`
-10. `[todo][active] 2026-03-26 01:47 - Active backlog lives in .agents/evidence/TODO.md` - `.agents/evidence/TODO.md`
-11. `[archive][done] 2026-03-26 01:47 - Legacy planning notes archived outside TODO naming` - `.agents/planning/ARCHIVE.md`
-12. `[bug][done] 2026-03-26 01:47 - bugs.md has no open items` - `.agents/review/bugs.md`
+1. `[todo][done] 2026-03-26 01:58 - Active TODO emptied after closing current items` - `.agents/evidence/TODO.md`, `.agents/evidence/CHANGELOG.md`
+2. `[perf][done] 2026-03-26 01:58 - Split the large Vite main chunk` - `app/main.js`, `animator-engine/choose-lesson/select-lesson-from-location.js`, `lesson-engine/register-lesson-packages/index.js`
+3. `[governance][done] 2026-03-26 01:58 - Legacy archive docs banner sweep completed` - `animator/agents.md`, `lessons/lesson-architecture.md`
+4. `[feature][done] 2026-03-26 - App shell moved under app/ with root compatibility aliases` - `app/index.html`, `app/main.js`, `index.html`, `main.js`, `vite.config.js`, `sidebar-step-by-step.html`
+5. `[feature][done] 2026-03-26 - Source-only lesson authoring contract locked` - `.agents/authoring/LESSON_AUTHORING.md`, `.agents/architecture/lesson-architecture.md`, `AGENTS.md`
+6. `[feature][done] 2026-03-26 - Lesson engine compiler boundary introduced` - `lesson-engine/compile-lesson-package.js`, `lesson-engine/read-scenes-contract.js`, `animator-engine/play-lesson/listen-to-step/compose-step-narration-text.js`
+7. `[feature][done] 2026-03-26 - Lesson source validation command added` - `lesson-engine/validate-source-lessons.js`, `package.json`, `AGENTS.md`
+8. `[governance][done] 2026-03-26 - Source-only migration governance completed` - `.agents/architecture/migration-governance.md`
+9. `[decision][done] 2026-03-26 - Merge dump kept as portable working backup` - `merge-files.sh`, `step-by-step-animator.txt`
+10. `[governance][done] 2026-03-26 01:47 - Mandatory work flow locked as plan -> todo -> evidence` - `AGENTS.md`, `.agents/planning/PLAN.md`, `.agents/evidence/TODO.md`, `.agents/evidence/CHANGELOG.md`
+11. `[todo][active] 2026-03-26 01:47 - Active backlog lives in .agents/evidence/TODO.md` - `.agents/evidence/TODO.md`
+12. `[archive][done] 2026-03-26 01:47 - Legacy planning notes archived outside TODO naming` - `.agents/planning/ARCHIVE.md`
 
 === .agents/evidence/TODO.md ===
 # Active TODO
@@ -3134,11 +3134,8 @@ Update rules:
 - move completed items to the evidence ledger when they are closed
 - use `YYYY-MM-DD HH:MM` timestamps for new items so task age and cycle time can be estimated
 
-## Current Items
-
-1. `[done] 2026-03-26 01:58 - Split the large Vite main chunk` - the app bootstrap is split, the lesson registry is lightweight, and the warning is gone
-2. `[done] 2026-03-26 01:58 - Decide whether the legacy archive docs need one final banner sweep` - added archive banners to `animator/agents.md` and `lessons/lesson-architecture.md`
-3. `[done] 2026-03-26 01:45 - App shell moved under app/ with compatibility aliases` - closed in `app/index.html`, `app/main.js`, `index.html`, `main.js`
+No active items.
+Completed entries belong in `.agents/evidence/CHANGELOG.md`.
 
 === .agents/planning/ARCHIVE.md ===
 # Planning Archive
@@ -3259,10 +3256,11 @@ Evidence ledger rules:
 Backlog rules:
 
 - when a review or implementation pass leaves follow-up work, add it to `.agents/evidence/TODO.md`
-- when an item is completed, mark it there and mirror the state change in `.agents/evidence/CHANGELOG.md`
+- when an item is completed, remove it from `.agents/evidence/TODO.md` and mirror the state change in `.agents/evidence/CHANGELOG.md`
 - do not rely on memory or chat history as the source of truth for pending work
 - use `YYYY-MM-DD HH:MM` timestamps for new backlog entries so duration and aging can be estimated
 - only `.agents/evidence/TODO.md` is the active TODO list; planning archive files are historical only
+- if `.agents/evidence/TODO.md` has no active work, it should say `No active items.`
 
 ## 1.4 Mandatory Work Flow
 
@@ -3278,6 +3276,7 @@ Rules:
 - `TODO.md` captures actionable follow-up work
 - `CHANGELOG.md` captures closed evidence and final state
 - `planning/ARCHIVE.md` may exist for legacy notes, but it is not an active TODO list
+- the active TODO file is not an archive; completed items do not stay there
 - do not skip a layer when the item is substantial enough to merit tracking
 - keep the three layers aligned in the same work item when the state changes
 

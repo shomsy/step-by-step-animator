@@ -59,10 +59,11 @@ Evidence ledger rules:
 Backlog rules:
 
 - when a review or implementation pass leaves follow-up work, add it to `.agents/evidence/TODO.md`
-- when an item is completed, mark it there and mirror the state change in `.agents/evidence/CHANGELOG.md`
+- when an item is completed, remove it from `.agents/evidence/TODO.md` and mirror the state change in `.agents/evidence/CHANGELOG.md`
 - do not rely on memory or chat history as the source of truth for pending work
 - use `YYYY-MM-DD HH:MM` timestamps for new backlog entries so duration and aging can be estimated
 - only `.agents/evidence/TODO.md` is the active TODO list; planning archive files are historical only
+- if `.agents/evidence/TODO.md` has no active work, it should say `No active items.`
 
 ## 1.4 Mandatory Work Flow
 
@@ -78,6 +79,7 @@ Rules:
 - `TODO.md` captures actionable follow-up work
 - `CHANGELOG.md` captures closed evidence and final state
 - `planning/ARCHIVE.md` may exist for legacy notes, but it is not an active TODO list
+- the active TODO file is not an archive; completed items do not stay there
 - do not skip a layer when the item is substantial enough to merit tracking
 - keep the three layers aligned in the same work item when the state changes
 
