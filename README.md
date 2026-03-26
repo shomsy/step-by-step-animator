@@ -2,14 +2,55 @@
 
 Step By Step Animator is an interactive lesson engine for HTML, CSS, and JavaScript tutorials that feel like watching a developer work live over screen share.
 
-The repo is organized around a source-only lesson model:
+## Repository Map
+
+### Canonical Live Shape
+
+These are the active runtime and lesson-system boundaries:
 
 - `app/` is the canonical app shell and runtime entry
-- `education/` contains lesson source
+- `education/` contains source-only lesson authoring material
 - `lesson-engine/` compiles lesson source into canonical lesson packages
 - `animator-engine/` plays compiled lesson packages
-- `foundation/` holds shared low-level primitives
 - `generated/` holds derived output
+
+The architecture documents also reserve a `foundation/` boundary for shared low-level primitives, but this checkout does not currently contain a populated root `foundation/` directory.
+
+### Legacy and Compatibility
+
+- `animator/` is a frozen legacy archive and should not be extended
+- `lessons/` is a frozen legacy lesson archive and should not be extended
+- `index.html` is a compatibility alias that redirects to `app/index.html`
+- `main.js` is a compatibility alias that imports `app/main.js`
+- `sidebar-step-by-step.html` is a compatibility alias for the sidebar lesson
+
+### Governance and Documentation
+
+- `.agents/` contains planning, evidence, architecture, authoring, and review records
+- `AGENTS.md` is the canonical operational contract for the repo
+- `README.md` is the human-friendly start here document
+
+### Tests and Tooling
+
+- `tests/` contains the Node test harness
+- `scripts/` contains helper scripts
+- `merge-files.sh` creates the merged repository snapshot
+- `vite.config.js` configures the Vite build
+
+### Local and Generated Working Directories
+
+- `dist/` is the build output directory
+- `node_modules/` contains installed dependencies
+- `step-by-step-animator.txt` is the merged snapshot and working backup
+
+### Editor Metadata
+
+- `.vscode/` contains shared editor tasks and settings
+- `.idea/` contains local IDE metadata
+
+### Git Metadata
+
+- `.git/` is repository metadata and is intentionally not part of the product surface
 
 ## Install
 
@@ -68,5 +109,4 @@ Each lesson is authored through:
 ## Notes
 
 - Do not edit generated output by hand.
-- The legacy `animator/` and `lessons/` trees are frozen archives.
 - The canonical app entry is `app/main.js`.
