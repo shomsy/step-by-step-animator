@@ -3111,15 +3111,17 @@ Update rules:
 4. `[feature][done] 2026-03-26 - Lesson source validation command added` - `lesson-engine/validate-source-lessons.js`, `package.json`, `AGENTS.md`
 5. `[governance][done] 2026-03-26 - Source-only migration governance completed` - `.agents/architecture/migration-governance.md`
 6. `[decision][done] 2026-03-26 - Merge dump kept as portable working backup` - `merge-files.sh`, `step-by-step-animator.txt`
-7. `[todo][active] 2026-03-26 01:45 - Active backlog lives in .agents/evidence/TODO.md` - `.agents/evidence/TODO.md`
-8. `[todo][archived] 2026-03-26 01:45 - Legacy TODO.md reflects old Lesson 07/08 recovery notes` - `.agents/planning/TODO.md`
-9. `[bug][done] 2026-03-26 01:45 - bugs.md has no open items` - `.agents/review/bugs.md`
-10. `[perf][follow-up] 2026-03-26 01:45 - Vite still warns about a large main chunk` - `npm run build`
+7. `[governance][done] 2026-03-26 01:47 - Mandatory work flow locked as plan -> todo -> evidence` - `AGENTS.md`, `.agents/planning/PLAN.md`, `.agents/evidence/TODO.md`, `.agents/evidence/CHANGELOG.md`
+8. `[todo][active] 2026-03-26 01:47 - Active backlog lives in .agents/evidence/TODO.md` - `.agents/evidence/TODO.md`
+9. `[todo][archived] 2026-03-26 01:47 - Legacy TODO.md reflects old Lesson 07/08 recovery notes` - `.agents/planning/TODO.md`
+10. `[bug][done] 2026-03-26 01:47 - bugs.md has no open items` - `.agents/review/bugs.md`
+11. `[perf][follow-up] 2026-03-26 01:47 - Vite still warns about a large main chunk` - `npm run build`
 
 === .agents/evidence/TODO.md ===
 # Active TODO
 
 This is the active backlog for follow-up work.
+It is fed by `.agents/planning/PLAN.md`.
 
 Update rules:
 
@@ -3134,10 +3136,29 @@ Update rules:
 2. `[follow-up] 2026-03-26 01:45 - Decide whether the legacy archive docs need one final banner sweep` - only if we want the frozen docs to be even more explicit
 3. `[done] 2026-03-26 01:45 - App shell moved under app/ with compatibility aliases` - closed in `app/index.html`, `app/main.js`, `index.html`, `main.js`
 
+=== .agents/planning/PLAN.md ===
+# Active Plan
+
+This is the mandatory first tracking layer for substantial work.
+
+Update rules:
+
+- keep newest items at the top
+- use `YYYY-MM-DD HH:MM` timestamps so duration and aging can be estimated
+- keep the plan high-level and outcome-oriented
+- when a plan item becomes actionable, move it into `.agents/evidence/TODO.md`
+- when an item closes, mirror it in `.agents/evidence/CHANGELOG.md`
+
+## Current Workstreams
+
+1. `[active] 2026-03-26 01:47 - Runtime stabilization and bundle splitting` - split the large Vite main chunk while keeping `app/` and `animator-engine/` aligned
+2. `[active] 2026-03-26 01:47 - Archive hygiene and documentation parity` - keep frozen docs clearly marked as reference only and remove any final split-brain wording
+
 === .agents/planning/TODO.md ===
 # TODO
 
-This file is archived. Active tracking lives in `.agents/evidence/TODO.md` and `.agents/evidence/CHANGELOG.md`.
+This file is archived. Active planning lives in `.agents/planning/PLAN.md`.
+Active tracking lives in `.agents/evidence/TODO.md` and `.agents/evidence/CHANGELOG.md`.
 
 === .agents/review/bugs.md ===
 # Bugs
@@ -3232,6 +3253,22 @@ Backlog rules:
 - when an item is completed, mark it there and mirror the state change in `.agents/evidence/CHANGELOG.md`
 - do not rely on memory or chat history as the source of truth for pending work
 - use `YYYY-MM-DD HH:MM` timestamps for new backlog entries so duration and aging can be estimated
+
+## 1.4 Mandatory Work Flow
+
+Every substantial work item must flow through these three layers in order:
+
+1. `.agents/planning/PLAN.md`
+2. `.agents/evidence/TODO.md`
+3. `.agents/evidence/CHANGELOG.md`
+
+Rules:
+
+- `PLAN.md` captures the current workstream and intent
+- `TODO.md` captures actionable follow-up work
+- `CHANGELOG.md` captures closed evidence and final state
+- do not skip a layer when the item is substantial enough to merit tracking
+- keep the three layers aligned in the same work item when the state changes
 
 Document authority rules:
 
@@ -3468,12 +3505,13 @@ At the end of every iteration, mandatory final discipline from the repo root is 
 This means:
 
 1. if the change touched architecture or naming, sync relevant documents
-2. update `.agents/evidence/TODO.md` if the iteration leaves any follow-up work
-3. update `.agents/evidence/CHANGELOG.md` if the work changed feature, bug, TODO, or plan state
-4. run `./merge-files.sh .` from repo root
-5. do `git add -A`
-6. make a normal `git commit`
-7. do `git push`
+2. update `.agents/planning/PLAN.md` if the work changes plan scope or priority
+3. update `.agents/evidence/TODO.md` if the iteration leaves any follow-up work
+4. update `.agents/evidence/CHANGELOG.md` if the work changed feature, bug, TODO, or plan state
+5. run `./merge-files.sh .` from repo root
+6. do `git add -A`
+7. make a normal `git commit`
+8. do `git push`
 
 Do not finish an implementation pass without this closing, unless the user explicitly asks not to commit or push.
 

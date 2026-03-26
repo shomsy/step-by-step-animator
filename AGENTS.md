@@ -63,6 +63,22 @@ Backlog rules:
 - do not rely on memory or chat history as the source of truth for pending work
 - use `YYYY-MM-DD HH:MM` timestamps for new backlog entries so duration and aging can be estimated
 
+## 1.4 Mandatory Work Flow
+
+Every substantial work item must flow through these three layers in order:
+
+1. `.agents/planning/PLAN.md`
+2. `.agents/evidence/TODO.md`
+3. `.agents/evidence/CHANGELOG.md`
+
+Rules:
+
+- `PLAN.md` captures the current workstream and intent
+- `TODO.md` captures actionable follow-up work
+- `CHANGELOG.md` captures closed evidence and final state
+- do not skip a layer when the item is substantial enough to merit tracking
+- keep the three layers aligned in the same work item when the state changes
+
 Document authority rules:
 
 - if we change structure, naming or responsibility boundaries, we change the owning document in the same work item
@@ -298,12 +314,13 @@ At the end of every iteration, mandatory final discipline from the repo root is 
 This means:
 
 1. if the change touched architecture or naming, sync relevant documents
-2. update `.agents/evidence/TODO.md` if the iteration leaves any follow-up work
-3. update `.agents/evidence/CHANGELOG.md` if the work changed feature, bug, TODO, or plan state
-4. run `./merge-files.sh .` from repo root
-5. do `git add -A`
-6. make a normal `git commit`
-7. do `git push`
+2. update `.agents/planning/PLAN.md` if the work changes plan scope or priority
+3. update `.agents/evidence/TODO.md` if the iteration leaves any follow-up work
+4. update `.agents/evidence/CHANGELOG.md` if the work changed feature, bug, TODO, or plan state
+5. run `./merge-files.sh .` from repo root
+6. do `git add -A`
+7. make a normal `git commit`
+8. do `git push`
 
 Do not finish an implementation pass without this closing, unless the user explicitly asks not to commit or push.
 

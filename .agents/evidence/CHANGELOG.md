@@ -19,7 +19,8 @@ Update rules:
 4. `[feature][done] 2026-03-26 - Lesson source validation command added` - `lesson-engine/validate-source-lessons.js`, `package.json`, `AGENTS.md`
 5. `[governance][done] 2026-03-26 - Source-only migration governance completed` - `.agents/architecture/migration-governance.md`
 6. `[decision][done] 2026-03-26 - Merge dump kept as portable working backup` - `merge-files.sh`, `step-by-step-animator.txt`
-7. `[todo][active] 2026-03-26 01:45 - Active backlog lives in .agents/evidence/TODO.md` - `.agents/evidence/TODO.md`
-8. `[todo][archived] 2026-03-26 01:45 - Legacy TODO.md reflects old Lesson 07/08 recovery notes` - `.agents/planning/TODO.md`
-9. `[bug][done] 2026-03-26 01:45 - bugs.md has no open items` - `.agents/review/bugs.md`
-10. `[perf][follow-up] 2026-03-26 01:45 - Vite still warns about a large main chunk` - `npm run build`
+7. `[governance][done] 2026-03-26 01:47 - Mandatory work flow locked as plan -> todo -> evidence` - `AGENTS.md`, `.agents/planning/PLAN.md`, `.agents/evidence/TODO.md`, `.agents/evidence/CHANGELOG.md`
+8. `[todo][active] 2026-03-26 01:47 - Active backlog lives in .agents/evidence/TODO.md` - `.agents/evidence/TODO.md`
+9. `[todo][archived] 2026-03-26 01:47 - Legacy TODO.md reflects old Lesson 07/08 recovery notes` - `.agents/planning/TODO.md`
+10. `[bug][done] 2026-03-26 01:47 - bugs.md has no open items` - `.agents/review/bugs.md`
+11. `[perf][follow-up] 2026-03-26 01:47 - Vite still warns about a large main chunk` - `npm run build`
