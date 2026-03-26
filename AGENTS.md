@@ -29,6 +29,7 @@ Every new lesson must use the same shell and the same teaching model:
 - preview shows exactly the same cumulative HTML/CSS/JS that is currently written
 - changes must be clear, predictable and easy to verbalize
 - for Web Components lessons, JS must first create the actual rendered DOM, only then CSS may style those parts
+- Web Components lessons are visual-first: early steps should establish the rendered shell and styling before behavior is introduced step by step
 
 This is not a showcase.
 This is not a fake storyboard.
@@ -309,7 +310,7 @@ These rules apply to all lessons, without exception:
 After every significant change, обязательно запустите:
 
 ```bash
-find product system tests scripts -name '*.js' -print0 | xargs -0 -n1 node --check && node --check product/app/main.js
+find product system tests -name '*.js' -print0 | xargs -0 -n1 node --check && node --check product/app/main.js && node --check vite.config.js
 npm run validate:lessons
 npm run sync:lesson-documents
 npm run build
@@ -418,6 +419,7 @@ For it, special teaching rules still apply:
 - third, optional JS file in the middle panel
 - actual live preview that executes the same cumulative JavaScript
 - Web Components teaching flow through custom element, shadow DOM, slot and lifecycle
+- early teaching steps stay visual-first: render the component shell and style it before splitting behavior into separate JS actions
 
 `05-clean-web-component-with-adopted-stylesheets` closes the cleanup story:
 

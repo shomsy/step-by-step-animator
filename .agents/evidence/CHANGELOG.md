@@ -15,6 +15,7 @@ Update rules:
 
 ## Current Ledger
 
+1. `[doc][done] 2026-03-26 16:25 - Web Components visual-first sequencing rule added` - `AGENTS.md`, `.agents/authoring/LESSON_AUTHORING.md`, `.agents/planning/PLAN.md`, `.agents/evidence/TODO.md`
 1. `[review][done] 2026-03-26 15:34 - Production readiness review closed` - `system/lesson-engine/documentation/sync-lesson-documents.js`, `system/lesson-engine/register-lesson-packages/*.js`, `tests/flows/compose-step-narration-text.test.js`, `tests/flows/select-lesson-from-location.test.js`
 2. `[refactor][done] 2026-03-26 15:26 - Product/System refactor completed` - `README.md`, `AGENTS.md`, `.agents/architecture/ARCHITECTURE.md`, `.agents/architecture/lesson-architecture.md`, `.agents/architecture/lesson-architecture-flow.md`, `.agents/architecture/migration-governance.md`, `.agents/authoring/LESSON_AUTHORING.md`, `.agents/planning/PLAN.md`, `.agents/planning/ARCHIVE.md`, `.agents/evidence/TODO.md`, `.agents/evidence/CHANGELOG.md`, `.gitignore`, `package.json`, `system/animator-engine/choose-lesson/select-lesson-from-location.js`, `system/lesson-engine/*`, `system/foundation/*`, `tests/*`, `generated/lesson-documents/`, `system/lesson-engine/output/`
 3. `[plan][done] 2026-03-26 15:26 - Product/System Refactor Realignment completed` - `.agents/planning/PLAN.md`, `.agents/planning/ARCHIVE.md`

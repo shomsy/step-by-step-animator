@@ -14,6 +14,7 @@ The lesson must behave like you're watching a programmer over share screen:
 - preview shows exactly the same cumulative result that is currently authored
 - every change must be visually clear and verbally explainable
 - for Web Components lessons, JavaScript must first create the actual rendered DOM, only then CSS should style it
+- Web Components lessons are visual-first: early steps should establish the rendered shell and styling before behavior is introduced step by step
 
 If content cannot be broken into such small, readable steps, it is not ready for this type of animation yet.
 

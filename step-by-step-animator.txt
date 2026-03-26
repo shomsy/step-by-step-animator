@@ -2427,6 +2427,7 @@ The lesson must behave like you're watching a programmer over share screen:
 - preview shows exactly the same cumulative result that is currently authored
 - every change must be visually clear and verbally explainable
 - for Web Components lessons, JavaScript must first create the actual rendered DOM, only then CSS should style it
+- Web Components lessons are visual-first: early steps should establish the rendered shell and styling before behavior is introduced step by step
 
 If content cannot be broken into such small, readable steps, it is not ready for this type of animation yet.
 
@@ -2976,6 +2977,7 @@ Update rules:
 
 ## Current Ledger
 
+1. `[doc][done] 2026-03-26 16:25 - Web Components visual-first sequencing rule added` - `AGENTS.md`, `.agents/authoring/LESSON_AUTHORING.md`, `.agents/planning/PLAN.md`, `.agents/evidence/TODO.md`
 1. `[review][done] 2026-03-26 15:34 - Production readiness review closed` - `system/lesson-engine/documentation/sync-lesson-documents.js`, `system/lesson-engine/register-lesson-packages/*.js`, `tests/flows/compose-step-narration-text.test.js`, `tests/flows/select-lesson-from-location.test.js`
 2. `[refactor][done] 2026-03-26 15:26 - Product/System refactor completed` - `README.md`, `AGENTS.md`, `.agents/architecture/ARCHITECTURE.md`, `.agents/architecture/lesson-architecture.md`, `.agents/architecture/lesson-architecture-flow.md`, `.agents/architecture/migration-governance.md`, `.agents/authoring/LESSON_AUTHORING.md`, `.agents/planning/PLAN.md`, `.agents/planning/ARCHIVE.md`, `.agents/evidence/TODO.md`, `.agents/evidence/CHANGELOG.md`, `.gitignore`, `package.json`, `system/animator-engine/choose-lesson/select-lesson-from-location.js`, `system/lesson-engine/*`, `system/foundation/*`, `tests/*`, `generated/lesson-documents/`, `system/lesson-engine/output/`
 3. `[plan][done] 2026-03-26 15:26 - Product/System Refactor Realignment completed` - `.agents/planning/PLAN.md`, `.agents/planning/ARCHIVE.md`
@@ -3111,6 +3113,7 @@ Every new lesson must use the same shell and the same teaching model:
 - preview shows exactly the same cumulative HTML/CSS/JS that is currently written
 - changes must be clear, predictable and easy to verbalize
 - for Web Components lessons, JS must first create the actual rendered DOM, only then CSS may style those parts
+- Web Components lessons are visual-first: early steps should establish the rendered shell and styling before behavior is introduced step by step
 
 This is not a showcase.
 This is not a fake storyboard.
@@ -3391,7 +3394,7 @@ These rules apply to all lessons, without exception:
 After every significant change, обязательно запустите:
 
 ```bash
-find product system tests scripts -name '*.js' -print0 | xargs -0 -n1 node --check && node --check product/app/main.js
+find product system tests -name '*.js' -print0 | xargs -0 -n1 node --check && node --check product/app/main.js && node --check vite.config.js
 npm run validate:lessons
 npm run sync:lesson-documents
 npm run build
@@ -3500,6 +3503,7 @@ For it, special teaching rules still apply:
 - third, optional JS file in the middle panel
 - actual live preview that executes the same cumulative JavaScript
 - Web Components teaching flow through custom element, shadow DOM, slot and lifecycle
+- early teaching steps stay visual-first: render the component shell and style it before splitting behavior into separate JS actions
 
 `05-clean-web-component-with-adopted-stylesheets` closes the cleanup story:
 
