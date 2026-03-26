@@ -51,6 +51,16 @@ Evidence ledger rules:
 - if the state of a feature, bug, TODO, or plan changes, update the ledger in the same work item
 - keep detailed docs in their owning folders; the ledger only tracks current state and links to the detail when useful
 
+## 1.3 Active Backlog
+
+`.agents/evidence/TODO.md` is the active backlog for follow-up work.
+
+Backlog rules:
+
+- when a review or implementation pass leaves follow-up work, add it to `.agents/evidence/TODO.md`
+- when an item is completed, mark it there and mirror the state change in `.agents/evidence/CHANGELOG.md`
+- do not rely on memory or chat history as the source of truth for pending work
+
 Document authority rules:
 
 - if we change structure, naming or responsibility boundaries, we change the owning document in the same work item
@@ -286,11 +296,12 @@ At the end of every iteration, mandatory final discipline from the repo root is 
 This means:
 
 1. if the change touched architecture or naming, sync relevant documents
-2. update `.agents/evidence/CHANGELOG.md` if the work changed feature, bug, TODO, or plan state
-3. run `./merge-files.sh .` from repo root
-4. do `git add -A`
-5. make a normal `git commit`
-6. do `git push`
+2. update `.agents/evidence/TODO.md` if the iteration leaves any follow-up work
+3. update `.agents/evidence/CHANGELOG.md` if the work changed feature, bug, TODO, or plan state
+4. run `./merge-files.sh .` from repo root
+5. do `git add -A`
+6. make a normal `git commit`
+7. do `git push`
 
 Do not finish an implementation pass without this closing, unless the user explicitly asks not to commit or push.
 
