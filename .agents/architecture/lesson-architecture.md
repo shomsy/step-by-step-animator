@@ -9,7 +9,7 @@ Target boundaries:
 - `education/` writes source content
 - `lesson-engine/` compiles source content into a canonical lesson package
 - `animator-engine/` replays the compiled package frame by frame
-- `app/` presents the product shell
+- `app/` presents the product shell from the canonical `app/index.html` entry
 
 The repository still contains legacy `lessons/` and `animator/` archive trees, so this document also explains how the historical shape maps to the target shape.
 
@@ -42,7 +42,7 @@ Historical archive mapping:
 
 - `lessons/` maps historically to `education/lessons/`
 - `animator/` maps historically to `animator-engine/`
-- root `main.js` and `index.html` are compatibility aliases for `app/`
+- the live app surface does not use root compatibility aliases
 
 ### 0.2 What the Lesson Engine Is
 

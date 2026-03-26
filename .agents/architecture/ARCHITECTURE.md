@@ -16,6 +16,7 @@ This repo is in a big-bang migration window.
 
 - `animator/` and `lessons/` are frozen legacy archive mappings and should not be extended
 - `app/`, `education/`, `lesson-engine/`, `animator-engine/`, `foundation/`, and `generated/` are the target canonical boundaries
+- the live app surface does not depend on root compatibility aliases
 - new work must follow the target boundaries even while legacy archive code still exists
 
 ## Vertical Slice Intent

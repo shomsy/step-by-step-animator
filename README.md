@@ -16,13 +16,10 @@ These are the active runtime and lesson-system boundaries:
 
 The architecture documents also reserve a `foundation/` boundary for shared low-level primitives, but this checkout does not currently contain a populated root `foundation/` directory.
 
-### Legacy and Compatibility
+### Legacy Archives
 
 - `animator/` is a frozen legacy archive and should not be extended
 - `lessons/` is a frozen legacy lesson archive and should not be extended
-- `index.html` is a compatibility alias that redirects to `app/index.html`
-- `main.js` is a compatibility alias that imports `app/main.js`
-- `sidebar-step-by-step.html` is a compatibility alias for the sidebar lesson
 
 ### Governance and Documentation
 
@@ -69,9 +66,8 @@ npm run dev
 Then open the app in your browser:
 
 - `http://localhost:5173/`
-- or directly `http://localhost:5173/app/index.html`
 
-The root `index.html` is a compatibility alias and redirects to the canonical app shell in `app/index.html`.
+Vite is rooted at `app/`, so the canonical shell is served from the server root.
 
 ## Available Commands
 
@@ -109,4 +105,4 @@ Each lesson is authored through:
 ## Notes
 
 - Do not edit generated output by hand.
-- The canonical app entry is `app/main.js`.
+- The canonical app entry is `app/main.js`, and the canonical shell file is `app/index.html`.

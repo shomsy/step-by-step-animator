@@ -96,6 +96,7 @@ This repo is in a big-bang migration window.
 
 - `animator/` and `lessons/` are frozen legacy archive mappings and should not be extended
 - `app/`, `education/`, `lesson-engine/`, `animator-engine/`, `foundation/`, and `generated/` are the target canonical boundaries
+- the live app surface does not depend on root compatibility aliases
 - new work must follow the target boundaries even while legacy archive code still exists
 
 ## Vertical Slice Intent
@@ -1240,7 +1241,7 @@ Target boundaries:
 - `education/` writes source content
 - `lesson-engine/` compiles source content into a canonical lesson package
 - `animator-engine/` replays the compiled package frame by frame
-- `app/` presents the product shell
+- `app/` presents the product shell from the canonical `app/index.html` entry
 
 The repository still contains legacy `lessons/` and `animator/` archive trees, so this document also explains how the historical shape maps to the target shape.
 
@@ -1273,7 +1274,7 @@ Historical archive mapping:
 
 - `lessons/` maps historically to `education/lessons/`
 - `animator/` maps historically to `animator-engine/`
-- root `main.js` and `index.html` are compatibility aliases for `app/`
+- the live app surface does not use root compatibility aliases
 
 ### 0.2 What the Lesson Engine Is
 
@@ -3107,6 +3108,7 @@ Update rules:
 
 ## Current Ledger
 
+1. `[feature][done] 2026-03-26 02:35 - Remove legacy app surface completed` - `vite.config.js`, `README.md`, `AGENTS.md`, `.agents/architecture/ARCHITECTURE.md`, `.agents/architecture/lesson-architecture.md`, `app/`, `index.html`, `main.js`, `sidebar-step-by-step.html`
 1. `[plan][done] 2026-03-26 02:26 - Expand root README folder map completed` - `README.md`, `.agents/planning/PLAN.md`, `.agents/evidence/TODO.md`
 2. `[todo][done] 2026-03-26 02:26 - Expand root README folder map completed` - `README.md`
 3. `[plan][done] 2026-03-26 02:22 - Root README and run instructions completed` - `README.md`, `.agents/planning/PLAN.md`, `.agents/evidence/TODO.md`
@@ -3403,10 +3405,9 @@ The legacy `content/documents/files/` shape is archive-only and is not the shape
 ### 2.4 Runtime and Entry Rules
 
 - no `src/` folder
-- `app/index.html` is the canonical lesson shell
+- `app/index.html` is the canonical lesson shell and Vite root entry
 - `app/main.js` is the canonical app entry
-- root `main.js` and `index.html` are compatibility aliases for the canonical app shell during migration
-- `sidebar-step-by-step.html` is compatible alias for `01-build-sidebar`
+- the live app surface does not use root compatibility aliases
 - build goes through Vite
 - `animator-engine/` is the runtime boundary used by the app entrypoint
 - `lesson-engine/` owns source translation for source-only lessons
@@ -3522,7 +3523,7 @@ These rules apply to all lessons, without exception:
 After every significant change, обязательно запустите:
 
 ```bash
-find animator lessons app -name '*.js' -print0 | xargs -0 -n1 node --check && node --check app/main.js && node --check main.js
+find animator lessons app lesson-engine animator-engine -name '*.js' -print0 | xargs -0 -n1 node --check && node --check app/main.js
 npm run validate:lessons
 npm run sync:lesson-documents
 npm run build
@@ -3674,13 +3675,10 @@ These are the active runtime and lesson-system boundaries:
 
 The architecture documents also reserve a `foundation/` boundary for shared low-level primitives, but this checkout does not currently contain a populated root `foundation/` directory.
 
-### Legacy and Compatibility
+### Legacy Archives
 
 - `animator/` is a frozen legacy archive and should not be extended
 - `lessons/` is a frozen legacy lesson archive and should not be extended
-- `index.html` is a compatibility alias that redirects to `app/index.html`
-- `main.js` is a compatibility alias that imports `app/main.js`
-- `sidebar-step-by-step.html` is a compatibility alias for the sidebar lesson
 
 ### Governance and Documentation
 
@@ -3727,9 +3725,8 @@ npm run dev
 Then open the app in your browser:
 
 - `http://localhost:5173/`
-- or directly `http://localhost:5173/app/index.html`
 
-The root `index.html` is a compatibility alias and redirects to the canonical app shell in `app/index.html`.
+Vite is rooted at `app/`, so the canonical shell is served from the server root.
 
 ## Available Commands
 
@@ -3767,7 +3764,7 @@ Each lesson is authored through:
 ## Notes
 
 - Do not edit generated output by hand.
-- The canonical app entry is `app/main.js`.
+- The canonical app entry is `app/main.js`, and the canonical shell file is `app/index.html`.
 
 === animator-engine/choose-lesson/present-lesson-picker.js ===
 export function presentLessonPicker({
@@ -39255,23 +39252,6 @@ U ovoj lekciji gradimo enterprise pricing karticu sa tier varijantama, dinamičk
 
 - Dodaj `discount-code` atribut koji primeni popust i prikaže precrtan originalni iznos.
 
-=== index.html ===
-<!doctype html>
-<html lang="sr">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Step By Step Animator</title>
-    <meta http-equiv="refresh" content="0; url=./app/index.html" />
-  </head>
-  <body>
-    <script>
-      window.location.replace('./app/index.html' + window.location.search + window.location.hash);
-    </script>
-    <p>Open <a href="./app/index.html">the app shell</a>.</p>
-  </body>
-</html>
-
 === lesson-engine/build-lines-from-rule-blocks.js ===
 function readStepBoundary(stepReference, stepNumberById) {
   if (typeof stepReference === 'number') {
@@ -49773,9 +49753,6 @@ step-by-step-animator/
 
 If a feature still needs executable lesson-specific glue, that glue belongs in `lesson-engine/` during migration. It does not belong under `education/`.
 
-=== main.js ===
-import './app/main.js';
-
 === merge-files.sh ===
 #!/usr/bin/env bash
 set -euo pipefail
@@ -51084,23 +51061,6 @@ EOF
   }
 }
 
-=== sidebar-step-by-step.html ===
-<!doctype html>
-<html lang="sr">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Step By Step Animator</title>
-    <meta http-equiv="refresh" content="0; url=./app/index.html?lesson=01-build-sidebar" />
-  </head>
-  <body>
-    <script>
-      window.location.replace('./app/index.html?lesson=01-build-sidebar');
-    </script>
-    <p>Otvori <a href="./app/index.html?lesson=01-build-sidebar">01-build-sidebar</a> lekciju.</p>
-  </body>
-</html>
-
 === tests/contracts/compile-lesson-package.test.js ===
 import test from 'node:test';
 import assert from 'node:assert/strict';
@@ -51524,14 +51484,15 @@ import { defineConfig } from 'vite';
 import { resolve } from 'node:path';
 
 export default defineConfig({
-  build: {
-    rollupOptions: {
-      input: {
-        index: resolve(process.cwd(), 'index.html'),
-        appIndex: resolve(process.cwd(), 'app/index.html'),
-        sidebarAlias: resolve(process.cwd(), 'sidebar-step-by-step.html')
-      }
+  root: resolve(process.cwd(), 'app'),
+  server: {
+    fs: {
+      allow: [resolve(process.cwd())]
     }
+  },
+  build: {
+    outDir: resolve(process.cwd(), 'dist'),
+    emptyOutDir: true
   }
 });
 
