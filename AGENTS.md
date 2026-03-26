@@ -29,7 +29,7 @@ Every new lesson must use the same shell and the same teaching model:
 - preview shows exactly the same cumulative HTML/CSS/JS that is currently written
 - changes must be clear, predictable and easy to verbalize
 - for Web Components lessons, JS must first create the actual rendered DOM, only then CSS may style those parts
-- Web Components lessons are visual-first: early steps should establish the rendered shell and styling before behavior is introduced step by step
+- Web Components lessons are written in two pedagogical phases: visual composition first, then behavior and API; early steps must establish the rendered shell and styling before attributes, events, lifecycle, cleanup, or methods are introduced
 
 This is not a showcase.
 This is not a fake storyboard.

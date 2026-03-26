@@ -2884,6 +2884,17 @@ This means:
 - no source file that did not come from the lesson contract
 - no preview state that the canonical lesson package cannot reproduce
 
+### 4.7 Web Components Lesson Phases
+
+Web Components lessons are written in two pedagogical phases: visual composition first, then behavior and API.
+
+Rules:
+
+- the visual phase may use the minimum JavaScript needed to make the component actually render, but the teaching goal is still to make the component visibly real and styled before behavior grows
+- the logic phase is where attributes, `observedAttributes`, properties, events, lifecycle, methods, state, and cleanup are introduced
+- do not split the lesson by file type alone; split it by the learner's mental model: first I can see the component, then I can understand how it behaves
+- when a step could belong to either phase, prefer the step that shows the final UI sooner without hiding the behavior contract
+
 ## 5. How to Break Content Into Steps and Scenes
 
 Before writing files, break content in this order:
@@ -2977,6 +2988,8 @@ Update rules:
 
 ## Current Ledger
 
+1. `[doc][done] 2026-03-27 00:53 - Added two-phase Web Components lesson writing rule` - `AGENTS.md`, `.agents/authoring/LESSON_AUTHORING.md`, `step-by-step-animator.txt`; `actual: 20m`
+1. `[lesson][done] 2026-03-27 00:39 - Reordered 07 helper JS after the visual shell` - `product/education/lessons/07-build-ui-user-avatar/source/lesson.md`, `product/education/lessons/07-build-ui-user-avatar/source/scenes.md`, `product/education/lessons/07-build-ui-user-avatar/source/artifacts/js.timeline.md`, `system/lesson-engine/output/07-build-ui-user-avatar.md`, `step-by-step-animator.txt`; `actual: 1h`
 1. `[lesson][done] 2026-03-27 00:24 - Reworked 07 lesson into visual-first shell, then functionality phase` - `product/education/lessons/07-build-ui-user-avatar/source/lesson.md`, `product/education/lessons/07-build-ui-user-avatar/source/scenes.md`, `system/lesson-engine/output/07-build-ui-user-avatar.md`, `step-by-step-animator.txt`; `actual: 1h`
 1. `[lesson][done] 2026-03-26 19:14 - Applied visual-first sequencing to Web Components lesson intros and cleared trackers` - `product/education/lessons/03-build-custom-element/source/lesson.md`, `product/education/lessons/04-build-web-component/source/lesson.md`, `product/education/lessons/05-clean-web-component-with-adopted-stylesheets/source/lesson.md`, `product/education/lessons/06-modular-web-components/source/lesson.md`, `system/lesson-engine/output/03-build-custom-element.md`, `system/lesson-engine/output/04-build-web-component.md`, `system/lesson-engine/output/05-clean-web-component-with-adopted-stylesheets.md`, `system/lesson-engine/output/06-modular-web-components.md`
 1. `[doc][done] 2026-03-26 16:25 - Web Components visual-first sequencing rule added` - `AGENTS.md`, `.agents/authoring/LESSON_AUTHORING.md`, `.agents/planning/PLAN.md`, `.agents/evidence/TODO.md`
@@ -3022,10 +3035,7 @@ Update rules:
 
 ## Current Items
 
-1. `[lesson][todo] 2026-03-27 00:36 - Move 07 helper JS after the visual shell`
-   - owner: Codex
-   - estimate: 45m
-   - acceptance: 07 lesson shows the visual component before helper and behavior JS steps begin
+No active items.
 
 === .agents/planning/ARCHIVE.md ===
 # Planning Archive
@@ -3055,10 +3065,7 @@ Update rules:
 
 ## Current Workstreams
 
-1. `[lesson][in_progress] 2026-03-27 00:36 - Move 07 helper JS after the visual shell`
-   - owner: Codex
-   - estimate: 45m
-   - acceptance: 07 lesson shows the visual component before helper and behavior JS steps begin
+No active workstreams.
 
 === .agents/review/bugs.md ===
 # Bugs
@@ -3121,7 +3128,7 @@ Every new lesson must use the same shell and the same teaching model:
 - preview shows exactly the same cumulative HTML/CSS/JS that is currently written
 - changes must be clear, predictable and easy to verbalize
 - for Web Components lessons, JS must first create the actual rendered DOM, only then CSS may style those parts
-- Web Components lessons are visual-first: early steps should establish the rendered shell and styling before behavior is introduced step by step
+- Web Components lessons are written in two pedagogical phases: visual composition first, then behavior and API; early steps must establish the rendered shell and styling before attributes, events, lifecycle, cleanup, or methods are introduced
 
 This is not a showcase.
 This is not a fake storyboard.

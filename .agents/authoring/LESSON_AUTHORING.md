@@ -471,6 +471,17 @@ This means:
 - no source file that did not come from the lesson contract
 - no preview state that the canonical lesson package cannot reproduce
 
+### 4.7 Web Components Lesson Phases
+
+Web Components lessons are written in two pedagogical phases: visual composition first, then behavior and API.
+
+Rules:
+
+- the visual phase may use the minimum JavaScript needed to make the component actually render, but the teaching goal is still to make the component visibly real and styled before behavior grows
+- the logic phase is where attributes, `observedAttributes`, properties, events, lifecycle, methods, state, and cleanup are introduced
+- do not split the lesson by file type alone; split it by the learner's mental model: first I can see the component, then I can understand how it behaves
+- when a step could belong to either phase, prefer the step that shows the final UI sooner without hiding the behavior contract
+
 ## 5. How to Break Content Into Steps and Scenes
 
 Before writing files, break content in this order:
