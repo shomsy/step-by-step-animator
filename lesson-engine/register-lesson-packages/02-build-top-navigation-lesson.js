@@ -5,7 +5,7 @@ import cssArtifactMarkdown from '../../education/lessons/02-build-top-navigation
 import goalImage from '../../education/lessons/02-build-top-navigation/source/assets/top-navigation-goal.svg';
 import { compileLessonPackage } from '../compile-lesson-package.js';
 
-export const buildTopNavigationLesson = compileLessonPackage({
+export const BuildTopNavigationLesson = compileLessonPackage({
   lessonMarkdown,
   scenesMarkdown,
   artifactMarkdownById: {

@@ -3,7 +3,7 @@
 ```json
 [
   {
-    "from": "empty_shell",
+    "from": "empty-shell",
     "target": "root",
     "lines": [
       "<div class=\"app-shell\">",
@@ -12,7 +12,7 @@
     ]
   },
   {
-    "from": "topbar_html",
+    "from": "topbar-html",
     "target": "app-shell-content",
     "lines": [
       "  <header class=\"topbar\">",
@@ -21,14 +21,14 @@
     ]
   },
   {
-    "from": "logo_html",
+    "from": "logo-html",
     "target": "topbar-content",
     "lines": [
       "    <a href=\"#\" class=\"topbar-logo\">LOGOBAKERY</a>"
     ]
   },
   {
-    "from": "nav_html",
+    "from": "nav-html",
     "target": "topbar-content",
     "lines": [
       "",
@@ -40,7 +40,7 @@
     ]
   },
   {
-    "from": "cta_html",
+    "from": "cta-html",
     "target": "topbar-content",
     "lines": [
       "",

@@ -161,6 +161,12 @@ function createArtifactBuilders({ artifactDeclarations, artifactMarkdownById, st
   });
 }
 
+function createArtifactBuilderLookup(artifactBuilders) {
+  return Object.fromEntries(
+    artifactBuilders.map(({ artifact, buildAtStep }) => [artifact.artifactId, buildAtStep])
+  );
+}
+
 function createRuntimeStep(step, previewTarget, focusArtifactId) {
   return {
     id: step.stepId,
@@ -217,6 +223,7 @@ export function compileLessonPackage({
     artifactMarkdownById,
     stepNumberById
   });
+  const buildArtifactAtStepById = createArtifactBuilderLookup(artifactBuilders);
 
   const statesByStep = sceneSteps.map((step, stepNumber) => ({
     stepId: step.stepId,
@@ -253,13 +260,25 @@ export function compileLessonPackage({
   const htmlArtifact = artifacts.find(artifact => artifact.artifactId === 'html');
   const cssArtifact = artifacts.find(artifact => artifact.artifactId === 'css');
 
-  function buildHtmlAtStep(stepNumber) {
-    return artifactBuilders.find(({ artifact }) => artifact.artifactId === 'html')?.buildAtStep(stepNumber) || [];
+  function buildAtStepForArtifactId(artifactId, stepNumber) {
+    return buildArtifactAtStepById[artifactId]?.(stepNumber) || [];
   }
 
-  function buildCssAtStep(stepNumber) {
-    return artifactBuilders.find(({ artifact }) => artifact.artifactId === 'css')?.buildAtStep(stepNumber) || [];
-  }
+  const buildHtmlAtStep = buildArtifactAtStepById.html
+    ? stepNumber => buildAtStepForArtifactId('html', stepNumber)
+    : undefined;
+  const buildCssAtStep = buildArtifactAtStepById.css
+    ? stepNumber => buildAtStepForArtifactId('css', stepNumber)
+    : undefined;
+  const buildJsAtStep = buildArtifactAtStepById.js
+    ? stepNumber => buildAtStepForArtifactId('js', stepNumber)
+    : undefined;
+  const buildTemplateJsAtStep = buildArtifactAtStepById['template-js']
+    ? stepNumber => buildAtStepForArtifactId('template-js', stepNumber)
+    : undefined;
+  const buildShadowCssAtStep = buildArtifactAtStepById['shadow-css']
+    ? stepNumber => buildAtStepForArtifactId('shadow-css', stepNumber)
+    : undefined;
 
   const compiledLesson = {
     schemaVersion: lessonMeta.schemaVersion,
@@ -273,7 +292,8 @@ export function compileLessonPackage({
       order: lessonMeta.order,
       tags: lessonMeta.tags,
       difficulty: lessonMeta.difficulty,
-      estimatedMinutes: lessonMeta.estimatedMinutes
+      estimatedMinutes: lessonMeta.estimatedMinutes,
+      ideMode: Boolean(attributes.ideMode)
     },
     teaching: {
       steps: teachingSteps,
@@ -299,8 +319,12 @@ export function compileLessonPackage({
     homeworkTitle: lessonMeta.homework.title,
     homeworkItems: lessonMeta.homework.items,
     steps: runtimeSteps,
+    ideMode: Boolean(attributes.ideMode),
     buildHtmlAtStep,
-    buildCssAtStep
+    buildCssAtStep,
+    buildJsAtStep,
+    buildTemplateJsAtStep,
+    buildShadowCssAtStep
   };
 
   return compiledLesson;

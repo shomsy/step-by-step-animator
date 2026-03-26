@@ -1,0 +1,29 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 760" role="img" aria-labelledby="title desc">
+  <title id="title">My first component Web Component goal</title>
+  <desc id="desc">Svetla pozadina sa tamnim card komponentom u sredini. Card ima badge Vanilla JS, veliki naslov, opis i plavo CTA dugme.</desc>
+  <defs>
+    <linearGradient id="bg" x1="0" x2="0" y1="0" y2="1">
+      <stop offset="0%" stop-color="#e2e8f0"/>
+      <stop offset="100%" stop-color="#cbd5e1"/>
+    </linearGradient>
+    <linearGradient id="cta" x1="0" x2="1" y1="0" y2="1">
+      <stop offset="0%" stop-color="#38bdf8"/>
+      <stop offset="100%" stop-color="#2563eb"/>
+    </linearGradient>
+    <filter id="shadow" x="-20%" y="-20%" width="140%" height="160%">
+      <feDropShadow dx="0" dy="26" stdDeviation="28" flood-color="#0f172a" flood-opacity="0.18"/>
+    </filter>
+  </defs>
+  <rect width="1200" height="760" fill="url(#bg)"/>
+  <g transform="translate(360 168)" filter="url(#shadow)">
+    <rect width="480" height="420" rx="34" fill="#0f172a"/>
+    <rect x="32" y="34" width="118" height="38" rx="19" fill="rgba(56,189,248,0.16)"/>
+    <text x="91" y="58" fill="#38bdf8" font-family="Inter, Arial, sans-serif" font-size="14" font-weight="700" text-anchor="middle" letter-spacing="1.2">VANILLA JS</text>
+    <text x="32" y="138" fill="#f8fafc" font-family="Inter, Arial, sans-serif" font-size="42" font-weight="800">Web Components</text>
+    <text x="32" y="186" fill="#f8fafc" font-family="Inter, Arial, sans-serif" font-size="42" font-weight="800">u praksi</text>
+    <text x="32" y="246" fill="#cbd5e1" font-family="Inter, Arial, sans-serif" font-size="22">Gradiš custom element, shadow DOM</text>
+    <text x="32" y="280" fill="#cbd5e1" font-family="Inter, Arial, sans-serif" font-size="22">i slot projekciju bez framework-a.</text>
+    <rect x="32" y="336" width="156" height="52" rx="26" fill="url(#cta)"/>
+    <text x="110" y="368" fill="#ffffff" font-family="Inter, Arial, sans-serif" font-size="18" font-weight="700" text-anchor="middle">Otvori lekciju</text>
+  </g>
+</svg>

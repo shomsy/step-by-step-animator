@@ -66,12 +66,7 @@ Read the tree in this order:
 3. file responsibility
 4. function action
 
-Root is intentionally divided into two areas:
-
-- `animator/` is technical runtime, shell, playback and document tooling
-- `lessons/` are business lesson slices and their content
-
-Target canonical shape after migration:
+Live canonical shape:
 
 ```txt
 app/
@@ -116,179 +111,12 @@ generated/
   validation-reports/
 ```
 
-Legacy live shape until migration completes:
+Frozen legacy archive, do not extend:
 
-```txt
-animator/
-  choose-lesson/
-    select-lesson-from-location.js
-    present-lesson-picker.js
-  play-lesson/
-    play-lesson.pipeline.js
-    lesson-player.css
-    escape-inline-text.js
-    01-start-lesson/
-      find-lesson-parts.js
-      create-lesson-progress.js
-      show-lesson-shell.js
-    02-follow-lesson/
-      listen-for-lesson-keys.js
-      show-active-lesson-panel.js
-      show-current-step.js
-      show-step-timeline.js
-    03-watch-code/
-      compare-code-lines.js
-      describe-css-line-role.js
-      escape-code-text.js
-      scroll-to-added-line.js
-      show-growing-code.js
-    04-watch-preview/
-      show-current-preview.js
-    05-download-lesson-files/
-      download-lesson-files.js
-    listen-to-step/
-      compose-step-narration-text.js
-      present-step-narration.js
-      read-step-narration-preferences.js
-      speak-with-browser-voice.js
-      speak-with-open-source-voice.js
-      write-step-narration-preferences.js
-    find-step/
-      present-step-finder.js
-    save-step/
-      read-saved-step-numbers.js
-      write-saved-step-numbers.js
-      show-saved-step-list.js
-      remember-saved-steps.js
-    choose-theme/
-      choose-theme.js
-  lesson-documents/
-    build-lines-from-rule-blocks.js
-    build-lines-from-timeline-blocks.js
-    parse-frontmatter.js
-    read-fenced-json-value.js
-    render-markdown.js
-    read-lesson-metadata.js
-    read-rule-blocks.js
-    read-timeline-blocks.js
-    sync-lesson-documents.js
-lessons/
-  register-lessons.js
-  01-build-sidebar/
-    build-sidebar.lesson.js
-    describe-steps.js
-    build-html-at-step.js
-    build-css-at-step.js
-    content/
-      documents/
-        01_build_sidebar.md
-        files/
-          lesson.sr.md
-          html.timeline.md
-          css.rules.md
-  04-build-web-component/
-    build-web-component.lesson.js
-    describe-steps.js
-    build-html-at-step.js
-    build-css-at-step.js
-    build-js-at-step.js
-    content/
-      assets/
-        web-component-goal.svg
-      documents/
-        04_build_web_component.md
-        files/
-          lesson.sr.md
-          html.timeline.md
-          css.rules.md
-          js.timeline.md
-  03-build-custom-element/
-    build-custom-element.lesson.js
-    describe-steps.js
-    build-html-at-step.js
-    build-css-at-step.js
-    build-js-at-step.js
-    content/
-      assets/
-        custom-element-goal.svg
-      documents/
-        03_build_custom_element.md
-        files/
-          lesson.sr.md
-          html.timeline.md
-          css.rules.md
-          js.timeline.md
-  02-build-top-navigation/
-    build-top-navigation.lesson.js
-    describe-steps.js
-    build-html-at-step.js
-    build-css-at-step.js
-    content/
-      assets/
-        top-navigation-goal.svg
-      documents/
-        02_build_top_navigation.md
-        files/
-          lesson.sr.md
-          html.timeline.md
-          css.rules.md
-  05-clean-web-component-with-adopted-stylesheets/
-    clean-web-component-with-adopted-stylesheets.lesson.js
-    describe-steps.js
-    build-html-at-step.js
-    build-css-at-step.js
-    build-js-at-step.js
-    build-shadow-css-at-step.js
-    content/
-      assets/
-        web-component-goal.svg
-      documents/
-        05_clean_web_component_with_adopted_stylesheets.md
-        files/
-          lesson.sr.md
-          html.timeline.md
-          css.rules.md
-          js.timeline.md
-          shadow-dom-style.css.md
-  06-modular-web-components/
-    06-modular-web-components.lesson.js
-    describe-steps.js
-    build-html-at-step.js
-    build-css-at-step.js
-    build-js-at-step.js
-    build-shadow-css-at-step.js
-    content/
-      assets/
-        web-component-goal.svg
-      documents/
-        06_modular_web_components.md
-        files/
-          lesson.sr.md
-          html.timeline.md
-          css.rules.md
-          js.timeline.md
-          shadow-dom-style.css.md
-  07-more-separation-of-code/
-    07-more-separation-of-code.lesson.js
-    describe-steps.js
-    build-html-at-step.js
-    build-css-at-step.js
-    build-js-at-step.js
-    build-template-js-at-step.js
-    build-shadow-css-at-step.js
-    content/
-      assets/
-        web-component-goal.svg
-      documents/
-        07_more_separation_of_code.md
-        files/
-          lesson.sr.md
-          html.timeline.md
-          css.rules.md
-          js.timeline.md
-          template-js.timeline.md
-          shadow-dom-style.css.md
-```
+- `animator/`
+- `lessons/`
+
+Current live lesson set is registered in `lesson-engine/register-lesson-packages/index.js`.
 
 ### 2.2 Lesson Contract
 
@@ -299,7 +127,7 @@ That means:
 - source lives under `education/lessons/<lesson-slug>/source/`
 - the author writes `lesson.md`, `scenes.md`, optional `theory.md`, `artifacts/`, and `assets/`
 - `lesson-engine/` owns parsing, validation, normalization, projection, compilation and generated docs
-- the legacy `feature-name.lesson.js` lesson slice shape is frozen for migrated lessons only
+- the legacy `feature-name.lesson.js` lesson slice shape is archive-only for already migrated lessons
 - do not introduce new `lesson.js`, `describe-steps.js`, or per-lesson `build-*` files for source-only lessons
 - if a lesson is not yet migrated, treat the legacy slice as read-only and add a source-only pilot instead of extending the old shape
 
@@ -307,7 +135,7 @@ That means:
 
 The exact source-only authoring contract is documented in `.agents/authoring/LESSON_AUTHORING.md`.
 
-The legacy `content/documents/files/` shape still exists in migrated lessons until it is retired, but it is not the shape to extend for new work.
+The legacy `content/documents/files/` shape is archive-only and is not the shape to extend for new work.
 
 ### 2.4 Runtime and Entry Rules
 
@@ -318,8 +146,7 @@ The legacy `content/documents/files/` shape still exists in migrated lessons unt
 - build goes through Vite
 - `animator-engine/` is the runtime boundary used by the app entrypoint
 - `lesson-engine/` owns source translation for source-only lessons
-- `animator/` remains the legacy runtime implementation area until migration completes
-- `lessons/` remains the legacy lesson slice area until each lesson is migrated into `education/`
+- `animator/` and `lessons/` are frozen legacy archive trees and are not the live contract
 - the current pilot lesson is compiled from `education/lessons/02-build-top-navigation/source/`
 
 ### 2.5 Naming Rules
@@ -373,7 +200,7 @@ Do not introduce new synonym generation if existing verb already covers the resp
 
 Numbers are used only on flow folders when the order truly carries meaning in the product story.
 
-In `lessons/` this applies to shipped learning path:
+In `education/lessons/` this applies to the shipped learning path:
 
 - `01-build-sidebar`
 - `02-build-top-navigation`
@@ -383,6 +210,8 @@ In `lessons/` this applies to shipped learning path:
 - `06-modular-web-components`
 - `07-more-separation-of-code`
 - `08-smell-of-enterprise`
+
+The frozen legacy `lessons/` archive keeps historical numbering only as reference.
 
 In player runtime this applies to main lesson journey:
 
