@@ -37,7 +37,7 @@ Education contains source only. No lesson build glue lives there.
 
 ## Migration Note
 
-The execution plan lives in `.agents/architecture/big-bang-refactor-plan.md`.
+The completed migration governance record lives in `.agents/architecture/migration-governance.md`.
 This tracked document keeps the repo-level target model and source contract only.
 
 ## Engine Contract

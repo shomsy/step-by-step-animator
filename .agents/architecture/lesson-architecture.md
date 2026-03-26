@@ -42,7 +42,7 @@ Historical archive mapping:
 
 - `lessons/` maps historically to `education/lessons/`
 - `animator/` maps historically to `animator-engine/`
-- `main.js` and `index.html` map to `app/`
+- root `main.js` and `index.html` are compatibility aliases for `app/`
 
 ### 0.2 What the Lesson Engine Is
 

@@ -149,8 +149,9 @@ The legacy `content/documents/files/` shape is archive-only and is not the shape
 ### 2.4 Runtime and Entry Rules
 
 - no `src/` folder
-- `main.js` is root entry
-- `index.html` is generic lesson shell
+- `app/index.html` is the canonical lesson shell
+- `app/main.js` is the canonical app entry
+- root `main.js` and `index.html` are compatibility aliases for the canonical app shell during migration
 - `sidebar-step-by-step.html` is compatible alias for `01-build-sidebar`
 - build goes through Vite
 - `animator-engine/` is the runtime boundary used by the app entrypoint
@@ -267,7 +268,7 @@ These rules apply to all lessons, without exception:
 After every significant change, обязательно запустите:
 
 ```bash
-find animator lessons -name '*.js' -print0 | xargs -0 -n1 node --check && node --check main.js
+find animator lessons app -name '*.js' -print0 | xargs -0 -n1 node --check && node --check app/main.js && node --check main.js
 npm run validate:lessons
 npm run sync:lesson-documents
 npm run build
