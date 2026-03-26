@@ -2,9 +2,9 @@
 schemaVersion: 1
 lessonId: 07-build-ui-user-avatar
 lessonTitle: 07 · UI User Avatar — Dashboard Widget
-lessonIntro: "Gradimo `ui-user-avatar` u dve faze: prvo pravimo kompletnu
-  vizuelnu komponentu sa HTML, CSS i template JS delovima, a tek onda joj
-  uključujemo status, tooltip, property API i click behavior korak po korak."
+lessonIntro: "Gradimo `ui-user-avatar` u dve faze: prvo zatvaramo kompletan
+  vizuelni shell sa HTML, template i CSS slojem, a tek onda uključujemo status,
+  tooltip, property API i click behavior korak po korak."
 status: active
 courseId: step-by-step-animator
 order: 7
@@ -69,4 +69,4 @@ homework:
       avatara kroz host CSS tokenе.
 ---
 
-Gradimo `ui-user-avatar` u dve faze: prvo pravimo kompletnu vizuelnu komponentu sa HTML, CSS i template JS delovima, a tek onda joj uključujemo status, tooltip, property API i click behavior korak po korak.
+Gradimo `ui-user-avatar` u dve faze: prvo zatvaramo kompletan vizuelni shell sa HTML, template i CSS slojem, a tek onda uključujemo status, tooltip, property API i click behavior korak po korak.

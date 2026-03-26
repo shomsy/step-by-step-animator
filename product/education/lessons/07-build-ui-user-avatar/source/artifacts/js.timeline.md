@@ -11,55 +11,8 @@
     ]
   },
   {
-    "from": "normalize-text-helper",
-    "target": "after-import-template",
-    "lines": [
-      "",
-      "function normalizeTextValue(value, fallback) {",
-      "  return String(value ?? '').trim() || fallback;",
-      "}",
-      "",
-      "@@slot:after-normalize-text@@"
-    ]
-  },
-  {
-    "from": "allowed-statuses-set",
-    "target": "after-normalize-text",
-    "lines": [
-      "const allowedStatuses = new Set(['online', 'idle', 'away', 'offline']);",
-      "",
-      "@@slot:after-allowed-statuses@@"
-    ]
-  },
-  {
-    "from": "normalize-status-helper",
-    "target": "after-allowed-statuses",
-    "lines": [
-      "function normalizeStatusValue(value) {",
-      "  const v = String(value ?? '').trim().toLowerCase();",
-      "  return allowedStatuses.has(v) ? v : 'offline';",
-      "}",
-      "",
-      "@@slot:after-normalize-status@@"
-    ]
-  },
-  {
-    "from": "status-label-map",
-    "target": "after-normalize-status",
-    "lines": [
-      "const statusAriaLabel = {",
-      "  online: 'Online',",
-      "  idle: 'Idle',",
-      "  away: 'Away',",
-      "  offline: 'Offline'",
-      "};",
-      "",
-      "@@slot:after-status-label-map@@"
-    ]
-  },
-  {
     "from": "class-declaration",
-    "target": "after-status-label-map",
+    "target": "after-import-template",
     "lines": [
       "class UiUserAvatar extends HTMLElement {",
       "  @@slot:class-head@@",
@@ -141,7 +94,55 @@
     "from": "connected-callback-bind",
     "target": "connected-body",
     "lines": [
-      "    this.bindEvents();"
+      "    this.bindEvents();",
+      "    @@slot:after-connected-callback-bind@@"
+    ]
+  },
+  {
+    "from": "normalize-text-helper",
+    "target": "after-connected-callback-bind",
+    "lines": [
+      "",
+      "function normalizeTextValue(value, fallback) {",
+      "  return String(value ?? '').trim() || fallback;",
+      "}",
+      "",
+      "@@slot:after-normalize-text@@"
+    ]
+  },
+  {
+    "from": "allowed-statuses-set",
+    "target": "after-normalize-text",
+    "lines": [
+      "const allowedStatuses = new Set(['online', 'idle', 'away', 'offline']);",
+      "",
+      "@@slot:after-allowed-statuses@@"
+    ]
+  },
+  {
+    "from": "normalize-status-helper",
+    "target": "after-allowed-statuses",
+    "lines": [
+      "function normalizeStatusValue(value) {",
+      "  const v = String(value ?? '').trim().toLowerCase();",
+      "  return allowedStatuses.has(v) ? v : 'offline';",
+      "}",
+      "",
+      "@@slot:after-normalize-status@@"
+    ]
+  },
+  {
+    "from": "status-label-map",
+    "target": "after-normalize-status",
+    "lines": [
+      "const statusAriaLabel = {",
+      "  online: 'Online',",
+      "  idle: 'Idle',",
+      "  away: 'Away',",
+      "  offline: 'Offline'",
+      "};",
+      "",
+      "@@slot:after-status-label-map@@"
     ]
   },
   {

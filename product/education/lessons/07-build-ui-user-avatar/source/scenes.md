@@ -81,42 +81,6 @@ steps:
     focusHtmlNeedles:
       - <ui-user-avatar
       - username=
-  - stepId: normalize-text-helper
-    title: "JS: normalizeTextValue() helper"
-    summary: Dodajemo `normalizeTextValue()` da username i role ne zavise od sirovog ulaza.
-    intent: API border normalizuje ulaz. Komponenta nikad ne radi sa undefined ili praznim stringovima bez fallback-a.
-    tag: js:normalize-text-helper
-    proTip: API border normalizuje ulaz. Komponenta nikad ne radi sa undefined ili praznim stringovima bez fallback-a.
-    focusHtmlNeedles:
-      - <ui-user-avatar
-      - username=
-  - stepId: allowed-statuses-set
-    title: "JS: allowedStatuses Set"
-    summary: "Zaključavamo dozvoljene statusne vrednosti: `online`, `idle`, `away`, `offline`."
-    intent: Otvoreni string API za status koji direktno utiče na styling je rizičan. Set ga zatvara.
-    tag: js:allowed-statuses-set
-    proTip: Otvoreni string API za status koji direktno utiče na styling je rizičan. Set ga zatvara.
-    focusHtmlNeedles:
-      - <ui-user-avatar
-      - username=
-  - stepId: normalize-status-helper
-    title: "JS: normalizeStatusValue() helper"
-    summary: Dodajemo `normalizeStatusValue()`. Svaki nepoznat status automatski pada na `offline`.
-    intent: Fallback je deo contract-a. Komponenta ne sme da padne zbog pogrešno napisanog statusa.
-    tag: js:normalize-status-helper
-    proTip: Fallback je deo contract-a. Komponenta ne sme da padne zbog pogrešno napisanog statusa.
-    focusHtmlNeedles:
-      - <ui-user-avatar
-      - username=
-  - stepId: status-label-map
-    title: "JS: statusAriaLabel mapa"
-    summary: Dodajemo `statusAriaLabel` objekat koji mapira status vrednosti na human-readable aria labele.
-    intent: Accessibility nije opciona. Status badge mora imati smislenu aria labelu na svakom koraku.
-    tag: js:status-label-map
-    proTip: Accessibility nije opciona. Status badge mora imati smislenu aria labelu na svakom koraku.
-    focusHtmlNeedles:
-      - <ui-user-avatar
-      - username=
   - stepId: class-declaration
     title: "JS: UiUserAvatar extends HTMLElement"
     summary: Klasa nosi domain-driven ime, konzistentno sa tagom.
@@ -1265,6 +1229,42 @@ steps:
     focusHtmlNeedles:
       - <ui-user-avatar
       - username=
+  - stepId: normalize-text-helper
+    title: "JS: normalizeTextValue() helper"
+    summary: Dodajemo `normalizeTextValue()` da username i role ne zavise od sirovog ulaza.
+    intent: API border normalizuje ulaz. Komponenta nikad ne radi sa undefined ili praznim stringovima bez fallback-a.
+    tag: js:normalize-text-helper
+    proTip: API border normalizuje ulaz. Komponenta nikad ne radi sa undefined ili praznim stringovima bez fallback-a.
+    focusHtmlNeedles:
+      - <ui-user-avatar
+      - username=
+  - stepId: allowed-statuses-set
+    title: "JS: allowedStatuses Set"
+    summary: "Zaključavamo dozvoljene statusne vrednosti: `online`, `idle`, `away`, `offline`."
+    intent: Otvoreni string API za status koji direktno utiče na styling je rizičan. Set ga zatvara.
+    tag: js:allowed-statuses-set
+    proTip: Otvoreni string API za status koji direktno utiče na styling je rizičan. Set ga zatvara.
+    focusHtmlNeedles:
+      - <ui-user-avatar
+      - username=
+  - stepId: normalize-status-helper
+    title: "JS: normalizeStatusValue() helper"
+    summary: Dodajemo `normalizeStatusValue()`. Svaki nepoznat status automatski pada na `offline`.
+    intent: Fallback je deo contract-a. Komponenta ne sme da padne zbog pogrešno napisanog statusa.
+    tag: js:normalize-status-helper
+    proTip: Fallback je deo contract-a. Komponenta ne sme da padne zbog pogrešno napisanog statusa.
+    focusHtmlNeedles:
+      - <ui-user-avatar
+      - username=
+  - stepId: status-label-map
+    title: "JS: statusAriaLabel mapa"
+    summary: Dodajemo `statusAriaLabel` objekat koji mapira status vrednosti na human-readable aria labele.
+    intent: Accessibility nije opciona. Status badge mora imati smislenu aria labelu na svakom koraku.
+    tag: js:status-label-map
+    proTip: Accessibility nije opciona. Status badge mora imati smislenu aria labelu na svakom koraku.
+    focusHtmlNeedles:
+      - <ui-user-avatar
+      - username=
   - stepId: disconnected-callback
     title: "JS: disconnectedCallback cleanup"
     summary: Na izlazu iz DOM-a skidamo event listener.
@@ -1586,74 +1586,6 @@ preview:
 
 narration:
 Behavior fajl uvozi `uiUserAvatarTemplate` iz template modula. Klasa ne gradi HTML stringove.
-
-focus:
-  artifactId: js
-
-code:
-  activeArtifactId: js
-
-preview:
-  action: apply-state
-  target: dom
-
-# Step: normalize-text-helper
-
-## Scene: normalize-text-helper-scene
-
-narration:
-Dodajemo `normalizeTextValue()` da username i role ne zavise od sirovog ulaza.
-
-focus:
-  artifactId: js
-
-code:
-  activeArtifactId: js
-
-preview:
-  action: apply-state
-  target: dom
-
-# Step: allowed-statuses-set
-
-## Scene: allowed-statuses-set-scene
-
-narration:
-Zaključavamo dozvoljene statusne vrednosti: `online`, `idle`, `away`, `offline`.
-
-focus:
-  artifactId: js
-
-code:
-  activeArtifactId: js
-
-preview:
-  action: apply-state
-  target: dom
-
-# Step: normalize-status-helper
-
-## Scene: normalize-status-helper-scene
-
-narration:
-Dodajemo `normalizeStatusValue()`. Svaki nepoznat status automatski pada na `offline`.
-
-focus:
-  artifactId: js
-
-code:
-  activeArtifactId: js
-
-preview:
-  action: apply-state
-  target: dom
-
-# Step: status-label-map
-
-## Scene: status-label-map-scene
-
-narration:
-Dodajemo `statusAriaLabel` objekat koji mapira status vrednosti na human-readable aria labele.
 
 focus:
   artifactId: js
@@ -3847,6 +3779,74 @@ preview:
 
 narration:
 Tek na kraju, kad su reference spremne, zakačujemo event listenere.
+
+focus:
+  artifactId: js
+
+code:
+  activeArtifactId: js
+
+preview:
+  action: apply-state
+  target: dom
+
+# Step: normalize-text-helper
+
+## Scene: normalize-text-helper-scene
+
+narration:
+Dodajemo `normalizeTextValue()` da username i role ne zavise od sirovog ulaza.
+
+focus:
+  artifactId: js
+
+code:
+  activeArtifactId: js
+
+preview:
+  action: apply-state
+  target: dom
+
+# Step: allowed-statuses-set
+
+## Scene: allowed-statuses-set-scene
+
+narration:
+Zaključavamo dozvoljene statusne vrednosti: `online`, `idle`, `away`, `offline`.
+
+focus:
+  artifactId: js
+
+code:
+  activeArtifactId: js
+
+preview:
+  action: apply-state
+  target: dom
+
+# Step: normalize-status-helper
+
+## Scene: normalize-status-helper-scene
+
+narration:
+Dodajemo `normalizeStatusValue()`. Svaki nepoznat status automatski pada na `offline`.
+
+focus:
+  artifactId: js
+
+code:
+  activeArtifactId: js
+
+preview:
+  action: apply-state
+  target: dom
+
+# Step: status-label-map
+
+## Scene: status-label-map-scene
+
+narration:
+Dodajemo `statusAriaLabel` objekat koji mapira status vrednosti na human-readable aria labele.
 
 focus:
   artifactId: js
