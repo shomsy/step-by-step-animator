@@ -2,13 +2,13 @@
 
 # 04 · Web Components 2/2 · Shadow DOM my first component
 
-Druga Web Components lekcija nadograđuje osnove: isti nivo komponente sada gradiš kroz template, shadow DOM, slotove, render lifecycle, cleanup i sigurniju registraciju.
+Druga Web Components lekcija prvo sastavlja vidljivi card shell kroz host, template i slotove, pa tek onda dodaje shadow DOM behavior, render lifecycle, cleanup i sigurniju registraciju.
 
 ## Goal
 
 - Šta gradimo u ovoj lekciji
 
-Ovo je drugi Web Components korak: host HTML ostaje mali, a prava komponenta se sada sklapa iz template-a, shadow DOM-a, slotova i završnog production polish sloja.
+Ovo je drugi Web Components korak: prvo složimo vidljivi card shell, a tek onda kroz template, shadow DOM, slotove i lifecycle dodajemo ponašanje i polish.
 
 ## Steps
 

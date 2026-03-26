@@ -2977,6 +2977,7 @@ Update rules:
 
 ## Current Ledger
 
+1. `[lesson][done] 2026-03-26 19:14 - Applied visual-first sequencing to Web Components lesson intros and cleared trackers` - `product/education/lessons/03-build-custom-element/source/lesson.md`, `product/education/lessons/04-build-web-component/source/lesson.md`, `product/education/lessons/05-clean-web-component-with-adopted-stylesheets/source/lesson.md`, `product/education/lessons/06-modular-web-components/source/lesson.md`, `system/lesson-engine/output/03-build-custom-element.md`, `system/lesson-engine/output/04-build-web-component.md`, `system/lesson-engine/output/05-clean-web-component-with-adopted-stylesheets.md`, `system/lesson-engine/output/06-modular-web-components.md`
 1. `[doc][done] 2026-03-26 16:25 - Web Components visual-first sequencing rule added` - `AGENTS.md`, `.agents/authoring/LESSON_AUTHORING.md`, `.agents/planning/PLAN.md`, `.agents/evidence/TODO.md`
 1. `[review][done] 2026-03-26 15:34 - Production readiness review closed` - `system/lesson-engine/documentation/sync-lesson-documents.js`, `system/lesson-engine/register-lesson-packages/*.js`, `tests/flows/compose-step-narration-text.test.js`, `tests/flows/select-lesson-from-location.test.js`
 2. `[refactor][done] 2026-03-26 15:26 - Product/System refactor completed` - `README.md`, `AGENTS.md`, `.agents/architecture/ARCHITECTURE.md`, `.agents/architecture/lesson-architecture.md`, `.agents/architecture/lesson-architecture-flow.md`, `.agents/architecture/migration-governance.md`, `.agents/authoring/LESSON_AUTHORING.md`, `.agents/planning/PLAN.md`, `.agents/planning/ARCHIVE.md`, `.agents/evidence/TODO.md`, `.agents/evidence/CHANGELOG.md`, `.gitignore`, `package.json`, `system/animator-engine/choose-lesson/select-lesson-from-location.js`, `system/lesson-engine/*`, `system/foundation/*`, `tests/*`, `generated/lesson-documents/`, `system/lesson-engine/output/`
@@ -8980,8 +8981,9 @@ preview:
 schemaVersion: 1
 lessonId: 03-build-custom-element
 lessonTitle: 03 · Web Components 1/2 · Light DOM custom element
-lessonIntro: Prva Web Components lekcija objašnjava host tag, registraciju,
-  atribute i prvi render kroz light DOM, bez shadow DOM sloja.
+lessonIntro: Prva Web Components lekcija prvo gradi vidljivi host i prvi render
+  koji korisnik vidi, pa tek onda kroz light DOM objašnjava registraciju i
+  atribute, bez shadow DOM sloja.
 status: active
 courseId: step-by-step-animator
 order: 3
@@ -9017,12 +9019,12 @@ goal:
   imageSrc: ./assets/custom-element-goal.svg
   imageAlt: Referentna slika tamnog callout card custom elementa na svetloj
     pozadini, sa malim badge-om, naslovom, opisom i CTA dugmetom.
-  imageCaption: "Ovo je prvi korak Web Components puta: isti problem rešavamo kroz
-    light DOM custom element, da bi host, atributi i registracija ostali potpuno
-    transparentni."
+  imageCaption: "Ovo je prvi korak Web Components puta: prvo gradimo vidljivi
+    host i prvi render, a tek onda kroz light DOM objašnjavamo host, atribute i
+    registraciju."
 ---
 
-Prva Web Components lekcija objašnjava host tag, registraciju, atribute i prvi render kroz light DOM, bez shadow DOM sloja.
+Prva Web Components lekcija prvo gradi vidljivi host i prvi render koji korisnik vidi, pa tek onda kroz light DOM objašnjava registraciju i atribute, bez shadow DOM sloja.
 
 === product/education/lessons/03-build-custom-element/source/scenes.md ===
 ---
@@ -10414,9 +10416,9 @@ preview:
 schemaVersion: 1
 lessonId: 04-build-web-component
 lessonTitle: 04 · Web Components 2/2 · Shadow DOM my first component
-lessonIntro: "Druga Web Components lekcija nadograđuje osnove: isti nivo
-  komponente sada gradiš kroz template, shadow DOM, slotove, render lifecycle,
-  cleanup i sigurniju registraciju."
+lessonIntro: "Druga Web Components lekcija prvo sastavlja vidljivi card shell
+  kroz host, template i slotove, pa tek onda dodaje shadow DOM behavior,
+  render lifecycle, cleanup i sigurniju registraciju."
 status: active
 courseId: step-by-step-animator
 order: 4
@@ -10452,12 +10454,12 @@ goal:
   imageSrc: ./assets/web-component-goal.svg
   imageAlt: Referentna slika tamnog my first component card Web Component-a na
     svetloj pozadini, sa badge oznakom, velikim naslovom, opisom i CTA dugmetom.
-  imageCaption: "Ovo je drugi Web Components korak: host HTML ostaje mali, a prava
-    komponenta se sada sklapa iz template-a, shadow DOM-a, slotova i završnog
-    production polish sloja."
+  imageCaption: "Ovo je drugi Web Components korak: prvo složimo vidljivi card
+    shell, a tek onda kroz template, shadow DOM, slotove i lifecycle dodajemo
+    ponašanje i polish."
 ---
 
-Druga Web Components lekcija nadograđuje osnove: isti nivo komponente sada gradiš kroz template, shadow DOM, slotove, render lifecycle, cleanup i sigurniju registraciju.
+Druga Web Components lekcija prvo sastavlja vidljivi card shell kroz host, template i slotove, pa tek onda dodaje shadow DOM behavior, render lifecycle, cleanup i sigurniju registraciju.
 
 === product/education/lessons/04-build-web-component/source/scenes.md ===
 ---
@@ -13090,10 +13092,10 @@ preview:
 schemaVersion: 1
 lessonId: 05-clean-web-component-with-adopted-stylesheets
 lessonTitle: 05 · Web Components 3/3 · Now Let's Clean The Mess
-lessonIntro: "Treća Web Components lekcija čisti stilsku priču komponente: CSS
-  više ne živi ni u template markup-u ni u velikom JS string-u, nego u posebnom
-  shadow CSS fajlu koji JavaScript uvozi kao tekst i usvaja preko
-  adoptedStyleSheets."
+lessonIntro: "Treća Web Components lekcija prvo zadržava isti vidljivi card
+  rezultat, pa tek onda čisti stilsku priču komponente: CSS više ne živi ni u
+  template markup-u ni u velikom JS string-u, nego u posebnom shadow CSS fajlu
+  koji JavaScript uvozi kao tekst i usvaja preko adoptedStyleSheets."
 status: active
 courseId: step-by-step-animator
 order: 5
@@ -13135,12 +13137,12 @@ goal:
   imageSrc: ./assets/web-component-goal.svg
   imageAlt: Referentna slika tamnog my first component card Web Component-a na
     svetloj pozadini, sa badge oznakom, velikim naslovom, opisom i CTA dugmetom.
-  imageCaption: "Ovo je cleanup korak: ista komponenta ostaje ista spolja, ali CSS
-    više ne živi u template string-u, već u posebnom `shadow-dom-style.css`
-    sloju koji shadow root usvaja."
+  imageCaption: "Ovo je cleanup korak: isti vidljivi card ostaje prvi fokus, a
+    tek onda CSS prelazi u poseban `shadow-dom-style.css` sloj koji shadow root
+    usvaja."
 ---
 
-Treća Web Components lekcija čisti stilsku priču komponente: CSS više ne živi ni u template markup-u ni u velikom JS string-u, nego u posebnom shadow CSS fajlu koji JavaScript uvozi kao tekst i usvaja preko adoptedStyleSheets.
+Treća Web Components lekcija prvo zadržava isti vidljivi card rezultat, pa tek onda čisti stilsku priču komponente: CSS više ne živi ni u template markup-u ni u velikom JS string-u, nego u posebnom shadow CSS fajlu koji JavaScript uvozi kao tekst i usvaja preko adoptedStyleSheets.
 
 === product/education/lessons/05-clean-web-component-with-adopted-stylesheets/source/scenes.md ===
 ---
@@ -15910,9 +15912,9 @@ preview:
 schemaVersion: 1
 lessonId: 06-modular-web-components
 lessonTitle: 06 · Modular Web Components (IDE View)
-lessonIntro: Ova lekcija demonstrira novi IDE mode playera. Umesto da svi
-  fajlovi budu vidljivi odjednom, koristimo stvarni file browser i automatsko
-  prebacivanje fokusa na fajl koji se trenutno menja.
+lessonIntro: Ova lekcija demonstrira novi IDE mode playera. Prvo ostaje vidljiv
+  stvarni UI rezultat komponente, a tek onda koristimo file browser i automatsko
+  prebacivanje fokusa da raspodelimo fajlove i ponašanje.
 status: active
 courseId: step-by-step-animator
 order: 6
@@ -15954,10 +15956,11 @@ goal:
   title: "Cilj: IDE Iskustvo"
   imageSrc: ./assets/web-component-goal.svg
   imageAlt: Referentna slika IDE view-a.
-  imageCaption: U ovoj lekciji testiramo IDE layout sa fajlovima na desnoj strani.
+  imageCaption: U ovoj lekciji prvo čuvamo vidljiv rezultat komponente, pa tek
+    onda IDE layout koristi fajlove da razdvoji odgovornosti.
 ---
 
-Ova lekcija demonstrira novi IDE mode playera. Umesto da svi fajlovi budu vidljivi odjednom, koristimo stvarni file browser i automatsko prebacivanje fokusa na fajl koji se trenutno menja.
+Ova lekcija demonstrira novi IDE mode playera. Prvo ostaje vidljiv stvarni UI rezultat komponente, a tek onda koristimo file browser i automatsko prebacivanje fokusa da raspodelimo fajlove i ponašanje.
 
 === product/education/lessons/06-modular-web-components/source/scenes.md ===
 ---
@@ -34836,13 +34839,13 @@ U ovoj lekciji gradimo samo prvi raspored iz reference: logo levo, linkovi u sre
 
 # 03 · Web Components 1/2 · Light DOM custom element
 
-Prva Web Components lekcija objašnjava host tag, registraciju, atribute i prvi render kroz light DOM, bez shadow DOM sloja.
+Prva Web Components lekcija prvo gradi vidljivi host i prvi render koji korisnik vidi, pa tek onda kroz light DOM objašnjava registraciju i atribute, bez shadow DOM sloja.
 
 ## Goal
 
 - Šta gradimo u ovoj lekciji
 
-Ovo je prvi korak Web Components puta: isti problem rešavamo kroz light DOM custom element, da bi host, atributi i registracija ostali potpuno transparentni.
+Ovo je prvi korak Web Components puta: prvo gradimo vidljivi host i prvi render, a tek onda kroz light DOM objašnjavamo host, atribute i registraciju.
 
 ## Steps
 
@@ -34953,13 +34956,13 @@ Ovo je prvi korak Web Components puta: isti problem rešavamo kroz light DOM cus
 
 # 04 · Web Components 2/2 · Shadow DOM my first component
 
-Druga Web Components lekcija nadograđuje osnove: isti nivo komponente sada gradiš kroz template, shadow DOM, slotove, render lifecycle, cleanup i sigurniju registraciju.
+Druga Web Components lekcija prvo sastavlja vidljivi card shell kroz host, template i slotove, pa tek onda dodaje shadow DOM behavior, render lifecycle, cleanup i sigurniju registraciju.
 
 ## Goal
 
 - Šta gradimo u ovoj lekciji
 
-Ovo je drugi Web Components korak: host HTML ostaje mali, a prava komponenta se sada sklapa iz template-a, shadow DOM-a, slotova i završnog production polish sloja.
+Ovo je drugi Web Components korak: prvo složimo vidljivi card shell, a tek onda kroz template, shadow DOM, slotove i lifecycle dodajemo ponašanje i polish.
 
 ## Steps
 
@@ -35162,13 +35165,13 @@ Ovo je drugi Web Components korak: host HTML ostaje mali, a prava komponenta se 
 
 # 05 · Web Components 3/3 · Now Let's Clean The Mess
 
-Treća Web Components lekcija čisti stilsku priču komponente: CSS više ne živi ni u template markup-u ni u velikom JS string-u, nego u posebnom shadow CSS fajlu koji JavaScript uvozi kao tekst i usvaja preko adoptedStyleSheets.
+Treća Web Components lekcija prvo zadržava isti vidljivi card rezultat, pa tek onda čisti stilsku priču komponente: CSS više ne živi ni u template markup-u ni u velikom JS string-u, nego u posebnom shadow CSS fajlu koji JavaScript uvozi kao tekst i usvaja preko adoptedStyleSheets.
 
 ## Goal
 
 - Šta gradimo u ovoj lekciji
 
-Ovo je cleanup korak: ista komponenta ostaje ista spolja, ali CSS više ne živi u template string-u, već u posebnom `shadow-dom-style.css` sloju koji shadow root usvaja.
+Ovo je cleanup korak: isti vidljivi card ostaje prvi fokus, a tek onda CSS prelazi u poseban `shadow-dom-style.css` sloj koji shadow root usvaja.
 
 ## Steps
 
@@ -35381,13 +35384,13 @@ Ovo je cleanup korak: ista komponenta ostaje ista spolja, ali CSS više ne živi
 
 # 06 · Modular Web Components (IDE View)
 
-Ova lekcija demonstrira novi IDE mode playera. Umesto da svi fajlovi budu vidljivi odjednom, koristimo stvarni file browser i automatsko prebacivanje fokusa na fajl koji se trenutno menja.
+Ova lekcija demonstrira novi IDE mode playera. Prvo ostaje vidljiv stvarni UI rezultat komponente, a tek onda koristimo file browser i automatsko prebacivanje fokusa da raspodelimo fajlove i ponašanje.
 
 ## Goal
 
 - Cilj: IDE Iskustvo
 
-U ovoj lekciji testiramo IDE layout sa fajlovima na desnoj strani.
+U ovoj lekciji prvo čuvamo vidljiv rezultat komponente, pa tek onda IDE layout koristi fajlove da razdvoji odgovornosti.
 
 ## Steps
 

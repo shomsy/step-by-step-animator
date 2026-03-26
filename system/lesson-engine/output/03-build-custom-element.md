@@ -2,13 +2,13 @@
 
 # 03 · Web Components 1/2 · Light DOM custom element
 
-Prva Web Components lekcija objašnjava host tag, registraciju, atribute i prvi render kroz light DOM, bez shadow DOM sloja.
+Prva Web Components lekcija prvo gradi vidljivi host i prvi render koji korisnik vidi, pa tek onda kroz light DOM objašnjava registraciju i atribute, bez shadow DOM sloja.
 
 ## Goal
 
 - Šta gradimo u ovoj lekciji
 
-Ovo je prvi korak Web Components puta: isti problem rešavamo kroz light DOM custom element, da bi host, atributi i registracija ostali potpuno transparentni.
+Ovo je prvi korak Web Components puta: prvo gradimo vidljivi host i prvi render, a tek onda kroz light DOM objašnjavamo host, atribute i registraciju.
 
 ## Steps
 

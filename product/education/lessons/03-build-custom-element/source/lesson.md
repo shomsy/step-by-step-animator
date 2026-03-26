@@ -2,8 +2,9 @@
 schemaVersion: 1
 lessonId: 03-build-custom-element
 lessonTitle: 03 · Web Components 1/2 · Light DOM custom element
-lessonIntro: Prva Web Components lekcija objašnjava host tag, registraciju,
-  atribute i prvi render kroz light DOM, bez shadow DOM sloja.
+lessonIntro: Prva Web Components lekcija prvo gradi vidljivi host i prvi render
+  koji korisnik vidi, pa tek onda kroz light DOM objašnjava registraciju i
+  atribute, bez shadow DOM sloja.
 status: active
 courseId: step-by-step-animator
 order: 3
@@ -39,9 +40,9 @@ goal:
   imageSrc: ./assets/custom-element-goal.svg
   imageAlt: Referentna slika tamnog callout card custom elementa na svetloj
     pozadini, sa malim badge-om, naslovom, opisom i CTA dugmetom.
-  imageCaption: "Ovo je prvi korak Web Components puta: isti problem rešavamo kroz
-    light DOM custom element, da bi host, atributi i registracija ostali potpuno
-    transparentni."
+  imageCaption: "Ovo je prvi korak Web Components puta: prvo gradimo vidljivi
+    host i prvi render, a tek onda kroz light DOM objašnjavamo host, atribute i
+    registraciju."
 ---
 
-Prva Web Components lekcija objašnjava host tag, registraciju, atribute i prvi render kroz light DOM, bez shadow DOM sloja.
+Prva Web Components lekcija prvo gradi vidljivi host i prvi render koji korisnik vidi, pa tek onda kroz light DOM objašnjava registraciju i atribute, bez shadow DOM sloja.
