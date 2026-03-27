@@ -43,28 +43,41 @@ This repo has three levels of documents:
 - `.agents/architecture/ARCHITECTURE.md` is the repo-specific application of that baseline.
 - `AGENTS.md` is the operational contract for work, delivery and collaboration in this repo.
 - `.agents/` stays at the repository root, is gitignored, and must not be moved or duplicated.
+- `.agents/` is the management tree for the repo, split by responsibility:
+  - `.agents/architecture/` for repo shape, migration posture, and naming baseline
+  - `.agents/authoring/` for lesson authoring rules and source contracts
+  - `.agents/backlog/` for raw ideas and user stories that are not yet committed work
+  - `.agents/bugs/` for active defects, regressions, and hotfix triage
+  - `.agents/planning/` for selected workstreams, breakdowns, dependencies, and estimates
+  - `.agents/evidence/` for actionable TODOs and closed evidence
+  - `.agents/governance/` for quality rules, review gates, and project policy
+  - `.agents/review/` for review findings and review archive notes
 
 ## 1.2 Evidence Ledger
 
-`.agents/evidence/CHANGELOG.md` is the single running evidence ledger for features, bugs, TODOs, plans, and major decisions.
+`.agents/evidence/CHANGELOG.md` is the running historical ledger for completed features, closed bugs, completed TODOs, closed plans, and major decisions.
 
 Evidence ledger rules:
 
 - if the state of a feature, bug, TODO, or plan changes, update the ledger in the same work item
 - keep detailed docs in their owning folders; the ledger only tracks current state and links to the detail when useful
-- use `YYYY-MM-DD HH:MM` timestamps for new evidence and backlog entries so duration and aging can be estimated
+- use `YYYY-MM-DD HH:MM` timestamps for new evidence, backlog, and bug entries so duration and aging can be estimated
 
-## 1.3 Active Backlog
+## 1.3 Capture And Triage
 
-`.agents/evidence/TODO.md` is the active backlog for follow-up work.
+`.agents/backlog/BACKLOG.md` is the raw idea and user-story inbox.
+`.agents/bugs/BUGS.md` is the active defect and hotfix queue.
+`.agents/evidence/TODO.md` is the active implementation queue for follow-up work.
 
-Backlog rules:
+Capture rules:
 
-- when a review or implementation pass leaves follow-up work, add it to `.agents/evidence/TODO.md`
+- when a new idea is still vague, capture it in `.agents/backlog/BACKLOG.md`
+- when a defect is confirmed, capture it in `.agents/bugs/BUGS.md`
+- when a backlog item or bug becomes selected work, promote it into `.agents/planning/PLAN.md`
+- when a plan item becomes actionable, move it into `.agents/evidence/TODO.md`
 - when an item is completed, remove it from `.agents/evidence/TODO.md` and mirror the state change in `.agents/evidence/CHANGELOG.md`
 - do not rely on memory or chat history as the source of truth for pending work
-- use `YYYY-MM-DD HH:MM` timestamps for new backlog entries so duration and aging can be estimated
-- only `.agents/evidence/TODO.md` is the active TODO list; planning archive files are historical only
+- use `YYYY-MM-DD HH:MM` timestamps for new backlog, bug, and TODO entries so duration and aging can be estimated
 - if `.agents/evidence/TODO.md` has no active work, it should say `No active items.`
 
 ### Legacy Removal Governance
@@ -80,21 +93,25 @@ Rules:
 
 ## 1.4 Mandatory Work Flow
 
-Every substantial work item must flow through these three layers in order:
+Every substantial work item must flow through a capture lane and then these layers in order:
 
-1. `.agents/planning/PLAN.md`
-2. `.agents/evidence/TODO.md`
-3. `.agents/evidence/CHANGELOG.md`
+1. `.agents/backlog/BACKLOG.md` or `.agents/bugs/BUGS.md`
+2. `.agents/planning/PLAN.md`
+3. `.agents/evidence/TODO.md`
+4. `.agents/evidence/CHANGELOG.md`
 
 Rules:
 
+- `BACKLOG.md` captures raw ideas and user stories
+- `BUGS.md` captures active defects and hotfix triage
 - `PLAN.md` captures the current workstream and intent
 - `TODO.md` captures actionable follow-up work
 - `CHANGELOG.md` captures closed evidence and final state
 - `planning/ARCHIVE.md` may exist for legacy notes, but it is not an active TODO list
+- `backlog/` and `bugs/` are capture lanes, not execution queues
 - the active TODO file is not an archive; completed items do not stay there
 - do not skip a layer when the item is substantial enough to merit tracking
-- keep the three layers aligned in the same work item when the state changes
+- keep the layers aligned in the same work item when the state changes
 
 ## 1.5 Work Item Metadata
 
@@ -108,7 +125,7 @@ To keep project management professional and measurable, substantial items should
 
 Rules:
 
-- use the same metadata language across `PLAN.md`, `TODO.md`, and `CHANGELOG.md`
+- use the same metadata language across `BACKLOG.md`, `BUGS.md`, `PLAN.md`, `TODO.md`, and `CHANGELOG.md`
 - do not create a new tracker file before using these fields
 - keep the metadata short and factual, not essay-like
 - if an item grows beyond a single work session, give it an estimate before starting
@@ -328,13 +345,15 @@ At the end of every iteration, mandatory final discipline from the repo root is 
 This means:
 
 1. if the change touched architecture or naming, sync relevant documents
-2. update `.agents/planning/PLAN.md` if the work changes plan scope or priority
-3. update `.agents/evidence/TODO.md` if the iteration leaves any follow-up work
-4. update `.agents/evidence/CHANGELOG.md` if the work changed feature, bug, TODO, or plan state
-5. run `./merge-files.sh .` from repo root
-6. do `git add -A`
-7. make a normal `git commit`
-8. do `git push`
+2. update `.agents/backlog/BACKLOG.md` if the work adds or reclassifies raw ideas or user stories
+3. update `.agents/planning/PLAN.md` if the work changes plan scope or priority
+4. update `.agents/bugs/BUGS.md` if the work changes defect state
+5. update `.agents/evidence/TODO.md` if the iteration leaves any follow-up work
+6. update `.agents/evidence/CHANGELOG.md` if the work changed feature, bug, TODO, or plan state
+7. run `./merge-files.sh .` from repo root
+8. do `git add -A`
+9. make a normal `git commit`
+10. do `git push`
 
 Do not finish an implementation pass without this closing, unless the user explicitly asks not to commit or push.
 
@@ -350,7 +369,7 @@ Rules:
 - if review finds a problem, fix it and rerun validation in the same work item
 - only after review and tests are green, run `./merge-files.sh .`, then `git add -A`, `git commit`, and `git push`
 - do not treat commit/push as a substitute for validation
-- do not leave a known-bad state in TODO as if it were done
+- do not leave a known-bad state in TODO or BUGS as if it were done
 
 ## 3. Feature Contract
 

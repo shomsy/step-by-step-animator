@@ -77,6 +77,39 @@
 >
 > ^C KeyboardInterrupt
 
+=== .agents/README.md ===
+# Agents Tree
+
+This directory holds the repo management contract. It is separate from the product and system code.
+
+## Responsibility Map
+
+- `architecture/` - repo shape, migration posture, and naming baseline
+- `authoring/` - lesson authoring rules and source contracts
+- `backlog/` - raw ideas and user stories that are not yet committed work
+- `bugs/` - active defects, regressions, and hotfix triage
+- `planning/` - selected workstreams, breakdowns, dependencies, and estimates
+- `evidence/` - actionable TODOs and closed evidence
+- `governance/` - quality rules, review gates, and project policy
+- `review/` - review findings and review archive notes
+
+## Reading Order
+
+1. `architecture/`
+2. `authoring/`
+3. `governance/`
+4. `backlog/`
+5. `planning/`
+6. `bugs/`
+7. `evidence/`
+8. `review/`
+
+## Notes
+
+- `planning/ARCHIVE.md` and `review/bugs.md` are historical records.
+- `evidence/TODO.md` remains the active implementation queue.
+- `evidence/CHANGELOG.md` remains the closed-state ledger.
+
 === .agents/architecture/ARCHITECTURE.md ===
 # Architecture
 
@@ -2970,6 +3003,43 @@ Before keeping a scene, check:
 
 If the answer is not `yes`, the scene should be broken or moved.
 
+=== .agents/backlog/BACKLOG.md ===
+# Backlog
+
+This file captures raw ideas and user stories before they become planned work.
+It is intentionally lightweight.
+
+## Update Rules
+
+- keep newest items at the top
+- write the rough thought first; do not force decomposition
+- use `YYYY-MM-DD HH:MM` timestamps so aging can be measured
+- promote an item to `.agents/planning/PLAN.md` when it is selected for work
+- move it to `.agents/evidence/TODO.md` only when execution is ready
+- if the item is a bug or hotfix, promote it to `.agents/bugs/BUGS.md` instead of planning
+
+## Current Ideas
+
+No active items.
+
+=== .agents/bugs/BUGS.md ===
+# Active Bugs
+
+This file captures active defects, regressions, and hotfixes.
+It feeds planning when a bug needs active implementation work.
+
+## Update Rules
+
+- keep newest items at the top
+- use `YYYY-MM-DD HH:MM` timestamps so age and urgency are visible
+- add `owner`, `estimate`, `blocked_by`, and `acceptance` when the bug needs active work
+- move implementation work into `.agents/evidence/TODO.md` when the fix becomes actionable
+- move closed bugs into `.agents/evidence/CHANGELOG.md`
+
+## Current Items
+
+1. `[bug][low] 2026-03-27 15:15 - Razmotriti sanitizaciju tagText pre innerHTML` - `system/animator-engine/play-lesson/02-follow-lesson/show-current-step.js:28` koristi `innerHTML` sa lesson podacima. Za sada prihvatljivo jer su lesson fajlovi pod kontrolom developera.
+
 === .agents/evidence/CHANGELOG.md ===
 # Evidence Log
 
@@ -3023,8 +3093,8 @@ Update rules:
 === .agents/evidence/TODO.md ===
 # Active TODO
 
-This is the active backlog for follow-up work.
-It is fed by `.agents/planning/PLAN.md`.
+This is the active queue for follow-up work.
+It is fed by `.agents/planning/PLAN.md` and `.agents/bugs/BUGS.md` when work is ready to execute.
 
 Update rules:
 
@@ -3036,29 +3106,61 @@ Update rules:
 
 ## Current Items
 
-No active items.
+1. `[doc][medium] 2026-03-27 15:15 - Implement .agents management split and update navigation docs`
+   owner: codex
+   estimate: 1h
+   acceptance: `.agents/README.md`, backlog, bugs, governance, and review docs exist and AGENTS/README/trackers point to the right responsibility.
+
+=== .agents/governance/QUALITY.md ===
+# Quality Governance
+
+This file captures the project-wide quality rules that sit above individual work items.
+
+## What Belongs Here
+
+- definition of done
+- review expectations
+- naming and responsibility rules that are broader than architecture
+- decision gates for merging, publishing, and refactoring
+- quality exceptions that must be remembered
+
+## Operating Rules
+
+- prefer simple flow-first names
+- keep product code and management docs separate
+- do not introduce new legacy compatibility layers without explicit governance
+- every non-trivial change must leave a readable paper trail in PLAN, TODO, BUGS, and CHANGELOG
+- when quality or architecture changes, update the owning doc in the same work item
+
+## Current Policy
+
+No active exceptions.
 
 === .agents/planning/ARCHIVE.md ===
 # Planning Archive
 
 This file keeps legacy planning notes that are no longer active work.
+The active ideas live in `.agents/backlog/BACKLOG.md`.
+The active bug queue lives in `.agents/bugs/BUGS.md`.
 The active plan lives in `.agents/planning/PLAN.md`.
-The active backlog lives in `.agents/evidence/TODO.md`.
+The active implementation queue lives in `.agents/evidence/TODO.md`.
 The evidence ledger lives in `.agents/evidence/CHANGELOG.md`.
 
-- 2026-03-26 15:26 - Product/System Refactor Realignment completed: moved lesson-engine into `system/lesson-engine/`, moved generated lesson docs into `system/lesson-engine/output/`, populated `system/foundation/` with `frontmatter/` and `markdown/`, and cleared the active backlog.
+- 2026-03-26 15:26 - Product/System Refactor Realignment completed: moved lesson-engine into `system/lesson-engine/`, moved generated lesson docs into `system/lesson-engine/output/`, populated `system/foundation/` with `frontmatter/` and `markdown/`, and cleared the active follow-up queue.
 - 2026-03-26 15:34 - Production readiness review completed: fixed the stale lesson-doc sync root and updated runtime test imports to the `system/` tree; validation, build, and tests passed afterward.
 
 === .agents/planning/PLAN.md ===
 # Active Plan
 
-This is the mandatory first tracking layer for substantial work.
+This is the selected workstream layer for substantial work.
+It sits after backlog or bug capture and before TODO execution.
 
 Update rules:
 
 - keep newest items at the top
 - use `YYYY-MM-DD HH:MM` timestamps so duration and aging can be estimated
 - keep the plan high-level and outcome-oriented
+- promote selected ideas or bug triage from the capture lanes into plan workstreams
 - add `owner`, `estimate`, and `acceptance` when the workstream is substantial
 - add `blocked_by` only when the workstream is waiting on an external dependency
 - when a plan item becomes actionable, move it into `.agents/evidence/TODO.md`
@@ -3066,12 +3168,35 @@ Update rules:
 
 ## Current Workstreams
 
-No active workstreams.
+1. `[doc][medium] 2026-03-27 15:15 - Organize .agents responsibilities into backlog, bugs, governance, and review lanes`
+   owner: codex
+   estimate: 1h
+   acceptance: `.agents` clearly separates raw ideas, defects, plans, TODOs, closures, and quality rules without deleting existing records.
+
+=== .agents/review/REVIEWS.md ===
+# Review Notes
+
+This file tracks active code-review findings and follow-up observations.
+
+## Update Rules
+
+- keep newest items at the top
+- write one finding per line
+- move confirmed defects into `.agents/bugs/BUGS.md`
+- move implementation follow-up into `.agents/evidence/TODO.md`
+- move closed review notes into `.agents/evidence/CHANGELOG.md`
+
+## Current Items
+
+No active items.
 
 === .agents/review/bugs.md ===
-# Bugs
+# Review Bug Archive
 
-This file is archived. Active bug evidence lives in `.agents/evidence/CHANGELOG.md`.
+This file is archived.
+Active bug evidence lives in `.agents/bugs/BUGS.md`.
+Active review notes live in `.agents/review/REVIEWS.md`.
+Closed evidence lives in `.agents/evidence/CHANGELOG.md`.
 
 === .gitignore ===
 node_modules/
@@ -3143,28 +3268,41 @@ This repo has three levels of documents:
 - `.agents/architecture/ARCHITECTURE.md` is the repo-specific application of that baseline.
 - `AGENTS.md` is the operational contract for work, delivery and collaboration in this repo.
 - `.agents/` stays at the repository root, is gitignored, and must not be moved or duplicated.
+- `.agents/` is the management tree for the repo, split by responsibility:
+  - `.agents/architecture/` for repo shape, migration posture, and naming baseline
+  - `.agents/authoring/` for lesson authoring rules and source contracts
+  - `.agents/backlog/` for raw ideas and user stories that are not yet committed work
+  - `.agents/bugs/` for active defects, regressions, and hotfix triage
+  - `.agents/planning/` for selected workstreams, breakdowns, dependencies, and estimates
+  - `.agents/evidence/` for actionable TODOs and closed evidence
+  - `.agents/governance/` for quality rules, review gates, and project policy
+  - `.agents/review/` for review findings and review archive notes
 
 ## 1.2 Evidence Ledger
 
-`.agents/evidence/CHANGELOG.md` is the single running evidence ledger for features, bugs, TODOs, plans, and major decisions.
+`.agents/evidence/CHANGELOG.md` is the running historical ledger for completed features, closed bugs, completed TODOs, closed plans, and major decisions.
 
 Evidence ledger rules:
 
 - if the state of a feature, bug, TODO, or plan changes, update the ledger in the same work item
 - keep detailed docs in their owning folders; the ledger only tracks current state and links to the detail when useful
-- use `YYYY-MM-DD HH:MM` timestamps for new evidence and backlog entries so duration and aging can be estimated
+- use `YYYY-MM-DD HH:MM` timestamps for new evidence, backlog, and bug entries so duration and aging can be estimated
 
-## 1.3 Active Backlog
+## 1.3 Capture And Triage
 
-`.agents/evidence/TODO.md` is the active backlog for follow-up work.
+`.agents/backlog/BACKLOG.md` is the raw idea and user-story inbox.
+`.agents/bugs/BUGS.md` is the active defect and hotfix queue.
+`.agents/evidence/TODO.md` is the active implementation queue for follow-up work.
 
-Backlog rules:
+Capture rules:
 
-- when a review or implementation pass leaves follow-up work, add it to `.agents/evidence/TODO.md`
+- when a new idea is still vague, capture it in `.agents/backlog/BACKLOG.md`
+- when a defect is confirmed, capture it in `.agents/bugs/BUGS.md`
+- when a backlog item or bug becomes selected work, promote it into `.agents/planning/PLAN.md`
+- when a plan item becomes actionable, move it into `.agents/evidence/TODO.md`
 - when an item is completed, remove it from `.agents/evidence/TODO.md` and mirror the state change in `.agents/evidence/CHANGELOG.md`
 - do not rely on memory or chat history as the source of truth for pending work
-- use `YYYY-MM-DD HH:MM` timestamps for new backlog entries so duration and aging can be estimated
-- only `.agents/evidence/TODO.md` is the active TODO list; planning archive files are historical only
+- use `YYYY-MM-DD HH:MM` timestamps for new backlog, bug, and TODO entries so duration and aging can be estimated
 - if `.agents/evidence/TODO.md` has no active work, it should say `No active items.`
 
 ### Legacy Removal Governance
@@ -3180,21 +3318,25 @@ Rules:
 
 ## 1.4 Mandatory Work Flow
 
-Every substantial work item must flow through these three layers in order:
+Every substantial work item must flow through a capture lane and then these layers in order:
 
-1. `.agents/planning/PLAN.md`
-2. `.agents/evidence/TODO.md`
-3. `.agents/evidence/CHANGELOG.md`
+1. `.agents/backlog/BACKLOG.md` or `.agents/bugs/BUGS.md`
+2. `.agents/planning/PLAN.md`
+3. `.agents/evidence/TODO.md`
+4. `.agents/evidence/CHANGELOG.md`
 
 Rules:
 
+- `BACKLOG.md` captures raw ideas and user stories
+- `BUGS.md` captures active defects and hotfix triage
 - `PLAN.md` captures the current workstream and intent
 - `TODO.md` captures actionable follow-up work
 - `CHANGELOG.md` captures closed evidence and final state
 - `planning/ARCHIVE.md` may exist for legacy notes, but it is not an active TODO list
+- `backlog/` and `bugs/` are capture lanes, not execution queues
 - the active TODO file is not an archive; completed items do not stay there
 - do not skip a layer when the item is substantial enough to merit tracking
-- keep the three layers aligned in the same work item when the state changes
+- keep the layers aligned in the same work item when the state changes
 
 ## 1.5 Work Item Metadata
 
@@ -3208,7 +3350,7 @@ To keep project management professional and measurable, substantial items should
 
 Rules:
 
-- use the same metadata language across `PLAN.md`, `TODO.md`, and `CHANGELOG.md`
+- use the same metadata language across `BACKLOG.md`, `BUGS.md`, `PLAN.md`, `TODO.md`, and `CHANGELOG.md`
 - do not create a new tracker file before using these fields
 - keep the metadata short and factual, not essay-like
 - if an item grows beyond a single work session, give it an estimate before starting
@@ -3428,13 +3570,15 @@ At the end of every iteration, mandatory final discipline from the repo root is 
 This means:
 
 1. if the change touched architecture or naming, sync relevant documents
-2. update `.agents/planning/PLAN.md` if the work changes plan scope or priority
-3. update `.agents/evidence/TODO.md` if the iteration leaves any follow-up work
-4. update `.agents/evidence/CHANGELOG.md` if the work changed feature, bug, TODO, or plan state
-5. run `./merge-files.sh .` from repo root
-6. do `git add -A`
-7. make a normal `git commit`
-8. do `git push`
+2. update `.agents/backlog/BACKLOG.md` if the work adds or reclassifies raw ideas or user stories
+3. update `.agents/planning/PLAN.md` if the work changes plan scope or priority
+4. update `.agents/bugs/BUGS.md` if the work changes defect state
+5. update `.agents/evidence/TODO.md` if the iteration leaves any follow-up work
+6. update `.agents/evidence/CHANGELOG.md` if the work changed feature, bug, TODO, or plan state
+7. run `./merge-files.sh .` from repo root
+8. do `git add -A`
+9. make a normal `git commit`
+10. do `git push`
 
 Do not finish an implementation pass without this closing, unless the user explicitly asks not to commit or push.
 
@@ -3450,7 +3594,7 @@ Rules:
 - if review finds a problem, fix it and rerun validation in the same work item
 - only after review and tests are green, run `./merge-files.sh .`, then `git add -A`, `git commit`, and `git push`
 - do not treat commit/push as a substitute for validation
-- do not leave a known-bad state in TODO as if it were done
+- do not leave a known-bad state in TODO or BUGS as if it were done
 
 ## 3. Feature Contract
 
@@ -3552,6 +3696,7 @@ Step By Step Animator is an interactive lesson engine for HTML, CSS, and JavaScr
 ## Where To Start
 
 - `AGENTS.md` defines the operational contract for work in this repo.
+- `.agents/README.md` maps the management responsibilities inside `.agents/`.
 - `.agents/architecture/ARCHITECTURE.md` defines the repo-specific architecture.
 - `product/app/index.html` and `product/app/main.js` are the live app entry points.
 - `product/education/lessons/02-build-top-navigation/source/lesson.md` is the current pilot lesson source.
@@ -3574,7 +3719,12 @@ The live repo is organized around these boundaries:
 
 ### Governance And Documentation
 
-- `.agents/` contains planning, evidence, architecture, authoring, and review records
+- `.agents/` contains the management tree: architecture, authoring, backlog, bugs, planning, governance, review, and evidence records
+- `.agents/README.md` gives the responsibility map in one place
+- `.agents/backlog/BACKLOG.md` captures raw ideas and user stories
+- `.agents/bugs/BUGS.md` captures active defects and hotfixes
+- `.agents/governance/QUALITY.md` captures quality rules and review gates
+- `.agents/review/REVIEWS.md` captures active review findings
 - `AGENTS.md` is the canonical operational contract for the repo
 - `README.md` is the human-friendly start-here document
 

@@ -5,6 +5,7 @@ Step By Step Animator is an interactive lesson engine for HTML, CSS, and JavaScr
 ## Where To Start
 
 - `AGENTS.md` defines the operational contract for work in this repo.
+- `.agents/README.md` maps the management responsibilities inside `.agents/`.
 - `.agents/architecture/ARCHITECTURE.md` defines the repo-specific architecture.
 - `product/app/index.html` and `product/app/main.js` are the live app entry points.
 - `product/education/lessons/02-build-top-navigation/source/lesson.md` is the current pilot lesson source.
@@ -27,7 +28,12 @@ The live repo is organized around these boundaries:
 
 ### Governance And Documentation
 
-- `.agents/` contains planning, evidence, architecture, authoring, and review records
+- `.agents/` contains the management tree: architecture, authoring, backlog, bugs, planning, governance, review, and evidence records
+- `.agents/README.md` gives the responsibility map in one place
+- `.agents/backlog/BACKLOG.md` captures raw ideas and user stories
+- `.agents/bugs/BUGS.md` captures active defects and hotfixes
+- `.agents/governance/QUALITY.md` captures quality rules and review gates
+- `.agents/review/REVIEWS.md` captures active review findings
 - `AGENTS.md` is the canonical operational contract for the repo
 - `README.md` is the human-friendly start-here document
 

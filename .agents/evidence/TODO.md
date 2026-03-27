@@ -1,7 +1,7 @@
 # Active TODO
 
-This is the active backlog for follow-up work.
-It is fed by `.agents/planning/PLAN.md`.
+This is the active queue for follow-up work.
+It is fed by `.agents/planning/PLAN.md` and `.agents/bugs/BUGS.md` when work is ready to execute.
 
 Update rules:
 
