@@ -2,13 +2,13 @@
 
 # 06 · Modular Web Components (IDE View)
 
-Ova lekcija demonstrira novi IDE mode playera. Prvo ostaje vidljiv stvarni UI rezultat komponente, a tek onda koristimo file browser i automatsko prebacivanje fokusa da raspodelimo fajlove i ponašanje.
+Ova lekcija demonstrira novi IDE mode playera. Prvo ostaje vidljiv stvarni UI rezultat komponente kao vizuelna faza, a tek onda koristimo file browser i automatsko prebacivanje fokusa kao logičku fazu da raspodelimo fajlove i ponašanje.
 
 ## Goal
 
 - Cilj: IDE Iskustvo
 
-U ovoj lekciji prvo čuvamo vidljiv rezultat komponente, pa tek onda IDE layout koristi fajlove da razdvoji odgovornosti.
+U ovoj lekciji prvo čuvamo vidljiv rezultat komponente, a tek onda IDE layout koristi fajlove da razdvoji odgovornosti.
 
 ## Steps
 

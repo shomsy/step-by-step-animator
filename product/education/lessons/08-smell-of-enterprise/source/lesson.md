@@ -2,10 +2,7 @@
 schemaVersion: 1
 lessonId: 08-smell-of-enterprise
 lessonTitle: 08 · UI Pricing Card — SaaS Pricing Table
-lessonIntro: Gradimo `ui-pricing-card` — enterprise SaaS pricing table
-  komponentu sa tier varijantama (starter/pro/enterprise), popular highlight
-  stanjem, yearly/monthly billing toggle-om koji dinamički menja cenu, CTA
-  dugmetom sa urgency countdown timerom i feature matrix slotovima.
+lessonIntro: "Gradimo `ui-pricing-card` u dve faze: prvo zatvaramo kompletan vizuelni shell sa HTML, template i CSS slojem kao vizuelnu fazu, a tek onda uključujemo tier varijante, popular highlight, yearly/monthly billing toggle, CTA dugme sa urgency countdown timerom i feature matrix slotove kao logičku fazu."
 status: active
 courseId: step-by-step-animator
 order: 8
@@ -54,8 +51,8 @@ goal:
   imageSrc: ./assets/web-component-goal.svg
   imageAlt: Referentna slika ui-pricing-card sa Pro tier-om, billing toggle-om,
     feature listom i urgency timer-om.
-  imageCaption: U ovoj lekciji gradimo enterprise pricing karticu sa tier
-    varijantama, dinamičkim toggle-om i countdown urgency timer-om.
+  imageCaption: Prvo gradimo vizuelnu pricing karticu, a tek onda na nju
+    primenjujemo tier varijante, toggle i countdown urgency ponašanje.
 homework:
   enabled: true
   title: Varijante za samostalnu vežbu
@@ -70,4 +67,4 @@ homework:
       originalni iznos.
 ---
 
-Gradimo `ui-pricing-card` — enterprise SaaS pricing table komponentu sa tier varijantama (starter/pro/enterprise), popular highlight stanjem, yearly/monthly billing toggle-om koji dinamički menja cenu, CTA dugmetom sa urgency countdown timerom i feature matrix slotovima.
+Gradimo `ui-pricing-card` u dve faze: prvo zatvaramo kompletan vizuelni shell sa HTML, template i CSS slojem kao vizuelnu fazu, a tek onda uključujemo tier varijante, popular highlight, yearly/monthly billing toggle, CTA dugme sa urgency countdown timerom i feature matrix slotove kao logičku fazu.

@@ -2988,6 +2988,7 @@ Update rules:
 
 ## Current Ledger
 
+1. `[doc][done] 2026-03-27 01:02 - Applied visual-then-logic lesson writing rule across Web Components lessons` - `product/education/lessons/03-build-custom-element/source/lesson.md`, `product/education/lessons/04-build-web-component/source/lesson.md`, `product/education/lessons/05-clean-web-component-with-adopted-stylesheets/source/lesson.md`, `product/education/lessons/06-modular-web-components/source/lesson.md`, `product/education/lessons/07-build-ui-user-avatar/source/lesson.md`, `product/education/lessons/08-smell-of-enterprise/source/lesson.md`, `system/lesson-engine/output/03-build-custom-element.md`, `system/lesson-engine/output/04-build-web-component.md`, `system/lesson-engine/output/05-clean-web-component-with-adopted-stylesheets.md`, `system/lesson-engine/output/06-modular-web-components.md`, `system/lesson-engine/output/07-build-ui-user-avatar.md`, `system/lesson-engine/output/08-smell-of-enterprise.md`, `step-by-step-animator.txt`; `actual: 1h`
 1. `[doc][done] 2026-03-27 00:53 - Added two-phase Web Components lesson writing rule` - `AGENTS.md`, `.agents/authoring/LESSON_AUTHORING.md`, `step-by-step-animator.txt`; `actual: 20m`
 1. `[lesson][done] 2026-03-27 00:39 - Reordered 07 helper JS after the visual shell` - `product/education/lessons/07-build-ui-user-avatar/source/lesson.md`, `product/education/lessons/07-build-ui-user-avatar/source/scenes.md`, `product/education/lessons/07-build-ui-user-avatar/source/artifacts/js.timeline.md`, `system/lesson-engine/output/07-build-ui-user-avatar.md`, `step-by-step-animator.txt`; `actual: 1h`
 1. `[lesson][done] 2026-03-27 00:24 - Reworked 07 lesson into visual-first shell, then functionality phase` - `product/education/lessons/07-build-ui-user-avatar/source/lesson.md`, `product/education/lessons/07-build-ui-user-avatar/source/scenes.md`, `system/lesson-engine/output/07-build-ui-user-avatar.md`, `step-by-step-animator.txt`; `actual: 1h`
@@ -8996,8 +8997,8 @@ schemaVersion: 1
 lessonId: 03-build-custom-element
 lessonTitle: 03 · Web Components 1/2 · Light DOM custom element
 lessonIntro: Prva Web Components lekcija prvo gradi vidljivi host i prvi render
-  koji korisnik vidi, pa tek onda kroz light DOM objašnjava registraciju i
-  atribute, bez shadow DOM sloja.
+  koji korisnik vidi kao vizuelnu fazu, a tek onda u logičkoj fazi kroz light
+  DOM objašnjava registraciju i atribute, bez shadow DOM sloja.
 status: active
 courseId: step-by-step-animator
 order: 3
@@ -9033,12 +9034,11 @@ goal:
   imageSrc: ./assets/custom-element-goal.svg
   imageAlt: Referentna slika tamnog callout card custom elementa na svetloj
     pozadini, sa malim badge-om, naslovom, opisom i CTA dugmetom.
-  imageCaption: "Ovo je prvi korak Web Components puta: prvo gradimo vidljivi
-    host i prvi render, a tek onda kroz light DOM objašnjavamo host, atribute i
-    registraciju."
+  imageCaption: "Prva faza je visual composition: prvo gradimo vidljivi host i
+    prvi render, a druga faza uvodi registraciju i atribute kroz light DOM."
 ---
 
-Prva Web Components lekcija prvo gradi vidljivi host i prvi render koji korisnik vidi, pa tek onda kroz light DOM objašnjava registraciju i atribute, bez shadow DOM sloja.
+Prva Web Components lekcija prvo gradi vidljivi host i prvi render koji korisnik vidi kao vizuelnu fazu, a tek onda u logičkoj fazi kroz light DOM objašnjava registraciju i atribute, bez shadow DOM sloja.
 
 === product/education/lessons/03-build-custom-element/source/scenes.md ===
 ---
@@ -10431,8 +10431,9 @@ schemaVersion: 1
 lessonId: 04-build-web-component
 lessonTitle: 04 · Web Components 2/2 · Shadow DOM my first component
 lessonIntro: "Druga Web Components lekcija prvo sastavlja vidljivi card shell
-  kroz host, template i slotove, pa tek onda dodaje shadow DOM behavior,
-  render lifecycle, cleanup i sigurniju registraciju."
+  kroz host, template i slotove kao vizuelnu fazu, a tek onda dodaje shadow DOM
+  behavior, render lifecycle, cleanup i sigurniju registraciju kao logičku
+  fazu."
 status: active
 courseId: step-by-step-animator
 order: 4
@@ -10468,12 +10469,11 @@ goal:
   imageSrc: ./assets/web-component-goal.svg
   imageAlt: Referentna slika tamnog my first component card Web Component-a na
     svetloj pozadini, sa badge oznakom, velikim naslovom, opisom i CTA dugmetom.
-  imageCaption: "Ovo je drugi Web Components korak: prvo složimo vidljivi card
-    shell, a tek onda kroz template, shadow DOM, slotove i lifecycle dodajemo
-    ponašanje i polish."
+  imageCaption: "Prvo završavamo vidljivi card shell, a onda kroz shadow DOM,
+    slotove i lifecycle uvodimo behavior i polish."
 ---
 
-Druga Web Components lekcija prvo sastavlja vidljivi card shell kroz host, template i slotove, pa tek onda dodaje shadow DOM behavior, render lifecycle, cleanup i sigurniju registraciju.
+Druga Web Components lekcija prvo sastavlja vidljivi card shell kroz host, template i slotove kao vizuelnu fazu, a tek onda dodaje shadow DOM behavior, render lifecycle, cleanup i sigurniju registraciju kao logičku fazu.
 
 === product/education/lessons/04-build-web-component/source/scenes.md ===
 ---
@@ -13106,10 +13106,7 @@ preview:
 schemaVersion: 1
 lessonId: 05-clean-web-component-with-adopted-stylesheets
 lessonTitle: 05 · Web Components 3/3 · Now Let's Clean The Mess
-lessonIntro: "Treća Web Components lekcija prvo zadržava isti vidljivi card
-  rezultat, pa tek onda čisti stilsku priču komponente: CSS više ne živi ni u
-  template markup-u ni u velikom JS string-u, nego u posebnom shadow CSS fajlu
-  koji JavaScript uvozi kao tekst i usvaja preko adoptedStyleSheets."
+lessonIntro: "Treća Web Components lekcija prvo zadržava isti vidljivi card rezultat kao vizuelnu fazu, a tek onda čisti stilsku priču komponente kao logičku fazu: CSS više ne živi ni u template markup-u ni u velikom JS string-u, nego u posebnom shadow CSS fajlu koji JavaScript uvozi kao tekst i usvaja preko adoptedStyleSheets."
 status: active
 courseId: step-by-step-animator
 order: 5
@@ -13151,12 +13148,11 @@ goal:
   imageSrc: ./assets/web-component-goal.svg
   imageAlt: Referentna slika tamnog my first component card Web Component-a na
     svetloj pozadini, sa badge oznakom, velikim naslovom, opisom i CTA dugmetom.
-  imageCaption: "Ovo je cleanup korak: isti vidljivi card ostaje prvi fokus, a
-    tek onda CSS prelazi u poseban `shadow-dom-style.css` sloj koji shadow root
-    usvaja."
+  imageCaption: "Prvo ostaje isti vidljivi card, a tek onda CSS prelazi u poseban
+    `shadow-dom-style.css` sloj koji shadow root usvaja."
 ---
 
-Treća Web Components lekcija prvo zadržava isti vidljivi card rezultat, pa tek onda čisti stilsku priču komponente: CSS više ne živi ni u template markup-u ni u velikom JS string-u, nego u posebnom shadow CSS fajlu koji JavaScript uvozi kao tekst i usvaja preko adoptedStyleSheets.
+Treća Web Components lekcija prvo zadržava isti vidljivi card rezultat kao vizuelnu fazu, a tek onda čisti stilsku priču komponente kao logičku fazu: CSS više ne živi ni u template markup-u ni u velikom JS string-u, nego u posebnom shadow CSS fajlu koji JavaScript uvozi kao tekst i usvaja preko adoptedStyleSheets.
 
 === product/education/lessons/05-clean-web-component-with-adopted-stylesheets/source/scenes.md ===
 ---
@@ -15927,8 +15923,9 @@ schemaVersion: 1
 lessonId: 06-modular-web-components
 lessonTitle: 06 · Modular Web Components (IDE View)
 lessonIntro: Ova lekcija demonstrira novi IDE mode playera. Prvo ostaje vidljiv
-  stvarni UI rezultat komponente, a tek onda koristimo file browser i automatsko
-  prebacivanje fokusa da raspodelimo fajlove i ponašanje.
+  stvarni UI rezultat komponente kao vizuelna faza, a tek onda koristimo file
+  browser i automatsko prebacivanje fokusa kao logičku fazu da raspodelimo
+  fajlove i ponašanje.
 status: active
 courseId: step-by-step-animator
 order: 6
@@ -15970,11 +15967,11 @@ goal:
   title: "Cilj: IDE Iskustvo"
   imageSrc: ./assets/web-component-goal.svg
   imageAlt: Referentna slika IDE view-a.
-  imageCaption: U ovoj lekciji prvo čuvamo vidljiv rezultat komponente, pa tek
+  imageCaption: U ovoj lekciji prvo čuvamo vidljiv rezultat komponente, a tek
     onda IDE layout koristi fajlove da razdvoji odgovornosti.
 ---
 
-Ova lekcija demonstrira novi IDE mode playera. Prvo ostaje vidljiv stvarni UI rezultat komponente, a tek onda koristimo file browser i automatsko prebacivanje fokusa da raspodelimo fajlove i ponašanje.
+Ova lekcija demonstrira novi IDE mode playera. Prvo ostaje vidljiv stvarni UI rezultat komponente kao vizuelna faza, a tek onda koristimo file browser i automatsko prebacivanje fokusa kao logičku fazu da raspodelimo fajlove i ponašanje.
 
 === product/education/lessons/06-modular-web-components/source/scenes.md ===
 ---
@@ -18794,8 +18791,9 @@ schemaVersion: 1
 lessonId: 07-build-ui-user-avatar
 lessonTitle: 07 · UI User Avatar — Dashboard Widget
 lessonIntro: "Gradimo `ui-user-avatar` u dve faze: prvo zatvaramo kompletan
-  vizuelni shell sa HTML, template i CSS slojem, a tek onda uključujemo status,
-  tooltip, property API i click behavior korak po korak."
+  vizuelni shell sa HTML, template i CSS slojem kao vizuelnu fazu, a tek onda
+  uključujemo status, tooltip, property API i click behavior korak po korak kao
+  logičku fazu."
 status: active
 courseId: step-by-step-animator
 order: 7
@@ -18860,7 +18858,7 @@ homework:
       avatara kroz host CSS tokenе.
 ---
 
-Gradimo `ui-user-avatar` u dve faze: prvo zatvaramo kompletan vizuelni shell sa HTML, template i CSS slojem, a tek onda uključujemo status, tooltip, property API i click behavior korak po korak.
+Gradimo `ui-user-avatar` u dve faze: prvo zatvaramo kompletan vizuelni shell sa HTML, template i CSS slojem kao vizuelnu fazu, a tek onda uključujemo status, tooltip, property API i click behavior korak po korak kao logičku fazu.
 
 === product/education/lessons/07-build-ui-user-avatar/source/scenes.md ===
 ---
@@ -23122,10 +23120,7 @@ preview:
 schemaVersion: 1
 lessonId: 08-smell-of-enterprise
 lessonTitle: 08 · UI Pricing Card — SaaS Pricing Table
-lessonIntro: Gradimo `ui-pricing-card` — enterprise SaaS pricing table
-  komponentu sa tier varijantama (starter/pro/enterprise), popular highlight
-  stanjem, yearly/monthly billing toggle-om koji dinamički menja cenu, CTA
-  dugmetom sa urgency countdown timerom i feature matrix slotovima.
+lessonIntro: "Gradimo `ui-pricing-card` u dve faze: prvo zatvaramo kompletan vizuelni shell sa HTML, template i CSS slojem kao vizuelnu fazu, a tek onda uključujemo tier varijante, popular highlight, yearly/monthly billing toggle, CTA dugme sa urgency countdown timerom i feature matrix slotove kao logičku fazu."
 status: active
 courseId: step-by-step-animator
 order: 8
@@ -23174,8 +23169,8 @@ goal:
   imageSrc: ./assets/web-component-goal.svg
   imageAlt: Referentna slika ui-pricing-card sa Pro tier-om, billing toggle-om,
     feature listom i urgency timer-om.
-  imageCaption: U ovoj lekciji gradimo enterprise pricing karticu sa tier
-    varijantama, dinamičkim toggle-om i countdown urgency timer-om.
+  imageCaption: Prvo gradimo vizuelnu pricing karticu, a tek onda na nju
+    primenjujemo tier varijante, toggle i countdown urgency ponašanje.
 homework:
   enabled: true
   title: Varijante za samostalnu vežbu
@@ -23190,7 +23185,7 @@ homework:
       originalni iznos.
 ---
 
-Gradimo `ui-pricing-card` — enterprise SaaS pricing table komponentu sa tier varijantama (starter/pro/enterprise), popular highlight stanjem, yearly/monthly billing toggle-om koji dinamički menja cenu, CTA dugmetom sa urgency countdown timerom i feature matrix slotovima.
+Gradimo `ui-pricing-card` u dve faze: prvo zatvaramo kompletan vizuelni shell sa HTML, template i CSS slojem kao vizuelnu fazu, a tek onda uključujemo tier varijante, popular highlight, yearly/monthly billing toggle, CTA dugme sa urgency countdown timerom i feature matrix slotove kao logičku fazu.
 
 === product/education/lessons/08-smell-of-enterprise/source/scenes.md ===
 ---
@@ -34831,13 +34826,13 @@ U ovoj lekciji gradimo samo prvi raspored iz reference: logo levo, linkovi u sre
 
 # 03 · Web Components 1/2 · Light DOM custom element
 
-Prva Web Components lekcija prvo gradi vidljivi host i prvi render koji korisnik vidi, pa tek onda kroz light DOM objašnjava registraciju i atribute, bez shadow DOM sloja.
+Prva Web Components lekcija prvo gradi vidljivi host i prvi render koji korisnik vidi kao vizuelnu fazu, a tek onda u logičkoj fazi kroz light DOM objašnjava registraciju i atribute, bez shadow DOM sloja.
 
 ## Goal
 
 - Šta gradimo u ovoj lekciji
 
-Ovo je prvi korak Web Components puta: prvo gradimo vidljivi host i prvi render, a tek onda kroz light DOM objašnjavamo host, atribute i registraciju.
+Prva faza je visual composition: prvo gradimo vidljivi host i prvi render, a druga faza uvodi registraciju i atribute kroz light DOM.
 
 ## Steps
 
@@ -34948,13 +34943,13 @@ Ovo je prvi korak Web Components puta: prvo gradimo vidljivi host i prvi render,
 
 # 04 · Web Components 2/2 · Shadow DOM my first component
 
-Druga Web Components lekcija prvo sastavlja vidljivi card shell kroz host, template i slotove, pa tek onda dodaje shadow DOM behavior, render lifecycle, cleanup i sigurniju registraciju.
+Druga Web Components lekcija prvo sastavlja vidljivi card shell kroz host, template i slotove kao vizuelnu fazu, a tek onda dodaje shadow DOM behavior, render lifecycle, cleanup i sigurniju registraciju kao logičku fazu.
 
 ## Goal
 
 - Šta gradimo u ovoj lekciji
 
-Ovo je drugi Web Components korak: prvo složimo vidljivi card shell, a tek onda kroz template, shadow DOM, slotove i lifecycle dodajemo ponašanje i polish.
+Prvo završavamo vidljivi card shell, a onda kroz shadow DOM, slotove i lifecycle uvodimo behavior i polish.
 
 ## Steps
 
@@ -35157,13 +35152,13 @@ Ovo je drugi Web Components korak: prvo složimo vidljivi card shell, a tek onda
 
 # 05 · Web Components 3/3 · Now Let's Clean The Mess
 
-Treća Web Components lekcija prvo zadržava isti vidljivi card rezultat, pa tek onda čisti stilsku priču komponente: CSS više ne živi ni u template markup-u ni u velikom JS string-u, nego u posebnom shadow CSS fajlu koji JavaScript uvozi kao tekst i usvaja preko adoptedStyleSheets.
+Treća Web Components lekcija prvo zadržava isti vidljivi card rezultat kao vizuelnu fazu, a tek onda čisti stilsku priču komponente kao logičku fazu: CSS više ne živi ni u template markup-u ni u velikom JS string-u, nego u posebnom shadow CSS fajlu koji JavaScript uvozi kao tekst i usvaja preko adoptedStyleSheets.
 
 ## Goal
 
 - Šta gradimo u ovoj lekciji
 
-Ovo je cleanup korak: isti vidljivi card ostaje prvi fokus, a tek onda CSS prelazi u poseban `shadow-dom-style.css` sloj koji shadow root usvaja.
+Prvo ostaje isti vidljivi card, a tek onda CSS prelazi u poseban `shadow-dom-style.css` sloj koji shadow root usvaja.
 
 ## Steps
 
@@ -35376,13 +35371,13 @@ Ovo je cleanup korak: isti vidljivi card ostaje prvi fokus, a tek onda CSS prela
 
 # 06 · Modular Web Components (IDE View)
 
-Ova lekcija demonstrira novi IDE mode playera. Prvo ostaje vidljiv stvarni UI rezultat komponente, a tek onda koristimo file browser i automatsko prebacivanje fokusa da raspodelimo fajlove i ponašanje.
+Ova lekcija demonstrira novi IDE mode playera. Prvo ostaje vidljiv stvarni UI rezultat komponente kao vizuelna faza, a tek onda koristimo file browser i automatsko prebacivanje fokusa kao logičku fazu da raspodelimo fajlove i ponašanje.
 
 ## Goal
 
 - Cilj: IDE Iskustvo
 
-U ovoj lekciji prvo čuvamo vidljiv rezultat komponente, pa tek onda IDE layout koristi fajlove da razdvoji odgovornosti.
+U ovoj lekciji prvo čuvamo vidljiv rezultat komponente, a tek onda IDE layout koristi fajlove da razdvoji odgovornosti.
 
 ## Steps
 
@@ -35595,7 +35590,7 @@ U ovoj lekciji prvo čuvamo vidljiv rezultat komponente, pa tek onda IDE layout 
 
 # 07 · UI User Avatar — Dashboard Widget
 
-Gradimo `ui-user-avatar` u dve faze: prvo zatvaramo kompletan vizuelni shell sa HTML, template i CSS slojem, a tek onda uključujemo status, tooltip, property API i click behavior korak po korak.
+Gradimo `ui-user-avatar` u dve faze: prvo zatvaramo kompletan vizuelni shell sa HTML, template i CSS slojem kao vizuelnu fazu, a tek onda uključujemo status, tooltip, property API i click behavior korak po korak kao logičku fazu.
 
 ## Goal
 
@@ -35942,13 +35937,13 @@ U ovoj lekciji prvo sklapamo kompletan vizuelni team member widget, a tek onda o
 
 # 08 · UI Pricing Card — SaaS Pricing Table
 
-Gradimo `ui-pricing-card` — enterprise SaaS pricing table komponentu sa tier varijantama (starter/pro/enterprise), popular highlight stanjem, yearly/monthly billing toggle-om koji dinamički menja cenu, CTA dugmetom sa urgency countdown timerom i feature matrix slotovima.
+Gradimo `ui-pricing-card` u dve faze: prvo zatvaramo kompletan vizuelni shell sa HTML, template i CSS slojem kao vizuelnu fazu, a tek onda uključujemo tier varijante, popular highlight, yearly/monthly billing toggle, CTA dugme sa urgency countdown timerom i feature matrix slotove kao logičku fazu.
 
 ## Goal
 
 - Cilj: SaaS Pricing Card Widget
 
-U ovoj lekciji gradimo enterprise pricing karticu sa tier varijantama, dinamičkim toggle-om i countdown urgency timer-om.
+Prvo gradimo vizuelnu pricing karticu, a tek onda na nju primenjujemo tier varijante, toggle i countdown urgency ponašanje.
 
 ## Steps
 

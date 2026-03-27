@@ -2,7 +2,7 @@
 
 # 07 · UI User Avatar — Dashboard Widget
 
-Gradimo `ui-user-avatar` u dve faze: prvo zatvaramo kompletan vizuelni shell sa HTML, template i CSS slojem, a tek onda uključujemo status, tooltip, property API i click behavior korak po korak.
+Gradimo `ui-user-avatar` u dve faze: prvo zatvaramo kompletan vizuelni shell sa HTML, template i CSS slojem kao vizuelnu fazu, a tek onda uključujemo status, tooltip, property API i click behavior korak po korak kao logičku fazu.
 
 ## Goal
 

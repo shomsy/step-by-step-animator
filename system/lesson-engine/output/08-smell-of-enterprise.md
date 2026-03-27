@@ -2,13 +2,13 @@
 
 # 08 · UI Pricing Card — SaaS Pricing Table
 
-Gradimo `ui-pricing-card` — enterprise SaaS pricing table komponentu sa tier varijantama (starter/pro/enterprise), popular highlight stanjem, yearly/monthly billing toggle-om koji dinamički menja cenu, CTA dugmetom sa urgency countdown timerom i feature matrix slotovima.
+Gradimo `ui-pricing-card` u dve faze: prvo zatvaramo kompletan vizuelni shell sa HTML, template i CSS slojem kao vizuelnu fazu, a tek onda uključujemo tier varijante, popular highlight, yearly/monthly billing toggle, CTA dugme sa urgency countdown timerom i feature matrix slotove kao logičku fazu.
 
 ## Goal
 
 - Cilj: SaaS Pricing Card Widget
 
-U ovoj lekciji gradimo enterprise pricing karticu sa tier varijantama, dinamičkim toggle-om i countdown urgency timer-om.
+Prvo gradimo vizuelnu pricing karticu, a tek onda na nju primenjujemo tier varijante, toggle i countdown urgency ponašanje.
 
 ## Steps
 

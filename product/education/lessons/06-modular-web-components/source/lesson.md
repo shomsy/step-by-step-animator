@@ -3,8 +3,9 @@ schemaVersion: 1
 lessonId: 06-modular-web-components
 lessonTitle: 06 · Modular Web Components (IDE View)
 lessonIntro: Ova lekcija demonstrira novi IDE mode playera. Prvo ostaje vidljiv
-  stvarni UI rezultat komponente, a tek onda koristimo file browser i automatsko
-  prebacivanje fokusa da raspodelimo fajlove i ponašanje.
+  stvarni UI rezultat komponente kao vizuelna faza, a tek onda koristimo file
+  browser i automatsko prebacivanje fokusa kao logičku fazu da raspodelimo
+  fajlove i ponašanje.
 status: active
 courseId: step-by-step-animator
 order: 6
@@ -46,8 +47,8 @@ goal:
   title: "Cilj: IDE Iskustvo"
   imageSrc: ./assets/web-component-goal.svg
   imageAlt: Referentna slika IDE view-a.
-  imageCaption: U ovoj lekciji prvo čuvamo vidljiv rezultat komponente, pa tek
+  imageCaption: U ovoj lekciji prvo čuvamo vidljiv rezultat komponente, a tek
     onda IDE layout koristi fajlove da razdvoji odgovornosti.
 ---
 
-Ova lekcija demonstrira novi IDE mode playera. Prvo ostaje vidljiv stvarni UI rezultat komponente, a tek onda koristimo file browser i automatsko prebacivanje fokusa da raspodelimo fajlove i ponašanje.
+Ova lekcija demonstrira novi IDE mode playera. Prvo ostaje vidljiv stvarni UI rezultat komponente kao vizuelna faza, a tek onda koristimo file browser i automatsko prebacivanje fokusa kao logičku fazu da raspodelimo fajlove i ponašanje.

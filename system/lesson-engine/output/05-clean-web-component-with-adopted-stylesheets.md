@@ -2,13 +2,13 @@
 
 # 05 · Web Components 3/3 · Now Let's Clean The Mess
 
-Treća Web Components lekcija prvo zadržava isti vidljivi card rezultat, pa tek onda čisti stilsku priču komponente: CSS više ne živi ni u template markup-u ni u velikom JS string-u, nego u posebnom shadow CSS fajlu koji JavaScript uvozi kao tekst i usvaja preko adoptedStyleSheets.
+Treća Web Components lekcija prvo zadržava isti vidljivi card rezultat kao vizuelnu fazu, a tek onda čisti stilsku priču komponente kao logičku fazu: CSS više ne živi ni u template markup-u ni u velikom JS string-u, nego u posebnom shadow CSS fajlu koji JavaScript uvozi kao tekst i usvaja preko adoptedStyleSheets.
 
 ## Goal
 
 - Šta gradimo u ovoj lekciji
 
-Ovo je cleanup korak: isti vidljivi card ostaje prvi fokus, a tek onda CSS prelazi u poseban `shadow-dom-style.css` sloj koji shadow root usvaja.
+Prvo ostaje isti vidljivi card, a tek onda CSS prelazi u poseban `shadow-dom-style.css` sloj koji shadow root usvaja.
 
 ## Steps
 

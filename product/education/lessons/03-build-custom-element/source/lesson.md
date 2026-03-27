@@ -3,8 +3,8 @@ schemaVersion: 1
 lessonId: 03-build-custom-element
 lessonTitle: 03 · Web Components 1/2 · Light DOM custom element
 lessonIntro: Prva Web Components lekcija prvo gradi vidljivi host i prvi render
-  koji korisnik vidi, pa tek onda kroz light DOM objašnjava registraciju i
-  atribute, bez shadow DOM sloja.
+  koji korisnik vidi kao vizuelnu fazu, a tek onda u logičkoj fazi kroz light
+  DOM objašnjava registraciju i atribute, bez shadow DOM sloja.
 status: active
 courseId: step-by-step-animator
 order: 3
@@ -40,9 +40,8 @@ goal:
   imageSrc: ./assets/custom-element-goal.svg
   imageAlt: Referentna slika tamnog callout card custom elementa na svetloj
     pozadini, sa malim badge-om, naslovom, opisom i CTA dugmetom.
-  imageCaption: "Ovo je prvi korak Web Components puta: prvo gradimo vidljivi
-    host i prvi render, a tek onda kroz light DOM objašnjavamo host, atribute i
-    registraciju."
+  imageCaption: "Prva faza je visual composition: prvo gradimo vidljivi host i
+    prvi render, a druga faza uvodi registraciju i atribute kroz light DOM."
 ---
 
-Prva Web Components lekcija prvo gradi vidljivi host i prvi render koji korisnik vidi, pa tek onda kroz light DOM objašnjava registraciju i atribute, bez shadow DOM sloja.
+Prva Web Components lekcija prvo gradi vidljivi host i prvi render koji korisnik vidi kao vizuelnu fazu, a tek onda u logičkoj fazi kroz light DOM objašnjava registraciju i atribute, bez shadow DOM sloja.

@@ -2,13 +2,13 @@
 
 # 03 · Web Components 1/2 · Light DOM custom element
 
-Prva Web Components lekcija prvo gradi vidljivi host i prvi render koji korisnik vidi, pa tek onda kroz light DOM objašnjava registraciju i atribute, bez shadow DOM sloja.
+Prva Web Components lekcija prvo gradi vidljivi host i prvi render koji korisnik vidi kao vizuelnu fazu, a tek onda u logičkoj fazi kroz light DOM objašnjava registraciju i atribute, bez shadow DOM sloja.
 
 ## Goal
 
 - Šta gradimo u ovoj lekciji
 
-Ovo je prvi korak Web Components puta: prvo gradimo vidljivi host i prvi render, a tek onda kroz light DOM objašnjavamo host, atribute i registraciju.
+Prva faza je visual composition: prvo gradimo vidljivi host i prvi render, a druga faza uvodi registraciju i atribute kroz light DOM.
 
 ## Steps
 
