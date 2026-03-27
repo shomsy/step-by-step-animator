@@ -5,8 +5,10 @@ Step By Step Animator is an interactive lesson engine for HTML, CSS, and JavaScr
 ## Where To Start
 
 - `AGENTS.md` defines the operational contract for work in this repo.
-- `.agents/README.md` maps the management responsibilities inside `.agents/`.
-- `.agents/architecture/ARCHITECTURE.md` defines the repo-specific architecture.
+- `.agents/README.md` maps the project rules and project memory.
+- `.agents/governance/QUALITY.md` defines the required questions and quality rules.
+- `.agents/governance/app-architecture/ARCHITECTURE.md` defines the repo-specific architecture.
+- `.agents/business-logic/README.md` defines the plain-language business meaning.
 - `product/app/index.html` and `product/app/main.js` are the live app entry points.
 - `product/education/lessons/02-build-top-navigation/source/lesson.md` is the current pilot lesson source.
 - `system/lesson-engine/register-lesson-packages/index.js` registers the live lesson set.
@@ -28,11 +30,15 @@ The live repo is organized around these boundaries:
 
 ### Governance And Documentation
 
-- `.agents/` contains the management tree: architecture, authoring, backlog, bugs, planning, governance, review, and evidence records
-- `.agents/README.md` gives the responsibility map in one place
-- `.agents/backlog/BACKLOG.md` captures raw ideas and user stories
-- `.agents/bugs/BUGS.md` captures active defects and hotfixes
-- `.agents/governance/QUALITY.md` captures quality rules and review gates
+- `.agents/` contains the management tree, the quality rules, and the domain docs
+- `.agents/README.md` gives the project map and required questions in one place
+- `.agents/management/backlog/BACKLOG.md` captures raw ideas and user stories
+- `.agents/management/bugs/BUGS.md` captures active defects and hotfixes
+- `.agents/management/planning/PLAN.md` captures selected workstreams
+- `.agents/management/evidence/TODO.md` captures actionable follow-up work
+- `.agents/management/evidence/CHANGELOG.md` captures closed history
+- `.agents/governance/QUALITY.md` captures quality rules, UX rules, and review gates
+- `.agents/business-logic/README.md` captures the user and software perspectives
 - `.agents/review/REVIEWS.md` captures active review findings
 - `AGENTS.md` is the canonical operational contract for the repo
 - `README.md` is the human-friendly start-here document

@@ -1,14 +1,14 @@
 # Review Notes
 
-This file tracks active code-review findings and follow-up observations.
+This file tracks active code review findings and follow-up observations.
 
-## Update Rules
+## Rules
 
-- keep newest items at the top
-- write one finding per line
-- move confirmed defects into `.agents/bugs/BUGS.md`
-- move implementation follow-up into `.agents/evidence/TODO.md`
-- move closed review notes into `.agents/evidence/CHANGELOG.md`
+- keep one finding per line
+- describe the visible problem and the expected result
+- move confirmed defects into `.agents/management/bugs/BUGS.md`
+- move execution follow-up into `.agents/management/evidence/TODO.md`
+- move closed review notes into `.agents/management/evidence/CHANGELOG.md`
 
 ## Current Items
 

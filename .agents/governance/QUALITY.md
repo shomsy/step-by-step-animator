@@ -1,22 +1,25 @@
-# Quality Governance
+# Quality Rules
 
-This file captures the project-wide quality rules that sit above individual work items.
+This file defines the questions and standards that every non-trivial item must satisfy.
 
-## What Belongs Here
+## Required Questions
 
-- definition of done
-- review expectations
-- naming and responsibility rules that are broader than architecture
-- decision gates for merging, publishing, and refactoring
-- quality exceptions that must be remembered
+Every idea, backlog item, plan, architecture note, business note, and lesson step must answer:
 
-## Operating Rules
+1. What does the user want to achieve?
+2. What should animator software do to make that possible?
+3. What should the user see, and does the UX meet the highest standard?
+4. What should the user learn visually and step by step?
 
-- prefer simple flow-first names
-- keep product code and management docs separate
-- do not introduce new legacy compatibility layers without explicit governance
-- every non-trivial change must leave a readable paper trail in PLAN, TODO, BUGS, and CHANGELOG
-- when quality or architecture changes, update the owning doc in the same work item
+## Rules
+
+- Write the user outcome first and the technical detail second.
+- Keep ideas and plans in plain language before moving into implementation.
+- If an item cannot answer the required questions, it is not ready.
+- Lesson work must show the visual path first, then the behavior and API.
+- The visible result must stay faithful to the authored code and teaching step.
+- When quality rules change, update the owning document in the same work item.
+- These questions are mandatory in governance, business, planning, execution, and review docs.
 
 ## Current Policy
 

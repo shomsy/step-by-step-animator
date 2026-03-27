@@ -1,11 +1,11 @@
 # Architecture
 
-This document applies the reusable standard from `.agents/architecture/architecture-standard.md` to the Step By Step Animator repo.
+This document applies the reusable standard from `.agents/governance/app-architecture/architecture-standard.md` to the Step By Step Animator repo.
 
 ## Scope and Authority
 
 - `AGENTS.md` governs execution, delivery discipline, and collaboration.
-- `.agents/architecture/architecture-standard.md` defines the reusable architecture baseline.
+- `.agents/governance/app-architecture/architecture-standard.md` defines the reusable architecture baseline.
 - This file binds that baseline to this repo and keeps it concrete.
 
 If a repo-specific exception is needed, it must be documented here and it must not lower the baseline quality bar.
@@ -346,10 +346,10 @@ Use this sentence as the filter before every new file:
 ## Change Policy
 
 - if a change affects repo shape, update this document in the same change
-- if a change affects the reusable standard, update `.agents/architecture/architecture-standard.md`
+- if a change affects the reusable standard, update `.agents/governance/app-architecture/architecture-standard.md`
 - do not invent invisible exceptions
 - do not add a folder, file, or abstraction unless it reduces mental noise
 
 ## Lesson Authoring
 
-How a lesson becomes animated is documented in [.agents/authoring/LESSON_AUTHORING.md](/home/shomsy/projects/step-by-step-animator/.agents/authoring/LESSON_AUTHORING.md).
+How a lesson becomes animated is documented in [.agents/business-logic/software/lesson-authoring/authoring/LESSON_AUTHORING.md](/home/shomsy/projects/step-by-step-animator/.agents/business-logic/software/lesson-authoring/authoring/LESSON_AUTHORING.md).

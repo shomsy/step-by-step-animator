@@ -15,6 +15,16 @@ The lesson must behave like you're watching a programmer over share screen:
 - every change must be visually clear and verbally explainable
 - for Web Components lessons, JavaScript must first create the actual rendered DOM, only then CSS should style it
 - Web Components lessons are visual-first: early steps should establish the rendered shell and styling before behavior is introduced step by step
+- the user goal, the visible UX, and the step-by-step learning path must stay explicit in every lesson decision
+
+## 1.1 Required Questions
+
+Every lesson brief, step sequence, and authoring decision must answer:
+
+1. What does the user want to achieve?
+2. What should animator software do to make that possible?
+3. What should the user see, and does the UX meet the highest standard?
+4. What should the user learn visually and step by step?
 
 If content cannot be broken into such small, readable steps, it is not ready for this type of animation yet.
 

@@ -1,124 +1,670 @@
-=== .agents/.aider.chat.history.md ===
-
-# aider chat started at 2026-03-22 23:12:25
-
-> You can skip this check with --no-gitignore
-> Add .aider* to .gitignore (recommended)? (Y)es/(N)o [Yes]: y
-> Added .aider* to .gitignore
-> /home/shomsy/.local/bin/aider --model ollama/phi3
-> Warning: ollama/phi3 expects these environment variables
-> - OLLAMA_API_BASE: Not set
-> You can skip this check with --no-show-model-warnings
-> https://aider.chat/docs/llms/warnings.html
-> Open documentation url for more info? (Y)es/(N)o/(D)on't ask again [Yes]: n
-> Aider v0.86.2
-> Model: ollama/phi3 with whole edit format
-> Git repo: .git with 87 files
-> Repo-map: using 4096 tokens, auto refresh
-> https://aider.chat/HISTORY.html#release-notes
-> Would you like to see what's new in this version? (Y)es/(N)o [Yes]: n
-
-#### /ask Explain this project structure and architecture. Focus on folder responsibilities, naming quality, and separation of concerns.
-
-#### Explain this project structure and architecture. Focus on folder responsibilities, naming quality, and separation of concerns.
-> litellm.APIConnectionError: OllamaException - {"error":"model requires more system memory (9.0 GiB) than is available (6.3 GiB)"}
-> Retrying in 0.2 seconds...
-> litellm.APIConnectionError: OllamaException - {"error":"model requires more system memory (9.0 GiB) than is available (6.3 GiB)"}
-> Retrying in 0.5 seconds...
-> litellm.APIConnectionError: OllamaException - {"error":"model requires more system memory (9.0 GiB) than is available (6.3 GiB)"}
-> Retrying in 1.0 seconds...
-> litellm.APIConnectionError: OllamaException - {"error":"model requires more system memory (9.0 GiB) than is available (6.3 GiB)"}
-> Retrying in 2.0 seconds...
-> litellm.APIConnectionError: OllamaException - {"error":"model requires more system memory (9.0 GiB) than is available (6.3 GiB)"}
-> Retrying in 4.0 seconds...
-> litellm.APIConnectionError: OllamaException - {"error":"model requires more system memory (9.0 GiB) than is available (6.3 GiB)"}
-> Retrying in 8.0 seconds...
-> litellm.APIConnectionError: OllamaException - {"error":"model requires more system memory (9.0 GiB) than is available (6.8 GiB)"}
-> Retrying in 16.0 seconds...
-> litellm.APIConnectionError: OllamaException - {"error":"model requires more system memory (9.0 GiB) than is available (6.5 GiB)"}
-> Retrying in 32.0 seconds...
-> litellm.APIConnectionError: OllamaException - {"error":"model requires more system memory (9.0 GiB) than is available (8.3 GiB)"}
-
-#### /ask Explain this project structure and architecture. Focus on folder responsibilities, naming quality, and separation of concerns.
-
-#### Explain this project structure and architecture. Focus on folder responsibilities, naming quality, and separation of concerns.
-> litellm.APIConnectionError: OllamaException - {"error":"model requires more system memory (9.0 GiB) than is available (8.6 GiB)"}
-> Retrying in 0.2 seconds...
-> litellm.APIConnectionError: OllamaException - {"error":"model requires more system memory (9.0 GiB) than is available (8.6 GiB)"}
-> Retrying in 0.5 seconds...
-> litellm.APIConnectionError: OllamaException - {"error":"model requires more system memory (9.0 GiB) than is available (8.6 GiB)"}
-> Retrying in 1.0 seconds...
-> litellm.APIConnectionError: OllamaException - {"error":"model requires more system memory (9.0 GiB) than is available (8.6 GiB)"}
-> Retrying in 2.0 seconds...
-> litellm.APIConnectionError: OllamaException - {"error":"model requires more system memory (9.0 GiB) than is available (8.6 GiB)"}
-> Retrying in 4.0 seconds...
-> litellm.APIConnectionError: OllamaException - {"error":"model requires more system memory (9.0 GiB) than is available (8.6 GiB)"}
-> Retrying in 8.0 seconds...
-> litellm.APIConnectionError: OllamaException - {"error":"model requires more system memory (9.0 GiB) than is available (8.6 GiB)"}
-> Retrying in 16.0 seconds...
-> litellm.APIConnectionError: OllamaException - {"error":"model requires more system memory (9.0 GiB) than is available (8.3 GiB)"}
-> Retrying in 32.0 seconds...
->
->
-> ^C again to exit
-
-#### /ask Explain this project structure and architecture. Focus on folder responsibilities, naming quality, and separation of concerns.
-
-#### Explain this project structure and architecture. Focus on folder responsibilities, naming quality, and separation of concerns.
->
->
-> ^C again to exit
-
-#### exit
->
->
-> ^C again to exit
->
->
-> ^C KeyboardInterrupt
-
 === .agents/README.md ===
-# Agents Tree
+# .agents
 
-This directory holds the repo management contract. It is separate from the product and system code.
+This folder holds the project rules and the project memory.
 
-## Responsibility Map
+## Domains
 
-- `architecture/` - repo shape, migration posture, and naming baseline
-- `authoring/` - lesson authoring rules and source contracts
-- `backlog/` - raw ideas and user stories that are not yet committed work
-- `bugs/` - active defects, regressions, and hotfix triage
-- `planning/` - selected workstreams, breakdowns, dependencies, and estimates
-- `evidence/` - actionable TODOs and closed evidence
-- `governance/` - quality rules, review gates, and project policy
-- `review/` - review findings and review archive notes
+| Domain | Responsibility |
+|--------|----------------|
+| `governance/` | Architecture, app structure, quality rules, review gates, and required questions |
+| `business-logic/` | Business definitions for content and software behavior, anchored by `business-logic/README.md` |
+| `management/` | Ideas, bugs, plans, TODOs, and history |
+| `review/` | Review notes and review archive |
+
+## Required Questions
+
+Every idea, plan, and lesson decision should answer:
+
+1. What does the user want to achieve?
+2. What should animator software do to make that possible?
+3. What should the user see, and does the UX meet the highest standard?
+4. What should the user learn visually and step by step?
 
 ## Reading Order
 
-1. `architecture/`
-2. `authoring/`
-3. `governance/`
-4. `backlog/`
-5. `planning/`
-6. `bugs/`
-7. `evidence/`
-8. `review/`
+1. `governance/`
+2. `business-logic/`
+3. `management/`
+4. `review/`
 
-## Notes
+## Rule
 
-- `planning/ARCHIVE.md` and `review/bugs.md` are historical records.
-- `evidence/TODO.md` remains the active implementation queue.
-- `evidence/CHANGELOG.md` remains the closed-state ledger.
+- Write the user language first, then the technical language.
+- Keep the UX visible and the step-by-step learning path explicit.
+- If the item cannot answer the required questions, it is not ready.
 
-=== .agents/architecture/ARCHITECTURE.md ===
+=== .agents/business-logic/README.md ===
+# Business Logic
+
+This folder defines the product meaning in plain language.
+
+## Required Questions
+
+Every business note, idea, and lesson definition should answer:
+
+1. What does the user want to achieve?
+2. What should animator software do to make that possible?
+3. What should the user see, and does the UX meet the highest standard?
+4. What should the user learn visually and step by step?
+
+## Domains
+
+- `content/` = lesson goals, user story, visible teaching path, and step-by-step learning
+- `software/lesson-authoring/authoring/LESSON_AUTHORING.md` = the lesson writing contract
+- `software/` = discovery, compilation, playback, and runtime behavior
+
+## Rule
+
+- Write the user-facing meaning before implementation detail.
+
+=== .agents/business-logic/software/lesson-authoring/authoring/LESSON_AUTHORING.md ===
+# Lesson Authoring
+
+This file is the practical contract for converting content into an animated `Step By Step Animator` lesson.
+
+## 1. Essence
+
+A lesson is not ordinary text and is not a static tutorial.
+
+The lesson must behave like you're watching a programmer over share screen:
+
+- HTML is added element by element
+- CSS is added property by property
+- when the lesson requires it, executable source is added action by action
+- preview shows exactly the same cumulative result that is currently authored
+- every change must be visually clear and verbally explainable
+- for Web Components lessons, JavaScript must first create the actual rendered DOM, only then CSS should style it
+- Web Components lessons are visual-first: early steps should establish the rendered shell and styling before behavior is introduced step by step
+- the user goal, the visible UX, and the step-by-step learning path must stay explicit in every lesson decision
+
+## 1.1 Required Questions
+
+Every lesson brief, step sequence, and authoring decision must answer:
+
+1. What does the user want to achieve?
+2. What should animator software do to make that possible?
+3. What should the user see, and does the UX meet the highest standard?
+4. What should the user learn visually and step by step?
+
+If content cannot be broken into such small, readable steps, it is not ready for this type of animation yet.
+
+## 2. Source-Only Lesson Root
+
+Every new lesson goes in its own folder under:
+
+```txt
+product/
+  education/
+    lessons/
+      feature-name/
+        source/
+          lesson.md
+          theory.md
+          scenes.md
+          artifacts/
+            html.timeline.md
+            css.rules.md
+            js.timeline.md
+            template-js.timeline.md
+            shadow-dom-style.css.md
+          assets/
+```
+
+Rules:
+
+- `product/education/` is source only
+- no per-lesson build glue lives in `product/education/`
+- `system/lesson-engine/` owns translation, validation, parsing, normalization, projection, and compilation
+- `system/foundation/` owns shared frontmatter and markdown primitives
+- `source/` is the only place where the lesson author writes material
+- `assets/` stays beside the source and holds reference images or other authoring assets
+
+## 3. File Contracts
+
+### 3.1 `lesson.md`
+
+`lesson.md` is the manifest and metadata source of truth.
+
+It is a markdown file with YAML frontmatter.
+The frontmatter is canonical.
+The markdown body may be empty or may contain a short human intro, but it is not the machine contract.
+
+Required frontmatter fields:
+
+- `schemaVersion`
+- `lessonId`
+- `lessonTitle`
+- `lessonIntro`
+- `status`
+- `courseId`
+- `order`
+- `scenes.file`
+- `artifacts`
+- `preview.type`
+- `preview.title`
+
+Optional frontmatter fields:
+
+- `theory.enabled`
+- `theory.file`
+- `goal`
+- `homework`
+- `references`
+- `tags`
+- `difficulty`
+- `estimatedMinutes`
+
+Recommended status values:
+
+- `draft`
+- `active`
+- `broken`
+- `deprecated`
+
+Recommended preview types:
+
+- `dom`
+- `terminal`
+- `markdown`
+- `diagram`
+- `none`
+
+Canonical lesson.md example:
+
+```md
+---
+schemaVersion: 1
+lessonId: 01-build-sidebar
+lessonTitle: Build Sidebar
+lessonIntro: In this lesson we build a sidebar step by step.
+status: active
+courseId: web-components
+order: 1
+
+theory:
+  enabled: true
+  file: ./theory.md
+
+scenes:
+  file: ./scenes.md
+
+artifacts:
+  - artifactId: html
+    file: ./artifacts/html.timeline.md
+    language: html
+    kind: timeline
+    label: index.html
+    isPrimary: true
+
+  - artifactId: css
+    file: ./artifacts/css.rules.md
+    language: css
+    kind: rules
+    label: style.css
+    isPrimary: false
+
+preview:
+  type: dom
+  title: Sidebar Preview
+
+goal:
+  title: What we are building
+  imageSrc: ./assets/goal.png
+  imageAlt: Sidebar final preview
+  imageCaption: Final sidebar result
+
+homework:
+  enabled: true
+  title: Homework
+  items:
+    - Add hover effects to sidebar items
+    - Add nested menu items
+
+references:
+  - title: MDN HTMLElement
+    href: https://developer.mozilla.org/
+---
+```
+
+Rules:
+
+- `lessonId` must match the lesson folder slug
+- each `artifactId` must be unique
+- every artifact entry must point to one source file
+- `theory.file` is required only when `theory.enabled` is `true`
+- `scenes.file` must always exist
+- `lesson.md` declares what exists; it does not implement the lesson
+
+### 3.2 `theory.md`
+
+`theory.md` is the explanation layer.
+
+It is plain markdown prose.
+It explains the mental model, the why, the business reason, and the conceptual path.
+It is not a playback script.
+It is not a build instruction file.
+
+Rules:
+
+- `theory.md` may be optional when `lesson.md` says so explicitly
+- if present, it should stay readable as ordinary markdown
+- headings may be used as anchors for `scenes.md`
+- `theory.md` can explain concepts, tradeoffs, and "why this order" reasoning
+- `theory.md` must not contain runtime logic or imperative compiler steps
+
+### 3.3 `scenes.md`
+
+`scenes.md` is the canonical storyboard DSL for lesson playback.
+
+It is strict, declarative, and machine-readable.
+It describes teaching moments, not runtime code.
+
+Core model:
+
+- `step` is the primary pedagogical unit
+- `scene` is the directed frame inside a step
+
+File shape:
+
+- frontmatter declares ordered steps
+- the body contains step sections and scene sections
+
+Frontmatter contract:
+
+- `schemaVersion` is required
+- `lessonId` is required
+- `steps` is required and ordered
+- every step must declare `stepId`, `title`, `summary`, and `intent`
+- `stepId` must be unique and use `kebab-case`
+- frontmatter order is execution order
+
+Body contract:
+
+- each step must appear exactly once as `# Step: <stepId>`
+- each scene must appear inside a declared step as `## Scene: <sceneId>`
+- every scene must declare `sceneId` and `narration`
+- every scene must include at least one of `focus`, `code`, `preview`, or `theory`
+- narration-only scenes are allowed only when the validator explicitly permits them
+
+Field contract:
+
+- `focus.artifactId` must exist in `lesson.md`
+- `code.activeArtifactId` must exist in `lesson.md`
+- `theory.anchor` must exist in `theory.md`
+- `preview.action` must be one of `apply-state` or `none`
+- `preview.target` must match the lesson preview capability
+
+Scene discipline:
+
+- one clear change or one clear explanation per scene
+- deterministic order
+- no hidden sorting
+- no empty scenes
+- keep it readable out loud in one breath
+
+Canonical scene shape:
+
+```md
+---
+schemaVersion: 1
+lessonId: 01-build-sidebar
+steps:
+  - stepId: add-sidebar-shell
+    title: Add sidebar shell
+    summary: Introduce the base sidebar container.
+    intent: Establish the minimum HTML structure before styling.
+
+  - stepId: add-sidebar-navigation
+    title: Add sidebar navigation
+    summary: Add a navigation block inside the sidebar.
+    intent: Introduce semantic navigation before visual refinement.
+---
+
+# Step: add-sidebar-shell
+
+## Scene: intro-shell
+
+narration:
+First, we introduce the simplest possible sidebar shell.
+
+focus:
+  artifactId: html
+  reveal:
+    from: 1
+    to: 3
+
+code:
+  activeArtifactId: html
+  highlightLines:
+    - from: 1
+      to: 3
+
+preview:
+  action: apply-state
+  target: dom
+
+theory:
+  anchor: why-shell-first
+
+## Scene: explain-empty-css
+
+narration:
+CSS stays empty for now because structure comes before visual identity.
+
+focus:
+  artifactId: css
+  reveal:
+    from: 1
+    to: 1
+
+code:
+  activeArtifactId: css
+
+preview:
+  action: none
+
+theory:
+  anchor: structure-before-style
+
+# Step: add-sidebar-navigation
+
+## Scene: add-nav-block
+
+narration:
+Now we add a navigation block inside the sidebar.
+
+focus:
+  artifactId: html
+  reveal:
+    from: 1
+    to: 6
+
+code:
+  activeArtifactId: html
+  highlightLines:
+    - from: 2
+      to: 5
+
+preview:
+  action: apply-state
+  target: dom
+
+theory:
+  anchor: sidebar-as-navigation
+```
+
+Validation rules:
+
+- steps must be declared in frontmatter and appear exactly once in the body
+- scenes must belong to declared steps
+- scene ids must be unique inside each step
+- cross-references must resolve
+- unknown preview actions, artifact ids, or theory anchors are validation errors
+
+Authoring rules:
+
+- write steps as pedagogy
+- write scenes as direction
+- keep narration human
+- use theory links when they add conceptual value
+- do not use scenes to hide missing step design
+- do not use steps as vague topic buckets
+- every scene must justify its existence
+
+Final rule:
+
+A good `scenes.md` file should let a human review the lesson flow without opening engine code, and let the lesson engine compile the lesson without guessing author intent.
+
+### 3.4 `artifacts/`
+
+`artifacts/` contains the canonical source artifacts for the lesson.
+
+The source artifact is the real desired content.
+It is not generated output.
+It is not a build artifact.
+
+Recommended naming pattern:
+
+- `html.source.html`
+- `css.source.css`
+- `js.source.js`
+- `template-js.source.js`
+- `shadow-css.source.css`
+- `php.source.php`
+- `sql.source.sql`
+- `yaml.source.yaml`
+- `readme.source.md`
+
+Rules:
+
+- each artifact entry in `lesson.md` must map to exactly one file in `artifacts/`
+- file extension must match the declared language
+- artifact names should be banal and predictable
+- new artifact kinds belong in the engine contract, not in per-lesson glue
+
+### 3.5 `assets/`
+
+`assets/` contains reference visuals and any other non-executable authoring asset.
+
+Rules:
+
+- goal images belong here
+- extra practice variants belong here
+- assets are optional, but when they exist they must be referenced from `lesson.md`
+
+## 4. Rules for Animated Lesson Flow
+
+### 4.1 Beginning
+
+If the lesson builds a component, start from the smallest neutral beginning.
+
+For layout or component work that is most often:
+
+```html
+<div class="app-shell">
+```
+
+Do not insert early filler content that the lesson does not explain.
+
+### 4.2 Step and Scene Rules
+
+Write the lesson as a sequence of steps, and each step as a sequence of scenes.
+
+Good:
+
+1. define the step
+2. open the first scene
+3. reveal one source artifact change
+4. narrate why it matters
+5. show the preview change
+6. move to the next scene
+
+Bad:
+
+- collapse everything into one giant step
+- mix multiple pedagogical moves into one scene without a reason
+- let a scene become a hidden mini-lesson
+
+### 4.3 Source Growth Rules
+
+Source grows in the smallest explainable increments.
+
+Good:
+
+1. add root wrapper
+2. add main semantic element
+3. add child zone
+4. add child element
+5. add label or copy
+
+Bad:
+
+- paste the finished source file all at once
+- skip intermediate states that the preview should teach
+
+### 4.4 Presentation Rules
+
+When some unit is still under construction, helper lines are mandatory if they help orientation.
+
+Rules:
+
+- helper outline or border is introduced early
+- `.app-shell` must also get its thin helper outline and keep it through the entire lesson, until the final shell summary
+- each sub-element of the same unit should have its own thin helper outline
+- each sub-element of the same unit may have its own helper color
+- helper styles stay active until the final summary step for that element or unit
+- final summary step only then removes helper styles
+
+Step narration must say this:
+
+- when introducing helper style: `We're adding a temporary helper border for easier orientation, we'll remove it later.`
+- when removing it: `We're removing the temporary helper border, we don't need it anymore.`
+
+### 4.5 Focus Rules During Styling
+
+While styling some element, the corresponding HTML target in the editor panel must be clearly highlighted in yellow.
+
+This means:
+
+- the current scene should show exactly which source area is being worked on
+- the highlight must be prominent enough to understand instantly
+- the same scene should not spread focus across too many unrelated elements
+
+### 4.6 Preview Integrity
+
+Preview must be the actual result of the same source shown in the authoring contract.
+
+This means:
+
+- no special fake preview DOM
+- no manually directed scene
+- no source file that did not come from the lesson contract
+- no preview state that the canonical lesson package cannot reproduce
+
+### 4.7 Web Components Lesson Phases
+
+Web Components lessons are written in two pedagogical phases: visual composition first, then behavior and API.
+
+Rules:
+
+- the visual phase may use the minimum JavaScript needed to make the component actually render, but the teaching goal is still to make the component visibly real and styled before behavior grows
+- the logic phase is where attributes, `observedAttributes`, properties, events, lifecycle, methods, state, and cleanup are introduced
+- do not split the lesson by file type alone; split it by the learner's mental model: first I can see the component, then I can understand how it behaves
+- when a step could belong to either phase, prefer the step that shows the final UI sooner without hiding the behavior contract
+
+## 5. How to Break Content Into Steps and Scenes
+
+Before writing files, break content in this order:
+
+1. What is the final result?
+2. What are the main pedagogical steps?
+3. In what order should the learner see them to understand the building?
+4. What are the scenes inside each step?
+5. What is the smallest source increment that still makes sense?
+6. What is the smallest visible or logical change that preview should show?
+
+Most common good order is:
+
+1. root shell
+2. main semantic wrapper
+3. first large unit
+4. child elements of that unit
+5. helper styles for orientation
+6. layout properties
+7. spacing
+8. colors and typography
+9. interaction states
+10. responsive rules
+11. final summary
+
+## 6. What To Tell AI
+
+If you want AI to convert content into a lesson, give it the UI goal and strict source rules.
+
+Use this template:
+
+```txt
+Convert this into a Step By Step Animator lesson.
+
+Lesson goal:
+- Make [component or layout name]
+- Final result should look like [short description]
+
+Repo contract:
+- root split is `product/` and `system/`
+- add new lesson under `product/education/lessons/[feature-name]/source/`
+- make:
+  - `lesson.md`
+  - `theory.md` when the lesson needs it
+  - `scenes.md`
+  - `artifacts/[artifactId].source.[ext]`
+  - `assets/[feature-name]-goal.svg` when reference image exists
+- do not create per-lesson build files
+- do not create runtime parser code in the lesson folder
+- keep authoring source-only
+
+Authoring rules:
+- step is the pedagogical unit
+- scene is the frame inside the step
+- step and scene must be easy to explain out loud
+- source artifacts are canonical desired content
+- preview must be derived from the same source contract
+- every scene must make one clear change or one clear explanation
+- use simple, predictable names
+
+Deliver output ready for this repo.
+```
+
+## 7. Quick Filter Before Every New Scene
+
+Before keeping a scene, check:
+
+- Does this scene make one clear change?
+- Can preview clearly show that change?
+- Could I explain this scene by voice without jumping around?
+- Is this a natural next scene for a learning human?
+- Does the scene belong to the right step?
+
+If the answer is not `yes`, the scene should be broken or moved.
+
+=== .agents/governance/QUALITY.md ===
+# Quality Rules
+
+This file defines the questions and standards that every non-trivial item must satisfy.
+
+## Required Questions
+
+Every idea, backlog item, plan, architecture note, business note, and lesson step must answer:
+
+1. What does the user want to achieve?
+2. What should animator software do to make that possible?
+3. What should the user see, and does the UX meet the highest standard?
+4. What should the user learn visually and step by step?
+
+## Rules
+
+- Write the user outcome first and the technical detail second.
+- Keep ideas and plans in plain language before moving into implementation.
+- If an item cannot answer the required questions, it is not ready.
+- Lesson work must show the visual path first, then the behavior and API.
+- The visible result must stay faithful to the authored code and teaching step.
+- When quality rules change, update the owning document in the same work item.
+- These questions are mandatory in governance, business, planning, execution, and review docs.
+
+## Current Policy
+
+No active exceptions.
+
+=== .agents/governance/app-architecture/ARCHITECTURE.md ===
 # Architecture
 
-This document applies the reusable standard from `.agents/architecture/architecture-standard.md` to the Step By Step Animator repo.
+This document applies the reusable standard from `.agents/governance/app-architecture/architecture-standard.md` to the Step By Step Animator repo.
 
 ## Scope and Authority
 
 - `AGENTS.md` governs execution, delivery discipline, and collaboration.
-- `.agents/architecture/architecture-standard.md` defines the reusable architecture baseline.
+- `.agents/governance/app-architecture/architecture-standard.md` defines the reusable architecture baseline.
 - This file binds that baseline to this repo and keeps it concrete.
 
 If a repo-specific exception is needed, it must be documented here and it must not lower the baseline quality bar.
@@ -459,15 +1005,15 @@ Use this sentence as the filter before every new file:
 ## Change Policy
 
 - if a change affects repo shape, update this document in the same change
-- if a change affects the reusable standard, update `.agents/architecture/architecture-standard.md`
+- if a change affects the reusable standard, update `.agents/governance/app-architecture/architecture-standard.md`
 - do not invent invisible exceptions
 - do not add a folder, file, or abstraction unless it reduces mental noise
 
 ## Lesson Authoring
 
-How a lesson becomes animated is documented in [.agents/authoring/LESSON_AUTHORING.md](/home/shomsy/projects/step-by-step-animator/.agents/authoring/LESSON_AUTHORING.md).
+How a lesson becomes animated is documented in [.agents/business-logic/software/lesson-authoring/authoring/LESSON_AUTHORING.md](/home/shomsy/projects/step-by-step-animator/.agents/business-logic/software/lesson-authoring/authoring/LESSON_AUTHORING.md).
 
-=== .agents/architecture/architecture-standard.md ===
+=== .agents/governance/app-architecture/architecture-standard.md ===
 # Universal Architecture Standard
 
 ## Purpose
@@ -1181,7 +1727,7 @@ It needs to be so clear that a person can open the repo and immediately know:
 
 That's the whole standard.
 
-=== .agents/architecture/lesson-architecture-flow.md ===
+=== .agents/governance/app-architecture/lesson-architecture-flow.md ===
 # Lesson Architecture Flow
 
 This diagram shows how the lesson system should work end to end.
@@ -1254,7 +1800,7 @@ flowchart LR
 - The compiled lesson package is the only truth the animator needs.
 - The runtime never reparses raw markdown to decide lesson meaning.
 
-=== .agents/architecture/lesson-architecture.md ===
+=== .agents/governance/app-architecture/lesson-architecture.md ===
 # Lesson Architecture
 
 This document defines the target lesson-engine architecture and the current lesson/runtime contract for the `step-by-step-animator` repo.
@@ -1268,7 +1814,7 @@ Target boundaries:
 - `system/animator-engine/` replays the compiled package frame by frame
 - `product/app/` presents the product shell from the canonical `product/app/index.html` entry
 
-The quality baseline for every implementation decision still comes from `.agents/architecture/architecture-standard.md` and `.agents/architecture/ARCHITECTURE.md`.
+The quality baseline for every implementation decision still comes from `.agents/governance/app-architecture/architecture-standard.md` and `.agents/governance/app-architecture/ARCHITECTURE.md`.
 
 Goal is for the structure to be:
 
@@ -1586,7 +2132,7 @@ Manual edits are not part of the contract.
 
 ### 0.11 Migration Governance Reference
 
-The completed migration governance record lives in `.agents/architecture/migration-governance.md`.
+The completed migration governance record lives in `.agents/governance/app-architecture/migration-governance.md`.
 This document keeps the architectural spec and the canonical source contract.
 
 ### 0.12 Definition of Done
@@ -2387,10 +2933,10 @@ Ideal final model looks like this:
 ## 51. Appendix: Existing Lesson Architecture
 
 For current lesson architecture details, see:
-- `.agents/architecture/ARCHITECTURE.md`
-- `.agents/authoring/LESSON_AUTHORING.md`
+- `.agents/governance/app-architecture/ARCHITECTURE.md`
+- `.agents/business-logic/software/lesson-authoring/authoring/LESSON_AUTHORING.md`
 
-=== .agents/architecture/migration-governance.md ===
+=== .agents/governance/app-architecture/migration-governance.md ===
 # Migration Governance Record
 
 Status: completed.
@@ -2441,569 +2987,9 @@ It is a historical governance record and a reference for the rules that remain i
 - the runtime consumes only compiled lesson packages
 - the app shell stays separate from lesson logic
 - names must stay simple, predictable, and flow-first
-- the evidence ledger in `.agents/evidence/CHANGELOG.md` is the active running log for follow-up state
+- the evidence ledger in `.agents/management/evidence/CHANGELOG.md` is the active running log for follow-up state
 
-=== .agents/authoring/LESSON_AUTHORING.md ===
-# Lesson Authoring
-
-This file is the practical contract for converting content into an animated `Step By Step Animator` lesson.
-
-## 1. Essence
-
-A lesson is not ordinary text and is not a static tutorial.
-
-The lesson must behave like you're watching a programmer over share screen:
-
-- HTML is added element by element
-- CSS is added property by property
-- when the lesson requires it, executable source is added action by action
-- preview shows exactly the same cumulative result that is currently authored
-- every change must be visually clear and verbally explainable
-- for Web Components lessons, JavaScript must first create the actual rendered DOM, only then CSS should style it
-- Web Components lessons are visual-first: early steps should establish the rendered shell and styling before behavior is introduced step by step
-
-If content cannot be broken into such small, readable steps, it is not ready for this type of animation yet.
-
-## 2. Source-Only Lesson Root
-
-Every new lesson goes in its own folder under:
-
-```txt
-product/
-  education/
-    lessons/
-      feature-name/
-        source/
-          lesson.md
-          theory.md
-          scenes.md
-          artifacts/
-            html.timeline.md
-            css.rules.md
-            js.timeline.md
-            template-js.timeline.md
-            shadow-dom-style.css.md
-          assets/
-```
-
-Rules:
-
-- `product/education/` is source only
-- no per-lesson build glue lives in `product/education/`
-- `system/lesson-engine/` owns translation, validation, parsing, normalization, projection, and compilation
-- `system/foundation/` owns shared frontmatter and markdown primitives
-- `source/` is the only place where the lesson author writes material
-- `assets/` stays beside the source and holds reference images or other authoring assets
-
-## 3. File Contracts
-
-### 3.1 `lesson.md`
-
-`lesson.md` is the manifest and metadata source of truth.
-
-It is a markdown file with YAML frontmatter.
-The frontmatter is canonical.
-The markdown body may be empty or may contain a short human intro, but it is not the machine contract.
-
-Required frontmatter fields:
-
-- `schemaVersion`
-- `lessonId`
-- `lessonTitle`
-- `lessonIntro`
-- `status`
-- `courseId`
-- `order`
-- `scenes.file`
-- `artifacts`
-- `preview.type`
-- `preview.title`
-
-Optional frontmatter fields:
-
-- `theory.enabled`
-- `theory.file`
-- `goal`
-- `homework`
-- `references`
-- `tags`
-- `difficulty`
-- `estimatedMinutes`
-
-Recommended status values:
-
-- `draft`
-- `active`
-- `broken`
-- `deprecated`
-
-Recommended preview types:
-
-- `dom`
-- `terminal`
-- `markdown`
-- `diagram`
-- `none`
-
-Canonical lesson.md example:
-
-```md
----
-schemaVersion: 1
-lessonId: 01-build-sidebar
-lessonTitle: Build Sidebar
-lessonIntro: In this lesson we build a sidebar step by step.
-status: active
-courseId: web-components
-order: 1
-
-theory:
-  enabled: true
-  file: ./theory.md
-
-scenes:
-  file: ./scenes.md
-
-artifacts:
-  - artifactId: html
-    file: ./artifacts/html.timeline.md
-    language: html
-    kind: timeline
-    label: index.html
-    isPrimary: true
-
-  - artifactId: css
-    file: ./artifacts/css.rules.md
-    language: css
-    kind: rules
-    label: style.css
-    isPrimary: false
-
-preview:
-  type: dom
-  title: Sidebar Preview
-
-goal:
-  title: What we are building
-  imageSrc: ./assets/goal.png
-  imageAlt: Sidebar final preview
-  imageCaption: Final sidebar result
-
-homework:
-  enabled: true
-  title: Homework
-  items:
-    - Add hover effects to sidebar items
-    - Add nested menu items
-
-references:
-  - title: MDN HTMLElement
-    href: https://developer.mozilla.org/
----
-```
-
-Rules:
-
-- `lessonId` must match the lesson folder slug
-- each `artifactId` must be unique
-- every artifact entry must point to one source file
-- `theory.file` is required only when `theory.enabled` is `true`
-- `scenes.file` must always exist
-- `lesson.md` declares what exists; it does not implement the lesson
-
-### 3.2 `theory.md`
-
-`theory.md` is the explanation layer.
-
-It is plain markdown prose.
-It explains the mental model, the why, the business reason, and the conceptual path.
-It is not a playback script.
-It is not a build instruction file.
-
-Rules:
-
-- `theory.md` may be optional when `lesson.md` says so explicitly
-- if present, it should stay readable as ordinary markdown
-- headings may be used as anchors for `scenes.md`
-- `theory.md` can explain concepts, tradeoffs, and "why this order" reasoning
-- `theory.md` must not contain runtime logic or imperative compiler steps
-
-### 3.3 `scenes.md`
-
-`scenes.md` is the canonical storyboard DSL for lesson playback.
-
-It is strict, declarative, and machine-readable.
-It describes teaching moments, not runtime code.
-
-Core model:
-
-- `step` is the primary pedagogical unit
-- `scene` is the directed frame inside a step
-
-File shape:
-
-- frontmatter declares ordered steps
-- the body contains step sections and scene sections
-
-Frontmatter contract:
-
-- `schemaVersion` is required
-- `lessonId` is required
-- `steps` is required and ordered
-- every step must declare `stepId`, `title`, `summary`, and `intent`
-- `stepId` must be unique and use `kebab-case`
-- frontmatter order is execution order
-
-Body contract:
-
-- each step must appear exactly once as `# Step: <stepId>`
-- each scene must appear inside a declared step as `## Scene: <sceneId>`
-- every scene must declare `sceneId` and `narration`
-- every scene must include at least one of `focus`, `code`, `preview`, or `theory`
-- narration-only scenes are allowed only when the validator explicitly permits them
-
-Field contract:
-
-- `focus.artifactId` must exist in `lesson.md`
-- `code.activeArtifactId` must exist in `lesson.md`
-- `theory.anchor` must exist in `theory.md`
-- `preview.action` must be one of `apply-state` or `none`
-- `preview.target` must match the lesson preview capability
-
-Scene discipline:
-
-- one clear change or one clear explanation per scene
-- deterministic order
-- no hidden sorting
-- no empty scenes
-- keep it readable out loud in one breath
-
-Canonical scene shape:
-
-```md
----
-schemaVersion: 1
-lessonId: 01-build-sidebar
-steps:
-  - stepId: add-sidebar-shell
-    title: Add sidebar shell
-    summary: Introduce the base sidebar container.
-    intent: Establish the minimum HTML structure before styling.
-
-  - stepId: add-sidebar-navigation
-    title: Add sidebar navigation
-    summary: Add a navigation block inside the sidebar.
-    intent: Introduce semantic navigation before visual refinement.
----
-
-# Step: add-sidebar-shell
-
-## Scene: intro-shell
-
-narration:
-First, we introduce the simplest possible sidebar shell.
-
-focus:
-  artifactId: html
-  reveal:
-    from: 1
-    to: 3
-
-code:
-  activeArtifactId: html
-  highlightLines:
-    - from: 1
-      to: 3
-
-preview:
-  action: apply-state
-  target: dom
-
-theory:
-  anchor: why-shell-first
-
-## Scene: explain-empty-css
-
-narration:
-CSS stays empty for now because structure comes before visual identity.
-
-focus:
-  artifactId: css
-  reveal:
-    from: 1
-    to: 1
-
-code:
-  activeArtifactId: css
-
-preview:
-  action: none
-
-theory:
-  anchor: structure-before-style
-
-# Step: add-sidebar-navigation
-
-## Scene: add-nav-block
-
-narration:
-Now we add a navigation block inside the sidebar.
-
-focus:
-  artifactId: html
-  reveal:
-    from: 1
-    to: 6
-
-code:
-  activeArtifactId: html
-  highlightLines:
-    - from: 2
-      to: 5
-
-preview:
-  action: apply-state
-  target: dom
-
-theory:
-  anchor: sidebar-as-navigation
-```
-
-Validation rules:
-
-- steps must be declared in frontmatter and appear exactly once in the body
-- scenes must belong to declared steps
-- scene ids must be unique inside each step
-- cross-references must resolve
-- unknown preview actions, artifact ids, or theory anchors are validation errors
-
-Authoring rules:
-
-- write steps as pedagogy
-- write scenes as direction
-- keep narration human
-- use theory links when they add conceptual value
-- do not use scenes to hide missing step design
-- do not use steps as vague topic buckets
-- every scene must justify its existence
-
-Final rule:
-
-A good `scenes.md` file should let a human review the lesson flow without opening engine code, and let the lesson engine compile the lesson without guessing author intent.
-
-### 3.4 `artifacts/`
-
-`artifacts/` contains the canonical source artifacts for the lesson.
-
-The source artifact is the real desired content.
-It is not generated output.
-It is not a build artifact.
-
-Recommended naming pattern:
-
-- `html.source.html`
-- `css.source.css`
-- `js.source.js`
-- `template-js.source.js`
-- `shadow-css.source.css`
-- `php.source.php`
-- `sql.source.sql`
-- `yaml.source.yaml`
-- `readme.source.md`
-
-Rules:
-
-- each artifact entry in `lesson.md` must map to exactly one file in `artifacts/`
-- file extension must match the declared language
-- artifact names should be banal and predictable
-- new artifact kinds belong in the engine contract, not in per-lesson glue
-
-### 3.5 `assets/`
-
-`assets/` contains reference visuals and any other non-executable authoring asset.
-
-Rules:
-
-- goal images belong here
-- extra practice variants belong here
-- assets are optional, but when they exist they must be referenced from `lesson.md`
-
-## 4. Rules for Animated Lesson Flow
-
-### 4.1 Beginning
-
-If the lesson builds a component, start from the smallest neutral beginning.
-
-For layout or component work that is most often:
-
-```html
-<div class="app-shell">
-```
-
-Do not insert early filler content that the lesson does not explain.
-
-### 4.2 Step and Scene Rules
-
-Write the lesson as a sequence of steps, and each step as a sequence of scenes.
-
-Good:
-
-1. define the step
-2. open the first scene
-3. reveal one source artifact change
-4. narrate why it matters
-5. show the preview change
-6. move to the next scene
-
-Bad:
-
-- collapse everything into one giant step
-- mix multiple pedagogical moves into one scene without a reason
-- let a scene become a hidden mini-lesson
-
-### 4.3 Source Growth Rules
-
-Source grows in the smallest explainable increments.
-
-Good:
-
-1. add root wrapper
-2. add main semantic element
-3. add child zone
-4. add child element
-5. add label or copy
-
-Bad:
-
-- paste the finished source file all at once
-- skip intermediate states that the preview should teach
-
-### 4.4 Presentation Rules
-
-When some unit is still under construction, helper lines are mandatory if they help orientation.
-
-Rules:
-
-- helper outline or border is introduced early
-- `.app-shell` must also get its thin helper outline and keep it through the entire lesson, until the final shell summary
-- each sub-element of the same unit should have its own thin helper outline
-- each sub-element of the same unit may have its own helper color
-- helper styles stay active until the final summary step for that element or unit
-- final summary step only then removes helper styles
-
-Step narration must say this:
-
-- when introducing helper style: `We're adding a temporary helper border for easier orientation, we'll remove it later.`
-- when removing it: `We're removing the temporary helper border, we don't need it anymore.`
-
-### 4.5 Focus Rules During Styling
-
-While styling some element, the corresponding HTML target in the editor panel must be clearly highlighted in yellow.
-
-This means:
-
-- the current scene should show exactly which source area is being worked on
-- the highlight must be prominent enough to understand instantly
-- the same scene should not spread focus across too many unrelated elements
-
-### 4.6 Preview Integrity
-
-Preview must be the actual result of the same source shown in the authoring contract.
-
-This means:
-
-- no special fake preview DOM
-- no manually directed scene
-- no source file that did not come from the lesson contract
-- no preview state that the canonical lesson package cannot reproduce
-
-### 4.7 Web Components Lesson Phases
-
-Web Components lessons are written in two pedagogical phases: visual composition first, then behavior and API.
-
-Rules:
-
-- the visual phase may use the minimum JavaScript needed to make the component actually render, but the teaching goal is still to make the component visibly real and styled before behavior grows
-- the logic phase is where attributes, `observedAttributes`, properties, events, lifecycle, methods, state, and cleanup are introduced
-- do not split the lesson by file type alone; split it by the learner's mental model: first I can see the component, then I can understand how it behaves
-- when a step could belong to either phase, prefer the step that shows the final UI sooner without hiding the behavior contract
-
-## 5. How to Break Content Into Steps and Scenes
-
-Before writing files, break content in this order:
-
-1. What is the final result?
-2. What are the main pedagogical steps?
-3. In what order should the learner see them to understand the building?
-4. What are the scenes inside each step?
-5. What is the smallest source increment that still makes sense?
-6. What is the smallest visible or logical change that preview should show?
-
-Most common good order is:
-
-1. root shell
-2. main semantic wrapper
-3. first large unit
-4. child elements of that unit
-5. helper styles for orientation
-6. layout properties
-7. spacing
-8. colors and typography
-9. interaction states
-10. responsive rules
-11. final summary
-
-## 6. What To Tell AI
-
-If you want AI to convert content into a lesson, give it the UI goal and strict source rules.
-
-Use this template:
-
-```txt
-Convert this into a Step By Step Animator lesson.
-
-Lesson goal:
-- Make [component or layout name]
-- Final result should look like [short description]
-
-Repo contract:
-- root split is `product/` and `system/`
-- add new lesson under `product/education/lessons/[feature-name]/source/`
-- make:
-  - `lesson.md`
-  - `theory.md` when the lesson needs it
-  - `scenes.md`
-  - `artifacts/[artifactId].source.[ext]`
-  - `assets/[feature-name]-goal.svg` when reference image exists
-- do not create per-lesson build files
-- do not create runtime parser code in the lesson folder
-- keep authoring source-only
-
-Authoring rules:
-- step is the pedagogical unit
-- scene is the frame inside the step
-- step and scene must be easy to explain out loud
-- source artifacts are canonical desired content
-- preview must be derived from the same source contract
-- every scene must make one clear change or one clear explanation
-- use simple, predictable names
-
-Deliver output ready for this repo.
-```
-
-## 7. Quick Filter Before Every New Scene
-
-Before keeping a scene, check:
-
-- Does this scene make one clear change?
-- Can preview clearly show that change?
-- Could I explain this scene by voice without jumping around?
-- Is this a natural next scene for a learning human?
-- Does the scene belong to the right step?
-
-If the answer is not `yes`, the scene should be broken or moved.
-
-=== .agents/backlog/BACKLOG.md ===
+=== .agents/management/backlog/BACKLOG.md ===
 # Backlog
 
 This file captures raw ideas and user stories before they become planned work.
@@ -3013,16 +2999,20 @@ It is intentionally lightweight.
 
 - keep newest items at the top
 - write the rough thought first; do not force decomposition
+- write the idea in plain user language first
+- capture what the user wants to achieve before the technical detail
+- use the required questions from `.agents/governance/QUALITY.md` before promoting an item
+- if it is lesson-related, note what the user should see and learn
 - use `YYYY-MM-DD HH:MM` timestamps so aging can be measured
-- promote an item to `.agents/planning/PLAN.md` when it is selected for work
-- move it to `.agents/evidence/TODO.md` only when execution is ready
-- if the item is a bug or hotfix, promote it to `.agents/bugs/BUGS.md` instead of planning
+- promote an item to `.agents/management/planning/PLAN.md` when it is selected for work
+- move it to `.agents/management/evidence/TODO.md` only when execution is ready
+- if the item is a bug or hotfix, promote it to `.agents/management/bugs/BUGS.md` instead of planning
 
 ## Current Ideas
 
 No active items.
 
-=== .agents/bugs/BUGS.md ===
+=== .agents/management/bugs/BUGS.md ===
 # Active Bugs
 
 This file captures active defects, regressions, and hotfixes.
@@ -3031,16 +3021,19 @@ It feeds planning when a bug needs active implementation work.
 ## Update Rules
 
 - keep newest items at the top
+- describe the visible failure first
+- describe what the user should see when the bug is fixed
+- if the bug affects lesson UX, keep the user goal and step-by-step learning path visible
 - use `YYYY-MM-DD HH:MM` timestamps so age and urgency are visible
 - add `owner`, `estimate`, `blocked_by`, and `acceptance` when the bug needs active work
-- move implementation work into `.agents/evidence/TODO.md` when the fix becomes actionable
-- move closed bugs into `.agents/evidence/CHANGELOG.md`
+- move implementation work into `.agents/management/evidence/TODO.md` when the fix becomes actionable
+- move closed bugs into `.agents/management/evidence/CHANGELOG.md`
 
 ## Current Items
 
 1. `[bug][low] 2026-03-27 15:15 - Razmotriti sanitizaciju tagText pre innerHTML` - `system/animator-engine/play-lesson/02-follow-lesson/show-current-step.js:28` koristi `innerHTML` sa lesson podacima. Za sada prihvatljivo jer su lesson fajlovi pod kontrolom developera.
 
-=== .agents/evidence/CHANGELOG.md ===
+=== .agents/management/evidence/CHANGELOG.md ===
 # Evidence Log
 
 This is the single running list for feature work, bugs, TODOs, plans, decisions, and follow-up items.
@@ -3058,98 +3051,43 @@ Update rules:
 
 ## Current Ledger
 
-1. `[doc][done] 2026-03-27 01:02 - Applied visual-then-logic lesson writing rule across Web Components lessons` - `product/education/lessons/03-build-custom-element/source/lesson.md`, `product/education/lessons/04-build-web-component/source/lesson.md`, `product/education/lessons/05-clean-web-component-with-adopted-stylesheets/source/lesson.md`, `product/education/lessons/06-modular-web-components/source/lesson.md`, `product/education/lessons/07-build-ui-user-avatar/source/lesson.md`, `product/education/lessons/08-smell-of-enterprise/source/lesson.md`, `system/lesson-engine/output/03-build-custom-element.md`, `system/lesson-engine/output/04-build-web-component.md`, `system/lesson-engine/output/05-clean-web-component-with-adopted-stylesheets.md`, `system/lesson-engine/output/06-modular-web-components.md`, `system/lesson-engine/output/07-build-ui-user-avatar.md`, `system/lesson-engine/output/08-smell-of-enterprise.md`, `step-by-step-animator.txt`; `actual: 1h`
-1. `[doc][done] 2026-03-27 00:53 - Added two-phase Web Components lesson writing rule` - `AGENTS.md`, `.agents/authoring/LESSON_AUTHORING.md`, `step-by-step-animator.txt`; `actual: 20m`
-1. `[lesson][done] 2026-03-27 00:39 - Reordered 07 helper JS after the visual shell` - `product/education/lessons/07-build-ui-user-avatar/source/lesson.md`, `product/education/lessons/07-build-ui-user-avatar/source/scenes.md`, `product/education/lessons/07-build-ui-user-avatar/source/artifacts/js.timeline.md`, `system/lesson-engine/output/07-build-ui-user-avatar.md`, `step-by-step-animator.txt`; `actual: 1h`
-1. `[lesson][done] 2026-03-27 00:24 - Reworked 07 lesson into visual-first shell, then functionality phase` - `product/education/lessons/07-build-ui-user-avatar/source/lesson.md`, `product/education/lessons/07-build-ui-user-avatar/source/scenes.md`, `system/lesson-engine/output/07-build-ui-user-avatar.md`, `step-by-step-animator.txt`; `actual: 1h`
-1. `[lesson][done] 2026-03-26 19:14 - Applied visual-first sequencing to Web Components lesson intros and cleared trackers` - `product/education/lessons/03-build-custom-element/source/lesson.md`, `product/education/lessons/04-build-web-component/source/lesson.md`, `product/education/lessons/05-clean-web-component-with-adopted-stylesheets/source/lesson.md`, `product/education/lessons/06-modular-web-components/source/lesson.md`, `system/lesson-engine/output/03-build-custom-element.md`, `system/lesson-engine/output/04-build-web-component.md`, `system/lesson-engine/output/05-clean-web-component-with-adopted-stylesheets.md`, `system/lesson-engine/output/06-modular-web-components.md`
-1. `[doc][done] 2026-03-26 16:25 - Web Components visual-first sequencing rule added` - `AGENTS.md`, `.agents/authoring/LESSON_AUTHORING.md`, `.agents/planning/PLAN.md`, `.agents/evidence/TODO.md`
-1. `[review][done] 2026-03-26 15:34 - Production readiness review closed` - `system/lesson-engine/documentation/sync-lesson-documents.js`, `system/lesson-engine/register-lesson-packages/*.js`, `tests/flows/compose-step-narration-text.test.js`, `tests/flows/select-lesson-from-location.test.js`
-2. `[refactor][done] 2026-03-26 15:26 - Product/System refactor completed` - `README.md`, `AGENTS.md`, `.agents/architecture/ARCHITECTURE.md`, `.agents/architecture/lesson-architecture.md`, `.agents/architecture/lesson-architecture-flow.md`, `.agents/architecture/migration-governance.md`, `.agents/authoring/LESSON_AUTHORING.md`, `.agents/planning/PLAN.md`, `.agents/planning/ARCHIVE.md`, `.agents/evidence/TODO.md`, `.agents/evidence/CHANGELOG.md`, `.gitignore`, `package.json`, `system/animator-engine/choose-lesson/select-lesson-from-location.js`, `system/lesson-engine/*`, `system/foundation/*`, `tests/*`, `generated/lesson-documents/`, `system/lesson-engine/output/`
-3. `[plan][done] 2026-03-26 15:26 - Product/System Refactor Realignment completed` - `.agents/planning/PLAN.md`, `.agents/planning/ARCHIVE.md`
-4. `[todo][done] 2026-03-26 15:26 - Product/System Refactor Backlog cleared` - `.agents/evidence/TODO.md`
-3. `[feature][done] 2026-03-26 02:44 - Remove all legacy trees completed` - `README.md`, `AGENTS.md`, `.agents/architecture/ARCHITECTURE.md`, `.agents/architecture/lesson-architecture.md`, `.agents/evidence/TODO.md`, `.agents/planning/PLAN.md`, `step-by-step-animator.txt`, `animator/`, `lessons/`
-1. `[feature][done] 2026-03-26 02:35 - Remove legacy app surface completed` - `vite.config.js`, `README.md`, `AGENTS.md`, `.agents/architecture/ARCHITECTURE.md`, `.agents/architecture/lesson-architecture.md`, `app/`, `index.html`, `main.js`, `sidebar-step-by-step.html`
-1. `[plan][done] 2026-03-26 02:26 - Expand root README folder map completed` - `README.md`, `.agents/planning/PLAN.md`, `.agents/evidence/TODO.md`
-2. `[todo][done] 2026-03-26 02:26 - Expand root README folder map completed` - `README.md`
-3. `[plan][done] 2026-03-26 02:22 - Root README and run instructions completed` - `README.md`, `.agents/planning/PLAN.md`, `.agents/evidence/TODO.md`
-4. `[todo][done] 2026-03-26 02:22 - Write root README completed` - `README.md`
-5. `[governance][done] 2026-03-26 02:11 - Review and test gate locked before git/push` - `AGENTS.md`, `.agents/planning/PLAN.md`
-6. `[plan][done] 2026-03-26 02:15 - Test harness and contract coverage completed` - `.agents/planning/PLAN.md`, `.agents/evidence/TODO.md`, `tests/contracts`, `tests/flows`, `tests/smoke`
-7. `[todo][done] 2026-03-26 02:15 - Add node:test harness completed` - `package.json`, `tests/contracts`, `tests/flows`, `tests/smoke`
-8. `[todo][done] 2026-03-26 02:15 - Cover lesson compiler contracts completed` - `system/lesson-engine/compile-lesson-package.js`, `tests/contracts`
-9. `[todo][done] 2026-03-26 02:15 - Cover runtime seams completed` - `animator-engine/choose-lesson/select-lesson-from-location.js`, `tests/flows`
-10. `[todo][done] 2026-03-26 01:58 - Active TODO emptied after closing current items` - `.agents/evidence/TODO.md`, `.agents/evidence/CHANGELOG.md`
-11. `[perf][done] 2026-03-26 01:58 - Split the large Vite main chunk` - `app/main.js`, `animator-engine/choose-lesson/select-lesson-from-location.js`, `system/lesson-engine/register-lesson-packages/index.js`
-12. `[governance][done] 2026-03-26 01:58 - Legacy archive docs banner sweep completed` - `animator/agents.md`, `lessons/lesson-architecture.md`
-13. `[feature][done] 2026-03-26 - App shell moved under app/ with root compatibility aliases` - `app/index.html`, `app/main.js`, `index.html`, `main.js`, `vite.config.js`, `sidebar-step-by-step.html`
-14. `[feature][done] 2026-03-26 - Source-only lesson authoring contract locked` - `.agents/authoring/LESSON_AUTHORING.md`, `.agents/architecture/lesson-architecture.md`, `AGENTS.md`
-15. `[feature][done] 2026-03-26 - Lesson engine compiler boundary introduced` - `system/lesson-engine/compile-lesson-package.js`, `system/lesson-engine/read-scenes-contract.js`, `animator-engine/play-lesson/listen-to-step/compose-step-narration-text.js`
-16. `[feature][done] 2026-03-26 - Lesson source validation command added` - `system/lesson-engine/validate-source-lessons.js`, `package.json`, `AGENTS.md`
-17. `[governance][done] 2026-03-26 - Source-only migration governance completed` - `.agents/architecture/migration-governance.md`
-18. `[decision][done] 2026-03-26 - Merge dump kept as portable working backup` - `merge-files.sh`, `step-by-step-animator.txt`
-19. `[governance][done] 2026-03-26 01:47 - Mandatory work flow locked as plan -> todo -> evidence` - `AGENTS.md`, `.agents/planning/PLAN.md`, `.agents/evidence/TODO.md`, `.agents/evidence/CHANGELOG.md`
+1. `[doc][medium] 2026-03-27 18:01 - Thinned AGENTS.md and wired the required questions into .agents`
+   owner: codex
+   actual: 1h
 
-=== .agents/evidence/TODO.md ===
+=== .agents/management/evidence/TODO.md ===
 # Active TODO
 
 This is the active queue for follow-up work.
-It is fed by `.agents/planning/PLAN.md` and `.agents/bugs/BUGS.md` when work is ready to execute.
 
 Update rules:
 
 - keep newest items at the top
 - mark each item with a status tag
+- keep the user-visible outcome clear in the acceptance text
+- if the task is lesson-related, keep the user goal, visible UX, and step-by-step learning path explicit
 - add `owner`, `estimate`, and `blocked_by` when the follow-up is substantial
 - move completed items to the evidence ledger when they are closed
 - use `YYYY-MM-DD HH:MM` timestamps for new items so task age and cycle time can be estimated
 
 ## Current Items
 
-1. `[doc][medium] 2026-03-27 15:15 - Implement .agents management split and update navigation docs`
-   owner: codex
-   estimate: 1h
-   acceptance: `.agents/README.md`, backlog, bugs, governance, and review docs exist and AGENTS/README/trackers point to the right responsibility.
+No active items.
 
-=== .agents/governance/QUALITY.md ===
-# Quality Governance
-
-This file captures the project-wide quality rules that sit above individual work items.
-
-## What Belongs Here
-
-- definition of done
-- review expectations
-- naming and responsibility rules that are broader than architecture
-- decision gates for merging, publishing, and refactoring
-- quality exceptions that must be remembered
-
-## Operating Rules
-
-- prefer simple flow-first names
-- keep product code and management docs separate
-- do not introduce new legacy compatibility layers without explicit governance
-- every non-trivial change must leave a readable paper trail in PLAN, TODO, BUGS, and CHANGELOG
-- when quality or architecture changes, update the owning doc in the same work item
-
-## Current Policy
-
-No active exceptions.
-
-=== .agents/planning/ARCHIVE.md ===
+=== .agents/management/planning/ARCHIVE.md ===
 # Planning Archive
 
 This file keeps legacy planning notes that are no longer active work.
-The active ideas live in `.agents/backlog/BACKLOG.md`.
-The active bug queue lives in `.agents/bugs/BUGS.md`.
-The active plan lives in `.agents/planning/PLAN.md`.
-The active implementation queue lives in `.agents/evidence/TODO.md`.
-The evidence ledger lives in `.agents/evidence/CHANGELOG.md`.
+The active ideas live in `.agents/management/backlog/BACKLOG.md`.
+The active bug queue lives in `.agents/management/bugs/BUGS.md`.
+The active plan lives in `.agents/management/planning/PLAN.md`.
+The active implementation queue lives in `.agents/management/evidence/TODO.md`.
+The evidence ledger lives in `.agents/management/evidence/CHANGELOG.md`.
 
 - 2026-03-26 15:26 - Product/System Refactor Realignment completed: moved lesson-engine into `system/lesson-engine/`, moved generated lesson docs into `system/lesson-engine/output/`, populated `system/foundation/` with `frontmatter/` and `markdown/`, and cleared the active follow-up queue.
 - 2026-03-26 15:34 - Production readiness review completed: fixed the stale lesson-doc sync root and updated runtime test imports to the `system/` tree; validation, build, and tests passed afterward.
 
-=== .agents/planning/PLAN.md ===
+=== .agents/management/planning/PLAN.md ===
 # Active Plan
 
 This is the selected workstream layer for substantial work.
@@ -3160,43 +3098,35 @@ Update rules:
 - keep newest items at the top
 - use `YYYY-MM-DD HH:MM` timestamps so duration and aging can be estimated
 - keep the plan high-level and outcome-oriented
+- keep the user goal, the visible result, and the learning path explicit
+- keep the required questions from `.agents/governance/QUALITY.md` visible in every workstream
 - promote selected ideas or bug triage from the capture lanes into plan workstreams
+- write the plan in plain user language first, then technical execution
 - add `owner`, `estimate`, and `acceptance` when the workstream is substantial
 - add `blocked_by` only when the workstream is waiting on an external dependency
-- when a plan item becomes actionable, move it into `.agents/evidence/TODO.md`
-- when an item closes, mirror it in `.agents/evidence/CHANGELOG.md`
+- when a plan item becomes actionable, move it into `.agents/management/evidence/TODO.md`
+- when an item closes, mirror it in `.agents/management/evidence/CHANGELOG.md`
 
 ## Current Workstreams
 
-1. `[doc][medium] 2026-03-27 15:15 - Organize .agents responsibilities into backlog, bugs, governance, and review lanes`
-   owner: codex
-   estimate: 1h
-   acceptance: `.agents` clearly separates raw ideas, defects, plans, TODOs, closures, and quality rules without deleting existing records.
+No active items.
 
 === .agents/review/REVIEWS.md ===
 # Review Notes
 
-This file tracks active code-review findings and follow-up observations.
+This file tracks active code review findings and follow-up observations.
 
-## Update Rules
+## Rules
 
-- keep newest items at the top
-- write one finding per line
-- move confirmed defects into `.agents/bugs/BUGS.md`
-- move implementation follow-up into `.agents/evidence/TODO.md`
-- move closed review notes into `.agents/evidence/CHANGELOG.md`
+- keep one finding per line
+- describe the visible problem and the expected result
+- move confirmed defects into `.agents/management/bugs/BUGS.md`
+- move execution follow-up into `.agents/management/evidence/TODO.md`
+- move closed review notes into `.agents/management/evidence/CHANGELOG.md`
 
 ## Current Items
 
 No active items.
-
-=== .agents/review/bugs.md ===
-# Review Bug Archive
-
-This file is archived.
-Active bug evidence lives in `.agents/bugs/BUGS.md`.
-Active review notes live in `.agents/review/REVIEWS.md`.
-Closed evidence lives in `.agents/evidence/CHANGELOG.md`.
 
 === .gitignore ===
 node_modules/
@@ -3225,468 +3155,15 @@ dist/
 === AGENTS.md ===
 # AGENTS
 
-This file is the canonical operational contract for working on this repo.
-
-## 1. Product Intent
-
-This repo is `Step By Step Animator`.
-
-It is a lesson engine for interactive HTML/CSS/JS lessons that should look like you're watching a programmer over share screen.
-
-The engine is generic.
-
-Currently shipped lessons are:
-
-- `01-build-sidebar`
-- `02-build-top-navigation`
-- `03-build-custom-element`
-- `04-build-web-component`
-- `05-clean-web-component-with-adopted-stylesheets`
-- `06-modular-web-components`
-- `07-build-ui-user-avatar`
-- `08-smell-of-enterprise`
-
-Every new lesson must use the same shell and the same teaching model:
-
-- HTML goes element by element
-- CSS goes property by property
-- when the lesson requires it, JS goes action by action
-- preview shows exactly the same cumulative HTML/CSS/JS that is currently written
-- changes must be clear, predictable and easy to verbalize
-- for Web Components lessons, JS must first create the actual rendered DOM, only then CSS may style those parts
-- Web Components lessons are written in two pedagogical phases: visual composition first, then behavior and API; early steps must establish the rendered shell and styling before attributes, events, lifecycle, cleanup, or methods are introduced
-
-This is not a showcase.
-This is not a fake storyboard.
-This is a teaching product.
-
-## 1.1 Document Authority
-
-This repo has three levels of documents:
-
-- `.agents/architecture/architecture-standard.md` is the reusable architectural baseline.
-- `.agents/architecture/ARCHITECTURE.md` is the repo-specific application of that baseline.
-- `AGENTS.md` is the operational contract for work, delivery and collaboration in this repo.
-- `.agents/` stays at the repository root, is gitignored, and must not be moved or duplicated.
-- `.agents/` is the management tree for the repo, split by responsibility:
-  - `.agents/architecture/` for repo shape, migration posture, and naming baseline
-  - `.agents/authoring/` for lesson authoring rules and source contracts
-  - `.agents/backlog/` for raw ideas and user stories that are not yet committed work
-  - `.agents/bugs/` for active defects, regressions, and hotfix triage
-  - `.agents/planning/` for selected workstreams, breakdowns, dependencies, and estimates
-  - `.agents/evidence/` for actionable TODOs and closed evidence
-  - `.agents/governance/` for quality rules, review gates, and project policy
-  - `.agents/review/` for review findings and review archive notes
-
-## 1.2 Evidence Ledger
-
-`.agents/evidence/CHANGELOG.md` is the running historical ledger for completed features, closed bugs, completed TODOs, closed plans, and major decisions.
-
-Evidence ledger rules:
-
-- if the state of a feature, bug, TODO, or plan changes, update the ledger in the same work item
-- keep detailed docs in their owning folders; the ledger only tracks current state and links to the detail when useful
-- use `YYYY-MM-DD HH:MM` timestamps for new evidence, backlog, and bug entries so duration and aging can be estimated
-
-## 1.3 Capture And Triage
-
-`.agents/backlog/BACKLOG.md` is the raw idea and user-story inbox.
-`.agents/bugs/BUGS.md` is the active defect and hotfix queue.
-`.agents/evidence/TODO.md` is the active implementation queue for follow-up work.
-
-Capture rules:
-
-- when a new idea is still vague, capture it in `.agents/backlog/BACKLOG.md`
-- when a defect is confirmed, capture it in `.agents/bugs/BUGS.md`
-- when a backlog item or bug becomes selected work, promote it into `.agents/planning/PLAN.md`
-- when a plan item becomes actionable, move it into `.agents/evidence/TODO.md`
-- when an item is completed, remove it from `.agents/evidence/TODO.md` and mirror the state change in `.agents/evidence/CHANGELOG.md`
-- do not rely on memory or chat history as the source of truth for pending work
-- use `YYYY-MM-DD HH:MM` timestamps for new backlog, bug, and TODO entries so duration and aging can be estimated
-- if `.agents/evidence/TODO.md` has no active work, it should say `No active items.`
-
-### Legacy Removal Governance
-
-When something is confirmed legacy and no longer part of the live contract, delete it from the repo surface instead of keeping a parallel compatibility layer.
-
-Rules:
-
-- delete legacy files and folders physically when they are no longer required by the live app
-- remove their active references from README, AGENTS, and architecture docs in the same work item
-- keep closed migration history only in `.agents/evidence/CHANGELOG.md`
-- do not leave a legacy surface in the product tree
-
-## 1.4 Mandatory Work Flow
-
-Every substantial work item must flow through a capture lane and then these layers in order:
-
-1. `.agents/backlog/BACKLOG.md` or `.agents/bugs/BUGS.md`
-2. `.agents/planning/PLAN.md`
-3. `.agents/evidence/TODO.md`
-4. `.agents/evidence/CHANGELOG.md`
-
-Rules:
-
-- `BACKLOG.md` captures raw ideas and user stories
-- `BUGS.md` captures active defects and hotfix triage
-- `PLAN.md` captures the current workstream and intent
-- `TODO.md` captures actionable follow-up work
-- `CHANGELOG.md` captures closed evidence and final state
-- `planning/ARCHIVE.md` may exist for legacy notes, but it is not an active TODO list
-- `backlog/` and `bugs/` are capture lanes, not execution queues
-- the active TODO file is not an archive; completed items do not stay there
-- do not skip a layer when the item is substantial enough to merit tracking
-- keep the layers aligned in the same work item when the state changes
-
-## 1.5 Work Item Metadata
-
-To keep project management professional and measurable, substantial items should carry lightweight metadata in the trackers:
-
-- `owner`: who is currently responsible for the item
-- `estimate`: rough time budget for the current phase
-- `blocked_by`: only when the item is waiting on something specific
-- `acceptance`: one-line definition of what done means for that item
-- `actual`: the real time spent, recorded when the item closes
-
-Rules:
-
-- use the same metadata language across `BACKLOG.md`, `BUGS.md`, `PLAN.md`, `TODO.md`, and `CHANGELOG.md`
-- do not create a new tracker file before using these fields
-- keep the metadata short and factual, not essay-like
-- if an item grows beyond a single work session, give it an estimate before starting
-
-Document authority rules:
-
-- if we change structure, naming or responsibility boundaries, we change the owning document in the same work item
-- no silent exceptions
-- repo-specific rule may narrow the standard, but may not weaken it without explicit record
-
-## 2. Technical Contract
-
-### 2.1 Architecture Shape
-
-The repo follows business-first screaming architecture.
-The completed migration governance record lives in `.agents/architecture/migration-governance.md`.
-
-Repo-level shape must stay in sync with `.agents/architecture/architecture-standard.md`, and repo-specific rules are documented in `.agents/architecture/ARCHITECTURE.md`.
-
-Read the tree in this order:
-
-1. flow
-2. feature slice
-3. file responsibility
-4. function action
-
-Live canonical shape:
-
-```txt
-product/
-  app/
-    index.html
-    main.js
-  education/
-    lessons/
-      <lesson-slug>/
-        source/
-          lesson.md
-          theory.md
-          scenes.md
-          artifacts/
-          assets/
-system/
-  animator-engine/
-    choose-lesson/
-    play-lesson/
-  lesson-engine/
-    discover-education-content/
-    read-education-entry/
-    validate-education-entry/
-    parse-education-source/
-    normalize-lesson-source/
-    project-artifact-state/
-    compile-lesson-package/
-    documentation/
-    register-lesson-packages/
-    contracts/
-    adapters/
-    output/
-      lesson-documents/
-  foundation/
-    frontmatter/
-    markdown/
-```
-
-Current live lesson set is registered in `system/lesson-engine/register-lesson-packages/index.js`.
-
-### 2.2 Lesson Contract
-
-New lesson work must use the source-only contract from `.agents/authoring/LESSON_AUTHORING.md`.
-
-That means:
-
-- source lives under `product/education/lessons/<lesson-slug>/source/`
-- the author writes `lesson.md`, `scenes.md`, optional `theory.md`, `artifacts/`, and `assets/`
-- `system/lesson-engine/` owns parsing, validation, normalization, projection, compilation and generated docs
-- do not introduce new `lesson.js`, `describe-steps.js`, or per-lesson `build-*` files for source-only lessons
-- all lessons are source-only; do not reintroduce the old per-lesson build-glue shape
-
-### 2.3 Lesson Documents
-
-The exact source-only authoring contract is documented in `.agents/authoring/LESSON_AUTHORING.md`.
-
-### 2.4 Runtime and Entry Rules
-
-- no `src/` folder
-- `product/app/index.html` is the canonical lesson shell and Vite root entry
-- `product/app/main.js` is the canonical app entry
-- the live app surface is rooted at `product/app/index.html`
-- build goes through Vite
-- `system/animator-engine/` is the runtime boundary used by the app entrypoint
-- `system/lesson-engine/` owns source translation for source-only lessons
-- the current pilot lesson is compiled from `product/education/lessons/02-build-top-navigation/source/`
-
-### 2.5 Naming Rules
-
-Use this filter before every new name:
-
-> If the folder does not say the flow, the file does not say the responsibility, or the function does not say the exact action, the name is not good enough.
-
-Prohibited bucket names:
-
-- `utils`
-- `helpers`
-- `shared`
-- `common`
-- `base`
-- `manager`
-- `service`
-- `controller`
-
-Prohibited verbs:
-
-- `handle`
-- `run`
-- `process`
-- `manage`
-- `doStuff`
-
-### 2.6 Vocabulary Rules
-
-In this repo, verbs have locked meaning:
-
-- these buckets are the first filter for file and function names
-- before you pick the exact file or function name, classify the work in this order:
-  - CRUD: touch one record
-  - Query: look at data without changing it
-  - Business: do what the business wants
-  - System: help the system move, sync, validate or recover
-  - State transition: move a thing from one state to another
-- `build...` builds derived lesson output for a specific step
-- `show...` writes current state to already found page parts
-- `present...` holds an interactive user flow
-- `create...` initializes progress for a flow
-- `find...` finds existing page parts in DOM or in list
-- `read...` reads from persistence layer
-- `write...` writes to persistence layer
-- `play...` orchestrates the complete lesson flow
-
-Do not introduce new synonym generation if existing verb already covers the responsibility.
-
-### 2.7 Numbering Rules
-
-Numbers are used only on flow folders when the order truly carries meaning in the product story.
-
-In `product/education/lessons/` this applies to the shipped learning path:
-
-- `01-build-sidebar`
-- `02-build-top-navigation`
-- `03-build-custom-element`
-- `04-build-web-component`
-- `05-clean-web-component-with-adopted-stylesheets`
-- `06-modular-web-components`
-- `07-more-separation-of-code`
-- `08-smell-of-enterprise`
-
-In player runtime this applies to main lesson journey:
-
-- `01-start-lesson`
-- `02-follow-lesson`
-- `03-watch-code`
-- `04-watch-preview`
-- `05-download-lesson-files`
-
-Support flows remain unnumbered:
-
-- `find-step`
-- `save-step`
-- `choose-theme`
-
-Do not number responsibility files.
-
-### 2.8 Preview Integrity Rules
-
-The right preview must be the actual render of the same cumulative HTML/CSS/JS code that the middle panel shows.
-
-This means:
-
-- no manually directed fake preview
-- no special preview DOM that deviates from lesson code
-- preview must be fed from the same builder functions that feed the lesson contract
-- HTML preview must show raw browser result when CSS is not yet added
-- CSS preview must affect only as much as currently written
-- JS preview must execute exactly the same cumulative JavaScript that the middle panel currently shows
-
-### 2.8a Teaching Visibility Rules
-
-These rules apply to all lessons, without exception:
-
-- `.app-shell` must get its thin helper outline and keep it through the entire lesson, until the final shell summary
-- every important HTML element or teaching unit must get its thin helper outline as early as possible
-- that outline is not removed immediately when the first final style is added
-- outline stays active until the final summary step for that element or unit
-- the final summary step for a given element should show its complete CSS and only then turn off the helper outline
-- while a CSS step is active for a certain element, the corresponding HTML target in the editor panel must be clearly highlighted in yellow
-
-### 2.9 Verification Rules
-
-After every significant change, обязательно запустите:
-
-```bash
-find product system tests -name '*.js' -print0 | xargs -0 -n1 node --check && node --check product/app/main.js && node --check vite.config.js
-npm run validate:lessons
-npm run sync:lesson-documents
-npm run build
-./merge-files.sh .
-```
-
-If you change documentation or flow tree, also refresh the merge dump.
-The merged `.txt` dump is a portable repository snapshot and may be used as a working backup during refactor passes.
-If you change the architectural structure, check that `.agents/architecture/architecture-standard.md`, `.agents/architecture/ARCHITECTURE.md` and `AGENTS.md` are still in sync.
-
-### 2.10 Delivery Discipline
-
-At the end of every iteration, mandatory final discipline from the repo root is required, even when the change is small.
-
-This means:
-
-1. if the change touched architecture or naming, sync relevant documents
-2. update `.agents/backlog/BACKLOG.md` if the work adds or reclassifies raw ideas or user stories
-3. update `.agents/planning/PLAN.md` if the work changes plan scope or priority
-4. update `.agents/bugs/BUGS.md` if the work changes defect state
-5. update `.agents/evidence/TODO.md` if the iteration leaves any follow-up work
-6. update `.agents/evidence/CHANGELOG.md` if the work changed feature, bug, TODO, or plan state
-7. run `./merge-files.sh .` from repo root
-8. do `git add -A`
-9. make a normal `git commit`
-10. do `git push`
-
-Do not finish an implementation pass without this closing, unless the user explicitly asks not to commit or push.
-
-### 2.11 Review and Test Gate
-
-Code review in this repo means iterative quality closure, not a one-shot comment pass.
-
-Rules:
-
-- keep fixing findings until the code matches the requested standards
-- relevant tests must pass before the work item can be closed
-- if tests fail, the work item stays open
-- if review finds a problem, fix it and rerun validation in the same work item
-- only after review and tests are green, run `./merge-files.sh .`, then `git add -A`, `git commit`, and `git push`
-- do not treat commit/push as a substitute for validation
-- do not leave a known-bad state in TODO or BUGS as if it were done
-
-## 3. Feature Contract
-
-For making new animated lessons and AI prompt template, see [.agents/authoring/LESSON_AUTHORING.md](/home/shomsy/projects/step-by-step-animator/.agents/authoring/LESSON_AUTHORING.md).
-
-### 3.1 Lesson Layout
-
-The application has three main panels:
-
-1. left lesson panel
-2. middle live editor panel
-3. right live preview panel
-
-Left panel:
-
-- shows current step
-- shows description and pro tip
-- shows progress
-- contains bookmark flow
-- contains controls for navigation and playback
-- contains open-source narration of current step with auto-read and voice speed control
-
-Middle panel:
-
-- shows HTML file
-- shows CSS file
-- when the lesson requires it, shows JS file
-- all displays are cumulative
-- existing lines are muted
-- newly added lines are highlighted
-- when CSS step is active, the HTML part for the same element must be highlighted in yellow
-
-Right panel:
-
-- takes the entire viewer panel
-- imitates browser
-- renders the actual cumulative HTML/CSS/JS output
-
-### 3.2 Current Shipped Lessons
-
-`01-build-sidebar` is the reference lesson for the engine.
-
-`02-build-top-navigation` shows additional shell capability:
-
-- goal image showing what we're building
-- homework notes for variants we don't implement yet
-- the current pilot version is compiled from `product/education/lessons/02-build-top-navigation/source/` through `system/lesson-engine/`
-
-For it, special teaching rules still apply:
-
-- starts with empty `.app-shell` space
-- sidebar is added as the first thing
-- no filler content outside of what the lesson actually explains
-- helper lines and helper borders stay until the entire visual unit is finished
-- outline helpers stay until the final summary step for that element or unit, only then removed
-
-`03-build-custom-element` opens the Web Components path:
-
-- host tag with dash
-- registration through `customElements.define`
-- attribute API
-- first render through light DOM
-
-`04-build-web-component` is the Web Components continuation:
-
-- third, optional JS file in the middle panel
-- actual live preview that executes the same cumulative JavaScript
-- Web Components teaching flow through custom element, shadow DOM, slot and lifecycle
-- early teaching steps stay visual-first: render the component shell and style it before splitting behavior into separate JS actions
-
-`05-clean-web-component-with-adopted-stylesheets` closes the cleanup story:
-
-- fourth, optional shadow CSS file in the middle panel
-- JavaScript imports `shadow-dom-style.css` as text via `?raw`
-- shadow root adopts separated stylesheet via `adoptedStyleSheets`
-
-### 3.3 How To Add A New Lesson
-
-For a new lesson:
-
-1. create new source folder under `product/education/lessons/<lesson-slug>/source/`
-2. add `lesson.md`
-3. add `scenes.md`
-4. add optional `theory.md` only if the lesson actually needs theory prose
-5. add `artifacts/` with the source artifacts declared in `lesson.md`
-6. add `assets/` if the lesson uses reference images or other authoring assets
-7. compile the lesson through `system/lesson-engine/`
-8. register the compiled package through the registry adapter, not through a new per-lesson build file
-
-Do not add new `lesson.js`, `describe-steps.js`, or per-lesson `build-*` files for new source-only lessons.
-Do not copy player runtime code into lesson source folders.
-New lesson should only add its source contract and its content.
+This is the thin entry point for working in this repo.
+
+- `.agents/README.md` is the project map.
+- `.agents/governance/QUALITY.md` defines the required questions and quality rules.
+- `.agents/governance/app-architecture/ARCHITECTURE.md` defines the repo architecture.
+- `.agents/business-logic/README.md` defines the business meaning for content and software.
+- `.agents/management/` holds backlog, bugs, planning, TODOs, and history.
+
+When work changes, update the owning document under `.agents/`.
 
 === README.md ===
 # Step By Step Animator
@@ -3696,8 +3173,10 @@ Step By Step Animator is an interactive lesson engine for HTML, CSS, and JavaScr
 ## Where To Start
 
 - `AGENTS.md` defines the operational contract for work in this repo.
-- `.agents/README.md` maps the management responsibilities inside `.agents/`.
-- `.agents/architecture/ARCHITECTURE.md` defines the repo-specific architecture.
+- `.agents/README.md` maps the project rules and project memory.
+- `.agents/governance/QUALITY.md` defines the required questions and quality rules.
+- `.agents/governance/app-architecture/ARCHITECTURE.md` defines the repo-specific architecture.
+- `.agents/business-logic/README.md` defines the plain-language business meaning.
 - `product/app/index.html` and `product/app/main.js` are the live app entry points.
 - `product/education/lessons/02-build-top-navigation/source/lesson.md` is the current pilot lesson source.
 - `system/lesson-engine/register-lesson-packages/index.js` registers the live lesson set.
@@ -3719,11 +3198,15 @@ The live repo is organized around these boundaries:
 
 ### Governance And Documentation
 
-- `.agents/` contains the management tree: architecture, authoring, backlog, bugs, planning, governance, review, and evidence records
-- `.agents/README.md` gives the responsibility map in one place
-- `.agents/backlog/BACKLOG.md` captures raw ideas and user stories
-- `.agents/bugs/BUGS.md` captures active defects and hotfixes
-- `.agents/governance/QUALITY.md` captures quality rules and review gates
+- `.agents/` contains the management tree, the quality rules, and the domain docs
+- `.agents/README.md` gives the project map and required questions in one place
+- `.agents/management/backlog/BACKLOG.md` captures raw ideas and user stories
+- `.agents/management/bugs/BUGS.md` captures active defects and hotfixes
+- `.agents/management/planning/PLAN.md` captures selected workstreams
+- `.agents/management/evidence/TODO.md` captures actionable follow-up work
+- `.agents/management/evidence/CHANGELOG.md` captures closed history
+- `.agents/governance/QUALITY.md` captures quality rules, UX rules, and review gates
+- `.agents/business-logic/README.md` captures the user and software perspectives
 - `.agents/review/REVIEWS.md` captures active review findings
 - `AGENTS.md` is the canonical operational contract for the repo
 - `README.md` is the human-friendly start-here document

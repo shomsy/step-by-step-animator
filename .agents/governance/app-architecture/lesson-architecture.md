@@ -11,7 +11,7 @@ Target boundaries:
 - `system/animator-engine/` replays the compiled package frame by frame
 - `product/app/` presents the product shell from the canonical `product/app/index.html` entry
 
-The quality baseline for every implementation decision still comes from `.agents/architecture/architecture-standard.md` and `.agents/architecture/ARCHITECTURE.md`.
+The quality baseline for every implementation decision still comes from `.agents/governance/app-architecture/architecture-standard.md` and `.agents/governance/app-architecture/ARCHITECTURE.md`.
 
 Goal is for the structure to be:
 
@@ -329,7 +329,7 @@ Manual edits are not part of the contract.
 
 ### 0.11 Migration Governance Reference
 
-The completed migration governance record lives in `.agents/architecture/migration-governance.md`.
+The completed migration governance record lives in `.agents/governance/app-architecture/migration-governance.md`.
 This document keeps the architectural spec and the canonical source contract.
 
 ### 0.12 Definition of Done
@@ -1130,5 +1130,5 @@ Ideal final model looks like this:
 ## 51. Appendix: Existing Lesson Architecture
 
 For current lesson architecture details, see:
-- `.agents/architecture/ARCHITECTURE.md`
-- `.agents/authoring/LESSON_AUTHORING.md`
+- `.agents/governance/app-architecture/ARCHITECTURE.md`
+- `.agents/business-logic/software/lesson-authoring/authoring/LESSON_AUTHORING.md`

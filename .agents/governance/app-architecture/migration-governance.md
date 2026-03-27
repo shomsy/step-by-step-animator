@@ -48,4 +48,4 @@ It is a historical governance record and a reference for the rules that remain i
 - the runtime consumes only compiled lesson packages
 - the app shell stays separate from lesson logic
 - names must stay simple, predictable, and flow-first
-- the evidence ledger in `.agents/evidence/CHANGELOG.md` is the active running log for follow-up state
+- the evidence ledger in `.agents/management/evidence/CHANGELOG.md` is the active running log for follow-up state
