@@ -1,15 +1,19 @@
 # Review Notes
 
-This file tracks active code review findings and follow-up observations.
+Canonical review findings and follow-up observations.
 
 ## Rules
 
-- keep one finding per line
-- describe the visible problem and the expected result
-- move confirmed defects into `.agents/management/bugs/BUGS.md`
-- move execution follow-up into `.agents/management/evidence/TODO.md`
-- move closed review notes into `.agents/management/evidence/CHANGELOG.md`
+- keep one finding per item
+- findings must include severity and risk
+- move confirmed defects into `management/BUGS.md`
+- move actionable implementation follow-up into `management/TODO.md`
+- log closed outcomes in `management/evidence/CHANGELOG.md`
 
 ## Current Items
 
-No active items.
+No active review findings.
+
+## Legacy Reference
+
+Older review records can exist in `code-review/REVIEWS.md`.

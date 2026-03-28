@@ -5,9 +5,11 @@ Step By Step Animator is an interactive lesson engine for HTML, CSS, and JavaScr
 ## Where To Start
 
 - `AGENTS.md` defines the operational contract for work in this repo.
-- `.agents/README.md` maps the project rules and project memory.
-- `.agents/governance/QUALITY.md` defines the required questions and quality rules.
-- `.agents/governance/app-architecture/ARCHITECTURE.md` defines the repo-specific architecture.
+- `.agents/README.md` maps the visible project workspace and local memory.
+- `.agents/.rules/AGENTS.md` is the mounted copy of the reusable `.agents` project.
+- `.agents/management/TIMELINE.md` defines the timestamp and estimation law.
+- `.agents/management/ACTIVE.md` mirrors the current active task and bug board.
+- `.agents/.rules/project-local/**` are repo-local migration docs and do not override `.agents/.rules/**`.
 - `.agents/business-logic/README.md` defines the plain-language business meaning.
 - `product/app/index.html` and `product/app/main.js` are the live app entry points.
 - `product/education/lessons/02-build-top-navigation/source/lesson.md` is the current pilot lesson source.
@@ -30,14 +32,14 @@ The live repo is organized around these boundaries:
 
 ### Governance And Documentation
 
-- `.agents/` contains the management tree, the quality rules, and the domain docs
+- `.agents/` contains the visible project workspace and local memory
+- `.agents/.rules/` contains the mounted reusable `.agents` project
 - `.agents/README.md` gives the project map and required questions in one place
-- `.agents/management/backlog/BACKLOG.md` captures raw ideas and user stories
-- `.agents/management/bugs/BUGS.md` captures active defects and hotfixes
-- `.agents/management/planning/PLAN.md` captures selected workstreams
-- `.agents/management/evidence/TODO.md` captures actionable follow-up work
+- `.agents/management/TODO.md`, `BUGS.md`, `ACTIVE.md`, and `TIMELINE.md` capture active work and queue discipline
 - `.agents/management/evidence/CHANGELOG.md` captures closed history
-- `.agents/governance/QUALITY.md` captures quality rules, UX rules, and review gates
+- `.agents/management/evidence/RELEASE_CHECKLIST.md` captures release readiness
+- `.agents/.rules/project-local/**` is legacy local guidance while migration is in progress
+- `.agents/language-specific/README.md` captures repo-local language and framework overlays
 - `.agents/business-logic/README.md` captures the user and software perspectives
 - `.agents/review/REVIEWS.md` captures active review findings
 - `AGENTS.md` is the canonical operational contract for the repo
@@ -46,7 +48,6 @@ The live repo is organized around these boundaries:
 ### Tests And Tooling
 
 - `tests/` contains the Node test harness
-- `scripts/` contains helper scripts
 - `merge-files.sh` creates the merged repository snapshot
 - `vite.config.js` configures the Vite build
 
