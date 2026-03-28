@@ -1,6 +1,7 @@
-# Active TODO
+# Legacy TODO
 
-This is the active queue for follow-up work.
+This file is kept for compatibility. The canonical active queue is
+`.agents/management/TODO.md`.
 
 Update rules:
 

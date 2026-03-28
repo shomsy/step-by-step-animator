@@ -23,7 +23,7 @@ async function waitForCondition(readCondition, description, timeoutMs = 10000) {
   throw new Error(`Timed out waiting for ${description}.`);
 }
 
-test('browser app smoke covers boot, navigation, lesson switch, and preview isolation', { timeout: 45000 }, async () => {
+test('browser app smoke covers boot, navigation, lesson switch, script-lesson loading, and preview isolation', { timeout: 45000 }, async () => {
   const server = await createServer({
     configFile: path.resolve(repoRoot, 'vite.config.js'),
     clearScreen: false,
@@ -263,6 +263,24 @@ test('browser app smoke covers boot, navigation, lesson switch, and preview isol
     );
     assert.ok(
       await page.$eval('#livePreviewFrame', frame => (frame.getAttribute('srcdoc') || '').length > 0)
+    );
+
+    await Promise.all([
+      page.waitForNavigation({ waitUntil: 'domcontentloaded' }),
+      page.select('#lessonPicker', '09-human-first-script-demo')
+    ]);
+
+    await waitForCondition(
+      async () => page.evaluate(() => document.getElementById('lessonPicker')?.value === '09-human-first-script-demo'),
+      'the script-authored lesson to load'
+    );
+    const headingAfterScriptLessonSwitch = await page.$eval('#lessonHeading', element => element.textContent?.trim() || '');
+
+    assert.match(page.url(), /[?&]lesson=09-human-first-script-demo\b/);
+    assert.equal(headingAfterScriptLessonSwitch, '09 · Human-First Script Demo');
+    assert.equal(
+      await page.$eval('#stepNumber', element => element.textContent?.startsWith('Prizor 1 /') || false),
+      true
     );
 
     assert.deepEqual(pageErrors, []);

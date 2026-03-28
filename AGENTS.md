@@ -63,7 +63,7 @@ NO OFF-ROAD. NO SHORTCUTS. START NOW.
 
 # AGENTS.md — step-by-step-animator Local Contract
 
-Version: 1.0.0
+Version: 1.0.1
 Status: Normative / Local
 Scope: `./**`
 
@@ -136,6 +136,12 @@ Agents MUST follow this order in this repository:
    - If a rules change is required, switch to the `agent-governance` repo and commit/push there.
 9. **Offload Output Contract**:
    - Final user-facing responses must include one short offload note: either a short recommendation or `No offload recommended for this step.`
+10. **Implementation And Fix Iteration Closure**:
+   - Every implementation or bugfix iteration that changes repository state must end with this closure sequence after validation passes:
+     1. run `./merge-files.sh .`
+     2. commit the iteration
+     3. push the branch
+   - Do not treat an implementation or fix iteration as closed until that sequence is complete.
 
 Keep this file short. Long procedures belong in governance docs, and active
 queues belong in `.agents/management/**`.

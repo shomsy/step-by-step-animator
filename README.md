@@ -47,6 +47,7 @@ The live repo is organized around these boundaries:
 
 - `tests/` contains the contract, flow, and browser smoke validation harness
 - `merge-files.sh` creates the merged repository snapshot
+- implementation and bugfix closure in this repo is: validate, run `./merge-files.sh .`, commit, then push
 - `vite.config.js` configures the Vite build
 
 ### Local Working Directories And Mounted Dependencies
@@ -87,6 +88,7 @@ npm run dev
 Then open the app in your browser:
 
 - `http://localhost:5173/`
+- `http://localhost:5173/?workspace=authoring`
 
 Vite is rooted at `product/app/`, so the canonical shell is served from the server root.
 
@@ -143,13 +145,22 @@ Source-only lessons live under:
 product/education/lessons/<lesson-slug>/source/
 ```
 
-Each lesson is authored through:
+Each shipped lesson is now authored through this canonical source contract:
 
-- `lesson.md`
-- `scenes.md`
+- `lesson.script.md`
 - optional `theory.md`
-- `artifacts/`
-- `assets/`
+- optional `assets/`
+
+`lesson.script.md` keeps step, scene, narration, and one-or-more `Show Code` snapshots in one scrollable file. The legacy split compiler remains only as an import/migration bridge; the shipped lesson estate no longer uses `lesson.md`, `scenes.md`, or `artifacts/` as active source of truth.
+
+## Authoring Studio
+
+The browser app now exposes a dedicated authoring workspace at `?workspace=authoring`.
+
+- shipped lesson source is loaded as immutable input
+- editable drafts live in browser-side SQLite persistence backed by IndexedDB
+- authors can create, open, update, duplicate, delete, publish snapshots, and export `lesson.script.md`
+- the editor is DSL-aware and compiles drafts back through the same lesson engine contract before save and publish
 
 ## Notes
 

@@ -15,6 +15,15 @@ Update rules:
 
 ## Current Ledger
 
+1. `[feature][medium] 2026-03-28 22:00 CET - Closed TODO-001 and TODO-002 by migrating every shipped lesson to lesson.script.md and shipping a SQLite-backed lesson authoring studio with browser SCRUD, publish snapshots, export, and live compile preview`
+   owner: codex
+   actual: 4h
+1. `[doc][medium] 2026-03-28 17:54 CET - Locked the local implementation and bugfix closure sequence to: validate, run ./merge-files.sh ., commit, then push`
+   owner: codex
+   actual: 10m
+1. `[feature][medium] 2026-03-28 17:04 CET - Shipped the human-first lesson.script.md source path with a script compiler, mixed-format source validation, generated lesson docs, and a registered script-authored demo lesson`
+   owner: codex
+   actual: 1h
 1. `[review][medium] 2026-03-28 15:40 CET - Closed BUG-002 whole-system review remediation after removing the remote font dependency, aligning narration product copy, and adding narration runtime regression coverage`
    owner: codex
    actual: 1h

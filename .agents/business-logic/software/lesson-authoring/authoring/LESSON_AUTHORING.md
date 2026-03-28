@@ -38,6 +38,19 @@ product/
     lessons/
       feature-name/
         source/
+          lesson.script.md
+          theory.md
+          assets/
+```
+
+Legacy split source may still appear only as an import or migration bridge:
+
+```txt
+product/
+  education/
+    lessons/
+      feature-name/
+        source/
           lesson.md
           theory.md
           scenes.md
@@ -58,8 +71,100 @@ Rules:
 - `system/foundation/` owns shared frontmatter and markdown primitives
 - `source/` is the only place where the lesson author writes material
 - `assets/` stays beside the source and holds reference images or other authoring assets
+- `lesson.script.md` is the canonical human-first format for shipped lessons
+- split `lesson.md` + `scenes.md` + `artifacts/` is legacy-only and should not be the active source of truth for a shipped lesson folder
 
 ## 3. File Contracts
+
+### 3.0 `lesson.script.md`
+
+`lesson.script.md` is the human-first authoring contract.
+
+It keeps lesson metadata, steps, scenes, narration, and code snapshots in one
+scrollable markdown file.
+The goal is authoring clarity first, while the lesson engine still compiles the
+result into the same runtime lesson package shape.
+
+Core model:
+
+- `step` is still the pedagogical unit
+- `scene` is still the playback frame inside a step
+- each scene owns one `Narration` block and one-or-more `Show Code: <artifactId>` blocks
+- the first `Show Code` block is the active teaching artifact for that scene
+- additional `Show Code` blocks are allowed when the same scene must keep multiple artifact snapshots in sync
+- each shown code block is a snapshot of that artifact at that moment
+
+Rules:
+
+- frontmatter keeps the lesson manifest fields such as `lessonId`, `lessonTitle`,
+  `lessonIntro`, `status`, `courseId`, `order`, `artifacts`, and `preview`
+- step order is the file order
+- each step is declared as `# Step: <stepId>`
+- each step must define inline YAML metadata with `title`, `summary`, and `intent`
+- each scene is declared as `## Scene: <sceneId>`
+- each scene must define `### Narration`
+- each scene must define at least one `### Show Code: <artifactId>` block
+- `Show Code` must use a fenced code block that matches the declared artifact language
+- `preview` may be omitted; when omitted, the engine applies the lesson preview target by default
+- `theory` remains optional and may still point to a separate `theory.md` file when enabled in frontmatter
+
+Canonical `lesson.script.md` shape:
+
+````md
+---
+schemaVersion: 1
+lessonId: 09-human-first-script-demo
+lessonTitle: Human-First Script Demo
+lessonIntro: Build a tiny callout card from one lesson script.
+status: active
+courseId: step-by-step-animator
+order: 9
+artifacts:
+  - artifactId: html
+    language: html
+    label: index.html
+    isPrimary: true
+  - artifactId: css
+    language: css
+    label: style.css
+preview:
+  type: dom
+  title: Script preview
+  address: browser://09-human-first-script-demo-preview
+---
+
+# Step: add-card-html
+title: HTML: Add the Card
+summary: Insert the first real component shell.
+intent: Show semantic structure before styling.
+
+## Scene: add-card-html-scene
+
+### Narration
+First we place the visible card shell into the app shell.
+
+### Show Code: html
+```html
+<div class="app-shell">
+  <aside class="callout-card"></aside>
+</div>
+```
+
+### Show Code: css
+```css
+.app-shell {
+}
+
+.callout-card {
+}
+```
+````
+
+Migration rule:
+
+- shipped lessons should compile from `lesson.script.md`
+- legacy split source is allowed only as a migration or import path
+- do not keep both formats as active source of truth for the same lesson folder
 
 ### 3.1 `lesson.md`
 

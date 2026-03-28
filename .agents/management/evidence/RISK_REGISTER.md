@@ -14,6 +14,13 @@ Tracks active and accepted risks.
 
 ## Active Risks
 
+1. `R-003`
+   - severity: low
+   - likelihood: medium
+   - impact: the all-script lesson estate and authoring studio now produce a Vite chunk-size warning, so future asset growth could slow initial authoring downloads unless code splitting stays watched.
+   - mitigation: keep `npm run build` in the release proof set, watch lesson-script chunk growth after new lesson additions, and split the authoring seed/import path further if the warning grows into measurable runtime cost.
+   - owner: unassigned
+   - status: accepted
 1. `R-002`
    - severity: low
    - likelihood: medium

@@ -1,17 +1,41 @@
-import '../../system/animator-engine/play-lesson/lesson-player.css';
-import { selectLessonFromLocation } from '../../system/animator-engine/choose-lesson/select-lesson-from-location.js';
-
 void bootstrap().catch(error => {
   console.error(error);
 });
 
 async function bootstrap() {
-  const [{ playLesson }, lessonSelection] = await Promise.all([
+  const activeUrl = new URL(window.location.href);
+  const activeWorkspace = activeUrl.searchParams.get('workspace');
+
+  if (activeWorkspace === 'authoring') {
+    await import('../../system/author-lessons/authoring-workspace.css');
+    const { showAuthoringWorkspace } = await import('../../system/author-lessons/show-authoring-workspace.js');
+
+    await showAuthoringWorkspace({
+      ownerDocument: document,
+      ownerLocation: window.location,
+      ownerWindow: window
+    });
+    return;
+  }
+
+  await import('../../system/animator-engine/play-lesson/lesson-player.css');
+
+  const [{ playLesson }, { selectLessonFromLocation }] = await Promise.all([
     import('../../system/animator-engine/play-lesson/play-lesson.pipeline.js'),
-    selectLessonFromLocation({
-      ownerLocation: window.location
-    })
+    import('../../system/animator-engine/choose-lesson/select-lesson-from-location.js')
   ]);
+  const lessonSelection = await selectLessonFromLocation({
+    ownerLocation: window.location
+  });
+  const authoringButton = document.getElementById('authoringBtn');
+
+  if (authoringButton) {
+    authoringButton.addEventListener('click', () => {
+      const nextUrl = new URL(window.location.href);
+      nextUrl.searchParams.set('workspace', 'authoring');
+      window.location.href = nextUrl.toString();
+    });
+  }
 
   playLesson({
     ownerDocument: document,

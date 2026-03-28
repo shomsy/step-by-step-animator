@@ -40,6 +40,11 @@ export const registeredLessons = [
     lessonId: '08-smell-of-enterprise',
     lessonTitle: 'Smell Of Enterprise',
     loadLesson: () => import('./08-smell-of-enterprise-lesson.js').then(module => module.SmellOfEnterpriseLesson)
+  },
+  {
+    lessonId: '09-human-first-script-demo',
+    lessonTitle: 'Human-First Script Demo',
+    loadLesson: () => import('./09-human-first-script-demo-lesson.js').then(module => module.HumanFirstScriptDemoLesson)
   }
 ];
 

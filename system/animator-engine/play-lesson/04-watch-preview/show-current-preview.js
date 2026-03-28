@@ -90,7 +90,7 @@ function composePreviewJavaScript(lesson, currentStepNumber) {
   return jsMarkup;
 }
 
-function composeLivePreviewDocument(lesson, currentStepNumber) {
+export function composeLivePreviewDocument(lesson, currentStepNumber) {
   const htmlMarkup = lesson.buildHtmlAtStep(currentStepNumber).join('\n');
   const cssMarkup = lesson.buildCssAtStep(currentStepNumber).join('\n');
   const jsMarkup = composePreviewJavaScript(lesson, currentStepNumber);

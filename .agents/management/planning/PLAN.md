@@ -14,9 +14,9 @@ Update rules:
 - write the plan in plain user language first, then technical execution
 - add `owner`, `estimate`, and `acceptance` when the workstream is substantial
 - add `blocked_by` only when the workstream is waiting on an external dependency
-- when a plan item becomes actionable, move it into `.agents/management/evidence/TODO.md`
+- when a plan item becomes actionable, move it into `.agents/management/TODO.md`
 - when an item closes, mirror it in `.agents/management/evidence/CHANGELOG.md`
 
 ## Current Workstreams
 
-No active items.
+No active workstreams.
