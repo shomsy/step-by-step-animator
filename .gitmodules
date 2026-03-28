@@ -1,0 +1,4 @@
+[submodule ".agents/.rules/vendor/agent-governance"]
+	path = .agents/.rules/vendor/agent-governance
+	url = https://github.com/shomsy/agent-governance.git
+	branch = main

@@ -1,1 +1,1 @@
-../../../agent-governance/.agents/README.md
+vendor/agent-governance/.agents/README.md

@@ -67,6 +67,19 @@ function isDirectoryLikeEntry(currentPath, entry) {
   return false;
 }
 
+function resolveRealPath(currentPath) {
+  try {
+    return fs.realpathSync(currentPath);
+  } catch {
+    return null;
+  }
+}
+
+function isWithinRoot(candidatePath, rootRealPath) {
+  const relative = path.relative(rootRealPath, candidatePath);
+  return relative === '' || (!relative.startsWith('..') && !path.isAbsolute(relative));
+}
+
 if (args.length < 1) {
   usage();
   process.exit(1);
@@ -123,6 +136,12 @@ if (!rootStat.isDirectory()) {
   process.exit(1);
 }
 
+const rootRealPath = resolveRealPath(rootDir);
+if (!rootRealPath) {
+  console.error(`directory '${targetArg}' does not exist`);
+  process.exit(1);
+}
+
 const targetBasename = path.basename(rootDir);
 const outputFile = path.join(rootDir, `${targetBasename}.txt`);
 // The merged .txt dump is a portable repo snapshot and can serve as a working backup during refactors.
@@ -143,6 +162,11 @@ const ignoredDirs = new Set([
   'vendor',
 ]);
 
+const visitedRealDirs = new Set();
+let merged = 0;
+let skipped = 0;
+const chunks = [];
+
 console.log(`Scanning directory: ${rootDir}`);
 console.log(`Output file: ${outputFile}`);
 console.log('Ignoring directories:');
@@ -156,6 +180,17 @@ console.log('----------------------------------------');
 const files = [];
 
 function walk(currentDir) {
+  const currentRealDir = resolveRealPath(currentDir);
+  if (!currentRealDir || !isWithinRoot(currentRealDir, rootRealPath)) {
+    return;
+  }
+
+  if (visitedRealDirs.has(currentRealDir)) {
+    return;
+  }
+
+  visitedRealDirs.add(currentRealDir);
+
   const entries = fs
     .readdirSync(currentDir, { withFileTypes: true })
     .sort((a, b) => compareStrings(a.name, b.name));
@@ -166,8 +201,25 @@ function walk(currentDir) {
       if (ignoredDirs.has(entry.name) && currentPath !== rootDir) {
         continue;
       }
+
+      const realDir = resolveRealPath(currentPath);
+      if (!realDir || !isWithinRoot(realDir, rootRealPath)) {
+        console.log(`Skipping (directory symlink escapes root): ${path.relative(rootDir, currentPath).split(path.sep).join('/')}`);
+        skipped += 1;
+        continue;
+      }
+
       walk(currentPath);
       continue;
+    }
+
+    if (entry.isSymbolicLink()) {
+      const realFile = resolveRealPath(currentPath);
+      if (!realFile || !isWithinRoot(realFile, rootRealPath)) {
+        console.log(`Skipping (file symlink escapes root): ${path.relative(rootDir, currentPath).split(path.sep).join('/')}`);
+        skipped += 1;
+        continue;
+      }
     }
 
     files.push(currentPath);
@@ -176,10 +228,6 @@ function walk(currentDir) {
 
 walk(rootDir);
 files.sort(compareStrings);
-
-let merged = 0;
-let skipped = 0;
-const chunks = [];
 
 for (const absPath of files) {
   const rel = path.relative(rootDir, absPath).split(path.sep).join('/');

@@ -1,1 +1,1 @@
-../../../agent-governance/.agents/AGENTS.md
+vendor/agent-governance/.agents/AGENTS.md
