@@ -10955,7 +10955,7 @@ Agents MUST follow this order in this repository:
    - **Delivery Kind**: `web app`
    - **Languages**: `javascript, css`
    - **Frameworks Or Runtimes**: `nodejs`
-   - **Applied Coding Profiles**: `.agents/.rules/governance/profiles/languages/javascript.md, .agents/.rules/governance/profiles/languages/css.md, .agents/.rules/governance/profiles/frameworks/nodejs.md`
+   - **Applied Coding Profiles**: `.agents/.rules/governance/profiles/languages/javascript.md, .agents/.rules/governance/profiles/languages/css.md, .agents/.rules/governance/profiles/languages/nodejs.md`
    - **Applied Architecture Profiles**: `.agents/.rules/governance/app-architecture/profiles/languages/javascript.md`
    - **Security Lanes Required**: `security/**`
    - **Operations Lanes Required**: `operations/**`
