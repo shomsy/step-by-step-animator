@@ -16,4 +16,5 @@ No active review findings.
 
 ## Legacy Reference
 
-Older review records can exist in `.agents/.rules/project-local/code-review/REVIEWS.md`.
+Older review records can exist in repo history, but `review/REVIEWS.md` is the
+active local lane.

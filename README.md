@@ -6,14 +6,13 @@ Step By Step Animator is an interactive lesson engine for HTML, CSS, and JavaScr
 
 - `AGENTS.md` defines the operational contract for work in this repo.
 - `.agents/README.md` maps the visible project workspace and local memory.
-- `.agents/.rules/AGENTS.md` is the mounted copy of the reusable `.agents` project.
+- `.agents/.rules/AGENTS.md` is the mounted copy of the reusable `.agents` project from the upstream `agent-governance` repo. If it is missing in a fresh clone, run `git submodule update --init --recursive`.
 - `.agents/management/TIMELINE.md` defines the timestamp and estimation law.
 - `.agents/management/ACTIVE.md` mirrors the current active task and bug board.
-- `.agents/.rules/project-local/**` are repo-local migration docs and do not override `.agents/.rules/**`.
 - `.agents/business-logic/README.md` defines the plain-language business meaning.
 - `product/app/index.html` and `product/app/main.js` are the live app entry points.
-- `product/education/lessons/02-build-top-navigation/source/lesson.md` is the current pilot lesson source.
-- `system/lesson-engine/register-lesson-packages/index.js` registers the live lesson set.
+- `product/education/lessons/01-build-sidebar/source/lesson.md` is the default shipped lesson source for the cold-start experience.
+- `system/lesson-engine/register-lesson-packages/index.js` registers the live lesson set and declares the default lesson id.
 
 ## Repository Map
 
@@ -38,7 +37,6 @@ The live repo is organized around these boundaries:
 - `.agents/management/TODO.md`, `BUGS.md`, `ACTIVE.md`, and `TIMELINE.md` capture active work and queue discipline
 - `.agents/management/evidence/CHANGELOG.md` captures closed history
 - `.agents/management/evidence/RELEASE_CHECKLIST.md` captures release readiness
-- `.agents/.rules/project-local/**` is legacy local guidance while migration is in progress
 - `.agents/language-specific/README.md` captures repo-local language and framework overlays
 - `.agents/business-logic/README.md` captures the user and software perspectives
 - `.agents/review/REVIEWS.md` captures active review findings
@@ -47,14 +45,15 @@ The live repo is organized around these boundaries:
 
 ### Tests And Tooling
 
-- `tests/` contains the Node test harness
+- `tests/` contains the contract, flow, and browser smoke validation harness
 - `merge-files.sh` creates the merged repository snapshot
 - `vite.config.js` configures the Vite build
 
-### Local Working Directories
+### Local Working Directories And Mounted Dependencies
 
 - `dist/` is the build output directory
 - `node_modules/` contains installed dependencies
+- `.agents/.rules/vendor/agent-governance/` is the mounted upstream rules submodule
 - `step-by-step-animator.txt` is the merged snapshot and working backup
 
 ### Git Metadata
@@ -64,8 +63,18 @@ The live repo is organized around these boundaries:
 ## Install
 
 ```bash
+git clone --recurse-submodules <repo-url>
+cd step-by-step-animator
 npm install
 ```
+
+If the repo was already cloned without submodules, recover the mounted rules tree first:
+
+```bash
+git submodule update --init --recursive
+```
+
+`npm install` and the canonical repo commands also re-check the mounted `.agents/.rules` tree before running.
 
 ## Run Locally
 

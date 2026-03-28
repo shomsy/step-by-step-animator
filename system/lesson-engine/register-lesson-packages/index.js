@@ -1,3 +1,5 @@
+const DEFAULT_LESSON_ID = '01-build-sidebar';
+
 export const registeredLessons = [
   {
     lessonId: '01-build-sidebar',
@@ -42,7 +44,11 @@ export const registeredLessons = [
 ];
 
 export function getDefaultLessonId() {
-  return registeredLessons[0].lessonId;
+  if (!findLesson(DEFAULT_LESSON_ID)) {
+    throw new Error(`Default lesson "${DEFAULT_LESSON_ID}" is not registered.`);
+  }
+
+  return DEFAULT_LESSON_ID;
 }
 
 export function findLesson(lessonId) {

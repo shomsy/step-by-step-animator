@@ -11,6 +11,32 @@ function escapeAttribute(text) {
     .replaceAll("'", '&#39;');
 }
 
+const SAFE_MARKDOWN_URL_PROTOCOLS = new Set(['http:', 'https:', 'mailto:', 'tel:']);
+
+function sanitizeMarkdownUrl(value) {
+  const url = String(value || '').trim();
+
+  if (!url) {
+    return '';
+  }
+
+  if (url.startsWith('#')) {
+    return url;
+  }
+
+  try {
+    const parsedUrl = new URL(url, 'https://example.invalid');
+
+    if (!SAFE_MARKDOWN_URL_PROTOCOLS.has(parsedUrl.protocol)) {
+      return '';
+    }
+
+    return url;
+  } catch {
+    return '';
+  }
+}
+
 function stripMarkdownSyntax(text) {
   return String(text)
     .replace(/!\[([^\]]*)\]\(([^)]+)\)/g, '$1')
@@ -51,18 +77,24 @@ function renderInlineMarkdown(text) {
         html: `<code>${escapeHtml(codeText)}</code>`
       });
     } else if (typeof imageSrc === 'string') {
-      placeholders.push({
-        placeholder,
-        html: `<img class="lesson-markdown-image" src="${escapeAttribute(imageSrc)}" alt="${escapeAttribute(imageAlt)}">`
-      });
-    } else if (typeof linkHref === 'string') {
-      const safeHref = escapeAttribute(linkHref);
+      const safeImageSrc = sanitizeMarkdownUrl(imageSrc);
 
       placeholders.push({
         placeholder,
-        html: String(linkHref).startsWith('#')
-          ? `<a href="${safeHref}">${escapeHtml(linkLabel)}</a>`
-          : `<a href="${safeHref}" target="_blank" rel="noreferrer">${escapeHtml(linkLabel)}</a>`
+        html: safeImageSrc
+          ? `<img class="lesson-markdown-image" src="${escapeAttribute(safeImageSrc)}" alt="${escapeAttribute(imageAlt)}">`
+          : escapeHtml(imageAlt)
+      });
+    } else if (typeof linkHref === 'string') {
+      const safeHref = sanitizeMarkdownUrl(linkHref);
+
+      placeholders.push({
+        placeholder,
+        html: safeHref
+          ? String(safeHref).startsWith('#')
+            ? `<a href="${escapeAttribute(safeHref)}">${escapeHtml(linkLabel)}</a>`
+            : `<a href="${escapeAttribute(safeHref)}" target="_blank" rel="noreferrer noopener">${escapeHtml(linkLabel)}</a>`
+          : escapeHtml(linkLabel)
       });
     }
 

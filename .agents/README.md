@@ -15,8 +15,8 @@ Repo-local docs and queues live in the visible `.agents/` tree.
 | `management/` | Active planning, defects, decisions, risks, evidence, and test records | Yes |
 | `review/` | Review logs and archive | Yes |
 
-Hidden repo-local overlays are preserved in `.rules/project-local/**` and do
-not appear in the visible workspace scaffold.
+There are no repo-local overlays inside `.rules/`; local project guidance lives
+in the visible `.agents/` tree.
 
 ## Required Questions
 
@@ -36,15 +36,13 @@ Every idea, plan, architecture decision, and lesson change must answer:
 5. `.rules/governance/app-architecture/README.md`
 6. `.rules/governance/security/README.md`
 7. `language-specific/README.md`
-8. `.rules/project-local/governance/QUALITY.md`
-9. `.rules/project-local/governance/app-architecture/ARCHITECTURE.md`
-10. `business-logic/README.md`
-11. `management/README.md`
-12. `management/ACTIVE.md`
-13. `management/TIMELINE.md`
-14. `management/TODO.md`
-15. `management/BUGS.md`
-16. `review/REVIEWS.md`
+8. `business-logic/README.md`
+9. `management/README.md`
+10. `management/ACTIVE.md`
+11. `management/TIMELINE.md`
+12. `management/TODO.md`
+13. `management/BUGS.md`
+14. `review/REVIEWS.md`
 
 ## Governance Index
 
@@ -58,8 +56,6 @@ Every idea, plan, architecture decision, and lesson change must answer:
 - `.rules/governance/app-architecture/architecture-standard.md`
 - `.rules/governance/app-architecture/ARCHITECTURE.md`
 - `.rules/governance/security/README.md`
-- `.rules/project-local/governance/QUALITY.md`
-- `.rules/project-local/governance/app-architecture/ARCHITECTURE.md`
 
 ## Legacy Compatibility
 

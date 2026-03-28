@@ -5,7 +5,7 @@ import { registeredLessons, findLesson, getDefaultLessonId } from '../../system/
 test('lesson registry exposes lazy lesson descriptors', () => {
   assert.ok(Array.isArray(registeredLessons));
   assert.ok(registeredLessons.length > 0);
-  assert.equal(getDefaultLessonId(), registeredLessons[0].lessonId);
+  assert.equal(getDefaultLessonId(), '01-build-sidebar');
 
   const lesson = findLesson('02-build-top-navigation');
 

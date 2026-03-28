@@ -210,14 +210,14 @@ Top-level projekti:
   - `@mintplex-labs/piper-tts-web`
   - `onnxruntime-web`
   - `yaml`
-- Governance:
-  - Root `AGENTS.md` (thin entrypoint)
-  - `.agents/` kao kanonski operativni sistem:
-    - `.agents/.rules/project-local/governance/QUALITY.md`
-    - `.agents/.rules/governance/execution-policy.md`
-    - `.agents/.rules/governance/how-to-code-review.md`
-    - `.agents/.rules/governance/how-to-coding-standards.md`
-    - `.agents/.rules/governance/how-to-document.md`
+  - Governance:
+    - Root `AGENTS.md` (thin entrypoint)
+    - `.agents/` kao kanonski operativni sistem:
+      - `.agents/.rules/governance/quality-gates.md`
+      - `.agents/.rules/governance/execution-policy.md`
+      - `.agents/.rules/governance/how-to-code-review.md`
+      - `.agents/.rules/governance/how-to-coding-standards.md`
+      - `.agents/.rules/governance/how-to-document.md`
     - `.agents/.rules/governance/release-and-rollback-policy.md`
     - `.agents/.rules/governance/app-architecture/**`
     - `.agents/business-logic/**`, `.agents/management/**`, `.agents/review/**`, `.agents/.rules/templates/**`, `.agents/.rules/glossary/**`, `.agents/.rules/onboarding/**`

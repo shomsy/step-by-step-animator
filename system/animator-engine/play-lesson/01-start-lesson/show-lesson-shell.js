@@ -50,6 +50,8 @@ export function showLessonShell({ ownerDocument, lessonParts, lesson }) {
   }
 
   lessonParts.previewAddress.textContent = lesson.previewAddress;
+  lessonParts.livePreviewFrame.setAttribute('sandbox', 'allow-scripts');
+  lessonParts.livePreviewFrame.setAttribute('referrerpolicy', 'no-referrer');
   lessonParts.htmlFileLabel.textContent = lesson.htmlFileName;
   lessonParts.cssFileLabel.textContent = lesson.cssFileName;
 
@@ -74,7 +76,7 @@ export function showLessonShell({ ownerDocument, lessonParts, lesson }) {
     lessonParts.ideFileList.innerHTML = files.map((file, index) => `
       <div class="ide-file-item${index === 0 ? ' active' : ''}" data-pane-id="${file.id}">
         <svg class="ide-file-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M13 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"/><polyline points="13 2 13 9 20 9"/></svg>
-        <span class="ide-file-name">${file.name}</span>
+        <span class="ide-file-name">${escapeInlineText(file.name)}</span>
         <div class="ide-file-dot"></div>
       </div>
     `).join('');

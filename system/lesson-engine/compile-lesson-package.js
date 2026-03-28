@@ -10,6 +10,13 @@ function normalizeString(value) {
   return typeof value === 'string' ? value.trim() : '';
 }
 
+function escapeHtml(text) {
+  return String(text)
+    .replaceAll('&', '&amp;')
+    .replaceAll('<', '&lt;')
+    .replaceAll('>', '&gt;');
+}
+
 function isPlainObject(value) {
   return Boolean(value) && typeof value === 'object' && !Array.isArray(value);
 }
@@ -511,7 +518,7 @@ export function compileLessonPackage({
     lessonId: lessonMeta.lessonId,
     lessonTitle: lessonMeta.lessonTitle,
     lessonIntro: lessonMeta.lessonIntro,
-    lessonIntroHtml: renderMarkdown(lessonBody) || (lessonMeta.lessonIntro ? `<p>${lessonMeta.lessonIntro}</p>` : ''),
+    lessonIntroHtml: renderMarkdown(lessonBody) || (lessonMeta.lessonIntro ? `<p>${escapeHtml(lessonMeta.lessonIntro)}</p>` : ''),
     previewAddress: lessonMeta.preview.address,
     previewTitle: lessonMeta.preview.title,
     htmlFileName: htmlArtifact?.fileName || 'index.html',

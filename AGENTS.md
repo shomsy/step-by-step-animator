@@ -4,8 +4,15 @@ Version: 1.0.0
 Status: Normative / Local
 Scope: `./**`
 
-This repo uses `.agents/.rules/` as the mounted reusable `.agents` project.
+This repo uses `.agents/.rules/` as the mounted reusable `.agents` project from
+the upstream `agent-governance` repo.
 Repo-local working docs live in the visible `.agents/` tree.
+
+`.agents/.rules/**` is a hard boundary in this repo: treat it as read-only here
+and make any rules changes only in `agent-governance`.
+The mounted rules tree must be initialized before using precedence items 2-16.
+If a fresh clone is missing `.agents/.rules/AGENTS.md`, run
+`git submodule update --init --recursive` first.
 
 ## 0) Order Of Precedence
 
@@ -58,8 +65,14 @@ Agents MUST follow this order in this repository:
    - review is stop-the-line
    - findings are blocking until fixed, validated, and re-reviewed
    - no review closes with a known defect still open
-8. **Project-Specific Exceptions or Forbidden Shortcuts**:
-   - Repo-local guidance may remain under `.agents/.rules/project-local/**` while it is being migrated, but it does not override `.agents/.rules/**`.
+8. **Mounted Governance Boundary**:
+   - STRICT and NON-NEGOTIABLE: `.agents/.rules/**` is upstream `agent-governance`, not local step-by-step-animator content.
+   - The mounted rules tree is required before using precedence items 2-16.
+   - Clone with `--recurse-submodules`, or run `git submodule update --init --recursive` if the mount is missing.
+   - Do not edit `.agents/.rules/**` in this repo.
+   - If a rules change is required, switch to the `agent-governance` repo and commit/push there.
+9. **Offload Output Contract**:
+   - Final user-facing responses must include one short offload note: either a short recommendation or `No offload recommended for this step.`
 
 Keep this file short. Long procedures belong in governance docs, and active
 queues belong in `.agents/management/**`.

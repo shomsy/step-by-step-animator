@@ -9,7 +9,7 @@ It is intentionally lightweight.
 - write the rough thought first; do not force decomposition
 - write the idea in plain user language first
 - capture what the user wants to achieve before the technical detail
-- use the required questions from `.agents/.rules/project-local/governance/QUALITY.md` before promoting an item
+- use the required questions from `AGENTS.md` and `.agents/.rules/governance/quality-gates.md` before promoting an item
 - if it is lesson-related, note what the user should see and learn
 - use `YYYY-MM-DD HH:MM TZ` timestamps so aging can be measured
 - promote an item to `.agents/management/planning/PLAN.md` when it is selected for work

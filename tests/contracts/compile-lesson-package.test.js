@@ -49,6 +49,25 @@ test('compileLessonPackage compiles the canonical source-only lesson package', (
   assert.deepEqual(compiled.buildCssAtStep(1), compiled.statesByStep[1].artifacts.css);
 });
 
+test('compileLessonPackage escapes fallback lesson intro html', () => {
+  const fixture = createSourceOnlyLessonFixture();
+  const lessonMarkdownWithoutBody = fixture.lessonMarkdown
+    .replace(
+      'lessonIntro: Build a sidebar shell step by step.',
+      'lessonIntro: Intro <script>alert(1)</script>'
+    )
+    .replace('\n---\nBuild a sidebar shell step by step.\n', '\n---\n');
+
+  const compiled = compileLessonPackage({
+    lessonMarkdown: lessonMarkdownWithoutBody,
+    scenesMarkdown: fixture.scenesMarkdown,
+    artifactMarkdownById: fixture.artifactMarkdownById,
+    theoryMarkdown: fixture.theoryMarkdown
+  });
+
+  assert.equal(compiled.lessonIntroHtml, '<p>Intro &lt;script&gt;alert(1)&lt;/script&gt;</p>');
+});
+
 test('compileLessonPackage rejects missing theory markdown when theory is enabled', () => {
   const fixture = createSourceOnlyLessonFixture();
 

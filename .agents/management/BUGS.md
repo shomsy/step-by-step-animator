@@ -12,16 +12,7 @@ Canonical active defect and regression queue.
 
 ## Current Items
 
-1. `id`: `BUG-001`
-   - created_at: `2026-03-27 15:15 CET`
-   - updated_at: `2026-03-28 01:57 CET`
-   - status: `open`
-   - estimate: `15m`
-   - severity: `low`
-   - risk: currently low because lesson content is controlled
-   - visible_failure: `The lesson step renderer still interpolates tag text via innerHTML.`
-   - expected_fixed_behavior: `Tag text is rendered safely without changing lesson output.`
-   - next: validate if additional sanitization should be enforced by policy
+No active bug items.
 
 ## Legacy Reference
 

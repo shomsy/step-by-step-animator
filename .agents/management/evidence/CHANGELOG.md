@@ -15,6 +15,9 @@ Update rules:
 
 ## Current Ledger
 
+1. `[bug][low] 2026-03-28 03:30 CET - Closed BUG-001 after escaping lesson tag rendering, aligning active queues, and validating the production-ready path`
+   owner: codex
+   actual: 30m
 1. `[doc][medium] 2026-03-27 18:01 - Thinned AGENTS.md and wired the required questions into .agents`
    owner: codex
    actual: 1h
