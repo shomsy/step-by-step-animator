@@ -20,7 +20,7 @@ Recommended card format:
 ```mermaid
 flowchart LR
     subgraph Ready["Ready"]
-        R0["No active cards"]
+        R1["BUG-001 | sanitize tag text | updated 2026-03-28 01:57 CET"]
     end
 
     subgraph InProgress["In Progress"]

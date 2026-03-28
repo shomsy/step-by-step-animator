@@ -6,6 +6,7 @@ Canonical active implementation queue.
 
 - keep newest items first
 - keep each item outcome-oriented
+- record `id`, `created_at`, `updated_at`, `status`, and `estimate`
 - include acceptance criteria
 - include owner only when needed
 
@@ -15,4 +16,4 @@ No active items.
 
 ## Legacy Reference
 
-See legacy queue at `management/evidence/TODO.md`.
+See legacy queue at `.agents/management/evidence/TODO.md`.

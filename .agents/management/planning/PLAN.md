@@ -6,10 +6,10 @@ It sits after backlog or bug capture and before TODO execution.
 Update rules:
 
 - keep newest items at the top
-- use `YYYY-MM-DD HH:MM` timestamps so duration and aging can be estimated
+- use `YYYY-MM-DD HH:MM TZ` timestamps so duration and aging can be estimated
 - keep the plan high-level and outcome-oriented
 - keep the user goal, the visible result, and the learning path explicit
-- keep the required questions from `.agents/governance/QUALITY.md` visible in every workstream
+- keep the required questions from `.agents/.rules/project-local/governance/QUALITY.md` visible in every workstream
 - promote selected ideas or bug triage from the capture lanes into plan workstreams
 - write the plan in plain user language first, then technical execution
 - add `owner`, `estimate`, and `acceptance` when the workstream is substantial

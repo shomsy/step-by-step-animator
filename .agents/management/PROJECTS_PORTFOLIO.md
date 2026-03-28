@@ -213,14 +213,14 @@ Top-level projekti:
 - Governance:
   - Root `AGENTS.md` (thin entrypoint)
   - `.agents/` kao kanonski operativni sistem:
-    - `governance/QUALITY.md`
-    - `governance/execution-policy.md`
-    - `governance/how-to-code-review.md`
-    - `governance/how-to-coding-standards.md`
-    - `governance/how-to-document.md`
-    - `governance/release-and-rollback-policy.md`
-    - `governance/app-architecture/**`
-    - `business-logic/**`, `management/**`, `review/**`, `templates/**`, `glossary/**`, `onboarding/**`
+    - `.agents/.rules/project-local/governance/QUALITY.md`
+    - `.agents/.rules/governance/execution-policy.md`
+    - `.agents/.rules/governance/how-to-code-review.md`
+    - `.agents/.rules/governance/how-to-coding-standards.md`
+    - `.agents/.rules/governance/how-to-document.md`
+    - `.agents/.rules/governance/release-and-rollback-policy.md`
+    - `.agents/.rules/governance/app-architecture/**`
+    - `.agents/business-logic/**`, `.agents/management/**`, `.agents/review/**`, `.agents/.rules/templates/**`, `.agents/.rules/glossary/**`, `.agents/.rules/onboarding/**`
 - Napomena:
   - Ovaj dokument je smesten ovde da ovaj repo bude centralna evidencija za portfolio mapu.
 

@@ -6,7 +6,7 @@ Raw opportunities and potential initiatives.
 
 - capture user value first
 - keep entries short and concrete
-- promote selected items to `management/TODO.md`
+- promote selected items to `.agents/management/TODO.md`
 
 ## Current Items
 
@@ -16,5 +16,5 @@ No active items.
 
 See older capture lanes:
 
-- `management/backlog/BACKLOG.md`
-- `management/planning/PLAN.md`
+- `.agents/management/backlog/BACKLOG.md`
+- `.agents/management/planning/PLAN.md`

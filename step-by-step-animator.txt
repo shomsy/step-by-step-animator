@@ -9879,7 +9879,7 @@ Recommended card format:
 ```mermaid
 flowchart LR
     subgraph Ready["Ready"]
-        R0["No active cards"]
+        R1["BUG-001 | sanitize tag text | updated 2026-03-28 01:57 CET"]
     end
 
     subgraph InProgress["In Progress"]
@@ -9908,19 +9908,27 @@ Canonical active defect and regression queue.
 ## Rules
 
 - keep newest items first
+- record `id`, `created_at`, `updated_at`, `status`, and `estimate`
 - describe user-visible failure first
 - include expected fixed behavior
 - capture severity and risk
 
 ## Current Items
 
-1. `[low] 2026-03-27 15:15 - Consider sanitizing tag text before innerHTML in lesson step renderer`
+1. `id`: `BUG-001`
+   - created_at: `2026-03-27 15:15 CET`
+   - updated_at: `2026-03-28 01:57 CET`
+   - status: `open`
+   - estimate: `15m`
+   - severity: `low`
    - risk: currently low because lesson content is controlled
+   - visible_failure: `The lesson step renderer still interpolates tag text via innerHTML.`
+   - expected_fixed_behavior: `Tag text is rendered safely without changing lesson output.`
    - next: validate if additional sanitization should be enforced by policy
 
 ## Legacy Reference
 
-See detailed historical capture at `management/bugs/BUGS.md`.
+See detailed historical capture at `.agents/management/bugs/BUGS.md`.
 
 === .agents/management/DECISIONS.md ===
 # DECISIONS
@@ -9950,7 +9958,7 @@ Raw opportunities and potential initiatives.
 
 - capture user value first
 - keep entries short and concrete
-- promote selected items to `management/TODO.md`
+- promote selected items to `.agents/management/TODO.md`
 
 ## Current Items
 
@@ -9960,8 +9968,8 @@ No active items.
 
 See older capture lanes:
 
-- `management/backlog/BACKLOG.md`
-- `management/planning/PLAN.md`
+- `.agents/management/backlog/BACKLOG.md`
+- `.agents/management/planning/PLAN.md`
 
 === .agents/management/PROJECTS_PORTFOLIO.md ===
 # Projects Portfolio Inventory
@@ -10179,14 +10187,14 @@ Top-level projekti:
 - Governance:
   - Root `AGENTS.md` (thin entrypoint)
   - `.agents/` kao kanonski operativni sistem:
-    - `governance/QUALITY.md`
-    - `governance/execution-policy.md`
-    - `governance/how-to-code-review.md`
-    - `governance/how-to-coding-standards.md`
-    - `governance/how-to-document.md`
-    - `governance/release-and-rollback-policy.md`
-    - `governance/app-architecture/**`
-    - `business-logic/**`, `management/**`, `review/**`, `templates/**`, `glossary/**`, `onboarding/**`
+    - `.agents/.rules/project-local/governance/QUALITY.md`
+    - `.agents/.rules/governance/execution-policy.md`
+    - `.agents/.rules/governance/how-to-code-review.md`
+    - `.agents/.rules/governance/how-to-coding-standards.md`
+    - `.agents/.rules/governance/how-to-document.md`
+    - `.agents/.rules/governance/release-and-rollback-policy.md`
+    - `.agents/.rules/governance/app-architecture/**`
+    - `.agents/business-logic/**`, `.agents/management/**`, `.agents/review/**`, `.agents/.rules/templates/**`, `.agents/.rules/glossary/**`, `.agents/.rules/onboarding/**`
 - Napomena:
   - Ovaj dokument je smesten ovde da ovaj repo bude centralna evidencija za portfolio mapu.
 
@@ -10318,6 +10326,7 @@ Rules:
 
 For TODO, BUG, and IDEA records, include at least:
 
+- `id`
 - `created_at`
 - `updated_at`
 - `status`
@@ -10382,6 +10391,7 @@ Canonical active implementation queue.
 
 - keep newest items first
 - keep each item outcome-oriented
+- record `id`, `created_at`, `updated_at`, `status`, and `estimate`
 - include acceptance criteria
 - include owner only when needed
 
@@ -10391,7 +10401,7 @@ No active items.
 
 ## Legacy Reference
 
-See legacy queue at `management/evidence/TODO.md`.
+See legacy queue at `.agents/management/evidence/TODO.md`.
 
 === .agents/management/backlog/BACKLOG.md ===
 # Backlog
@@ -10405,9 +10415,9 @@ It is intentionally lightweight.
 - write the rough thought first; do not force decomposition
 - write the idea in plain user language first
 - capture what the user wants to achieve before the technical detail
-- use the required questions from `.agents/governance/QUALITY.md` before promoting an item
+- use the required questions from `.agents/.rules/project-local/governance/QUALITY.md` before promoting an item
 - if it is lesson-related, note what the user should see and learn
-- use `YYYY-MM-DD HH:MM` timestamps so aging can be measured
+- use `YYYY-MM-DD HH:MM TZ` timestamps so aging can be measured
 - promote an item to `.agents/management/planning/PLAN.md` when it is selected for work
 - move it to `.agents/management/evidence/TODO.md` only when execution is ready
 - if the item is a bug or hotfix, promote it to `.agents/management/bugs/BUGS.md` instead of planning
@@ -10428,7 +10438,7 @@ It feeds planning when a bug needs active implementation work.
 - describe the visible failure first
 - describe what the user should see when the bug is fixed
 - if the bug affects lesson UX, keep the user goal and step-by-step learning path visible
-- use `YYYY-MM-DD HH:MM` timestamps so age and urgency are visible
+- use `YYYY-MM-DD HH:MM TZ` timestamps so age and urgency are visible
 - add `owner`, `estimate`, `blocked_by`, and `acceptance` when the bug needs active work
 - move implementation work into `.agents/management/evidence/TODO.md` when the fix becomes actionable
 - move closed bugs into `.agents/management/evidence/CHANGELOG.md`
@@ -10556,7 +10566,7 @@ Update rules:
 - if the task is lesson-related, keep the user goal, visible UX, and step-by-step learning path explicit
 - add `owner`, `estimate`, and `blocked_by` when the follow-up is substantial
 - move completed items to the evidence ledger when they are closed
-- use `YYYY-MM-DD HH:MM` timestamps for new items so task age and cycle time can be estimated
+- use `YYYY-MM-DD HH:MM TZ` timestamps for new items so task age and cycle time can be estimated
 
 ## Current Items
 
@@ -10584,10 +10594,10 @@ It sits after backlog or bug capture and before TODO execution.
 Update rules:
 
 - keep newest items at the top
-- use `YYYY-MM-DD HH:MM` timestamps so duration and aging can be estimated
+- use `YYYY-MM-DD HH:MM TZ` timestamps so duration and aging can be estimated
 - keep the plan high-level and outcome-oriented
 - keep the user goal, the visible result, and the learning path explicit
-- keep the required questions from `.agents/governance/QUALITY.md` visible in every workstream
+- keep the required questions from `.agents/.rules/project-local/governance/QUALITY.md` visible in every workstream
 - promote selected ideas or bug triage from the capture lanes into plan workstreams
 - write the plan in plain user language first, then technical execution
 - add `owner`, `estimate`, and `acceptance` when the workstream is substantial
@@ -10847,9 +10857,9 @@ Canonical review findings and follow-up observations.
 
 - keep one finding per item
 - findings must include severity and risk
-- move confirmed defects into `management/BUGS.md`
-- move actionable implementation follow-up into `management/TODO.md`
-- log closed outcomes in `management/evidence/CHANGELOG.md`
+- move confirmed defects into `.agents/management/BUGS.md`
+- move actionable implementation follow-up into `.agents/management/TODO.md`
+- log closed outcomes in `.agents/management/evidence/CHANGELOG.md`
 
 ## Current Items
 
@@ -10857,7 +10867,7 @@ No active review findings.
 
 ## Legacy Reference
 
-Older review records can exist in `code-review/REVIEWS.md`.
+Older review records can exist in `.agents/.rules/project-local/code-review/REVIEWS.md`.
 
 === .agents/review/archive/README.md ===
 # Review Archive

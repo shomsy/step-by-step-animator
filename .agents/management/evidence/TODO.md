@@ -10,7 +10,7 @@ Update rules:
 - if the task is lesson-related, keep the user goal, visible UX, and step-by-step learning path explicit
 - add `owner`, `estimate`, and `blocked_by` when the follow-up is substantial
 - move completed items to the evidence ledger when they are closed
-- use `YYYY-MM-DD HH:MM` timestamps for new items so task age and cycle time can be estimated
+- use `YYYY-MM-DD HH:MM TZ` timestamps for new items so task age and cycle time can be estimated
 
 ## Current Items
 

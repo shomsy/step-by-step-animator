@@ -36,6 +36,7 @@ Rules:
 
 For TODO, BUG, and IDEA records, include at least:
 
+- `id`
 - `created_at`
 - `updated_at`
 - `status`
