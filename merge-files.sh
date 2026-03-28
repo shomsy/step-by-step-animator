@@ -51,6 +51,22 @@ function readPackageName(rootDir) {
   }
 }
 
+function isDirectoryLikeEntry(currentPath, entry) {
+  if (entry.isDirectory()) {
+    return true;
+  }
+
+  if (entry.isSymbolicLink()) {
+    try {
+      return fs.statSync(currentPath).isDirectory();
+    } catch {
+      return false;
+    }
+  }
+
+  return false;
+}
+
 if (args.length < 1) {
   usage();
   process.exit(1);
@@ -146,7 +162,7 @@ function walk(currentDir) {
 
   for (const entry of entries) {
     const currentPath = path.join(currentDir, entry.name);
-    if (entry.isDirectory()) {
+    if (isDirectoryLikeEntry(currentPath, entry)) {
       if (ignoredDirs.has(entry.name) && currentPath !== rootDir) {
         continue;
       }
