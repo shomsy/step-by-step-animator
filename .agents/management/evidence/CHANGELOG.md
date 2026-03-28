@@ -15,6 +15,9 @@ Update rules:
 
 ## Current Ledger
 
+1. `[review][medium] 2026-03-28 15:40 CET - Closed BUG-002 whole-system review remediation after removing the remote font dependency, aligning narration product copy, and adding narration runtime regression coverage`
+   owner: codex
+   actual: 1h
 1. `[bug][low] 2026-03-28 03:30 CET - Closed BUG-001 after escaping lesson tag rendering, aligning active queues, and validating the production-ready path`
    owner: codex
    actual: 30m

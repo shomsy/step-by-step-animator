@@ -16,4 +16,4 @@ It feeds planning when a bug needs active implementation work.
 
 ## Current Items
 
-1. `[bug][low] 2026-03-27 15:15 - Razmotriti sanitizaciju tagText pre innerHTML` - `system/animator-engine/play-lesson/02-follow-lesson/show-current-step.js:28` koristi `innerHTML` sa lesson podacima. Za sada prihvatljivo jer su lesson fajlovi pod kontrolom developera.
+No active bug items.

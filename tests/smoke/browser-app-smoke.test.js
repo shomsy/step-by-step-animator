@@ -8,14 +8,6 @@ import { createServer } from 'vite';
 
 const currentDir = path.dirname(fileURLToPath(import.meta.url));
 const repoRoot = path.resolve(currentDir, '../../');
-const IGNORED_CONSOLE_ERROR_PATTERNS = [
-  /fonts\.googleapis\.com/i,
-  /fonts\.gstatic\.com/i
-];
-
-function isIgnoredConsoleError(message) {
-  return IGNORED_CONSOLE_ERROR_PATTERNS.some(pattern => pattern.test(message));
-}
 
 async function waitForCondition(readCondition, description, timeoutMs = 10000) {
   const deadline = Date.now() + timeoutMs;
@@ -62,18 +54,76 @@ test('browser app smoke covers boot, navigation, lesson switch, and preview isol
     const consoleErrors = [];
     const pageErrors = [];
 
+    await page.evaluateOnNewDocument(() => {
+      window.__speechLog = [];
+
+      class FakeSpeechSynthesisUtterance extends EventTarget {
+        constructor(text) {
+          super();
+          this.text = text;
+          this.lang = '';
+          this.rate = 1;
+          this.voice = null;
+        }
+      }
+
+      const fakeSpeechSynthesis = {
+        paused: false,
+        _activeUtterance: null,
+        _voices: [
+          {
+            voiceURI: 'sr-RS-test-voice',
+            name: 'Test Serbian Voice',
+            lang: 'sr-RS'
+          }
+        ],
+        getVoices() {
+          return this._voices;
+        },
+        addEventListener() {},
+        removeEventListener() {},
+        speak(utterance) {
+          this.paused = false;
+          this._activeUtterance = utterance;
+          window.__speechLog.push({
+            type: 'speak',
+            text: utterance.text,
+            lang: utterance.lang,
+            voiceURI: utterance.voice?.voiceURI || null
+          });
+        },
+        cancel() {
+          this.paused = false;
+          this._activeUtterance = null;
+          window.__speechLog.push({ type: 'cancel' });
+        },
+        pause() {
+          this.paused = true;
+          window.__speechLog.push({ type: 'pause' });
+        },
+        resume() {
+          this.paused = false;
+          window.__speechLog.push({ type: 'resume' });
+        }
+      };
+
+      Object.defineProperty(window, 'SpeechSynthesisUtterance', {
+        configurable: true,
+        writable: true,
+        value: FakeSpeechSynthesisUtterance
+      });
+      Object.defineProperty(window, 'speechSynthesis', {
+        configurable: true,
+        writable: true,
+        value: fakeSpeechSynthesis
+      });
+    });
+
     page.on('console', message => {
       if (message.type() !== 'error') {
         return;
       }
-
-      const messageText = message.text();
-
-      if (isIgnoredConsoleError(messageText)) {
-        return;
-      }
-
-      consoleErrors.push(messageText);
+      consoleErrors.push(message.text());
     });
 
     page.on('pageerror', error => {
@@ -114,6 +164,70 @@ test('browser app smoke covers boot, navigation, lesson switch, and preview isol
     assert.ok(
       await page.$eval('#livePreviewFrame', frame => (frame.getAttribute('srcdoc') || '').length > 0)
     );
+
+    await page.select('#stepSpeechSourceSelect', 'browser');
+    await waitForCondition(
+      async () => page.$eval(
+        '#stepSpeechStatus',
+        element => element.textContent?.includes('Koristiću sistemski glas') || false
+      ),
+      'browser narration readiness'
+    );
+    assert.deepEqual(
+      await page.$eval(
+        '#stepSpeechBrowserVoiceSelect',
+        element => Array.from(element.options).map(option => option.value)
+      ),
+      ['', 'sr-RS-test-voice']
+    );
+
+    await page.$eval('#speakStepBtn', element => {
+      element.click();
+    });
+    await waitForCondition(
+      async () => page.evaluate(() => window.__speechLog.some(entry => entry.type === 'speak')),
+      'browser narration to start'
+    );
+    assert.equal(
+      await page.$eval('#pauseStepSpeechBtn', element => element.disabled),
+      false
+    );
+
+    await page.$eval('#pauseStepSpeechBtn', element => {
+      element.click();
+    });
+    await waitForCondition(
+      async () => page.evaluate(() => window.__speechLog.some(entry => entry.type === 'pause')),
+      'browser narration to pause'
+    );
+    await waitForCondition(
+      async () => page.$eval('#speakStepBtn span', element => element.textContent === 'Nastavi'),
+      'browser narration resume label'
+    );
+
+    await page.$eval('#speakStepBtn', element => {
+      element.click();
+    });
+    await waitForCondition(
+      async () => page.evaluate(() => window.__speechLog.some(entry => entry.type === 'resume')),
+      'browser narration to resume'
+    );
+
+    await page.$eval('#stopStepSpeechBtn', element => {
+      element.click();
+    });
+    await waitForCondition(
+      async () => page.$eval(
+        '#stepSpeechStatus',
+        element => element.textContent?.includes('Naracija je zaustavljena.') || false
+      ),
+      'browser narration to stop'
+    );
+    const spokenEntries = await page.evaluate(() => window.__speechLog.filter(entry => entry.type === 'speak'));
+    assert.equal(spokenEntries.length, 1);
+    assert.equal(spokenEntries[0].lang, 'sr-RS');
+    assert.equal(spokenEntries[0].voiceURI, 'sr-RS-test-voice');
+    assert.match(spokenEntries[0].text, /^Korak 1 od \d+\./);
 
     await waitForCondition(
       async () => page.$eval('#nextBtn', element => element.disabled === false),

@@ -1,4 +1,5 @@
 import { composeStepNarrationText } from './compose-step-narration-text.js';
+import { readStepNarrationController } from './read-step-narration-controller.js';
 import { readStepNarrationPreferences } from './read-step-narration-preferences.js';
 import {
   describeBrowserVoice,
@@ -111,6 +112,10 @@ function showBrowserVoiceChoices({
         optionValues.add(voiceChoice.voiceURI);
         return true;
       })
+      .map(voiceChoice => ({
+        value: voiceChoice.voiceURI,
+        label: voiceChoice.label
+      }))
   ];
 
   browserVoiceSelect.replaceChildren(
@@ -558,81 +563,46 @@ export function presentStepNarration({ lessonParts, ownerWindow }) {
 
       showStepSpeechStatus(lessonParts, statusText);
     };
-    const hasPreferredBrowserVoice = Boolean(preferredBrowserVoice);
-
-    if (voiceSourcePreference === 'browser' && hasPreferredBrowserVoice) {
-      return speakWithBrowserVoice({
-        ownerWindow,
-        text: narrationText,
-        speechRate,
-        onStatusChange: showNarrationStatus,
-        narrationLanguagePreference,
-        preferredVoiceUri: browserVoiceUriPreference
-      });
-    }
-
-    if (voiceSourcePreference === 'browser' && !hasPreferredBrowserVoice) {
-      showNarrationStatus(`Nema lokalnog ${readNarrationLanguageLabel(narrationLanguagePreference)} sistemskog glasa. Prelazim na open-source Piper.`);
-    }
-
-    if (voiceSourcePreference === 'auto' && hasPreferredBrowserVoice) {
-      return speakWithBrowserVoice({
-        ownerWindow,
-        text: narrationText,
-        speechRate,
-        onStatusChange: showNarrationStatus,
-        narrationLanguagePreference,
-        preferredVoiceUri: browserVoiceUriPreference
-      });
-    }
-
-    try {
-      await prepareCurrentOpenSourceVoice();
-
-      return await speakWithOpenSourceVoice({
-        ownerWindow,
-        text: narrationText,
-        speechRate,
-        onStatusChange: showNarrationStatus,
-        narrationLanguagePreference
-      });
-    } catch {
-      isOpenSourceVoiceReady = false;
-      shouldUseBrowserFallback = hasPreferredBrowserVoice;
-      showVoiceBadge({
-        lessonParts,
-        narrationLanguagePreference,
-        voiceSourcePreference,
-        preferredBrowserVoice,
-        isPreparingOpenSourceVoice,
-        isOpenSourceVoiceReady,
-        shouldUseBrowserFallback
-      });
-      showPrepareStepSpeechButton({
-        lessonParts,
-        isPreparingOpenSourceVoice,
-        isOpenSourceVoiceReady,
-        shouldUseBrowserFallback
-      });
-
-      if (!hasPreferredBrowserVoice) {
-        throw new Error(
-          `Nema lokalnog ${readNarrationLanguageLabel(narrationLanguagePreference)} glasa, a open-source Piper trenutno nije uspeo.`
-        );
-      }
-
-      showNarrationStatus(`Open-source Piper glas nije uspeo za ${readNarrationLanguageLabel(narrationLanguagePreference)} naraciju. Prelazim na sistemski glas.`);
-    }
-
-    return speakWithBrowserVoice({
+    const narrationOutcome = await readStepNarrationController({
       ownerWindow,
-      text: narrationText,
+      narrationText,
       speechRate,
-      onStatusChange: showNarrationStatus,
       narrationLanguagePreference,
-      preferredVoiceUri: browserVoiceUriPreference,
-      allowGenericBrowserVoiceFallback: !hasPreferredBrowserVoice
+      voiceSourcePreference,
+      preferredBrowserVoice,
+      browserVoiceUriPreference,
+      readNarrationLanguageLabel,
+      prepareOpenSourceVoice: prepareCurrentOpenSourceVoice,
+      speakWithOpenSourceVoice,
+      speakWithBrowserVoice,
+      onStatusChange: showNarrationStatus
     });
+
+    if (typeof narrationOutcome.nextOpenSourceVoiceReady === 'boolean') {
+      isOpenSourceVoiceReady = narrationOutcome.nextOpenSourceVoiceReady;
+    }
+
+    if (typeof narrationOutcome.nextShouldUseBrowserFallback === 'boolean') {
+      shouldUseBrowserFallback = narrationOutcome.nextShouldUseBrowserFallback;
+    }
+
+    showVoiceBadge({
+      lessonParts,
+      narrationLanguagePreference,
+      voiceSourcePreference,
+      preferredBrowserVoice,
+      isPreparingOpenSourceVoice,
+      isOpenSourceVoiceReady,
+      shouldUseBrowserFallback
+    });
+    showPrepareStepSpeechButton({
+      lessonParts,
+      isPreparingOpenSourceVoice,
+      isOpenSourceVoiceReady,
+      shouldUseBrowserFallback
+    });
+
+    return narrationOutcome.controller;
   }
 
   function pauseCurrentStepNarration() {
