@@ -54,7 +54,11 @@ Agents MUST follow this order in this repository:
    - `.agents/language-specific/`
    - `.agents/management/`
    - `.agents/review/`
-7. **Project-Specific Exceptions or Forbidden Shortcuts**:
+7. **Code Review Mode**:
+   - review is stop-the-line
+   - findings are blocking until fixed, validated, and re-reviewed
+   - no review closes with a known defect still open
+8. **Project-Specific Exceptions or Forbidden Shortcuts**:
    - Repo-local guidance may remain under `.agents/.rules/project-local/**` while it is being migrated, but it does not override `.agents/.rules/**`.
 
 Keep this file short. Long procedures belong in governance docs, and active
