@@ -70,7 +70,17 @@ async function setMetadataValue(page, fieldName, nextValue) {
   }, nextValue);
 }
 
-test('browser authoring smoke covers writer flow insert, metadata apply, save shortcut, reload persistence, and preview sync', { timeout: 60000 }, async () => {
+async function readMetadataValue(page, fieldName) {
+  return page.$eval(`[data-metadata-field="${fieldName}"]`, element => {
+    if (!(element instanceof HTMLInputElement || element instanceof HTMLTextAreaElement || element instanceof HTMLSelectElement)) {
+      throw new Error('Expected a metadata control.');
+    }
+
+    return element.value;
+  });
+}
+
+test('browser authoring smoke covers V2 writer body view, metadata drawer, preview sync, and validation jump flow', { timeout: 60000 }, async () => {
   const server = await createServer({
     configFile: path.resolve(repoRoot, 'vite.config.js'),
     clearScreen: false,
@@ -127,14 +137,26 @@ test('browser authoring smoke covers writer flow insert, metadata apply, save sh
       'the new draft to open'
     );
 
-    await setEditorValue(page, await page.$eval('#authoringScriptEditor', element => {
-      if (!(element instanceof HTMLTextAreaElement)) {
-        throw new Error('Expected the authoring editor textarea.');
-      }
+    await waitForCondition(
+      async () => page.evaluate(() => {
+        const editor = document.querySelector('#authoringScriptEditor');
+        return editor instanceof HTMLTextAreaElement
+          && editor.value.startsWith('# Step:')
+          && !editor.value.includes('lessonId:');
+      }),
+      'the writer body view to hide frontmatter and open on the first step'
+    );
 
-      return element.value
-        .replace(/^lessonId:\s*.+$/m, 'lessonId: authoring-smoke-lesson');
-    }));
+    await waitForCondition(
+      async () => page.evaluate(() => {
+        const compileCard = document.querySelector('#authoringCompileStatus');
+        const validationCard = document.querySelector('#authoringValidation');
+        const previewCard = document.querySelector('#authoringPreviewCard');
+        const snapshotTabs = document.querySelector('#authoringSnapshotTabs');
+        return Boolean(compileCard && validationCard && previewCard && snapshotTabs);
+      }),
+      'the right inspector to render'
+    );
 
     await setEditorCursorBeforeFirstScene(page);
     await page.click('#authoringAddSceneBtn');
@@ -173,6 +195,7 @@ test('browser authoring smoke covers writer flow insert, metadata apply, save sh
     );
 
     await setMetadataValue(page, 'lessonTitle', 'Authoring Smoke Lesson');
+    await setMetadataValue(page, 'lessonId', 'authoring-smoke-lesson');
     await setMetadataValue(page, 'previewTitle', 'Smoke Preview');
     await page.click('[data-action="apply-metadata"]');
 
@@ -201,10 +224,15 @@ test('browser authoring smoke covers writer flow insert, metadata apply, save sh
       async () => page.evaluate(() => {
         const editor = document.querySelector('#authoringScriptEditor');
         return editor instanceof HTMLTextAreaElement
-          && editor.value.includes('authoring-smoke-lesson')
-          && editor.value.includes('lessonTitle: Authoring Smoke Lesson');
+          && !editor.value.includes('lessonTitle: Authoring Smoke Lesson')
+          && editor.value.startsWith('# Step:');
       }),
       'SQLite persistence after reload'
+    );
+
+    await waitForCondition(
+      async () => page.$eval('#authoringLessonTitle', element => element.textContent?.includes('Authoring Smoke Lesson') || false),
+      'the reloaded header title after metadata persistence'
     );
 
     await waitForCondition(
@@ -215,6 +243,55 @@ test('browser authoring smoke covers writer flow insert, metadata apply, save sh
     await waitForCondition(
       async () => page.$eval('#authoringPreviewFrame', frame => (frame.getAttribute('srcdoc') || '').includes('<!DOCTYPE html>')),
       'the preview iframe after reload'
+    );
+
+    await page.click('#authoringMetadataBtn');
+    await waitForCondition(
+      async () => page.$('#authoringMetadataDrawer:not([hidden])').then(Boolean),
+      'the metadata drawer to reopen after reload'
+    );
+    assert.equal(await readMetadataValue(page, 'lessonTitle'), 'Authoring Smoke Lesson');
+    assert.equal(await readMetadataValue(page, 'lessonId'), 'authoring-smoke-lesson');
+    await page.click('[data-action="close-metadata"]');
+
+    await setEditorValue(page, await page.$eval('#authoringScriptEditor', element => {
+      if (!(element instanceof HTMLTextAreaElement)) {
+        throw new Error('Expected the authoring editor textarea.');
+      }
+
+      return `${element.value}\n### Show Code: html\n\`\`\`html\n<div class="broken-preview">Broken</div>`;
+    }));
+
+    await waitForCondition(
+      async () => page.$eval('#authoringCompileChip', element => element.textContent?.includes('Syntax issue') || false),
+      'the broken body view source to show a syntax issue'
+    );
+
+    await waitForCondition(
+      async () => page.$eval('#authoringPreviewFrame', frame => (frame.getAttribute('srcdoc') || '').includes('smoke-card')),
+      'the preview iframe to keep the last healthy state while invalid'
+    );
+
+    await page.$eval('#authoringScriptEditor', element => {
+      if (!(element instanceof HTMLTextAreaElement)) {
+        throw new Error('Expected the authoring editor textarea.');
+      }
+
+      element.focus();
+      element.setSelectionRange(0, 0);
+      element.dispatchEvent(new MouseEvent('mouseup', { bubbles: true }));
+    });
+
+    await waitForCondition(
+      async () => page.$$('.authoring-validation-item').then(items => items.length > 0),
+      'a validation item for the syntax issue'
+    );
+
+    await page.click('.authoring-validation-item');
+
+    await waitForCondition(
+      async () => page.$eval('#authoringLineBadge', element => element.textContent?.trim() !== 'Line 1' || false),
+      'the validation click to move the cursor to the failing region'
     );
 
     assert.deepEqual(pageErrors, []);

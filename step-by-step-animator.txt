@@ -10599,6 +10599,9 @@ Update rules:
 
 ## Current Ledger
 
+1. `[review][medium] 2026-03-29 04:45 CEST - Closed TODO-004 and re-ran the whole-system cold review by shipping Write Mode V2: hidden frontmatter body view, right inspector, lighter outline, stronger DSL hierarchy, exact save/publish cursor preservation, and V2 smoke coverage`
+   owner: codex
+   actual: 15m
 1. `[review][medium] 2026-03-29 04:13 CEST - Closed TODO-003 and the requested whole-system cold review by shipping the compact Write Mode workspace, fixing the export dead path and hidden-overlay hit-test bug, and revalidating with tests plus a production build`
    owner: codex
    actual: 3h
@@ -10798,6 +10801,7 @@ The active plan lives in `.agents/management/planning/PLAN.md`.
 The active implementation queue lives in `.agents/management/TODO.md`.
 The evidence ledger lives in `.agents/management/evidence/CHANGELOG.md`.
 
+- 2026-03-29 04:45 CEST - PLAN-002 completed: shipped Write Mode V2 with a body-first lesson editor, a true right inspector, hidden metadata-by-drawer flow, and closed TODO-004 plus the follow-up cold review/remediation loop.
 - 2026-03-29 04:13 CEST - PLAN-001 completed: shipped the compact Write Mode authoring workspace, closed TODO-003, and finished the whole-system cold review/remediation loop.
 - 2026-03-26 15:26 - Product/System Refactor Realignment completed: moved lesson-engine into `system/lesson-engine/`, moved generated lesson docs into `system/lesson-engine/output/`, populated `system/foundation/` with `frontmatter/` and `markdown/`, and cleared the active follow-up queue.
 - 2026-03-26 15:34 - Production readiness review completed: fixed the stale lesson-doc sync root and updated runtime test imports to the `system/` tree; validation, build, and tests passed afterward.
@@ -11437,8 +11441,11 @@ The browser app now exposes a dedicated authoring workspace at `?workspace=autho
 - shipped lesson source is loaded as immutable input
 - editable drafts live in browser-side SQLite persistence backed by IndexedDB
 - authors can create, open, update, duplicate, delete, publish snapshots, and export `lesson.script.md`
-- Write Mode keeps the lesson script editor as the primary surface, with outline navigation, DSL block insertion, a metadata drawer, and a compact preview/validation inspector
-- the editor is DSL-aware and compiles drafts back through the same lesson engine contract before save and publish
+- Write Mode opens on the first real `# Step:` block instead of the raw frontmatter contract
+- metadata stays in the `Metadata` drawer while the main editor focuses on the lesson body
+- the workspace is split into `Outline | Editor | Inspector`, with live preview, compile state, validation, and snapshots kept in the right column
+- the editor remains DSL-aware, with slash-triggered block insertion and inline `+ Insert Block` authoring
+- drafts still compile back through the same lesson engine contract before save and publish
 
 ## Notes
 
@@ -88978,9 +88985,9 @@ body:has(.authoring-app) {
 .authoring-app {
   min-height: 100vh;
   box-sizing: border-box;
-  padding: 24px;
+  padding: 20px;
   display: grid;
-  gap: 16px;
+  gap: 14px;
 }
 
 .authoring-topbar,
@@ -88995,11 +89002,11 @@ body:has(.authoring-app) {
 }
 
 .authoring-topbar {
-  border-radius: 24px;
-  padding: 18px 22px;
+  border-radius: 22px;
+  padding: 16px 20px;
   display: flex;
   justify-content: space-between;
-  gap: 18px;
+  gap: 16px;
   align-items: center;
 }
 
@@ -89013,7 +89020,7 @@ body:has(.authoring-app) {
 .authoring-inspector-head h2,
 .authoring-drawer-head h2 {
   margin: 0;
-  font-size: 1.15rem;
+  font-size: 1.08rem;
   font-weight: 500;
   line-height: 1.2;
   letter-spacing: 0.02em;
@@ -89046,7 +89053,7 @@ body:has(.authoring-app) {
 .authoring-popover-list {
   display: flex;
   flex-wrap: wrap;
-  gap: 10px;
+  gap: 8px;
 }
 
 .authoring-topbar-actions {
@@ -89093,7 +89100,7 @@ body:has(.authoring-app) {
 #authoringAddStepBtn,
 #authoringAddSceneBtn,
 #authoringInsertBtn {
-  padding: 10px 14px;
+  padding: 9px 13px;
 }
 
 .authoring-chip,
@@ -89134,27 +89141,28 @@ body:has(.authoring-app) {
 }
 
 .authoring-status {
-  border-radius: 18px;
-  padding: 12px 16px;
-  font-size: 0.86rem;
+  border-radius: 16px;
+  padding: 10px 14px;
+  font-size: 0.82rem;
   line-height: 1.5;
+  background: rgba(19, 19, 20, 0.82);
 }
 
 .authoring-shell {
-  display: grid;
-  gap: 16px;
+  display: block;
 }
 
 .authoring-frame {
   display: grid;
-  grid-template-columns: 260px minmax(0, 1fr);
-  border-radius: 26px;
+  grid-template-columns: 220px minmax(0, 1fr) 360px;
+  border-radius: 24px;
   overflow: hidden;
 }
 
 .authoring-outline-pane,
-.authoring-editor-pane {
-  padding: 20px;
+.authoring-editor-pane,
+.authoring-inspector-pane {
+  padding: 18px;
   min-height: 0;
 }
 
@@ -89162,13 +89170,21 @@ body:has(.authoring-app) {
   border-right: 1px solid var(--authoring-border);
   display: grid;
   grid-template-rows: auto 1fr auto;
-  gap: 16px;
+  gap: 12px;
 }
 
 .authoring-editor-pane {
+  border-right: 1px solid var(--authoring-border);
   display: grid;
-  grid-template-rows: auto 1fr auto auto;
-  gap: 14px;
+  grid-template-rows: auto auto 1fr auto auto;
+  gap: 12px;
+}
+
+.authoring-inspector-pane {
+  display: grid;
+  align-content: start;
+  gap: 12px;
+  background: rgba(8, 8, 9, 0.22);
 }
 
 .authoring-pane-head,
@@ -89183,27 +89199,30 @@ body:has(.authoring-app) {
 .authoring-outline-root,
 .authoring-validation-list {
   display: grid;
-  gap: 10px;
+  gap: 8px;
 }
 
 .authoring-outline-step-group {
   display: grid;
-  gap: 8px;
+  gap: 4px;
 }
 
 .authoring-outline-scenes {
   display: grid;
-  gap: 8px;
-  padding-left: 16px;
+  gap: 2px;
+  padding-left: 14px;
 }
 
 .authoring-outline-step,
 .authoring-outline-scene {
   width: 100%;
   text-align: left;
-  padding: 12px 14px;
+  padding: 7px 10px;
   display: grid;
-  gap: 4px;
+  gap: 2px;
+  border-radius: 10px;
+  border: 1px solid transparent;
+  background: transparent;
 }
 
 .authoring-outline-step.is-active,
@@ -89211,14 +89230,14 @@ body:has(.authoring-app) {
 .authoring-artifact-chip.is-active,
 .authoring-popover-item.is-active {
   border-color: var(--authoring-border-strong);
-  background: rgba(255, 255, 255, 0.08);
+  background: rgba(255, 255, 255, 0.05);
 }
 
 .authoring-outline-step strong,
 .authoring-outline-scene strong,
 .authoring-popover-item strong,
 .authoring-validation-item strong {
-  font-size: 0.95rem;
+  font-size: 0.9rem;
   font-weight: 500;
 }
 
@@ -89230,18 +89249,40 @@ body:has(.authoring-app) {
 
 .authoring-outline-index {
   color: var(--authoring-muted);
-  font-size: 0.75rem;
+  font-size: 0.72rem;
   letter-spacing: 0.08em;
   text-transform: uppercase;
 }
 
+.authoring-outline-pane .authoring-empty {
+  padding: 10px;
+}
+
+.authoring-outline-actions {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
 .authoring-editor-surface {
   position: relative;
-  min-height: 640px;
-  border-radius: 22px;
+  min-height: 700px;
+  border-radius: 18px;
   border: 1px solid var(--authoring-border);
   background: var(--authoring-panel-strong);
   overflow: hidden;
+}
+
+.authoring-editor-meta {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 12px;
+  border-radius: 14px;
+  border: 1px solid var(--authoring-border);
+  background: rgba(255, 255, 255, 0.03);
+  color: var(--authoring-muted);
+  font-size: 0.8rem;
 }
 
 .authoring-script-highlight,
@@ -89250,7 +89291,7 @@ body:has(.authoring-app) {
   inset: 0;
   box-sizing: border-box;
   margin: 0;
-  padding: 20px 22px;
+  padding: 18px 20px 28px;
   border: 0;
   outline: 0;
   font: inherit;
@@ -89285,25 +89326,47 @@ body:has(.authoring-app) {
   display: block;
   min-height: 1.75em;
   border-radius: 10px;
-  padding: 0 6px;
-  margin: 0 -6px;
+  padding: 0 8px;
+  margin: 0 -8px;
 }
 
 .authoring-script-line.is-active {
   background: rgba(255, 255, 255, 0.06);
 }
 
-.authoring-token-heading,
 .authoring-script-line.is-step,
 .authoring-script-line.is-scene,
 .authoring-script-line.is-section {
   color: var(--authoring-ink);
 }
 
+.authoring-script-line.is-step {
+  background: rgba(141, 206, 122, 0.08);
+  box-shadow: inset 2px 0 0 rgba(141, 206, 122, 0.72);
+}
+
+.authoring-script-line.is-scene {
+  background: rgba(207, 216, 255, 0.07);
+  box-shadow: inset 2px 0 0 rgba(207, 216, 255, 0.72);
+}
+
+.authoring-script-line.is-section {
+  background: rgba(255, 255, 255, 0.03);
+}
+
 .authoring-token-step,
 .authoring-token-scene,
 .authoring-token-artifact {
   color: #cfd8ff;
+}
+
+.authoring-token-heading {
+  color: #8dce7a;
+}
+
+.authoring-token-section-label {
+  color: #f0d48d;
+  font-weight: 600;
 }
 
 .authoring-token-key {
@@ -89329,6 +89392,7 @@ body:has(.authoring-app) {
 .authoring-script-line.is-code,
 .authoring-script-line.is-code-boundary {
   color: #d8d7d0;
+  background: rgba(126, 163, 183, 0.07);
 }
 
 .authoring-editor-footer {
@@ -89342,20 +89406,14 @@ body:has(.authoring-app) {
 
 .authoring-editor-insert {
   display: flex;
-  justify-content: flex-end;
-}
-
-.authoring-inspector-strip {
-  display: grid;
-  grid-template-columns: 0.9fr 1fr 1.5fr 1fr;
-  gap: 16px;
+  justify-content: flex-start;
 }
 
 .authoring-inspector-card {
-  border-radius: 22px;
-  padding: 18px;
+  border-radius: 18px;
+  padding: 16px;
   display: grid;
-  gap: 14px;
+  gap: 12px;
   min-height: 0;
 }
 
@@ -89460,8 +89518,8 @@ body:has(.authoring-app) {
 
 .authoring-preview-frame {
   width: 100%;
-  min-height: 260px;
-  border-radius: 18px;
+  min-height: 280px;
+  border-radius: 16px;
   border: 1px solid var(--authoring-border);
   background: white;
 }
@@ -89476,9 +89534,9 @@ body:has(.authoring-app) {
 
 .authoring-snapshot-code {
   margin: 0;
-  min-height: 260px;
-  padding: 16px;
-  border-radius: 18px;
+  min-height: 220px;
+  padding: 14px;
+  border-radius: 16px;
   border: 1px solid var(--authoring-border);
   background: var(--authoring-panel-strong);
   color: #d8d7d0;
@@ -89594,17 +89652,22 @@ code {
 }
 
 @media (max-width: 1400px) {
-  .authoring-inspector-strip {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
+  .authoring-frame {
+    grid-template-columns: 200px minmax(0, 1fr) 320px;
   }
 }
 
 @media (max-width: 1080px) {
   .authoring-frame {
-    grid-template-columns: 1fr;
+    grid-template-columns: minmax(0, 1fr);
   }
 
   .authoring-outline-pane {
+    border-right: 0;
+    border-bottom: 1px solid var(--authoring-border);
+  }
+
+  .authoring-editor-pane {
     border-right: 0;
     border-bottom: 1px solid var(--authoring-border);
   }
@@ -89632,12 +89695,13 @@ code {
     width: 100%;
   }
 
-  .authoring-inspector-strip {
-    grid-template-columns: 1fr;
-  }
-
   .authoring-editor-surface {
     min-height: 460px;
+  }
+
+  .authoring-editor-meta {
+    flex-direction: column;
+    align-items: flex-start;
   }
 
   .authoring-drawer {
@@ -89936,27 +90000,27 @@ function readFenceLanguageForArtifact(parsedLesson, artifactId) {
 export function buildInsertMenuItems(context) {
   if (context.kind === 'root') {
     return [
-      { action: 'insert-step', label: 'Step', hint: 'Insert a new step block.' }
+      { action: 'insert-step', label: 'Insert Step', hint: 'Insert a new step block.' }
     ];
   }
 
   if (context.kind === 'step') {
     return [
-      { action: 'insert-scene', label: 'Scene', hint: 'Insert a scene block under the current step.' },
-      { action: 'insert-step-summary', label: 'Step Summary', hint: 'Insert the step summary field.' },
-      { action: 'insert-intent', label: 'Intent', hint: 'Insert the step intent field.' }
+      { action: 'insert-scene', label: 'Insert Scene', hint: 'Insert a scene block under the current step.' },
+      { action: 'insert-step-summary', label: 'Insert Step Summary', hint: 'Insert the step summary field.' },
+      { action: 'insert-intent', label: 'Insert Intent', hint: 'Insert the step intent field.' }
     ];
   }
 
   return [
-    { action: 'insert-narration', label: 'Narration', hint: 'Insert the narration section.' },
-    { action: 'insert-show-code:html', label: 'Show Code → HTML', hint: 'Insert an HTML code block.' },
-    { action: 'insert-show-code:css', label: 'Show Code → CSS', hint: 'Insert a CSS code block.' },
-    { action: 'insert-show-code:js', label: 'Show Code → JS', hint: 'Insert a JS code block.' },
-    { action: 'insert-show-code:template-js', label: 'Show Code → Template JS', hint: 'Insert a template JS code block.' },
-    { action: 'insert-show-code:shadow-css', label: 'Show Code → Shadow CSS', hint: 'Insert a shadow CSS code block.' },
-    { action: 'insert-theory-link', label: 'Theory Link', hint: 'Insert the theory section.' },
-    { action: 'insert-preview-action', label: 'Preview Action', hint: 'Insert the preview section.' }
+    { action: 'insert-narration', label: 'Insert Narration', hint: 'Insert the narration section.' },
+    { action: 'insert-show-code:html', label: 'Insert Show Code → HTML', hint: 'Insert an HTML code block.' },
+    { action: 'insert-show-code:css', label: 'Insert Show Code → CSS', hint: 'Insert a CSS code block.' },
+    { action: 'insert-show-code:js', label: 'Insert Show Code → JS', hint: 'Insert a JS code block.' },
+    { action: 'insert-show-code:template-js', label: 'Insert Show Code → Template JS', hint: 'Insert a template JS code block.' },
+    { action: 'insert-show-code:shadow-css', label: 'Insert Show Code → Shadow CSS', hint: 'Insert a shadow CSS code block.' },
+    { action: 'insert-theory-link', label: 'Insert Theory Link', hint: 'Insert the theory section.' },
+    { action: 'insert-preview-action', label: 'Insert Preview Action', hint: 'Insert the preview section.' }
   ];
 }
 
@@ -91147,6 +91211,82 @@ function buildHeaderMeta(state) {
   return `${parsedLesson?.attributes?.lessonId || selectedDraft.lessonId} · ${readDraftOriginLabel(selectedDraft.sourceOrigin)}`;
 }
 
+function readWriterFallbackStartLineIndex(lines) {
+  if (!lines.length) {
+    return 0;
+  }
+
+  let insideFrontmatter = false;
+  let firstBodyLineIndex = 0;
+
+  for (let lineIndex = 0; lineIndex < lines.length; lineIndex += 1) {
+    const trimmedLine = normalizeText(lines[lineIndex]);
+
+    if (lineIndex === 0 && trimmedLine === '---') {
+      insideFrontmatter = true;
+      firstBodyLineIndex = Math.min(lines.length - 1, lineIndex + 1);
+      continue;
+    }
+
+    if (insideFrontmatter) {
+      firstBodyLineIndex = Math.min(lines.length - 1, lineIndex + 1);
+
+      if (trimmedLine === '---') {
+        insideFrontmatter = false;
+      }
+
+      continue;
+    }
+
+    if (/^# Step:\s*/.test(lines[lineIndex])) {
+      return lineIndex;
+    }
+
+    if (trimmedLine) {
+      return lineIndex;
+    }
+  }
+
+  return firstBodyLineIndex;
+}
+
+function buildWriterView(sourceMarkdown, editorContext) {
+  const lines = editorContext?.lines || String(sourceMarkdown || '').split('\n');
+  const lineStarts = editorContext?.lineStarts || [0];
+  const firstStepNode = editorContext?.steps?.[0] || null;
+  const startLineIndex = firstStepNode
+    ? firstStepNode.lineIndex
+    : readWriterFallbackStartLineIndex(lines);
+  const startOffset = lineStarts[startLineIndex] || 0;
+
+  return {
+    hiddenPrefixMarkdown: String(sourceMarkdown || '').slice(0, startOffset),
+    bodyMarkdown: String(sourceMarkdown || '').slice(startOffset),
+    startOffset,
+    startLineIndex,
+    startLineNumber: startLineIndex + 1
+  };
+}
+
+function readDefaultWriterSelectionOffset(sourceMarkdown) {
+  const seedContext = readEditorContext(String(sourceMarkdown || ''), 0, null);
+  const writerView = buildWriterView(sourceMarkdown, seedContext);
+
+  return writerView.startOffset;
+}
+
+function readVisibleEditorOffset(state, sourceOffset) {
+  return Math.max(0, Number(sourceOffset || 0) - (state.writerView?.startOffset || 0));
+}
+
+function readSourceEditorOffset(state, visibleOffset) {
+  return Math.max(0, (state.writerView?.startOffset || 0) + Number(visibleOffset || 0));
+}
+
+function readVisibleLineNumber(state, sourceLineNumber) {
+  return Math.max(1, Number(sourceLineNumber || 1) - ((state.writerView?.startLineNumber || 1) - 1));
+}
+
 function buildSaveChipLabel(state) {
   return state.dirty ? 'Unsaved changes' : 'Saved';
 }
@@ -91183,37 +91323,9 @@ function buildCompileChipLabel(state) {
   return 'No compiled preview';
 }
 
-function buildLessonStatusLabel(state) {
-  const parsedLesson = state.analysis?.parsedLesson;
-
-  if (!parsedLesson) {
-    return state.workspaceSnapshot.selectedDraft ? 'draft' : 'idle';
-  }
-
-  return parsedLesson.attributes.status || 'draft';
-}
-
-function buildLessonStatusTone(state) {
-  const lessonStatus = buildLessonStatusLabel(state);
-
-  if (lessonStatus === 'active') {
-    return 'success';
-  }
-
-  if (lessonStatus === 'broken') {
-    return 'danger';
-  }
-
-  if (lessonStatus === 'deprecated') {
-    return 'warning';
-  }
-
-  return 'muted';
-}
-
 function buildContextLabel(context) {
   if (!context || context.stepIndex < 0) {
-    return 'Frontmatter or before the first step';
+    return 'Before the first step';
   }
 
   const stepLabel = `Step ${context.stepIndex + 1}`;
@@ -91561,6 +91673,25 @@ function highlightHeadingLine(line, prefix, valueClass) {
   ].join('');
 }
 
+function highlightSectionLine(line) {
+  const showCodeMatch = line.match(/^### Show Code:\s*(.+)$/);
+
+  if (showCodeMatch) {
+    return [
+      '<span class="authoring-token-section-label">Show Code</span>',
+      `<span class="authoring-token-artifact">${escapeHtml(showCodeMatch[1])}</span>`
+    ].join(' ');
+  }
+
+  const sectionMatch = line.match(/^###\s+(.+)$/);
+
+  if (!sectionMatch) {
+    return `<span class="authoring-token-heading">${escapeHtml(line)}</span>`;
+  }
+
+  return `<span class="authoring-token-section-label">${escapeHtml(sectionMatch[1])}</span>`;
+}
+
 function buildHighlightedScriptMarkup(sourceMarkdown, activeLineIndex) {
   const lines = String(sourceMarkdown || '').split('\n');
   let insideFrontmatter = false;
@@ -91590,10 +91721,10 @@ function buildHighlightedScriptMarkup(sourceMarkdown, activeLineIndex) {
       markup = highlightHeadingLine(line, '## Scene: ', 'authoring-token-scene');
     } else if (/^### Show Code:\s*/.test(line)) {
       lineClass = 'is-section is-show-code';
-      markup = highlightHeadingLine(line, '### Show Code: ', 'authoring-token-artifact');
+      markup = highlightSectionLine(line);
     } else if (/^###\s+/.test(line)) {
       lineClass = 'is-section';
-      markup = `<span class="authoring-token-heading">${escapeHtml(line)}</span>`;
+      markup = highlightSectionLine(line);
     } else if (/^```/.test(trimmedLine)) {
       lineClass = 'is-code-boundary';
       insideCodeFence = !insideCodeFence;
@@ -91638,11 +91769,10 @@ function buildOutlineMarkup(state) {
             <button
               type="button"
               class="authoring-outline-scene${sceneSelected ? ' is-active' : ''}"
-              data-action="jump-to-line:${scene.lineNumber}"
+              data-action="jump-to-source-line:${scene.lineNumber}"
             >
               <span class="authoring-outline-index">Scene ${sceneIndex + 1}</span>
               <strong>${escapeHtml(scene.title || scene.sceneId)}</strong>
-              <small>${escapeHtml(scene.sceneId)}</small>
             </button>
           `;
         }).join('');
@@ -91652,11 +91782,10 @@ function buildOutlineMarkup(state) {
             <button
               type="button"
               class="authoring-outline-step${stepSelected ? ' is-active' : ''}"
-              data-action="jump-to-line:${step.lineNumber}"
+              data-action="jump-to-source-line:${step.lineNumber}"
             >
               <span class="authoring-outline-index">${stepIndex + 1}</span>
               <strong>${escapeHtml(step.title || step.stepId)}</strong>
-              <small>${escapeHtml(step.stepId)}</small>
             </button>
             <div class="authoring-outline-scenes">
               ${sceneMarkup || '<div class="authoring-empty">No scenes yet.</div>'}
@@ -91746,7 +91875,7 @@ function buildValidationMarkup(state) {
           type="button"
           class="authoring-validation-item"
           data-tone="${item.tone}"
-          data-action="jump-to-line:${item.lineNumber}"
+          data-action="jump-to-source-line:${item.lineNumber}"
         >
           <span>${escapeHtml(item.label)}</span>
           <strong>${escapeHtml(item.contextLabel)}</strong>
@@ -91943,9 +92072,6 @@ function buildMetadataDrawerMarkup(state) {
       <div class="authoring-empty">
         Fix the lesson script first, then reopen this drawer to edit frontmatter safely.
       </div>
-      <div class="authoring-drawer-actions">
-        <button type="button" class="authoring-inline-action" data-action="jump-to-line:1">Jump to frontmatter</button>
-      </div>
     `;
   }
 
@@ -92020,7 +92146,6 @@ function buildMetadataDrawerMarkup(state) {
     <div class="authoring-drawer-actions">
       <button type="button" class="authoring-inline-action" data-action="apply-metadata">Apply metadata</button>
       <button type="button" class="authoring-inline-action" data-action="reset-metadata">Reset</button>
-      <button type="button" class="authoring-inline-action" data-action="jump-to-line:1">Jump to frontmatter</button>
     </div>
 
     <p class="authoring-drawer-note">
@@ -92041,7 +92166,6 @@ function createWorkspaceParts(ownerDocument) {
 
         <div class="authoring-topbar-actions">
           <span class="authoring-chip" id="authoringSaveState" data-tone="muted">Saved</span>
-          <span class="authoring-chip" id="authoringLessonStatus" data-tone="muted">idle</span>
           <span class="authoring-chip" id="authoringCompileChip" data-tone="muted">No compiled preview</span>
           <button type="button" id="authoringPreviewBtn">Preview</button>
           <button type="button" id="authoringSaveDraftBtn">Save</button>
@@ -92079,7 +92203,12 @@ function createWorkspaceParts(ownerDocument) {
                 <span class="authoring-pane-label">Lesson script</span>
                 <h2>One continuous script</h2>
               </div>
-              <span class="authoring-pane-note" id="authoringCursorInfo">Frontmatter or before the first step</span>
+              <span class="authoring-pane-note" id="authoringCursorInfo">Open a draft to start writing.</span>
+            </div>
+
+            <div class="authoring-editor-meta">
+              <span>Metadata stays hidden in Write Mode.</span>
+              <button type="button" class="authoring-inline-action" data-action="open-metadata">Metadata</button>
             </div>
 
             <div class="authoring-editor-surface">
@@ -92094,50 +92223,50 @@ function createWorkspaceParts(ownerDocument) {
 
             <div class="authoring-editor-insert">
               <div class="authoring-popover-shell">
-                <button type="button" id="authoringInsertBtn">/ Insert block</button>
+                <button type="button" id="authoringInsertBtn">+ Insert Block</button>
                 <div class="authoring-popover" id="authoringInsertMenu" hidden></div>
               </div>
             </div>
           </section>
-        </section>
 
-        <section class="authoring-inspector-strip" id="authoringInspectorStrip">
-          <section class="authoring-inspector-card">
-            <div class="authoring-inspector-head">
-              <span class="authoring-pane-label">Compile status</span>
-              <h2>State</h2>
-            </div>
-            <div id="authoringCompileStatus"></div>
-          </section>
+          <aside class="authoring-inspector-pane" id="authoringInspectorPane">
+            <section class="authoring-inspector-card authoring-inspector-preview-card" id="authoringPreviewCard">
+              <div class="authoring-inspector-head">
+                <span class="authoring-pane-label">Preview</span>
+                <h2>Live panel</h2>
+              </div>
+              <div class="authoring-preview-meta">
+                <strong id="authoringPreviewContext">No preview yet</strong>
+                <span id="authoringPreviewNote">Preview appears here once the script defines a readable state.</span>
+              </div>
+              <iframe class="authoring-preview-frame" id="authoringPreviewFrame" title="Lesson authoring preview" sandbox="allow-scripts"></iframe>
+            </section>
 
-          <section class="authoring-inspector-card">
-            <div class="authoring-inspector-head">
-              <span class="authoring-pane-label">Errors</span>
-              <h2>Validation</h2>
-            </div>
-            <div id="authoringValidation"></div>
-          </section>
+            <section class="authoring-inspector-card">
+              <div class="authoring-inspector-head">
+                <span class="authoring-pane-label">Compile status</span>
+                <h2>State</h2>
+              </div>
+              <div id="authoringCompileStatus"></div>
+            </section>
 
-          <section class="authoring-inspector-card authoring-inspector-preview-card" id="authoringPreviewCard">
-            <div class="authoring-inspector-head">
-              <span class="authoring-pane-label">Preview</span>
-              <h2>Live panel</h2>
-            </div>
-            <div class="authoring-preview-meta">
-              <strong id="authoringPreviewContext">No preview yet</strong>
-              <span id="authoringPreviewNote">Preview appears here once the script defines a readable state.</span>
-            </div>
-            <iframe class="authoring-preview-frame" id="authoringPreviewFrame" title="Lesson authoring preview" sandbox="allow-scripts"></iframe>
-          </section>
+            <section class="authoring-inspector-card">
+              <div class="authoring-inspector-head">
+                <span class="authoring-pane-label">Validation errors</span>
+                <h2>Fix list</h2>
+              </div>
+              <div id="authoringValidation"></div>
+            </section>
 
-          <section class="authoring-inspector-card">
-            <div class="authoring-inspector-head">
-              <span class="authoring-pane-label">Snapshot</span>
-              <h2>Current artifact</h2>
-            </div>
-            <div class="authoring-snapshot-tabs" id="authoringSnapshotTabs"></div>
-            <pre class="authoring-snapshot-code" id="authoringSnapshotCode"></pre>
-          </section>
+            <section class="authoring-inspector-card">
+              <div class="authoring-inspector-head">
+                <span class="authoring-pane-label">Current snapshot</span>
+                <h2>Artifact state</h2>
+              </div>
+              <div class="authoring-snapshot-tabs" id="authoringSnapshotTabs"></div>
+              <pre class="authoring-snapshot-code" id="authoringSnapshotCode"></pre>
+            </section>
+          </aside>
         </section>
       </main>
 
@@ -92149,7 +92278,6 @@ function createWorkspaceParts(ownerDocument) {
     lessonTitle: ownerDocument.getElementById('authoringLessonTitle'),
     lessonMeta: ownerDocument.getElementById('authoringLessonMeta'),
     saveState: ownerDocument.getElementById('authoringSaveState'),
-    lessonStatus: ownerDocument.getElementById('authoringLessonStatus'),
     compileChip: ownerDocument.getElementById('authoringCompileChip'),
     previewButton: ownerDocument.getElementById('authoringPreviewBtn'),
     saveDraftButton: ownerDocument.getElementById('authoringSaveDraftBtn'),
@@ -92204,7 +92332,6 @@ function syncEditorSurfaceScroll(parts) {
 
 function renderWorkspace(state, parts) {
   const selectedDraft = state.workspaceSnapshot.selectedDraft;
-  const parsedLesson = state.analysis?.parsedLesson;
   const context = state.analysis?.editorContext?.context || {
     kind: 'root',
     lineNumber: 1,
@@ -92220,8 +92347,6 @@ function renderWorkspace(state, parts) {
   parts.lessonMeta.textContent = buildHeaderMeta(state);
   parts.saveState.textContent = buildSaveChipLabel(state);
   parts.saveState.dataset.tone = buildSaveChipTone(state);
-  parts.lessonStatus.textContent = buildLessonStatusLabel(state);
-  parts.lessonStatus.dataset.tone = buildLessonStatusTone(state);
   parts.compileChip.textContent = buildCompileChipLabel(state);
   parts.compileChip.dataset.tone = buildCompileChipTone(state);
   parts.status.textContent = buildStatusMessage(state);
@@ -92241,22 +92366,22 @@ function renderWorkspace(state, parts) {
   parts.insertMenu.hidden = !state.insertMenuOpen;
   renderMetadataDrawer(state, parts);
   parts.cursorInfo.textContent = buildContextLabel(context);
-  parts.lineBadge.textContent = `Line ${context.lineNumber || 1}`;
+  parts.lineBadge.textContent = `Line ${readVisibleLineNumber(state, context.lineNumber || 1)}`;
   parts.dirtyBadge.textContent = state.dirty ? 'Unsaved changes' : 'Saved';
   parts.dirtyBadge.dataset.tone = state.dirty ? 'warning' : 'success';
 
-  if (parts.editorTextarea.value !== state.editorSourceMarkdown) {
-    parts.editorTextarea.value = state.editorSourceMarkdown;
+  if (parts.editorTextarea.value !== state.writerView.bodyMarkdown) {
+    parts.editorTextarea.value = state.writerView.bodyMarkdown;
   }
 
   parts.editorHighlight.innerHTML = buildHighlightedScriptMarkup(
-    state.editorSourceMarkdown,
-    Math.max(0, (state.analysis?.editorContext?.lineIndex || 0))
+    state.writerView.bodyMarkdown,
+    readVisibleLineNumber(state, (state.analysis?.editorContext?.lineNumber || 1)) - 1
   );
   parts.editorTextarea.disabled = !selectedDraft;
   parts.editorTextarea.readOnly = !selectedDraft;
   parts.editorTextarea.placeholder = selectedDraft
-    ? 'Write the lesson script here.'
+    ? 'Write the lesson flow here.'
     : 'Create or open a draft to start writing.';
   parts.saveDraftButton.disabled = !selectedDraft || !state.dirty;
   parts.publishButton.disabled = !selectedDraft || Boolean(state.analysis?.parseErrorMessage || state.analysis?.compileErrorMessage);
@@ -92298,6 +92423,7 @@ function refreshAnalysis(state, cursorOffset) {
   }
 
   const editorContext = readEditorContext(sourceMarkdown, cursorOffset, parsedLesson);
+  const writerView = buildWriterView(sourceMarkdown, editorContext);
 
   state.analysis = {
     parsedLesson,
@@ -92306,6 +92432,7 @@ function refreshAnalysis(state, cursorOffset) {
     compileErrorMessage,
     editorContext
   };
+  state.writerView = writerView;
   state.previewModel = parsedLesson
     ? buildParsedPreviewModel(parsedLesson, editorContext.context)
     : null;
@@ -92333,12 +92460,30 @@ function maybeConfirmNavigation(state, ownerWindow) {
   return ownerWindow.confirm('This draft has unsaved changes. Continue and lose them?');
 }
 
-function focusEditorAtLine(parts, lineStarts, lineNumber) {
-  const lineIndex = Math.max(0, lineNumber - 1);
-  const offset = lineStarts[lineIndex] || 0;
+function applyVisibleEditorSelection(state, parts, selectionStart, selectionEnd = selectionStart, focusEditor = true) {
+  const visibleSelectionStart = readVisibleEditorOffset(state, selectionStart);
+  const visibleSelectionEnd = readVisibleEditorOffset(state, selectionEnd);
 
-  parts.editorTextarea.focus();
-  parts.editorTextarea.setSelectionRange(offset, offset);
+  if (focusEditor) {
+    parts.editorTextarea.focus();
+  }
+
+  parts.editorTextarea.setSelectionRange(visibleSelectionStart, visibleSelectionEnd);
+  syncEditorSurfaceScroll(parts);
+}
+
+function focusEditorAtSourceLine(state, parts, lineNumber) {
+  const lineIndex = Math.max(0, lineNumber - 1);
+  const offset = state.analysis?.editorContext?.lineStarts?.[lineIndex] || 0;
+
+  if (offset < (state.writerView?.startOffset || 0)) {
+    openMetadataDrawer(state);
+    state.statusMessage = 'Metadata stays hidden in Write Mode. Edit it from the drawer.';
+    state.statusMessageTone = 'muted';
+    return;
+  }
+
+  applyVisibleEditorSelection(state, parts, offset, offset, true);
 }
 
 function buildInsertedSource({
@@ -92377,16 +92522,9 @@ function applyEditorSourceChange(state, parts, {
   state.statusMessage = statusMessage;
   state.statusMessageTone = statusTone;
 
-  if (parts.editorTextarea.value !== nextValue) {
-    parts.editorTextarea.value = nextValue;
-  }
-
-  if (focusEditor) {
-    parts.editorTextarea.focus();
-  }
-
-  parts.editorTextarea.setSelectionRange(selectionStart, selectionEnd);
   refreshAnalysis(state, selectionStart);
+  parts.editorTextarea.value = state.writerView.bodyMarkdown;
+  applyVisibleEditorSelection(state, parts, selectionStart, selectionEnd, focusEditor);
 }
 
 function insertSnippetIntoEditor(state, parts, {
@@ -92443,7 +92581,7 @@ function readSelectionOffsetForContext(sourceMarkdown, editorContext) {
     }
   }
 
-  return 0;
+  return readDefaultWriterSelectionOffset(sourceMarkdown);
 }
 
 function readMetadataEditorContextScan(editorContext, stepIndex) {
@@ -92471,7 +92609,7 @@ function closeAuthoringOverlays(state) {
   state.metadataDrawerOpen = false;
 }
 
-function openWorkspaceSnapshot(state, parts, workspaceSnapshot, statusMessage, tone = 'success', selectionOffset = 0) {
+function openWorkspaceSnapshot(state, parts, workspaceSnapshot, statusMessage, tone = 'success', selectionOffset = null) {
   state.workspaceSnapshot = workspaceSnapshot;
   state.editorSourceMarkdown = workspaceSnapshot.selectedDraft?.sourceMarkdown || '';
   state.dirty = false;
@@ -92481,9 +92619,24 @@ function openWorkspaceSnapshot(state, parts, workspaceSnapshot, statusMessage, t
   state.metadataForm = null;
   state.metadataFormVersion += 1;
   closeAuthoringOverlays(state);
-  parts.editorTextarea.value = state.editorSourceMarkdown;
-  parts.editorTextarea.setSelectionRange(selectionOffset, selectionOffset);
-  refreshAnalysis(state, selectionOffset);
+  refreshAnalysis(
+    state,
+    Number.isInteger(selectionOffset)
+      ? selectionOffset
+      : readDefaultWriterSelectionOffset(state.editorSourceMarkdown)
+  );
+  parts.editorTextarea.value = state.writerView.bodyMarkdown;
+  applyVisibleEditorSelection(
+    state,
+    parts,
+    Number.isInteger(selectionOffset)
+      ? selectionOffset
+      : state.writerView.startOffset,
+    Number.isInteger(selectionOffset)
+      ? selectionOffset
+      : state.writerView.startOffset,
+    false
+  );
 }
 
 function getActiveMenuKey(actionElement) {
@@ -92546,6 +92699,13 @@ export async function showAuthoringWorkspace({
   const state = {
     workspaceSnapshot: initialDraftWorkspace,
     editorSourceMarkdown: initialDraftWorkspace.selectedDraft?.sourceMarkdown || '',
+    writerView: {
+      hiddenPrefixMarkdown: '',
+      bodyMarkdown: initialDraftWorkspace.selectedDraft?.sourceMarkdown || '',
+      startOffset: 0,
+      startLineIndex: 0,
+      startLineNumber: 1
+    },
     dirty: false,
     statusMessage: 'SQLite workspace loaded.',
     statusMessageTone: 'success',
@@ -92580,7 +92740,7 @@ export async function showAuthoringWorkspace({
   };
   const parts = createWorkspaceParts(ownerDocument);
 
-  refreshAnalysis(state, 0);
+  refreshAnalysis(state, readDefaultWriterSelectionOffset(state.editorSourceMarkdown));
 
   async function safelyRunWorkspaceAction(workspaceAction, successMessage, readSelectionOffset = null) {
     try {
@@ -92589,7 +92749,7 @@ export async function showAuthoringWorkspace({
       if (result?.workspaceSnapshot) {
         const selectionOffset = typeof readSelectionOffset === 'function'
           ? readSelectionOffset(result.workspaceSnapshot)
-          : 0;
+          : null;
 
         openWorkspaceSnapshot(
           state,
@@ -92617,6 +92777,8 @@ export async function showAuthoringWorkspace({
       return;
     }
 
+    const selectionOffset = readSourceEditorOffset(state, parts.editorTextarea.selectionStart ?? 0);
+
     await safelyRunWorkspaceAction(async () => {
       const nextWorkspaceSnapshot = await authoringStore.saveLessonDraft({
         draftId: state.workspaceSnapshot.selectedDraft.draftId,
@@ -92626,10 +92788,7 @@ export async function showAuthoringWorkspace({
       return {
         workspaceSnapshot: nextWorkspaceSnapshot
       };
-    }, 'Draft saved into SQLite.', workspaceSnapshot => readSelectionOffsetForContext(
-      workspaceSnapshot.selectedDraft?.sourceMarkdown || '',
-      state.analysis.editorContext
-    ));
+    }, 'Draft saved into SQLite.', () => selectionOffset);
   }
 
   async function publishCurrentDraft() {
@@ -92637,29 +92796,28 @@ export async function showAuthoringWorkspace({
       return;
     }
 
+    const selectionOffset = readSourceEditorOffset(state, parts.editorTextarea.selectionStart ?? 0);
+
     await safelyRunWorkspaceAction(async () => {
       const nextWorkspaceSnapshot = await authoringStore.publishLessonDraft(state.workspaceSnapshot.selectedDraft.draftId);
 
       return {
         workspaceSnapshot: nextWorkspaceSnapshot
       };
-    }, 'Published snapshot stored in SQLite.', workspaceSnapshot => readSelectionOffsetForContext(
-      workspaceSnapshot.selectedDraft?.sourceMarkdown || '',
-      state.analysis.editorContext
-    ));
+    }, 'Published snapshot stored in SQLite.', () => selectionOffset);
   }
 
   function syncCursorState() {
-    refreshAnalysis(state, parts.editorTextarea.selectionStart ?? 0);
+    refreshAnalysis(state, readSourceEditorOffset(state, parts.editorTextarea.selectionStart ?? 0));
     renderWorkspace(state, parts);
   }
 
   parts.editorTextarea.addEventListener('input', () => {
-    state.editorSourceMarkdown = parts.editorTextarea.value;
+    state.editorSourceMarkdown = `${state.writerView.hiddenPrefixMarkdown}${parts.editorTextarea.value}`;
     state.dirty = true;
     state.statusMessage = 'Draft has unsaved changes.';
     state.statusMessageTone = 'warning';
-    refreshAnalysis(state, parts.editorTextarea.selectionStart ?? 0);
+    refreshAnalysis(state, readSourceEditorOffset(state, parts.editorTextarea.selectionStart ?? 0));
     renderWorkspace(state, parts);
   });
 
@@ -92686,7 +92844,7 @@ export async function showAuthoringWorkspace({
     const isCommandK = (event.metaKey || event.ctrlKey) && event.key.toLowerCase() === 'k';
     const currentContext = state.analysis.editorContext.context;
     const lineText = state.analysis.editorContext.lines[currentContext.lineIndex] || '';
-    const cursorColumn = (parts.editorTextarea.selectionStart ?? 0)
+    const cursorColumn = readSourceEditorOffset(state, parts.editorTextarea.selectionStart ?? 0)
       - (state.analysis.editorContext.lineStarts[currentContext.lineIndex] || 0);
     const slashTriggerEligible = event.key === '/'
       && !event.metaKey
@@ -92711,7 +92869,10 @@ export async function showAuthoringWorkspace({
   });
 
   parts.previewButton.addEventListener('click', () => {
-    parts.previewCard.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    refreshAnalysis(state, readSourceEditorOffset(state, parts.editorTextarea.selectionStart ?? 0));
+    state.statusMessage = 'Preview refreshed from the active writing context.';
+    state.statusMessageTone = 'success';
+    renderWorkspace(state, parts);
   });
 
   parts.saveDraftButton.addEventListener('click', async () => {
@@ -92801,9 +92962,9 @@ export async function showAuthoringWorkspace({
 
     const { actionName, parts: actionParts } = getActiveMenuKey(actionElement);
 
-    if (actionName === 'jump-to-line') {
-      focusEditorAtLine(parts, state.analysis.editorContext.lineStarts, Number(actionParts[0]));
-      refreshAnalysis(state, parts.editorTextarea.selectionStart ?? 0);
+    if (actionName === 'jump-to-source-line') {
+      focusEditorAtSourceLine(state, parts, Number(actionParts[0]));
+      refreshAnalysis(state, readSourceEditorOffset(state, parts.editorTextarea.selectionStart ?? 0));
       renderWorkspace(state, parts);
       return;
     }
@@ -92987,8 +93148,11 @@ export async function showAuthoringWorkspace({
       || actionName === 'insert-preview-action') {
       insertSnippetIntoEditor(state, parts, {
         actionName: actionElement.dataset.action,
-        insertionStart: parts.editorTextarea.selectionStart ?? 0,
-        insertionEnd: parts.editorTextarea.selectionEnd ?? parts.editorTextarea.selectionStart ?? 0
+        insertionStart: readSourceEditorOffset(state, parts.editorTextarea.selectionStart ?? 0),
+        insertionEnd: readSourceEditorOffset(
+          state,
+          parts.editorTextarea.selectionEnd ?? parts.editorTextarea.selectionStart ?? 0
+        )
       });
       state.insertMenuOpen = false;
       renderWorkspace(state, parts);
@@ -99153,7 +99317,17 @@ async function setMetadataValue(page, fieldName, nextValue) {
   }, nextValue);
 }
 
-test('browser authoring smoke covers writer flow insert, metadata apply, save shortcut, reload persistence, and preview sync', { timeout: 60000 }, async () => {
+async function readMetadataValue(page, fieldName) {
+  return page.$eval(`[data-metadata-field="${fieldName}"]`, element => {
+    if (!(element instanceof HTMLInputElement || element instanceof HTMLTextAreaElement || element instanceof HTMLSelectElement)) {
+      throw new Error('Expected a metadata control.');
+    }
+
+    return element.value;
+  });
+}
+
+test('browser authoring smoke covers V2 writer body view, metadata drawer, preview sync, and validation jump flow', { timeout: 60000 }, async () => {
   const server = await createServer({
     configFile: path.resolve(repoRoot, 'vite.config.js'),
     clearScreen: false,
@@ -99210,14 +99384,26 @@ test('browser authoring smoke covers writer flow insert, metadata apply, save sh
       'the new draft to open'
     );
 
-    await setEditorValue(page, await page.$eval('#authoringScriptEditor', element => {
-      if (!(element instanceof HTMLTextAreaElement)) {
-        throw new Error('Expected the authoring editor textarea.');
-      }
+    await waitForCondition(
+      async () => page.evaluate(() => {
+        const editor = document.querySelector('#authoringScriptEditor');
+        return editor instanceof HTMLTextAreaElement
+          && editor.value.startsWith('# Step:')
+          && !editor.value.includes('lessonId:');
+      }),
+      'the writer body view to hide frontmatter and open on the first step'
+    );
 
-      return element.value
-        .replace(/^lessonId:\s*.+$/m, 'lessonId: authoring-smoke-lesson');
-    }));
+    await waitForCondition(
+      async () => page.evaluate(() => {
+        const compileCard = document.querySelector('#authoringCompileStatus');
+        const validationCard = document.querySelector('#authoringValidation');
+        const previewCard = document.querySelector('#authoringPreviewCard');
+        const snapshotTabs = document.querySelector('#authoringSnapshotTabs');
+        return Boolean(compileCard && validationCard && previewCard && snapshotTabs);
+      }),
+      'the right inspector to render'
+    );
 
     await setEditorCursorBeforeFirstScene(page);
     await page.click('#authoringAddSceneBtn');
@@ -99256,6 +99442,7 @@ test('browser authoring smoke covers writer flow insert, metadata apply, save sh
     );
 
     await setMetadataValue(page, 'lessonTitle', 'Authoring Smoke Lesson');
+    await setMetadataValue(page, 'lessonId', 'authoring-smoke-lesson');
     await setMetadataValue(page, 'previewTitle', 'Smoke Preview');
     await page.click('[data-action="apply-metadata"]');
 
@@ -99284,10 +99471,15 @@ test('browser authoring smoke covers writer flow insert, metadata apply, save sh
       async () => page.evaluate(() => {
         const editor = document.querySelector('#authoringScriptEditor');
         return editor instanceof HTMLTextAreaElement
-          && editor.value.includes('authoring-smoke-lesson')
-          && editor.value.includes('lessonTitle: Authoring Smoke Lesson');
+          && !editor.value.includes('lessonTitle: Authoring Smoke Lesson')
+          && editor.value.startsWith('# Step:');
       }),
       'SQLite persistence after reload'
+    );
+
+    await waitForCondition(
+      async () => page.$eval('#authoringLessonTitle', element => element.textContent?.includes('Authoring Smoke Lesson') || false),
+      'the reloaded header title after metadata persistence'
     );
 
     await waitForCondition(
@@ -99298,6 +99490,55 @@ test('browser authoring smoke covers writer flow insert, metadata apply, save sh
     await waitForCondition(
       async () => page.$eval('#authoringPreviewFrame', frame => (frame.getAttribute('srcdoc') || '').includes('<!DOCTYPE html>')),
       'the preview iframe after reload'
+    );
+
+    await page.click('#authoringMetadataBtn');
+    await waitForCondition(
+      async () => page.$('#authoringMetadataDrawer:not([hidden])').then(Boolean),
+      'the metadata drawer to reopen after reload'
+    );
+    assert.equal(await readMetadataValue(page, 'lessonTitle'), 'Authoring Smoke Lesson');
+    assert.equal(await readMetadataValue(page, 'lessonId'), 'authoring-smoke-lesson');
+    await page.click('[data-action="close-metadata"]');
+
+    await setEditorValue(page, await page.$eval('#authoringScriptEditor', element => {
+      if (!(element instanceof HTMLTextAreaElement)) {
+        throw new Error('Expected the authoring editor textarea.');
+      }
+
+      return `${element.value}\n### Show Code: html\n\`\`\`html\n<div class="broken-preview">Broken</div>`;
+    }));
+
+    await waitForCondition(
+      async () => page.$eval('#authoringCompileChip', element => element.textContent?.includes('Syntax issue') || false),
+      'the broken body view source to show a syntax issue'
+    );
+
+    await waitForCondition(
+      async () => page.$eval('#authoringPreviewFrame', frame => (frame.getAttribute('srcdoc') || '').includes('smoke-card')),
+      'the preview iframe to keep the last healthy state while invalid'
+    );
+
+    await page.$eval('#authoringScriptEditor', element => {
+      if (!(element instanceof HTMLTextAreaElement)) {
+        throw new Error('Expected the authoring editor textarea.');
+      }
+
+      element.focus();
+      element.setSelectionRange(0, 0);
+      element.dispatchEvent(new MouseEvent('mouseup', { bubbles: true }));
+    });
+
+    await waitForCondition(
+      async () => page.$$('.authoring-validation-item').then(items => items.length > 0),
+      'a validation item for the syntax issue'
+    );
+
+    await page.click('.authoring-validation-item');
+
+    await waitForCondition(
+      async () => page.$eval('#authoringLineBadge', element => element.textContent?.trim() !== 'Line 1' || false),
+      'the validation click to move the cursor to the failing region'
     );
 
     assert.deepEqual(pageErrors, []);

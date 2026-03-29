@@ -27,9 +27,9 @@ body:has(.authoring-app) {
 .authoring-app {
   min-height: 100vh;
   box-sizing: border-box;
-  padding: 24px;
+  padding: 20px;
   display: grid;
-  gap: 16px;
+  gap: 14px;
 }
 
 .authoring-topbar,
@@ -44,11 +44,11 @@ body:has(.authoring-app) {
 }
 
 .authoring-topbar {
-  border-radius: 24px;
-  padding: 18px 22px;
+  border-radius: 22px;
+  padding: 16px 20px;
   display: flex;
   justify-content: space-between;
-  gap: 18px;
+  gap: 16px;
   align-items: center;
 }
 
@@ -62,7 +62,7 @@ body:has(.authoring-app) {
 .authoring-inspector-head h2,
 .authoring-drawer-head h2 {
   margin: 0;
-  font-size: 1.15rem;
+  font-size: 1.08rem;
   font-weight: 500;
   line-height: 1.2;
   letter-spacing: 0.02em;
@@ -95,7 +95,7 @@ body:has(.authoring-app) {
 .authoring-popover-list {
   display: flex;
   flex-wrap: wrap;
-  gap: 10px;
+  gap: 8px;
 }
 
 .authoring-topbar-actions {
@@ -142,7 +142,7 @@ body:has(.authoring-app) {
 #authoringAddStepBtn,
 #authoringAddSceneBtn,
 #authoringInsertBtn {
-  padding: 10px 14px;
+  padding: 9px 13px;
 }
 
 .authoring-chip,
@@ -183,27 +183,28 @@ body:has(.authoring-app) {
 }
 
 .authoring-status {
-  border-radius: 18px;
-  padding: 12px 16px;
-  font-size: 0.86rem;
+  border-radius: 16px;
+  padding: 10px 14px;
+  font-size: 0.82rem;
   line-height: 1.5;
+  background: rgba(19, 19, 20, 0.82);
 }
 
 .authoring-shell {
-  display: grid;
-  gap: 16px;
+  display: block;
 }
 
 .authoring-frame {
   display: grid;
-  grid-template-columns: 260px minmax(0, 1fr);
-  border-radius: 26px;
+  grid-template-columns: 220px minmax(0, 1fr) 360px;
+  border-radius: 24px;
   overflow: hidden;
 }
 
 .authoring-outline-pane,
-.authoring-editor-pane {
-  padding: 20px;
+.authoring-editor-pane,
+.authoring-inspector-pane {
+  padding: 18px;
   min-height: 0;
 }
 
@@ -211,13 +212,21 @@ body:has(.authoring-app) {
   border-right: 1px solid var(--authoring-border);
   display: grid;
   grid-template-rows: auto 1fr auto;
-  gap: 16px;
+  gap: 12px;
 }
 
 .authoring-editor-pane {
+  border-right: 1px solid var(--authoring-border);
   display: grid;
-  grid-template-rows: auto 1fr auto auto;
-  gap: 14px;
+  grid-template-rows: auto auto 1fr auto auto;
+  gap: 12px;
+}
+
+.authoring-inspector-pane {
+  display: grid;
+  align-content: start;
+  gap: 12px;
+  background: rgba(8, 8, 9, 0.22);
 }
 
 .authoring-pane-head,
@@ -232,27 +241,30 @@ body:has(.authoring-app) {
 .authoring-outline-root,
 .authoring-validation-list {
   display: grid;
-  gap: 10px;
+  gap: 8px;
 }
 
 .authoring-outline-step-group {
   display: grid;
-  gap: 8px;
+  gap: 4px;
 }
 
 .authoring-outline-scenes {
   display: grid;
-  gap: 8px;
-  padding-left: 16px;
+  gap: 2px;
+  padding-left: 14px;
 }
 
 .authoring-outline-step,
 .authoring-outline-scene {
   width: 100%;
   text-align: left;
-  padding: 12px 14px;
+  padding: 7px 10px;
   display: grid;
-  gap: 4px;
+  gap: 2px;
+  border-radius: 10px;
+  border: 1px solid transparent;
+  background: transparent;
 }
 
 .authoring-outline-step.is-active,
@@ -260,14 +272,14 @@ body:has(.authoring-app) {
 .authoring-artifact-chip.is-active,
 .authoring-popover-item.is-active {
   border-color: var(--authoring-border-strong);
-  background: rgba(255, 255, 255, 0.08);
+  background: rgba(255, 255, 255, 0.05);
 }
 
 .authoring-outline-step strong,
 .authoring-outline-scene strong,
 .authoring-popover-item strong,
 .authoring-validation-item strong {
-  font-size: 0.95rem;
+  font-size: 0.9rem;
   font-weight: 500;
 }
 
@@ -279,18 +291,40 @@ body:has(.authoring-app) {
 
 .authoring-outline-index {
   color: var(--authoring-muted);
-  font-size: 0.75rem;
+  font-size: 0.72rem;
   letter-spacing: 0.08em;
   text-transform: uppercase;
 }
 
+.authoring-outline-pane .authoring-empty {
+  padding: 10px;
+}
+
+.authoring-outline-actions {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
 .authoring-editor-surface {
   position: relative;
-  min-height: 640px;
-  border-radius: 22px;
+  min-height: 700px;
+  border-radius: 18px;
   border: 1px solid var(--authoring-border);
   background: var(--authoring-panel-strong);
   overflow: hidden;
+}
+
+.authoring-editor-meta {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 12px;
+  border-radius: 14px;
+  border: 1px solid var(--authoring-border);
+  background: rgba(255, 255, 255, 0.03);
+  color: var(--authoring-muted);
+  font-size: 0.8rem;
 }
 
 .authoring-script-highlight,
@@ -299,7 +333,7 @@ body:has(.authoring-app) {
   inset: 0;
   box-sizing: border-box;
   margin: 0;
-  padding: 20px 22px;
+  padding: 18px 20px 28px;
   border: 0;
   outline: 0;
   font: inherit;
@@ -334,25 +368,47 @@ body:has(.authoring-app) {
   display: block;
   min-height: 1.75em;
   border-radius: 10px;
-  padding: 0 6px;
-  margin: 0 -6px;
+  padding: 0 8px;
+  margin: 0 -8px;
 }
 
 .authoring-script-line.is-active {
   background: rgba(255, 255, 255, 0.06);
 }
 
-.authoring-token-heading,
 .authoring-script-line.is-step,
 .authoring-script-line.is-scene,
 .authoring-script-line.is-section {
   color: var(--authoring-ink);
 }
 
+.authoring-script-line.is-step {
+  background: rgba(141, 206, 122, 0.08);
+  box-shadow: inset 2px 0 0 rgba(141, 206, 122, 0.72);
+}
+
+.authoring-script-line.is-scene {
+  background: rgba(207, 216, 255, 0.07);
+  box-shadow: inset 2px 0 0 rgba(207, 216, 255, 0.72);
+}
+
+.authoring-script-line.is-section {
+  background: rgba(255, 255, 255, 0.03);
+}
+
 .authoring-token-step,
 .authoring-token-scene,
 .authoring-token-artifact {
   color: #cfd8ff;
+}
+
+.authoring-token-heading {
+  color: #8dce7a;
+}
+
+.authoring-token-section-label {
+  color: #f0d48d;
+  font-weight: 600;
 }
 
 .authoring-token-key {
@@ -378,6 +434,7 @@ body:has(.authoring-app) {
 .authoring-script-line.is-code,
 .authoring-script-line.is-code-boundary {
   color: #d8d7d0;
+  background: rgba(126, 163, 183, 0.07);
 }
 
 .authoring-editor-footer {
@@ -391,20 +448,14 @@ body:has(.authoring-app) {
 
 .authoring-editor-insert {
   display: flex;
-  justify-content: flex-end;
-}
-
-.authoring-inspector-strip {
-  display: grid;
-  grid-template-columns: 0.9fr 1fr 1.5fr 1fr;
-  gap: 16px;
+  justify-content: flex-start;
 }
 
 .authoring-inspector-card {
-  border-radius: 22px;
-  padding: 18px;
+  border-radius: 18px;
+  padding: 16px;
   display: grid;
-  gap: 14px;
+  gap: 12px;
   min-height: 0;
 }
 
@@ -509,8 +560,8 @@ body:has(.authoring-app) {
 
 .authoring-preview-frame {
   width: 100%;
-  min-height: 260px;
-  border-radius: 18px;
+  min-height: 280px;
+  border-radius: 16px;
   border: 1px solid var(--authoring-border);
   background: white;
 }
@@ -525,9 +576,9 @@ body:has(.authoring-app) {
 
 .authoring-snapshot-code {
   margin: 0;
-  min-height: 260px;
-  padding: 16px;
-  border-radius: 18px;
+  min-height: 220px;
+  padding: 14px;
+  border-radius: 16px;
   border: 1px solid var(--authoring-border);
   background: var(--authoring-panel-strong);
   color: #d8d7d0;
@@ -643,17 +694,22 @@ code {
 }
 
 @media (max-width: 1400px) {
-  .authoring-inspector-strip {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
+  .authoring-frame {
+    grid-template-columns: 200px minmax(0, 1fr) 320px;
   }
 }
 
 @media (max-width: 1080px) {
   .authoring-frame {
-    grid-template-columns: 1fr;
+    grid-template-columns: minmax(0, 1fr);
   }
 
   .authoring-outline-pane {
+    border-right: 0;
+    border-bottom: 1px solid var(--authoring-border);
+  }
+
+  .authoring-editor-pane {
     border-right: 0;
     border-bottom: 1px solid var(--authoring-border);
   }
@@ -681,12 +737,13 @@ code {
     width: 100%;
   }
 
-  .authoring-inspector-strip {
-    grid-template-columns: 1fr;
-  }
-
   .authoring-editor-surface {
     min-height: 460px;
+  }
+
+  .authoring-editor-meta {
+    flex-direction: column;
+    align-items: flex-start;
   }
 
   .authoring-drawer {

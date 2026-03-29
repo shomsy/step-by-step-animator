@@ -160,8 +160,11 @@ The browser app now exposes a dedicated authoring workspace at `?workspace=autho
 - shipped lesson source is loaded as immutable input
 - editable drafts live in browser-side SQLite persistence backed by IndexedDB
 - authors can create, open, update, duplicate, delete, publish snapshots, and export `lesson.script.md`
-- Write Mode keeps the lesson script editor as the primary surface, with outline navigation, DSL block insertion, a metadata drawer, and a compact preview/validation inspector
-- the editor is DSL-aware and compiles drafts back through the same lesson engine contract before save and publish
+- Write Mode opens on the first real `# Step:` block instead of the raw frontmatter contract
+- metadata stays in the `Metadata` drawer while the main editor focuses on the lesson body
+- the workspace is split into `Outline | Editor | Inspector`, with live preview, compile state, validation, and snapshots kept in the right column
+- the editor remains DSL-aware, with slash-triggered block insertion and inline `+ Insert Block` authoring
+- drafts still compile back through the same lesson engine contract before save and publish
 
 ## Notes
 

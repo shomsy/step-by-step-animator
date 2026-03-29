@@ -118,6 +118,82 @@ function buildHeaderMeta(state) {
   return `${parsedLesson?.attributes?.lessonId || selectedDraft.lessonId} · ${readDraftOriginLabel(selectedDraft.sourceOrigin)}`;
 }
 
+function readWriterFallbackStartLineIndex(lines) {
+  if (!lines.length) {
+    return 0;
+  }
+
+  let insideFrontmatter = false;
+  let firstBodyLineIndex = 0;
+
+  for (let lineIndex = 0; lineIndex < lines.length; lineIndex += 1) {
+    const trimmedLine = normalizeText(lines[lineIndex]);
+
+    if (lineIndex === 0 && trimmedLine === '---') {
+      insideFrontmatter = true;
+      firstBodyLineIndex = Math.min(lines.length - 1, lineIndex + 1);
+      continue;
+    }
+
+    if (insideFrontmatter) {
+      firstBodyLineIndex = Math.min(lines.length - 1, lineIndex + 1);
+
+      if (trimmedLine === '---') {
+        insideFrontmatter = false;
+      }
+
+      continue;
+    }
+
+    if (/^# Step:\s*/.test(lines[lineIndex])) {
+      return lineIndex;
+    }
+
+    if (trimmedLine) {
+      return lineIndex;
+    }
+  }
+
+  return firstBodyLineIndex;
+}
+
+function buildWriterView(sourceMarkdown, editorContext) {
+  const lines = editorContext?.lines || String(sourceMarkdown || '').split('\n');
+  const lineStarts = editorContext?.lineStarts || [0];
+  const firstStepNode = editorContext?.steps?.[0] || null;
+  const startLineIndex = firstStepNode
+    ? firstStepNode.lineIndex
+    : readWriterFallbackStartLineIndex(lines);
+  const startOffset = lineStarts[startLineIndex] || 0;
+
+  return {
+    hiddenPrefixMarkdown: String(sourceMarkdown || '').slice(0, startOffset),
+    bodyMarkdown: String(sourceMarkdown || '').slice(startOffset),
+    startOffset,
+    startLineIndex,
+    startLineNumber: startLineIndex + 1
+  };
+}
+
+function readDefaultWriterSelectionOffset(sourceMarkdown) {
+  const seedContext = readEditorContext(String(sourceMarkdown || ''), 0, null);
+  const writerView = buildWriterView(sourceMarkdown, seedContext);
+
+  return writerView.startOffset;
+}
+
+function readVisibleEditorOffset(state, sourceOffset) {
+  return Math.max(0, Number(sourceOffset || 0) - (state.writerView?.startOffset || 0));
+}
+
+function readSourceEditorOffset(state, visibleOffset) {
+  return Math.max(0, (state.writerView?.startOffset || 0) + Number(visibleOffset || 0));
+}
+
+function readVisibleLineNumber(state, sourceLineNumber) {
+  return Math.max(1, Number(sourceLineNumber || 1) - ((state.writerView?.startLineNumber || 1) - 1));
+}
+
 function buildSaveChipLabel(state) {
   return state.dirty ? 'Unsaved changes' : 'Saved';
 }
@@ -154,37 +230,9 @@ function buildCompileChipLabel(state) {
   return 'No compiled preview';
 }
 
-function buildLessonStatusLabel(state) {
-  const parsedLesson = state.analysis?.parsedLesson;
-
-  if (!parsedLesson) {
-    return state.workspaceSnapshot.selectedDraft ? 'draft' : 'idle';
-  }
-
-  return parsedLesson.attributes.status || 'draft';
-}
-
-function buildLessonStatusTone(state) {
-  const lessonStatus = buildLessonStatusLabel(state);
-
-  if (lessonStatus === 'active') {
-    return 'success';
-  }
-
-  if (lessonStatus === 'broken') {
-    return 'danger';
-  }
-
-  if (lessonStatus === 'deprecated') {
-    return 'warning';
-  }
-
-  return 'muted';
-}
-
 function buildContextLabel(context) {
   if (!context || context.stepIndex < 0) {
-    return 'Frontmatter or before the first step';
+    return 'Before the first step';
   }
 
   const stepLabel = `Step ${context.stepIndex + 1}`;
@@ -532,6 +580,25 @@ function highlightHeadingLine(line, prefix, valueClass) {
   ].join('');
 }
 
+function highlightSectionLine(line) {
+  const showCodeMatch = line.match(/^### Show Code:\s*(.+)$/);
+
+  if (showCodeMatch) {
+    return [
+      '<span class="authoring-token-section-label">Show Code</span>',
+      `<span class="authoring-token-artifact">${escapeHtml(showCodeMatch[1])}</span>`
+    ].join(' ');
+  }
+
+  const sectionMatch = line.match(/^###\s+(.+)$/);
+
+  if (!sectionMatch) {
+    return `<span class="authoring-token-heading">${escapeHtml(line)}</span>`;
+  }
+
+  return `<span class="authoring-token-section-label">${escapeHtml(sectionMatch[1])}</span>`;
+}
+
 function buildHighlightedScriptMarkup(sourceMarkdown, activeLineIndex) {
   const lines = String(sourceMarkdown || '').split('\n');
   let insideFrontmatter = false;
@@ -561,10 +628,10 @@ function buildHighlightedScriptMarkup(sourceMarkdown, activeLineIndex) {
       markup = highlightHeadingLine(line, '## Scene: ', 'authoring-token-scene');
     } else if (/^### Show Code:\s*/.test(line)) {
       lineClass = 'is-section is-show-code';
-      markup = highlightHeadingLine(line, '### Show Code: ', 'authoring-token-artifact');
+      markup = highlightSectionLine(line);
     } else if (/^###\s+/.test(line)) {
       lineClass = 'is-section';
-      markup = `<span class="authoring-token-heading">${escapeHtml(line)}</span>`;
+      markup = highlightSectionLine(line);
     } else if (/^```/.test(trimmedLine)) {
       lineClass = 'is-code-boundary';
       insideCodeFence = !insideCodeFence;
@@ -609,11 +676,10 @@ function buildOutlineMarkup(state) {
             <button
               type="button"
               class="authoring-outline-scene${sceneSelected ? ' is-active' : ''}"
-              data-action="jump-to-line:${scene.lineNumber}"
+              data-action="jump-to-source-line:${scene.lineNumber}"
             >
               <span class="authoring-outline-index">Scene ${sceneIndex + 1}</span>
               <strong>${escapeHtml(scene.title || scene.sceneId)}</strong>
-              <small>${escapeHtml(scene.sceneId)}</small>
             </button>
           `;
         }).join('');
@@ -623,11 +689,10 @@ function buildOutlineMarkup(state) {
             <button
               type="button"
               class="authoring-outline-step${stepSelected ? ' is-active' : ''}"
-              data-action="jump-to-line:${step.lineNumber}"
+              data-action="jump-to-source-line:${step.lineNumber}"
             >
               <span class="authoring-outline-index">${stepIndex + 1}</span>
               <strong>${escapeHtml(step.title || step.stepId)}</strong>
-              <small>${escapeHtml(step.stepId)}</small>
             </button>
             <div class="authoring-outline-scenes">
               ${sceneMarkup || '<div class="authoring-empty">No scenes yet.</div>'}
@@ -717,7 +782,7 @@ function buildValidationMarkup(state) {
           type="button"
           class="authoring-validation-item"
           data-tone="${item.tone}"
-          data-action="jump-to-line:${item.lineNumber}"
+          data-action="jump-to-source-line:${item.lineNumber}"
         >
           <span>${escapeHtml(item.label)}</span>
           <strong>${escapeHtml(item.contextLabel)}</strong>
@@ -914,9 +979,6 @@ function buildMetadataDrawerMarkup(state) {
       <div class="authoring-empty">
         Fix the lesson script first, then reopen this drawer to edit frontmatter safely.
       </div>
-      <div class="authoring-drawer-actions">
-        <button type="button" class="authoring-inline-action" data-action="jump-to-line:1">Jump to frontmatter</button>
-      </div>
     `;
   }
 
@@ -991,7 +1053,6 @@ function buildMetadataDrawerMarkup(state) {
     <div class="authoring-drawer-actions">
       <button type="button" class="authoring-inline-action" data-action="apply-metadata">Apply metadata</button>
       <button type="button" class="authoring-inline-action" data-action="reset-metadata">Reset</button>
-      <button type="button" class="authoring-inline-action" data-action="jump-to-line:1">Jump to frontmatter</button>
     </div>
 
     <p class="authoring-drawer-note">
@@ -1012,7 +1073,6 @@ function createWorkspaceParts(ownerDocument) {
 
         <div class="authoring-topbar-actions">
           <span class="authoring-chip" id="authoringSaveState" data-tone="muted">Saved</span>
-          <span class="authoring-chip" id="authoringLessonStatus" data-tone="muted">idle</span>
           <span class="authoring-chip" id="authoringCompileChip" data-tone="muted">No compiled preview</span>
           <button type="button" id="authoringPreviewBtn">Preview</button>
           <button type="button" id="authoringSaveDraftBtn">Save</button>
@@ -1050,7 +1110,12 @@ function createWorkspaceParts(ownerDocument) {
                 <span class="authoring-pane-label">Lesson script</span>
                 <h2>One continuous script</h2>
               </div>
-              <span class="authoring-pane-note" id="authoringCursorInfo">Frontmatter or before the first step</span>
+              <span class="authoring-pane-note" id="authoringCursorInfo">Open a draft to start writing.</span>
+            </div>
+
+            <div class="authoring-editor-meta">
+              <span>Metadata stays hidden in Write Mode.</span>
+              <button type="button" class="authoring-inline-action" data-action="open-metadata">Metadata</button>
             </div>
 
             <div class="authoring-editor-surface">
@@ -1065,50 +1130,50 @@ function createWorkspaceParts(ownerDocument) {
 
             <div class="authoring-editor-insert">
               <div class="authoring-popover-shell">
-                <button type="button" id="authoringInsertBtn">/ Insert block</button>
+                <button type="button" id="authoringInsertBtn">+ Insert Block</button>
                 <div class="authoring-popover" id="authoringInsertMenu" hidden></div>
               </div>
             </div>
           </section>
-        </section>
 
-        <section class="authoring-inspector-strip" id="authoringInspectorStrip">
-          <section class="authoring-inspector-card">
-            <div class="authoring-inspector-head">
-              <span class="authoring-pane-label">Compile status</span>
-              <h2>State</h2>
-            </div>
-            <div id="authoringCompileStatus"></div>
-          </section>
+          <aside class="authoring-inspector-pane" id="authoringInspectorPane">
+            <section class="authoring-inspector-card authoring-inspector-preview-card" id="authoringPreviewCard">
+              <div class="authoring-inspector-head">
+                <span class="authoring-pane-label">Preview</span>
+                <h2>Live panel</h2>
+              </div>
+              <div class="authoring-preview-meta">
+                <strong id="authoringPreviewContext">No preview yet</strong>
+                <span id="authoringPreviewNote">Preview appears here once the script defines a readable state.</span>
+              </div>
+              <iframe class="authoring-preview-frame" id="authoringPreviewFrame" title="Lesson authoring preview" sandbox="allow-scripts"></iframe>
+            </section>
 
-          <section class="authoring-inspector-card">
-            <div class="authoring-inspector-head">
-              <span class="authoring-pane-label">Errors</span>
-              <h2>Validation</h2>
-            </div>
-            <div id="authoringValidation"></div>
-          </section>
+            <section class="authoring-inspector-card">
+              <div class="authoring-inspector-head">
+                <span class="authoring-pane-label">Compile status</span>
+                <h2>State</h2>
+              </div>
+              <div id="authoringCompileStatus"></div>
+            </section>
 
-          <section class="authoring-inspector-card authoring-inspector-preview-card" id="authoringPreviewCard">
-            <div class="authoring-inspector-head">
-              <span class="authoring-pane-label">Preview</span>
-              <h2>Live panel</h2>
-            </div>
-            <div class="authoring-preview-meta">
-              <strong id="authoringPreviewContext">No preview yet</strong>
-              <span id="authoringPreviewNote">Preview appears here once the script defines a readable state.</span>
-            </div>
-            <iframe class="authoring-preview-frame" id="authoringPreviewFrame" title="Lesson authoring preview" sandbox="allow-scripts"></iframe>
-          </section>
+            <section class="authoring-inspector-card">
+              <div class="authoring-inspector-head">
+                <span class="authoring-pane-label">Validation errors</span>
+                <h2>Fix list</h2>
+              </div>
+              <div id="authoringValidation"></div>
+            </section>
 
-          <section class="authoring-inspector-card">
-            <div class="authoring-inspector-head">
-              <span class="authoring-pane-label">Snapshot</span>
-              <h2>Current artifact</h2>
-            </div>
-            <div class="authoring-snapshot-tabs" id="authoringSnapshotTabs"></div>
-            <pre class="authoring-snapshot-code" id="authoringSnapshotCode"></pre>
-          </section>
+            <section class="authoring-inspector-card">
+              <div class="authoring-inspector-head">
+                <span class="authoring-pane-label">Current snapshot</span>
+                <h2>Artifact state</h2>
+              </div>
+              <div class="authoring-snapshot-tabs" id="authoringSnapshotTabs"></div>
+              <pre class="authoring-snapshot-code" id="authoringSnapshotCode"></pre>
+            </section>
+          </aside>
         </section>
       </main>
 
@@ -1120,7 +1185,6 @@ function createWorkspaceParts(ownerDocument) {
     lessonTitle: ownerDocument.getElementById('authoringLessonTitle'),
     lessonMeta: ownerDocument.getElementById('authoringLessonMeta'),
     saveState: ownerDocument.getElementById('authoringSaveState'),
-    lessonStatus: ownerDocument.getElementById('authoringLessonStatus'),
     compileChip: ownerDocument.getElementById('authoringCompileChip'),
     previewButton: ownerDocument.getElementById('authoringPreviewBtn'),
     saveDraftButton: ownerDocument.getElementById('authoringSaveDraftBtn'),
@@ -1175,7 +1239,6 @@ function syncEditorSurfaceScroll(parts) {
 
 function renderWorkspace(state, parts) {
   const selectedDraft = state.workspaceSnapshot.selectedDraft;
-  const parsedLesson = state.analysis?.parsedLesson;
   const context = state.analysis?.editorContext?.context || {
     kind: 'root',
     lineNumber: 1,
@@ -1191,8 +1254,6 @@ function renderWorkspace(state, parts) {
   parts.lessonMeta.textContent = buildHeaderMeta(state);
   parts.saveState.textContent = buildSaveChipLabel(state);
   parts.saveState.dataset.tone = buildSaveChipTone(state);
-  parts.lessonStatus.textContent = buildLessonStatusLabel(state);
-  parts.lessonStatus.dataset.tone = buildLessonStatusTone(state);
   parts.compileChip.textContent = buildCompileChipLabel(state);
   parts.compileChip.dataset.tone = buildCompileChipTone(state);
   parts.status.textContent = buildStatusMessage(state);
@@ -1212,22 +1273,22 @@ function renderWorkspace(state, parts) {
   parts.insertMenu.hidden = !state.insertMenuOpen;
   renderMetadataDrawer(state, parts);
   parts.cursorInfo.textContent = buildContextLabel(context);
-  parts.lineBadge.textContent = `Line ${context.lineNumber || 1}`;
+  parts.lineBadge.textContent = `Line ${readVisibleLineNumber(state, context.lineNumber || 1)}`;
   parts.dirtyBadge.textContent = state.dirty ? 'Unsaved changes' : 'Saved';
   parts.dirtyBadge.dataset.tone = state.dirty ? 'warning' : 'success';
 
-  if (parts.editorTextarea.value !== state.editorSourceMarkdown) {
-    parts.editorTextarea.value = state.editorSourceMarkdown;
+  if (parts.editorTextarea.value !== state.writerView.bodyMarkdown) {
+    parts.editorTextarea.value = state.writerView.bodyMarkdown;
   }
 
   parts.editorHighlight.innerHTML = buildHighlightedScriptMarkup(
-    state.editorSourceMarkdown,
-    Math.max(0, (state.analysis?.editorContext?.lineIndex || 0))
+    state.writerView.bodyMarkdown,
+    readVisibleLineNumber(state, (state.analysis?.editorContext?.lineNumber || 1)) - 1
   );
   parts.editorTextarea.disabled = !selectedDraft;
   parts.editorTextarea.readOnly = !selectedDraft;
   parts.editorTextarea.placeholder = selectedDraft
-    ? 'Write the lesson script here.'
+    ? 'Write the lesson flow here.'
     : 'Create or open a draft to start writing.';
   parts.saveDraftButton.disabled = !selectedDraft || !state.dirty;
   parts.publishButton.disabled = !selectedDraft || Boolean(state.analysis?.parseErrorMessage || state.analysis?.compileErrorMessage);
@@ -1269,6 +1330,7 @@ function refreshAnalysis(state, cursorOffset) {
   }
 
   const editorContext = readEditorContext(sourceMarkdown, cursorOffset, parsedLesson);
+  const writerView = buildWriterView(sourceMarkdown, editorContext);
 
   state.analysis = {
     parsedLesson,
@@ -1277,6 +1339,7 @@ function refreshAnalysis(state, cursorOffset) {
     compileErrorMessage,
     editorContext
   };
+  state.writerView = writerView;
   state.previewModel = parsedLesson
     ? buildParsedPreviewModel(parsedLesson, editorContext.context)
     : null;
@@ -1304,12 +1367,30 @@ function maybeConfirmNavigation(state, ownerWindow) {
   return ownerWindow.confirm('This draft has unsaved changes. Continue and lose them?');
 }
 
-function focusEditorAtLine(parts, lineStarts, lineNumber) {
-  const lineIndex = Math.max(0, lineNumber - 1);
-  const offset = lineStarts[lineIndex] || 0;
+function applyVisibleEditorSelection(state, parts, selectionStart, selectionEnd = selectionStart, focusEditor = true) {
+  const visibleSelectionStart = readVisibleEditorOffset(state, selectionStart);
+  const visibleSelectionEnd = readVisibleEditorOffset(state, selectionEnd);
 
-  parts.editorTextarea.focus();
-  parts.editorTextarea.setSelectionRange(offset, offset);
+  if (focusEditor) {
+    parts.editorTextarea.focus();
+  }
+
+  parts.editorTextarea.setSelectionRange(visibleSelectionStart, visibleSelectionEnd);
+  syncEditorSurfaceScroll(parts);
+}
+
+function focusEditorAtSourceLine(state, parts, lineNumber) {
+  const lineIndex = Math.max(0, lineNumber - 1);
+  const offset = state.analysis?.editorContext?.lineStarts?.[lineIndex] || 0;
+
+  if (offset < (state.writerView?.startOffset || 0)) {
+    openMetadataDrawer(state);
+    state.statusMessage = 'Metadata stays hidden in Write Mode. Edit it from the drawer.';
+    state.statusMessageTone = 'muted';
+    return;
+  }
+
+  applyVisibleEditorSelection(state, parts, offset, offset, true);
 }
 
 function buildInsertedSource({
@@ -1348,16 +1429,9 @@ function applyEditorSourceChange(state, parts, {
   state.statusMessage = statusMessage;
   state.statusMessageTone = statusTone;
 
-  if (parts.editorTextarea.value !== nextValue) {
-    parts.editorTextarea.value = nextValue;
-  }
-
-  if (focusEditor) {
-    parts.editorTextarea.focus();
-  }
-
-  parts.editorTextarea.setSelectionRange(selectionStart, selectionEnd);
   refreshAnalysis(state, selectionStart);
+  parts.editorTextarea.value = state.writerView.bodyMarkdown;
+  applyVisibleEditorSelection(state, parts, selectionStart, selectionEnd, focusEditor);
 }
 
 function insertSnippetIntoEditor(state, parts, {
@@ -1414,7 +1488,7 @@ function readSelectionOffsetForContext(sourceMarkdown, editorContext) {
     }
   }
 
-  return 0;
+  return readDefaultWriterSelectionOffset(sourceMarkdown);
 }
 
 function readMetadataEditorContextScan(editorContext, stepIndex) {
@@ -1442,7 +1516,7 @@ function closeAuthoringOverlays(state) {
   state.metadataDrawerOpen = false;
 }
 
-function openWorkspaceSnapshot(state, parts, workspaceSnapshot, statusMessage, tone = 'success', selectionOffset = 0) {
+function openWorkspaceSnapshot(state, parts, workspaceSnapshot, statusMessage, tone = 'success', selectionOffset = null) {
   state.workspaceSnapshot = workspaceSnapshot;
   state.editorSourceMarkdown = workspaceSnapshot.selectedDraft?.sourceMarkdown || '';
   state.dirty = false;
@@ -1452,9 +1526,24 @@ function openWorkspaceSnapshot(state, parts, workspaceSnapshot, statusMessage, t
   state.metadataForm = null;
   state.metadataFormVersion += 1;
   closeAuthoringOverlays(state);
-  parts.editorTextarea.value = state.editorSourceMarkdown;
-  parts.editorTextarea.setSelectionRange(selectionOffset, selectionOffset);
-  refreshAnalysis(state, selectionOffset);
+  refreshAnalysis(
+    state,
+    Number.isInteger(selectionOffset)
+      ? selectionOffset
+      : readDefaultWriterSelectionOffset(state.editorSourceMarkdown)
+  );
+  parts.editorTextarea.value = state.writerView.bodyMarkdown;
+  applyVisibleEditorSelection(
+    state,
+    parts,
+    Number.isInteger(selectionOffset)
+      ? selectionOffset
+      : state.writerView.startOffset,
+    Number.isInteger(selectionOffset)
+      ? selectionOffset
+      : state.writerView.startOffset,
+    false
+  );
 }
 
 function getActiveMenuKey(actionElement) {
@@ -1517,6 +1606,13 @@ export async function showAuthoringWorkspace({
   const state = {
     workspaceSnapshot: initialDraftWorkspace,
     editorSourceMarkdown: initialDraftWorkspace.selectedDraft?.sourceMarkdown || '',
+    writerView: {
+      hiddenPrefixMarkdown: '',
+      bodyMarkdown: initialDraftWorkspace.selectedDraft?.sourceMarkdown || '',
+      startOffset: 0,
+      startLineIndex: 0,
+      startLineNumber: 1
+    },
     dirty: false,
     statusMessage: 'SQLite workspace loaded.',
     statusMessageTone: 'success',
@@ -1551,7 +1647,7 @@ export async function showAuthoringWorkspace({
   };
   const parts = createWorkspaceParts(ownerDocument);
 
-  refreshAnalysis(state, 0);
+  refreshAnalysis(state, readDefaultWriterSelectionOffset(state.editorSourceMarkdown));
 
   async function safelyRunWorkspaceAction(workspaceAction, successMessage, readSelectionOffset = null) {
     try {
@@ -1560,7 +1656,7 @@ export async function showAuthoringWorkspace({
       if (result?.workspaceSnapshot) {
         const selectionOffset = typeof readSelectionOffset === 'function'
           ? readSelectionOffset(result.workspaceSnapshot)
-          : 0;
+          : null;
 
         openWorkspaceSnapshot(
           state,
@@ -1588,6 +1684,8 @@ export async function showAuthoringWorkspace({
       return;
     }
 
+    const selectionOffset = readSourceEditorOffset(state, parts.editorTextarea.selectionStart ?? 0);
+
     await safelyRunWorkspaceAction(async () => {
       const nextWorkspaceSnapshot = await authoringStore.saveLessonDraft({
         draftId: state.workspaceSnapshot.selectedDraft.draftId,
@@ -1597,10 +1695,7 @@ export async function showAuthoringWorkspace({
       return {
         workspaceSnapshot: nextWorkspaceSnapshot
       };
-    }, 'Draft saved into SQLite.', workspaceSnapshot => readSelectionOffsetForContext(
-      workspaceSnapshot.selectedDraft?.sourceMarkdown || '',
-      state.analysis.editorContext
-    ));
+    }, 'Draft saved into SQLite.', () => selectionOffset);
   }
 
   async function publishCurrentDraft() {
@@ -1608,29 +1703,28 @@ export async function showAuthoringWorkspace({
       return;
     }
 
+    const selectionOffset = readSourceEditorOffset(state, parts.editorTextarea.selectionStart ?? 0);
+
     await safelyRunWorkspaceAction(async () => {
       const nextWorkspaceSnapshot = await authoringStore.publishLessonDraft(state.workspaceSnapshot.selectedDraft.draftId);
 
       return {
         workspaceSnapshot: nextWorkspaceSnapshot
       };
-    }, 'Published snapshot stored in SQLite.', workspaceSnapshot => readSelectionOffsetForContext(
-      workspaceSnapshot.selectedDraft?.sourceMarkdown || '',
-      state.analysis.editorContext
-    ));
+    }, 'Published snapshot stored in SQLite.', () => selectionOffset);
   }
 
   function syncCursorState() {
-    refreshAnalysis(state, parts.editorTextarea.selectionStart ?? 0);
+    refreshAnalysis(state, readSourceEditorOffset(state, parts.editorTextarea.selectionStart ?? 0));
     renderWorkspace(state, parts);
   }
 
   parts.editorTextarea.addEventListener('input', () => {
-    state.editorSourceMarkdown = parts.editorTextarea.value;
+    state.editorSourceMarkdown = `${state.writerView.hiddenPrefixMarkdown}${parts.editorTextarea.value}`;
     state.dirty = true;
     state.statusMessage = 'Draft has unsaved changes.';
     state.statusMessageTone = 'warning';
-    refreshAnalysis(state, parts.editorTextarea.selectionStart ?? 0);
+    refreshAnalysis(state, readSourceEditorOffset(state, parts.editorTextarea.selectionStart ?? 0));
     renderWorkspace(state, parts);
   });
 
@@ -1657,7 +1751,7 @@ export async function showAuthoringWorkspace({
     const isCommandK = (event.metaKey || event.ctrlKey) && event.key.toLowerCase() === 'k';
     const currentContext = state.analysis.editorContext.context;
     const lineText = state.analysis.editorContext.lines[currentContext.lineIndex] || '';
-    const cursorColumn = (parts.editorTextarea.selectionStart ?? 0)
+    const cursorColumn = readSourceEditorOffset(state, parts.editorTextarea.selectionStart ?? 0)
       - (state.analysis.editorContext.lineStarts[currentContext.lineIndex] || 0);
     const slashTriggerEligible = event.key === '/'
       && !event.metaKey
@@ -1682,7 +1776,10 @@ export async function showAuthoringWorkspace({
   });
 
   parts.previewButton.addEventListener('click', () => {
-    parts.previewCard.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    refreshAnalysis(state, readSourceEditorOffset(state, parts.editorTextarea.selectionStart ?? 0));
+    state.statusMessage = 'Preview refreshed from the active writing context.';
+    state.statusMessageTone = 'success';
+    renderWorkspace(state, parts);
   });
 
   parts.saveDraftButton.addEventListener('click', async () => {
@@ -1772,9 +1869,9 @@ export async function showAuthoringWorkspace({
 
     const { actionName, parts: actionParts } = getActiveMenuKey(actionElement);
 
-    if (actionName === 'jump-to-line') {
-      focusEditorAtLine(parts, state.analysis.editorContext.lineStarts, Number(actionParts[0]));
-      refreshAnalysis(state, parts.editorTextarea.selectionStart ?? 0);
+    if (actionName === 'jump-to-source-line') {
+      focusEditorAtSourceLine(state, parts, Number(actionParts[0]));
+      refreshAnalysis(state, readSourceEditorOffset(state, parts.editorTextarea.selectionStart ?? 0));
       renderWorkspace(state, parts);
       return;
     }
@@ -1958,8 +2055,11 @@ export async function showAuthoringWorkspace({
       || actionName === 'insert-preview-action') {
       insertSnippetIntoEditor(state, parts, {
         actionName: actionElement.dataset.action,
-        insertionStart: parts.editorTextarea.selectionStart ?? 0,
-        insertionEnd: parts.editorTextarea.selectionEnd ?? parts.editorTextarea.selectionStart ?? 0
+        insertionStart: readSourceEditorOffset(state, parts.editorTextarea.selectionStart ?? 0),
+        insertionEnd: readSourceEditorOffset(
+          state,
+          parts.editorTextarea.selectionEnd ?? parts.editorTextarea.selectionStart ?? 0
+        )
       });
       state.insertMenuOpen = false;
       renderWorkspace(state, parts);

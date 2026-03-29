@@ -15,6 +15,9 @@ Update rules:
 
 ## Current Ledger
 
+1. `[review][medium] 2026-03-29 04:45 CEST - Closed TODO-004 and re-ran the whole-system cold review by shipping Write Mode V2: hidden frontmatter body view, right inspector, lighter outline, stronger DSL hierarchy, exact save/publish cursor preservation, and V2 smoke coverage`
+   owner: codex
+   actual: 15m
 1. `[review][medium] 2026-03-29 04:13 CEST - Closed TODO-003 and the requested whole-system cold review by shipping the compact Write Mode workspace, fixing the export dead path and hidden-overlay hit-test bug, and revalidating with tests plus a production build`
    owner: codex
    actual: 3h

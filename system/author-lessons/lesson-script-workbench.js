@@ -285,27 +285,27 @@ function readFenceLanguageForArtifact(parsedLesson, artifactId) {
 export function buildInsertMenuItems(context) {
   if (context.kind === 'root') {
     return [
-      { action: 'insert-step', label: 'Step', hint: 'Insert a new step block.' }
+      { action: 'insert-step', label: 'Insert Step', hint: 'Insert a new step block.' }
     ];
   }
 
   if (context.kind === 'step') {
     return [
-      { action: 'insert-scene', label: 'Scene', hint: 'Insert a scene block under the current step.' },
-      { action: 'insert-step-summary', label: 'Step Summary', hint: 'Insert the step summary field.' },
-      { action: 'insert-intent', label: 'Intent', hint: 'Insert the step intent field.' }
+      { action: 'insert-scene', label: 'Insert Scene', hint: 'Insert a scene block under the current step.' },
+      { action: 'insert-step-summary', label: 'Insert Step Summary', hint: 'Insert the step summary field.' },
+      { action: 'insert-intent', label: 'Insert Intent', hint: 'Insert the step intent field.' }
     ];
   }
 
   return [
-    { action: 'insert-narration', label: 'Narration', hint: 'Insert the narration section.' },
-    { action: 'insert-show-code:html', label: 'Show Code → HTML', hint: 'Insert an HTML code block.' },
-    { action: 'insert-show-code:css', label: 'Show Code → CSS', hint: 'Insert a CSS code block.' },
-    { action: 'insert-show-code:js', label: 'Show Code → JS', hint: 'Insert a JS code block.' },
-    { action: 'insert-show-code:template-js', label: 'Show Code → Template JS', hint: 'Insert a template JS code block.' },
-    { action: 'insert-show-code:shadow-css', label: 'Show Code → Shadow CSS', hint: 'Insert a shadow CSS code block.' },
-    { action: 'insert-theory-link', label: 'Theory Link', hint: 'Insert the theory section.' },
-    { action: 'insert-preview-action', label: 'Preview Action', hint: 'Insert the preview section.' }
+    { action: 'insert-narration', label: 'Insert Narration', hint: 'Insert the narration section.' },
+    { action: 'insert-show-code:html', label: 'Insert Show Code → HTML', hint: 'Insert an HTML code block.' },
+    { action: 'insert-show-code:css', label: 'Insert Show Code → CSS', hint: 'Insert a CSS code block.' },
+    { action: 'insert-show-code:js', label: 'Insert Show Code → JS', hint: 'Insert a JS code block.' },
+    { action: 'insert-show-code:template-js', label: 'Insert Show Code → Template JS', hint: 'Insert a template JS code block.' },
+    { action: 'insert-show-code:shadow-css', label: 'Insert Show Code → Shadow CSS', hint: 'Insert a shadow CSS code block.' },
+    { action: 'insert-theory-link', label: 'Insert Theory Link', hint: 'Insert the theory section.' },
+    { action: 'insert-preview-action', label: 'Insert Preview Action', hint: 'Insert the preview section.' }
   ];
 }
 
