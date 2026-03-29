@@ -63,7 +63,7 @@ NO OFF-ROAD. NO SHORTCUTS. START NOW.
 
 # AGENTS.md — step-by-step-animator Local Contract
 
-Version: 1.0.1
+Version: 1.0.2
 Status: Normative / Local
 Scope: `./**`
 
@@ -142,6 +142,19 @@ Agents MUST follow this order in this repository:
      2. commit the iteration
      3. push the branch
    - Do not treat an implementation or fix iteration as closed until that sequence is complete.
+11. **Live Lesson Authoring Contract**:
+   - Write Mode at `?workspace=authoring` is the default authoring surface.
+   - The browser-backed authoring store is the canonical draft truth for in-progress lessons.
+   - `Save` persists draft content to the authoring store.
+   - `Play` compiles from the latest healthy saved draft and fails closed to the shipped lesson package when the draft is unhealthy.
+   - `Publish` is the explicit authoring snapshot or shipped-output step; `Export` is explicit filesystem materialization.
+   - Files under `product/education/lessons/**/source/` are off the critical path for creating and editing drafts. They exist as shipped lesson materialization plus import/export compatibility inputs.
+   - Legacy file-based lessons remain importable during migration, but they are not the preferred path for new day-to-day authoring.
+12. **Lesson Authoring Documentation Path**:
+   - The live repo-local lesson architecture and authoring contract is documented in:
+     - `.agents/business-logic/software/lesson-authoring/architecture/LESSON_ARCHITECTURE.md`
+     - `.agents/business-logic/software/lesson-authoring/authoring/LESSON_AUTHORING.md`
+   - If mounted reusable docs under `.agents/.rules/project-local/governance/app-architecture/lesson-architecture*.md` still show older file-first examples, treat them as reusable baseline or migration reference, not as the live default authoring workflow for this repo.
 
 Keep this file short. Long procedures belong in governance docs, and active
 queues belong in `.agents/management/**`.

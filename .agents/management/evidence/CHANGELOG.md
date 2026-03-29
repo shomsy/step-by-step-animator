@@ -15,6 +15,9 @@ Update rules:
 
 ## Current Ledger
 
+1. `[doc][medium] 2026-03-30 01:57 CEST - Closed TODO-012 by removing the repo-local lesson authoring split-brain across README, AGENTS, and local lesson architecture/authoring docs so Write Mode, the authoring store, Save / Play / Publish / Export, and migration posture now use one explicit contract`
+   owner: codex
+   actual: 25m
 1. `[review][medium] 2026-03-30 01:33 CEST - Closed TODO-011 by refactoring lesson-scoped authoring entry and paired-draft synchronization so Write Mode opens the requested shipped lesson, untouched paired drafts refresh from shipped source updates, and normal player selection ignores unpaired same-id drafts`
    owner: codex
    actual: 20m

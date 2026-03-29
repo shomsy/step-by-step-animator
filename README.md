@@ -22,9 +22,10 @@ The live repo is organized around these boundaries:
 
 - `product/` is the product surface
   - `product/app/` is the canonical browser shell and Vite root
-  - `product/education/` is source-only lesson authoring
-- `system/lesson-engine/` translates lesson source into compiled lesson data and writes derived docs to `system/lesson-engine/output/`
+  - `product/education/` holds shipped lesson sources plus publish/export and migration compatibility material
 - `system/` is the runtime boundary
+  - `system/author-lessons/` owns Write Mode and the browser-backed authoring store
+  - `system/lesson-engine/` compiles lesson drafts or shipped lesson source into the canonical lesson package and writes derived docs to `system/lesson-engine/output/`
   - `system/animator-engine/` plays compiled lesson packages
 - `system/foundation/` contains shared frontmatter and markdown primitives
 - `system/lesson-engine/output/` holds derived output
@@ -112,7 +113,12 @@ flowchart TD
   LessonShell --> PreviewPanel
 ```
 
-Source authoring flows in the opposite direction:
+Authoring and playback are separate on purpose:
+
+- day-to-day authoring flow is `Write Mode -> Authoring Store -> Lesson Engine -> Play`
+- shipped compatibility and publish/export flow is `product/education/lessons/<lesson-slug>/source/ -> Lesson Engine -> Compiled lesson package`
+
+Published lesson files still live here:
 
 - `product/education/lessons/<lesson-slug>/source/`
 - `system/lesson-engine/`
@@ -134,30 +140,42 @@ npm run sync:lesson-documents
 - `npm run build` creates a production bundle with Vite
 - `npm run preview` serves the production build locally
 - `npm test` runs the contract, flow, and smoke tests
-- `npm run validate:lessons` validates the shipped source-only lessons
+- `npm run validate:lessons` validates the shipped lesson source material
 - `npm run sync:lesson-documents` regenerates lesson documents under `system/lesson-engine/output/`
 
-## Lesson Source
+## Lesson Drafts, Shipped Files, And Migration
 
-Source-only lessons live under:
+Normal lesson authoring starts in Write Mode.
+
+- the canonical authored document shape is still `lesson.script.md`
+- during normal authoring that document lives in the browser-backed authoring store, not in a required filesystem scaffold
+- a new lesson can start from the UI without pre-existing folders or source files
+- `Save` persists the draft to the authoring store
+- `Play` compiles from the latest healthy saved draft
+- `Publish` stores a recoverable authoring snapshot
+- `Export` materializes a `lesson.script.md` file
+
+Shipped lesson files live under:
 
 ```txt
 product/education/lessons/<lesson-slug>/source/
 ```
 
-Each shipped lesson is authored through this canonical source contract:
+When a lesson is materialized to the repository, the shipped shape is:
 
 - `lesson.script.md`
 - optional `theory.md`
 - optional `assets/`
 
-`lesson.script.md` keeps step, scene, narration, and one-or-more `Show Code` snapshots in one scrollable file. The legacy split source (`lesson.md`, `scenes.md`, `artifacts/`) remains only as an import/migration bridge; the shipped lesson estate uses `lesson.script.md` as the source of truth.
+`lesson.script.md` keeps step, scene, narration, and one-or-more `Show Code` snapshots in one scrollable file. The legacy split source (`lesson.md`, `scenes.md`, `artifacts/`) remains only as an import/migration bridge. Filesystem lesson sources are off the critical path for creating and editing drafts, but they remain valid import inputs and publish/export outputs while migration stays in flight.
 
 ## Authoring Workspace
 
 The browser app now exposes a dedicated authoring workspace at `?workspace=authoring`.
 
-- shipped lesson source is loaded as immutable input
+- Write Mode is the default authoring surface
+- the authoring store is the draft source of truth for in-progress lessons
+- shipped lesson source is loaded as importable or pairable input, not as the required starting point for new authoring
 - editable drafts live in browser-side SQLite persistence backed by IndexedDB
 - authors can create, open, update, duplicate, delete, publish snapshots, and export `lesson.script.md`
 - Write Mode opens on the first real `# Step:` block instead of the raw frontmatter contract
@@ -174,8 +192,8 @@ The browser app now exposes a dedicated authoring workspace at `?workspace=autho
 - the authoring state model is explicit: `Draft Saved`, `Unsaved Changes`, `Playable Draft`, `Broken Draft Fallback`, `Published Lesson`, and `No Draft`
 - `Save` persists draft content to SQLite only
 - `Play` uses the latest healthy saved draft, or fails closed to the shipped lesson package when the saved draft is unhealthy
-- `Publish` stores a recoverable version snapshot in SQLite
-- `Export` downloads the current `lesson.script.md`, but filesystem materialization is not required for day-to-day authoring
+- `Publish` stores a recoverable version snapshot in SQLite and marks the lesson as a `Published Lesson` inside the authoring lifecycle
+- `Export` downloads the current `lesson.script.md`; filesystem materialization is optional for day-to-day authoring and required only when you explicitly want publish/export artifacts
 - a restored version snapshot should return the draft to a recoverable saved state instead of acting like a second source of truth
 
 ## Notes
