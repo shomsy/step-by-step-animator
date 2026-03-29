@@ -22,6 +22,7 @@ Update rules:
 ### PLAN-003 | Hybrid editor architecture for lesson authoring
 - created_at: `2026-03-29 04:45 CEST`
 - updated_at: `2026-03-29 16:54 CEST`
+- updated_at: `2026-03-29 17:23 CEST`
 - status: `in_progress`
 - owner: `codex`
 - estimate: `1-2 iterations`
@@ -55,6 +56,7 @@ Update rules:
   - model synchronization as projection and serialization, not three editors mutating the same raw string concurrently
   - add migration and validation tests for round-tripping content between projections and canonical source
   - apply the writer-first Write Mode V2 layout rules: body-first opening, compact outline, right inspector, stronger DSL hierarchy, and context-aware insert flow
+  - frontmatter stays editable, but it is not the primary surface in Write Mode
 - architecture boundaries:
   - `system/author-lessons/**`
   - `system/lesson-engine/**`
@@ -78,3 +80,5 @@ Update rules:
   - opening a lesson must land the author on the first real lesson step, not on frontmatter or system metadata
   - the right inspector remains visible as a real side panel for preview, compile, validation, and snapshot
   - slash insert generates valid context-aware DSL templates and remains the primary authoring path
+  - outline navigation must jump to exact Step and Scene anchors in the editor
+  - metadata and publishing actions must never displace the lesson script from the center panel in Write Mode
