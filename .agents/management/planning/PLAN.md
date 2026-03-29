@@ -19,4 +19,27 @@ Update rules:
 
 ## Current Workstreams
 
-No active workstreams.
+1. `PLAN-001 | Compact Write Mode shell | updated 2026-03-29 03:45 CEST`
+   - `id`: `PLAN-001`
+   - `created_at`: `2026-03-29 03:45 CEST`
+   - `updated_at`: `2026-03-29 03:45 CEST`
+   - `status`: `active`
+   - `owner`: `codex`
+   - `estimate`: `1-2d`
+   - `linked_todo`: `TODO-003`
+   - `user_goal`: `Make the authoring workspace feel like a writer-first editor instead of an admin studio.`
+   - `visible_result`: `A calm 3-column layout with outline, lesson script editor, and inspector panels.`
+   - `learning_path`: `Open lesson -> jump by outline -> insert DSL blocks -> validate -> preview -> save -> continue.`
+   - `quality_gates`: `trust, operator clarity, rollback posture, contract stability, state ownership, async containment, deterministic automation, observability, runtime hardening, performance posture, source truth, evidence integrity, self-healing loop`
+   - `acceptance`:
+     - `Header stays minimal and does not compete with the editor.`
+     - `Editor remains the primary work surface.`
+     - `Insert Block` is context-aware and inserts valid DSL templates.
+     - `Outline` only navigates step and scene structure.
+     - `Inspector` shows compile status, validation, preview, and current snapshot only.
+     - `Metadata` lives in a drawer or modal instead of the primary flow.
+   - `technical_execution`:
+     - `system/author-lessons/show-authoring-workspace.js`
+     - `system/author-lessons/authoring-workspace.css`
+     - `system/author-lessons/lesson-script-workbench.js`
+     - `tests/smoke/browser-authoring-smoke.test.js`

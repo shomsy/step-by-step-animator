@@ -24,7 +24,7 @@ flowchart LR
     end
 
     subgraph InProgress["In Progress"]
-        P0["No active cards"]
+        P0["TODO-003 | compact write mode shell | updated 2026-03-29 03:45 CEST"]
     end
 
     subgraph Blocked["Blocked"]
