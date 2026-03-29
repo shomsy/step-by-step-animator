@@ -45,6 +45,26 @@ function readLineIndexFromOffset(lineStarts, offset) {
   return Math.max(0, Math.min(lineStarts.length - 1, low));
 }
 
+export function readEditorContextFromScan(scan, cursorOffset) {
+  const lineIndex = readLineIndexFromOffset(scan?.lineStarts || [], cursorOffset);
+
+  return {
+    ...scan,
+    lineIndex,
+    lineNumber: lineIndex + 1,
+    context: scan?.contextByLine?.[lineIndex] || {
+      kind: 'root',
+      lineIndex,
+      lineNumber: lineIndex + 1,
+      stepIndex: -1,
+      sceneIndex: -1,
+      sectionType: '',
+      artifactId: '',
+      insideCodeFence: false
+    }
+  };
+}
+
 function isFrontmatterBoundary(line, lineIndex) {
   return lineIndex === 0 && normalizeString(line) === '---';
 }
@@ -219,23 +239,8 @@ export function scanLessonScriptSource(sourceMarkdown, parsedLesson = null) {
 
 export function readEditorContext(sourceMarkdown, cursorOffset, parsedLesson = null) {
   const scan = scanLessonScriptSource(sourceMarkdown, parsedLesson);
-  const lineIndex = readLineIndexFromOffset(scan.lineStarts, cursorOffset);
 
-  return {
-    ...scan,
-    lineIndex,
-    lineNumber: lineIndex + 1,
-    context: scan.contextByLine[lineIndex] || {
-      kind: 'root',
-      lineIndex,
-      lineNumber: lineIndex + 1,
-      stepIndex: -1,
-      sceneIndex: -1,
-      sectionType: '',
-      artifactId: '',
-      insideCodeFence: false
-    }
-  };
+  return readEditorContextFromScan(scan, cursorOffset);
 }
 
 function suggestUniqueId(prefix, existingIds) {

@@ -4,15 +4,18 @@ import { composeLivePreviewDocument } from '../animator-engine/play-lesson/04-wa
 import { openAuthoringSqlite } from './open-authoring-sqlite.js';
 import { readShippedLessonScripts } from './read-shipped-lesson-scripts.js';
 import { readLessonScript } from '../lesson-engine/read-lesson-script.js';
+import { parseFrontmatter } from '../foundation/frontmatter/parse-frontmatter.js';
 import {
   buildInsertMenuItems,
   buildInsertSnippet,
-  readEditorContext
+  readEditorContextFromScan,
+  scanLessonScriptSource
 } from './lesson-script-workbench.js';
 import { createLessonScriptEditor } from './create-lesson-script-editor.js';
 
 let metadataProseEditorFactoryPromise = null;
 
+const ANALYSIS_DEBOUNCE_MS = 120;
 const METADATA_STATUS_OPTIONS = ['draft', 'active', 'broken', 'deprecated'];
 const PREVIEW_TYPE_OPTIONS = ['dom', 'terminal', 'markdown', 'diagram', 'none'];
 
@@ -26,6 +29,10 @@ function escapeHtml(text) {
 
 function normalizeText(value) {
   return typeof value === 'string' ? value.trim() : '';
+}
+
+function normalizeMultilineText(value) {
+  return String(value || '').replace(/\r\n/g, '\n');
 }
 
 async function loadMetadataProseEditorFactory() {
@@ -98,8 +105,11 @@ function cloneArtifactLineMap(linesByArtifactId) {
 
 function buildHeaderTitle(state) {
   const parsedLesson = state.analysis?.parsedLesson;
+  const frontmatterAttributes = state.analysis?.frontmatterAttributes || {};
   const selectedDraft = state.workspaceSnapshot.selectedDraft;
   const lessonTitle = parsedLesson?.attributes?.lessonTitle
+    || normalizeText(frontmatterAttributes.lessonTitle)
+    || normalizeText(frontmatterAttributes.lessonId)
     || selectedDraft?.lessonTitle
     || 'No draft selected';
   const order = parsedLesson?.attributes?.order;
@@ -116,6 +126,8 @@ function buildHeaderMeta(state) {
   const selectedDraft = state.workspaceSnapshot.selectedDraft;
   const steps = Array.isArray(parsedLesson?.steps) ? parsedLesson.steps : [];
   const sceneCount = steps.reduce((count, step) => count + (Array.isArray(step.scenes) ? step.scenes.length : 0), 0);
+  const outlinedSteps = state.analysis?.editorContext?.steps || [];
+  const outlinedSceneCount = outlinedSteps.reduce((count, step) => count + (Array.isArray(step.scenes) ? step.scenes.length : 0), 0);
 
   if (!selectedDraft) {
     return 'Open or create a draft to start writing.';
@@ -123,6 +135,10 @@ function buildHeaderMeta(state) {
 
   if (steps.length) {
     return `${steps.length} steps · ${sceneCount} scenes · metadata stays in the drawer`;
+  }
+
+  if (outlinedSteps.length) {
+    return `${outlinedSteps.length} detected steps · ${outlinedSceneCount} scenes · metadata stays in the drawer`;
   }
 
   return 'Start the first step. Metadata stays in the drawer.';
@@ -186,10 +202,35 @@ function buildWriterView(sourceMarkdown, editorContext) {
 }
 
 function readDefaultWriterSelectionOffset(sourceMarkdown) {
-  const seedContext = readEditorContext(String(sourceMarkdown || ''), 0, null);
+  const seedScan = scanLessonScriptSource(String(sourceMarkdown || ''), null);
+  const seedContext = readEditorContextFromScan(seedScan, 0);
   const writerView = buildWriterView(sourceMarkdown, seedContext);
 
   return writerView.startOffset;
+}
+
+function readFullLessonSourceFromPaste(pastedText) {
+  const sourceMarkdown = normalizeMultilineText(pastedText).trim();
+
+  if (!sourceMarkdown.startsWith('---\n')) {
+    return '';
+  }
+
+  try {
+    const { attributes, body } = parseFrontmatter(sourceMarkdown);
+
+    if (!Object.keys(attributes || {}).length) {
+      return '';
+    }
+
+    if (!/^# Step:\s*/m.test(String(body || ''))) {
+      return '';
+    }
+
+    return sourceMarkdown;
+  } catch {
+    return '';
+  }
 }
 
 function readVisibleEditorOffset(state, sourceOffset) {
@@ -213,6 +254,10 @@ function buildSaveChipTone(state) {
 }
 
 function buildCompileChipTone(state) {
+  if (state.analysisPending) {
+    return 'muted';
+  }
+
   if (state.analysis?.parseErrorMessage || state.analysis?.compileErrorMessage) {
     return 'danger';
   }
@@ -225,6 +270,10 @@ function buildCompileChipTone(state) {
 }
 
 function buildCompileChipLabel(state) {
+  if (state.analysisPending) {
+    return 'Refreshing…';
+  }
+
   if (state.analysis?.parseErrorMessage) {
     return 'Syntax issue';
   }
@@ -261,6 +310,10 @@ function buildContextLabel(context) {
 }
 
 function buildStatusMessageTone(state) {
+  if (state.analysisPending) {
+    return state.statusMessageTone || 'muted';
+  }
+
   if (state.analysis?.parseErrorMessage || state.analysis?.compileErrorMessage) {
     return 'danger';
   }
@@ -269,6 +322,10 @@ function buildStatusMessageTone(state) {
 }
 
 function buildStatusMessage(state) {
+  if (state.analysisPending && state.statusMessage) {
+    return state.statusMessage;
+  }
+
   if (state.analysis?.parseErrorMessage) {
     return state.analysis.parseErrorMessage;
   }
@@ -417,6 +474,10 @@ function resolveValidationLocation(editorContext, message) {
 }
 
 function readValidationItems(state) {
+  if (state.analysisPending) {
+    return [];
+  }
+
   const items = [];
   const editorContext = state.analysis?.editorContext;
 
@@ -625,6 +686,10 @@ function buildPreviewNote(state, previewModel) {
     return 'Open a draft to preview the lesson state.';
   }
 
+  if (state.analysisPending) {
+    return 'Preview updates after the latest script analysis completes.';
+  }
+
   if (!previewModel) {
     return 'Preview appears here once the script defines a readable state.';
   }
@@ -707,6 +772,16 @@ function buildCompileStatusMarkup(state) {
     return '<div class="authoring-empty">Open a draft to inspect compile state.</div>';
   }
 
+  if (state.analysisPending) {
+    return `
+      <div class="authoring-compile-summary" data-tone="muted">
+        <strong>Refreshing</strong>
+        <p>Updating compile diagnostics from the latest script change.</p>
+        <span>Waiting for the new analysis pass</span>
+      </div>
+    `;
+  }
+
   if (state.analysis?.parseErrorMessage) {
     return `
       <div class="authoring-compile-summary" data-tone="danger">
@@ -755,6 +830,17 @@ function buildValidationMarkup(state) {
   }
 
   if (!validationItems.length) {
+    if (state.analysisPending) {
+      return `
+        <div class="authoring-validation-list">
+          <div class="authoring-validation-summary" data-tone="muted">
+            <strong>Refreshing</strong>
+            <p>Updating exact validation from the latest draft change.</p>
+          </div>
+        </div>
+      `;
+    }
+
     return `
       <div class="authoring-validation-list">
         <div class="authoring-validation-summary" data-tone="success">
@@ -1354,7 +1440,7 @@ function renderWorkspace(state, parts) {
     ? 'Write the lesson flow here.'
     : 'Create or open a draft to start writing.');
   parts.saveDraftButton.disabled = !selectedDraft || !state.dirty;
-  parts.publishButton.disabled = !selectedDraft || Boolean(state.analysis?.parseErrorMessage || state.analysis?.compileErrorMessage);
+  parts.publishButton.disabled = !selectedDraft || state.analysisPending || Boolean(state.analysis?.parseErrorMessage || state.analysis?.compileErrorMessage);
   parts.previewButton.disabled = !selectedDraft;
   parts.metadataButton.disabled = !selectedDraft;
   parts.insertButton.disabled = !selectedDraft;
@@ -1369,8 +1455,15 @@ function renderWorkspace(state, parts) {
 
 function refreshAnalysis(state, cursorOffset) {
   const sourceMarkdown = state.editorSourceMarkdown;
+  let frontmatterAttributes = {};
   let parsedLesson = null;
   let parseErrorMessage = '';
+
+  try {
+    frontmatterAttributes = parseFrontmatter(sourceMarkdown).attributes || {};
+  } catch {
+    frontmatterAttributes = {};
+  }
 
   try {
     parsedLesson = readLessonScript(sourceMarkdown);
@@ -1391,17 +1484,50 @@ function refreshAnalysis(state, cursorOffset) {
     }
   }
 
-  const editorContext = readEditorContext(sourceMarkdown, cursorOffset, parsedLesson);
+  const editorScan = scanLessonScriptSource(sourceMarkdown, parsedLesson);
+  const editorContext = readEditorContextFromScan(editorScan, cursorOffset);
   const writerView = buildWriterView(sourceMarkdown, editorContext);
 
   state.analysis = {
+    frontmatterAttributes,
     parsedLesson,
     parseErrorMessage,
     compiledLesson,
     compileErrorMessage,
+    editorScan,
     editorContext
   };
   state.writerView = writerView;
+  state.previewModel = parsedLesson
+    ? buildParsedPreviewModel(parsedLesson, editorContext.context)
+    : null;
+
+  if (state.previewModel) {
+    state.lastHealthyPreviewModel = state.previewModel;
+  }
+
+  if (editorContext.context.artifactId) {
+    state.currentArtifactId = editorContext.context.artifactId;
+  } else {
+    const fallbackArtifactId = readPrimaryArtifactId(parsedLesson);
+
+    if (!state.currentArtifactId || !readArtifactDeclarations(parsedLesson).some(artifact => artifact.artifactId === state.currentArtifactId)) {
+      state.currentArtifactId = fallbackArtifactId;
+    }
+  }
+}
+
+function refreshEditorContext(state, cursorOffset) {
+  const parsedLesson = state.analysis?.parsedLesson || null;
+  const editorScan = state.analysis?.editorScan || scanLessonScriptSource(state.editorSourceMarkdown, parsedLesson);
+  const editorContext = readEditorContextFromScan(editorScan, cursorOffset);
+
+  state.analysis = {
+    ...state.analysis,
+    editorScan,
+    editorContext
+  };
+  state.writerView = buildWriterView(state.editorSourceMarkdown, editorContext);
   state.previewModel = parsedLesson
     ? buildParsedPreviewModel(parsedLesson, editorContext.context)
     : null;
@@ -1495,6 +1621,18 @@ function applyEditorSourceChange(state, parts, {
   applyVisibleEditorSelection(state, parts, selectionStart, selectionEnd, focusEditor);
 }
 
+function importFullLessonSourceIntoEditor(state, parts, sourceMarkdown) {
+  const selectionOffset = readDefaultWriterSelectionOffset(sourceMarkdown);
+
+  applyEditorSourceChange(state, parts, {
+    nextValue: sourceMarkdown,
+    selectionStart: selectionOffset,
+    selectionEnd: selectionOffset,
+    statusMessage: 'Full lesson source imported into Write Mode.',
+    statusTone: 'success'
+  });
+}
+
 function insertSnippetIntoEditor(state, parts, {
   actionName,
   insertionStart,
@@ -1580,6 +1718,9 @@ function closeAuthoringOverlays(state) {
 function openWorkspaceSnapshot(state, parts, workspaceSnapshot, statusMessage, tone = 'success', selectionOffset = null) {
   state.workspaceSnapshot = workspaceSnapshot;
   state.editorSourceMarkdown = workspaceSnapshot.selectedDraft?.sourceMarkdown || '';
+  state.analysisPending = false;
+  state.analysisTimerId = 0;
+  state.pendingAnalysisCursorOffset = 0;
   state.dirty = false;
   state.statusMessage = statusMessage;
   state.statusMessageTone = tone;
@@ -1687,11 +1828,24 @@ export async function showAuthoringWorkspace({
     metadataProseEditorLoading: false,
     previewModel: null,
     lastHealthyPreviewModel: null,
+    analysisPending: false,
+    analysisTimerId: 0,
+    pendingAnalysisCursorOffset: 0,
     analysis: {
+      frontmatterAttributes: {},
       parsedLesson: null,
       parseErrorMessage: '',
       compiledLesson: null,
       compileErrorMessage: '',
+      editorScan: {
+        lineStarts: [],
+        lines: [],
+        frontmatterBoundaryCount: 0,
+        steps: [],
+        contextByLine: [],
+        existingStepIds: new Set(),
+        existingSceneIdsByStep: []
+      },
       editorContext: {
         context: {
           kind: 'root',
@@ -1709,6 +1863,47 @@ export async function showAuthoringWorkspace({
     },
     onDeferredMetadataSurfaceReady: null
   };
+
+  function clearDeferredAnalysis() {
+    if (!state.analysisTimerId) {
+      return;
+    }
+
+    ownerWindow.clearTimeout(state.analysisTimerId);
+    state.analysisTimerId = 0;
+  }
+
+  function finishDeferredAnalysis() {
+    clearDeferredAnalysis();
+    state.analysisPending = false;
+    refreshAnalysis(state, state.pendingAnalysisCursorOffset);
+
+    if (state.dirty) {
+      state.statusMessage = 'Draft has unsaved changes.';
+      state.statusMessageTone = 'warning';
+    }
+  }
+
+  function scheduleDeferredAnalysis(cursorOffset) {
+    state.pendingAnalysisCursorOffset = cursorOffset;
+    state.analysisPending = true;
+    state.statusMessage = 'Updating outline, preview, and validation from the latest draft.';
+    state.statusMessageTone = 'warning';
+    clearDeferredAnalysis();
+    state.analysisTimerId = ownerWindow.setTimeout(() => {
+      finishDeferredAnalysis();
+      renderWorkspace(state, parts);
+    }, ANALYSIS_DEBOUNCE_MS);
+  }
+
+  function flushDeferredAnalysis() {
+    if (!state.analysisPending && !state.analysisTimerId) {
+      return;
+    }
+
+    finishDeferredAnalysis();
+  }
+
   const parts = createWorkspaceParts(ownerDocument);
   state.onDeferredMetadataSurfaceReady = () => {
     if (state.metadataDrawerOpen) {
@@ -1729,11 +1924,28 @@ export async function showAuthoringWorkspace({
     },
     onChange({ value, selectionStart }) {
       state.editorSourceMarkdown = `${state.writerView.hiddenPrefixMarkdown}${value}`;
+      state.writerView = {
+        ...state.writerView,
+        bodyMarkdown: value
+      };
       state.dirty = true;
-      state.statusMessage = 'Draft has unsaved changes.';
-      state.statusMessageTone = 'warning';
-      refreshAnalysis(state, readSourceEditorOffset(state, selectionStart));
+      scheduleDeferredAnalysis(readSourceEditorOffset(state, selectionStart));
       renderWorkspace(state, parts);
+    },
+    onPasteText({ text, selectionStart, selectionEnd }) {
+      const importedSource = readFullLessonSourceFromPaste(text);
+      const visibleBodyMarkdown = parts.editorController.getValue();
+      const fullBodySelected = selectionStart === 0 && selectionEnd === visibleBodyMarkdown.length;
+
+      if (!importedSource || !fullBodySelected) {
+        return false;
+      }
+
+      clearDeferredAnalysis();
+      state.analysisPending = false;
+      importFullLessonSourceIntoEditor(state, parts, importedSource);
+      renderWorkspace(state, parts);
+      return true;
     },
     onCursorChange() {
       syncCursorState();
@@ -1743,6 +1955,7 @@ export async function showAuthoringWorkspace({
         return;
       }
 
+      flushDeferredAnalysis();
       state.insertMenuOpen = true;
       state.moreMenuOpen = false;
       renderWorkspace(state, parts);
@@ -1760,6 +1973,8 @@ export async function showAuthoringWorkspace({
       const result = await workspaceAction();
 
       if (result?.workspaceSnapshot) {
+        clearDeferredAnalysis();
+        state.analysisPending = false;
         const selectionOffset = typeof readSelectionOffset === 'function'
           ? readSelectionOffset(result.workspaceSnapshot)
           : null;
@@ -1805,6 +2020,8 @@ export async function showAuthoringWorkspace({
   }
 
   async function publishCurrentDraft() {
+    flushDeferredAnalysis();
+
     if (!state.workspaceSnapshot.selectedDraft || state.analysis?.parseErrorMessage || state.analysis?.compileErrorMessage) {
       return;
     }
@@ -1821,11 +2038,19 @@ export async function showAuthoringWorkspace({
   }
 
   function syncCursorState() {
-    refreshAnalysis(state, readSourceEditorOffset(state, parts.editorController.getSelectionStart()));
+    const cursorOffset = readSourceEditorOffset(state, parts.editorController.getSelectionStart());
+
+    if (state.analysisPending) {
+      state.pendingAnalysisCursorOffset = cursorOffset;
+      return;
+    }
+
+    refreshEditorContext(state, cursorOffset);
     renderWorkspace(state, parts);
   }
 
   parts.previewButton.addEventListener('click', () => {
+    flushDeferredAnalysis();
     refreshAnalysis(state, readSourceEditorOffset(state, parts.editorController.getSelectionStart()));
     state.statusMessage = 'Preview refreshed from the active writing context.';
     state.statusMessageTone = 'success';
@@ -1841,11 +2066,13 @@ export async function showAuthoringWorkspace({
   });
 
   parts.metadataButton.addEventListener('click', () => {
+    flushDeferredAnalysis();
     openMetadataDrawer(state);
     renderWorkspace(state, parts);
   });
 
   parts.insertButton.addEventListener('click', () => {
+    flushDeferredAnalysis();
     state.insertMenuOpen = !state.insertMenuOpen;
     state.moreMenuOpen = false;
     renderWorkspace(state, parts);
@@ -1862,6 +2089,7 @@ export async function showAuthoringWorkspace({
       return;
     }
 
+    flushDeferredAnalysis();
     const activeStepIndex = state.analysis.editorContext.context.stepIndex;
     const insertionStart = activeStepIndex >= 0
       ? readInsertOffsetAfterStep(state, activeStepIndex)
@@ -1875,6 +2103,7 @@ export async function showAuthoringWorkspace({
   });
 
   parts.addSceneButton.addEventListener('click', () => {
+    flushDeferredAnalysis();
     const activeStepIndex = state.analysis.editorContext.context.stepIndex;
 
     if (activeStepIndex < 0) {
@@ -1923,8 +2152,9 @@ export async function showAuthoringWorkspace({
     const { actionName, parts: actionParts } = getActiveMenuKey(actionElement);
 
     if (actionName === 'jump-to-source-line') {
+      flushDeferredAnalysis();
       focusEditorAtSourceLine(state, parts, Number(actionParts[0]));
-      refreshAnalysis(state, readSourceEditorOffset(state, parts.editorController.getSelectionStart()));
+      refreshEditorContext(state, readSourceEditorOffset(state, parts.editorController.getSelectionStart()));
       renderWorkspace(state, parts);
       return;
     }
@@ -1962,6 +2192,8 @@ export async function showAuthoringWorkspace({
         return;
       }
 
+      clearDeferredAnalysis();
+      state.analysisPending = false;
       openWorkspaceSnapshot(
         state,
         parts,
@@ -1977,6 +2209,8 @@ export async function showAuthoringWorkspace({
         return;
       }
 
+      clearDeferredAnalysis();
+      state.analysisPending = false;
       const nextWorkspaceSnapshot = await authoringStore.openDraftForShippedLesson(actionParts[0]);
 
       openWorkspaceSnapshot(
@@ -1994,6 +2228,8 @@ export async function showAuthoringWorkspace({
         return;
       }
 
+      clearDeferredAnalysis();
+      state.analysisPending = false;
       openWorkspaceSnapshot(
         state,
         parts,
@@ -2009,6 +2245,8 @@ export async function showAuthoringWorkspace({
         return;
       }
 
+      clearDeferredAnalysis();
+      state.analysisPending = false;
       openWorkspaceSnapshot(
         state,
         parts,
@@ -2032,6 +2270,8 @@ export async function showAuthoringWorkspace({
         return;
       }
 
+      clearDeferredAnalysis();
+      state.analysisPending = false;
       openWorkspaceSnapshot(
         state,
         parts,
@@ -2073,6 +2313,7 @@ export async function showAuthoringWorkspace({
     }
 
     if (actionName === 'open-metadata') {
+      flushDeferredAnalysis();
       openMetadataDrawer(state);
       renderWorkspace(state, parts);
       return;
@@ -2086,6 +2327,7 @@ export async function showAuthoringWorkspace({
     }
 
     if (actionName === 'apply-metadata') {
+      flushDeferredAnalysis();
       applyMetadataFormToScript(state, parts);
       renderWorkspace(state, parts);
       return;
@@ -2106,6 +2348,7 @@ export async function showAuthoringWorkspace({
       || actionName.startsWith('insert-show-code')
       || actionName === 'insert-theory-link'
       || actionName === 'insert-preview-action') {
+      flushDeferredAnalysis();
       insertSnippetIntoEditor(state, parts, {
         actionName: actionElement.dataset.action,
         insertionStart: readSourceEditorOffset(state, parts.editorController.getSelectionStart()),

@@ -10610,6 +10610,9 @@ Update rules:
 
 ## Current Ledger
 
+1. `[review][medium] 2026-03-29 19:36 CEST - Closed TODO-007 by removing large-paste bottlenecks from Write Mode, deferring heavy analysis after document edits, adding full lesson source paste import without hidden-frontmatter corruption, and revalidating with browser smoke plus the full test/build path`
+   owner: codex
+   actual: 45m
 1. `[review][medium] 2026-03-29 18:29 CEST - Closed TODO-006 and the requested cold review/remediation loop by tightening the Write Mode runtime: lighter outline rail, stronger DSL hierarchy, clearer slash insert path, exact outline/validation jumps, and stronger active preview verification`
    owner: codex
    actual: 1h
@@ -10818,9 +10821,10 @@ The active plan lives in `.agents/management/planning/PLAN.md`.
 The active implementation queue lives in `.agents/management/TODO.md`.
 The evidence ledger lives in `.agents/management/evidence/CHANGELOG.md`.
 
-- 2026-03-29 04:45 CEST - PLAN-002 completed: shipped Write Mode V2 with a body-first lesson editor, a true right inspector, hidden metadata-by-drawer flow, and closed TODO-004 plus the follow-up cold review/remediation loop.
+- 2026-03-29 19:36 CEST - PLAN-005 completed: removed large-paste friction from Write Mode by deferring heavy analysis after document edits, keeping cursor-only updates cheap, and safely importing full lesson sources through the body-first editor without duplicating hidden frontmatter.
 - 2026-03-29 18:29 CEST - PLAN-004 completed: tightened Write Mode runtime into a calmer writer-first workspace by lightening the outline rail, strengthening the DSL hierarchy, making slash insert more explicit, improving exact validation jumps, and closing TODO-006 with a zero-finding cold review.
 - 2026-03-29 17:43 CEST - PLAN-003 completed: shipped the hybrid Write Mode authoring surface with CodeMirror owning canonical `lesson.script.md`, lazy-loaded BlockNote metadata prose editors, maintained the writer-first layout, and closed TODO-005 after a zero-finding cold review/remediation loop.
+- 2026-03-29 04:45 CEST - PLAN-002 completed: shipped Write Mode V2 with a body-first lesson editor, a true right inspector, hidden metadata-by-drawer flow, and closed TODO-004 plus the follow-up cold review/remediation loop.
 - 2026-03-29 04:13 CEST - PLAN-001 completed: shipped the compact Write Mode authoring workspace, closed TODO-003, and finished the whole-system cold review/remediation loop.
 - 2026-03-26 15:26 - Product/System Refactor Realignment completed: moved lesson-engine into `system/lesson-engine/`, moved generated lesson docs into `system/lesson-engine/output/`, populated `system/foundation/` with `frontmatter/` and `markdown/`, and cleared the active follow-up queue.
 - 2026-03-26 15:34 - Production readiness review completed: fixed the stale lesson-doc sync root and updated runtime test imports to the `system/` tree; validation, build, and tests passed afterward.
@@ -92603,7 +92607,7 @@ const dslDecorationPlugin = ViewPlugin.fromClass(class {
   }
 
   update(update) {
-    if (update.docChanged || update.selectionSet || update.viewportChanged) {
+    if (update.docChanged) {
       this.decorations = buildDslDecorations(update.state);
     }
   }
@@ -92663,6 +92667,7 @@ export function createLessonScriptEditor({
   readSlashMenuEligibility = () => true,
   onChange = () => {},
   onCursorChange = () => {},
+  onPasteText = () => false,
   onInsertMenuRequest = () => {},
   onEscapeRequest = () => {}
 }) {
@@ -92729,6 +92734,20 @@ export function createLessonScriptEditor({
             reason: 'contextmenu'
           });
           return true;
+        },
+        paste(event) {
+          const pasteText = event.clipboardData?.getData('text/plain') || '';
+
+          if (!pasteText) {
+            return false;
+          }
+
+          if (handlePastedText(pasteText)) {
+            event.preventDefault();
+            return true;
+          }
+
+          return false;
         }
       })
     ]
@@ -92754,6 +92773,14 @@ export function createLessonScriptEditor({
       },
       effects
     });
+  }
+
+  function handlePastedText(text) {
+    return Boolean(onPasteText({
+      text,
+      selectionStart: view.state.selection.main.from,
+      selectionEnd: view.state.selection.main.to
+    }));
   }
 
   const controller = {
@@ -92794,6 +92821,44 @@ export function createLessonScriptEditor({
     },
     setSelectionRange(selectionStart, selectionEnd = selectionStart, scrollIntoView = true) {
       dispatchSelection(selectionStart, selectionEnd, scrollIntoView);
+    },
+    replaceSelectionText(insertText, {
+      selectInsertedText = false,
+      scrollIntoView = true
+    } = {}) {
+      const selection = view.state.selection.main;
+      const text = String(insertText || '');
+      const selectionStart = selection.from;
+      const selectionEnd = selectionStart + text.length;
+      const effects = scrollIntoView
+        ? [EditorView.scrollIntoView(selectionStart, { y: 'center' })]
+        : [];
+
+      view.dispatch({
+        changes: {
+          from: selection.from,
+          to: selection.to,
+          insert: text
+        },
+        selection: {
+          anchor: selectInsertedText ? selectionStart : selectionEnd,
+          head: selectionEnd
+        },
+        effects
+      });
+    },
+    pasteText(text) {
+      const pasteText = String(text || '');
+
+      if (!pasteText) {
+        return;
+      }
+
+      if (handlePastedText(pasteText)) {
+        return;
+      }
+
+      controller.replaceSelectionText(pasteText);
     },
     setEditable(isEditable) {
       if (currentEditable === isEditable) {
@@ -92949,6 +93014,26 @@ function readLineIndexFromOffset(lineStarts, offset) {
   }
 
   return Math.max(0, Math.min(lineStarts.length - 1, low));
+}
+
+export function readEditorContextFromScan(scan, cursorOffset) {
+  const lineIndex = readLineIndexFromOffset(scan?.lineStarts || [], cursorOffset);
+
+  return {
+    ...scan,
+    lineIndex,
+    lineNumber: lineIndex + 1,
+    context: scan?.contextByLine?.[lineIndex] || {
+      kind: 'root',
+      lineIndex,
+      lineNumber: lineIndex + 1,
+      stepIndex: -1,
+      sceneIndex: -1,
+      sectionType: '',
+      artifactId: '',
+      insideCodeFence: false
+    }
+  };
 }
 
 function isFrontmatterBoundary(line, lineIndex) {
@@ -93125,23 +93210,8 @@ export function scanLessonScriptSource(sourceMarkdown, parsedLesson = null) {
 
 export function readEditorContext(sourceMarkdown, cursorOffset, parsedLesson = null) {
   const scan = scanLessonScriptSource(sourceMarkdown, parsedLesson);
-  const lineIndex = readLineIndexFromOffset(scan.lineStarts, cursorOffset);
 
-  return {
-    ...scan,
-    lineIndex,
-    lineNumber: lineIndex + 1,
-    context: scan.contextByLine[lineIndex] || {
-      kind: 'root',
-      lineIndex,
-      lineNumber: lineIndex + 1,
-      stepIndex: -1,
-      sceneIndex: -1,
-      sectionType: '',
-      artifactId: '',
-      insideCodeFence: false
-    }
-  };
+  return readEditorContextFromScan(scan, cursorOffset);
 }
 
 function suggestUniqueId(prefix, existingIds) {
@@ -94288,15 +94358,18 @@ import { composeLivePreviewDocument } from '../animator-engine/play-lesson/04-wa
 import { openAuthoringSqlite } from './open-authoring-sqlite.js';
 import { readShippedLessonScripts } from './read-shipped-lesson-scripts.js';
 import { readLessonScript } from '../lesson-engine/read-lesson-script.js';
+import { parseFrontmatter } from '../foundation/frontmatter/parse-frontmatter.js';
 import {
   buildInsertMenuItems,
   buildInsertSnippet,
-  readEditorContext
+  readEditorContextFromScan,
+  scanLessonScriptSource
 } from './lesson-script-workbench.js';
 import { createLessonScriptEditor } from './create-lesson-script-editor.js';
 
 let metadataProseEditorFactoryPromise = null;
 
+const ANALYSIS_DEBOUNCE_MS = 120;
 const METADATA_STATUS_OPTIONS = ['draft', 'active', 'broken', 'deprecated'];
 const PREVIEW_TYPE_OPTIONS = ['dom', 'terminal', 'markdown', 'diagram', 'none'];
 
@@ -94310,6 +94383,10 @@ function escapeHtml(text) {
 
 function normalizeText(value) {
   return typeof value === 'string' ? value.trim() : '';
+}
+
+function normalizeMultilineText(value) {
+  return String(value || '').replace(/\r\n/g, '\n');
 }
 
 async function loadMetadataProseEditorFactory() {
@@ -94382,8 +94459,11 @@ function cloneArtifactLineMap(linesByArtifactId) {
 
 function buildHeaderTitle(state) {
   const parsedLesson = state.analysis?.parsedLesson;
+  const frontmatterAttributes = state.analysis?.frontmatterAttributes || {};
   const selectedDraft = state.workspaceSnapshot.selectedDraft;
   const lessonTitle = parsedLesson?.attributes?.lessonTitle
+    || normalizeText(frontmatterAttributes.lessonTitle)
+    || normalizeText(frontmatterAttributes.lessonId)
     || selectedDraft?.lessonTitle
     || 'No draft selected';
   const order = parsedLesson?.attributes?.order;
@@ -94400,6 +94480,8 @@ function buildHeaderMeta(state) {
   const selectedDraft = state.workspaceSnapshot.selectedDraft;
   const steps = Array.isArray(parsedLesson?.steps) ? parsedLesson.steps : [];
   const sceneCount = steps.reduce((count, step) => count + (Array.isArray(step.scenes) ? step.scenes.length : 0), 0);
+  const outlinedSteps = state.analysis?.editorContext?.steps || [];
+  const outlinedSceneCount = outlinedSteps.reduce((count, step) => count + (Array.isArray(step.scenes) ? step.scenes.length : 0), 0);
 
   if (!selectedDraft) {
     return 'Open or create a draft to start writing.';
@@ -94407,6 +94489,10 @@ function buildHeaderMeta(state) {
 
   if (steps.length) {
     return `${steps.length} steps · ${sceneCount} scenes · metadata stays in the drawer`;
+  }
+
+  if (outlinedSteps.length) {
+    return `${outlinedSteps.length} detected steps · ${outlinedSceneCount} scenes · metadata stays in the drawer`;
   }
 
   return 'Start the first step. Metadata stays in the drawer.';
@@ -94470,10 +94556,35 @@ function buildWriterView(sourceMarkdown, editorContext) {
 }
 
 function readDefaultWriterSelectionOffset(sourceMarkdown) {
-  const seedContext = readEditorContext(String(sourceMarkdown || ''), 0, null);
+  const seedScan = scanLessonScriptSource(String(sourceMarkdown || ''), null);
+  const seedContext = readEditorContextFromScan(seedScan, 0);
   const writerView = buildWriterView(sourceMarkdown, seedContext);
 
   return writerView.startOffset;
+}
+
+function readFullLessonSourceFromPaste(pastedText) {
+  const sourceMarkdown = normalizeMultilineText(pastedText).trim();
+
+  if (!sourceMarkdown.startsWith('---\n')) {
+    return '';
+  }
+
+  try {
+    const { attributes, body } = parseFrontmatter(sourceMarkdown);
+
+    if (!Object.keys(attributes || {}).length) {
+      return '';
+    }
+
+    if (!/^# Step:\s*/m.test(String(body || ''))) {
+      return '';
+    }
+
+    return sourceMarkdown;
+  } catch {
+    return '';
+  }
 }
 
 function readVisibleEditorOffset(state, sourceOffset) {
@@ -94497,6 +94608,10 @@ function buildSaveChipTone(state) {
 }
 
 function buildCompileChipTone(state) {
+  if (state.analysisPending) {
+    return 'muted';
+  }
+
   if (state.analysis?.parseErrorMessage || state.analysis?.compileErrorMessage) {
     return 'danger';
   }
@@ -94509,6 +94624,10 @@ function buildCompileChipTone(state) {
 }
 
 function buildCompileChipLabel(state) {
+  if (state.analysisPending) {
+    return 'Refreshing…';
+  }
+
   if (state.analysis?.parseErrorMessage) {
     return 'Syntax issue';
   }
@@ -94545,6 +94664,10 @@ function buildContextLabel(context) {
 }
 
 function buildStatusMessageTone(state) {
+  if (state.analysisPending) {
+    return state.statusMessageTone || 'muted';
+  }
+
   if (state.analysis?.parseErrorMessage || state.analysis?.compileErrorMessage) {
     return 'danger';
   }
@@ -94553,6 +94676,10 @@ function buildStatusMessageTone(state) {
 }
 
 function buildStatusMessage(state) {
+  if (state.analysisPending && state.statusMessage) {
+    return state.statusMessage;
+  }
+
   if (state.analysis?.parseErrorMessage) {
     return state.analysis.parseErrorMessage;
   }
@@ -94701,6 +94828,10 @@ function resolveValidationLocation(editorContext, message) {
 }
 
 function readValidationItems(state) {
+  if (state.analysisPending) {
+    return [];
+  }
+
   const items = [];
   const editorContext = state.analysis?.editorContext;
 
@@ -94909,6 +95040,10 @@ function buildPreviewNote(state, previewModel) {
     return 'Open a draft to preview the lesson state.';
   }
 
+  if (state.analysisPending) {
+    return 'Preview updates after the latest script analysis completes.';
+  }
+
   if (!previewModel) {
     return 'Preview appears here once the script defines a readable state.';
   }
@@ -94991,6 +95126,16 @@ function buildCompileStatusMarkup(state) {
     return '<div class="authoring-empty">Open a draft to inspect compile state.</div>';
   }
 
+  if (state.analysisPending) {
+    return `
+      <div class="authoring-compile-summary" data-tone="muted">
+        <strong>Refreshing</strong>
+        <p>Updating compile diagnostics from the latest script change.</p>
+        <span>Waiting for the new analysis pass</span>
+      </div>
+    `;
+  }
+
   if (state.analysis?.parseErrorMessage) {
     return `
       <div class="authoring-compile-summary" data-tone="danger">
@@ -95039,6 +95184,17 @@ function buildValidationMarkup(state) {
   }
 
   if (!validationItems.length) {
+    if (state.analysisPending) {
+      return `
+        <div class="authoring-validation-list">
+          <div class="authoring-validation-summary" data-tone="muted">
+            <strong>Refreshing</strong>
+            <p>Updating exact validation from the latest draft change.</p>
+          </div>
+        </div>
+      `;
+    }
+
     return `
       <div class="authoring-validation-list">
         <div class="authoring-validation-summary" data-tone="success">
@@ -95638,7 +95794,7 @@ function renderWorkspace(state, parts) {
     ? 'Write the lesson flow here.'
     : 'Create or open a draft to start writing.');
   parts.saveDraftButton.disabled = !selectedDraft || !state.dirty;
-  parts.publishButton.disabled = !selectedDraft || Boolean(state.analysis?.parseErrorMessage || state.analysis?.compileErrorMessage);
+  parts.publishButton.disabled = !selectedDraft || state.analysisPending || Boolean(state.analysis?.parseErrorMessage || state.analysis?.compileErrorMessage);
   parts.previewButton.disabled = !selectedDraft;
   parts.metadataButton.disabled = !selectedDraft;
   parts.insertButton.disabled = !selectedDraft;
@@ -95653,8 +95809,15 @@ function renderWorkspace(state, parts) {
 
 function refreshAnalysis(state, cursorOffset) {
   const sourceMarkdown = state.editorSourceMarkdown;
+  let frontmatterAttributes = {};
   let parsedLesson = null;
   let parseErrorMessage = '';
+
+  try {
+    frontmatterAttributes = parseFrontmatter(sourceMarkdown).attributes || {};
+  } catch {
+    frontmatterAttributes = {};
+  }
 
   try {
     parsedLesson = readLessonScript(sourceMarkdown);
@@ -95675,17 +95838,50 @@ function refreshAnalysis(state, cursorOffset) {
     }
   }
 
-  const editorContext = readEditorContext(sourceMarkdown, cursorOffset, parsedLesson);
+  const editorScan = scanLessonScriptSource(sourceMarkdown, parsedLesson);
+  const editorContext = readEditorContextFromScan(editorScan, cursorOffset);
   const writerView = buildWriterView(sourceMarkdown, editorContext);
 
   state.analysis = {
+    frontmatterAttributes,
     parsedLesson,
     parseErrorMessage,
     compiledLesson,
     compileErrorMessage,
+    editorScan,
     editorContext
   };
   state.writerView = writerView;
+  state.previewModel = parsedLesson
+    ? buildParsedPreviewModel(parsedLesson, editorContext.context)
+    : null;
+
+  if (state.previewModel) {
+    state.lastHealthyPreviewModel = state.previewModel;
+  }
+
+  if (editorContext.context.artifactId) {
+    state.currentArtifactId = editorContext.context.artifactId;
+  } else {
+    const fallbackArtifactId = readPrimaryArtifactId(parsedLesson);
+
+    if (!state.currentArtifactId || !readArtifactDeclarations(parsedLesson).some(artifact => artifact.artifactId === state.currentArtifactId)) {
+      state.currentArtifactId = fallbackArtifactId;
+    }
+  }
+}
+
+function refreshEditorContext(state, cursorOffset) {
+  const parsedLesson = state.analysis?.parsedLesson || null;
+  const editorScan = state.analysis?.editorScan || scanLessonScriptSource(state.editorSourceMarkdown, parsedLesson);
+  const editorContext = readEditorContextFromScan(editorScan, cursorOffset);
+
+  state.analysis = {
+    ...state.analysis,
+    editorScan,
+    editorContext
+  };
+  state.writerView = buildWriterView(state.editorSourceMarkdown, editorContext);
   state.previewModel = parsedLesson
     ? buildParsedPreviewModel(parsedLesson, editorContext.context)
     : null;
@@ -95779,6 +95975,18 @@ function applyEditorSourceChange(state, parts, {
   applyVisibleEditorSelection(state, parts, selectionStart, selectionEnd, focusEditor);
 }
 
+function importFullLessonSourceIntoEditor(state, parts, sourceMarkdown) {
+  const selectionOffset = readDefaultWriterSelectionOffset(sourceMarkdown);
+
+  applyEditorSourceChange(state, parts, {
+    nextValue: sourceMarkdown,
+    selectionStart: selectionOffset,
+    selectionEnd: selectionOffset,
+    statusMessage: 'Full lesson source imported into Write Mode.',
+    statusTone: 'success'
+  });
+}
+
 function insertSnippetIntoEditor(state, parts, {
   actionName,
   insertionStart,
@@ -95864,6 +96072,9 @@ function closeAuthoringOverlays(state) {
 function openWorkspaceSnapshot(state, parts, workspaceSnapshot, statusMessage, tone = 'success', selectionOffset = null) {
   state.workspaceSnapshot = workspaceSnapshot;
   state.editorSourceMarkdown = workspaceSnapshot.selectedDraft?.sourceMarkdown || '';
+  state.analysisPending = false;
+  state.analysisTimerId = 0;
+  state.pendingAnalysisCursorOffset = 0;
   state.dirty = false;
   state.statusMessage = statusMessage;
   state.statusMessageTone = tone;
@@ -95971,11 +96182,24 @@ export async function showAuthoringWorkspace({
     metadataProseEditorLoading: false,
     previewModel: null,
     lastHealthyPreviewModel: null,
+    analysisPending: false,
+    analysisTimerId: 0,
+    pendingAnalysisCursorOffset: 0,
     analysis: {
+      frontmatterAttributes: {},
       parsedLesson: null,
       parseErrorMessage: '',
       compiledLesson: null,
       compileErrorMessage: '',
+      editorScan: {
+        lineStarts: [],
+        lines: [],
+        frontmatterBoundaryCount: 0,
+        steps: [],
+        contextByLine: [],
+        existingStepIds: new Set(),
+        existingSceneIdsByStep: []
+      },
       editorContext: {
         context: {
           kind: 'root',
@@ -95993,6 +96217,47 @@ export async function showAuthoringWorkspace({
     },
     onDeferredMetadataSurfaceReady: null
   };
+
+  function clearDeferredAnalysis() {
+    if (!state.analysisTimerId) {
+      return;
+    }
+
+    ownerWindow.clearTimeout(state.analysisTimerId);
+    state.analysisTimerId = 0;
+  }
+
+  function finishDeferredAnalysis() {
+    clearDeferredAnalysis();
+    state.analysisPending = false;
+    refreshAnalysis(state, state.pendingAnalysisCursorOffset);
+
+    if (state.dirty) {
+      state.statusMessage = 'Draft has unsaved changes.';
+      state.statusMessageTone = 'warning';
+    }
+  }
+
+  function scheduleDeferredAnalysis(cursorOffset) {
+    state.pendingAnalysisCursorOffset = cursorOffset;
+    state.analysisPending = true;
+    state.statusMessage = 'Updating outline, preview, and validation from the latest draft.';
+    state.statusMessageTone = 'warning';
+    clearDeferredAnalysis();
+    state.analysisTimerId = ownerWindow.setTimeout(() => {
+      finishDeferredAnalysis();
+      renderWorkspace(state, parts);
+    }, ANALYSIS_DEBOUNCE_MS);
+  }
+
+  function flushDeferredAnalysis() {
+    if (!state.analysisPending && !state.analysisTimerId) {
+      return;
+    }
+
+    finishDeferredAnalysis();
+  }
+
   const parts = createWorkspaceParts(ownerDocument);
   state.onDeferredMetadataSurfaceReady = () => {
     if (state.metadataDrawerOpen) {
@@ -96013,11 +96278,28 @@ export async function showAuthoringWorkspace({
     },
     onChange({ value, selectionStart }) {
       state.editorSourceMarkdown = `${state.writerView.hiddenPrefixMarkdown}${value}`;
+      state.writerView = {
+        ...state.writerView,
+        bodyMarkdown: value
+      };
       state.dirty = true;
-      state.statusMessage = 'Draft has unsaved changes.';
-      state.statusMessageTone = 'warning';
-      refreshAnalysis(state, readSourceEditorOffset(state, selectionStart));
+      scheduleDeferredAnalysis(readSourceEditorOffset(state, selectionStart));
       renderWorkspace(state, parts);
+    },
+    onPasteText({ text, selectionStart, selectionEnd }) {
+      const importedSource = readFullLessonSourceFromPaste(text);
+      const visibleBodyMarkdown = parts.editorController.getValue();
+      const fullBodySelected = selectionStart === 0 && selectionEnd === visibleBodyMarkdown.length;
+
+      if (!importedSource || !fullBodySelected) {
+        return false;
+      }
+
+      clearDeferredAnalysis();
+      state.analysisPending = false;
+      importFullLessonSourceIntoEditor(state, parts, importedSource);
+      renderWorkspace(state, parts);
+      return true;
     },
     onCursorChange() {
       syncCursorState();
@@ -96027,6 +96309,7 @@ export async function showAuthoringWorkspace({
         return;
       }
 
+      flushDeferredAnalysis();
       state.insertMenuOpen = true;
       state.moreMenuOpen = false;
       renderWorkspace(state, parts);
@@ -96044,6 +96327,8 @@ export async function showAuthoringWorkspace({
       const result = await workspaceAction();
 
       if (result?.workspaceSnapshot) {
+        clearDeferredAnalysis();
+        state.analysisPending = false;
         const selectionOffset = typeof readSelectionOffset === 'function'
           ? readSelectionOffset(result.workspaceSnapshot)
           : null;
@@ -96089,6 +96374,8 @@ export async function showAuthoringWorkspace({
   }
 
   async function publishCurrentDraft() {
+    flushDeferredAnalysis();
+
     if (!state.workspaceSnapshot.selectedDraft || state.analysis?.parseErrorMessage || state.analysis?.compileErrorMessage) {
       return;
     }
@@ -96105,11 +96392,19 @@ export async function showAuthoringWorkspace({
   }
 
   function syncCursorState() {
-    refreshAnalysis(state, readSourceEditorOffset(state, parts.editorController.getSelectionStart()));
+    const cursorOffset = readSourceEditorOffset(state, parts.editorController.getSelectionStart());
+
+    if (state.analysisPending) {
+      state.pendingAnalysisCursorOffset = cursorOffset;
+      return;
+    }
+
+    refreshEditorContext(state, cursorOffset);
     renderWorkspace(state, parts);
   }
 
   parts.previewButton.addEventListener('click', () => {
+    flushDeferredAnalysis();
     refreshAnalysis(state, readSourceEditorOffset(state, parts.editorController.getSelectionStart()));
     state.statusMessage = 'Preview refreshed from the active writing context.';
     state.statusMessageTone = 'success';
@@ -96125,11 +96420,13 @@ export async function showAuthoringWorkspace({
   });
 
   parts.metadataButton.addEventListener('click', () => {
+    flushDeferredAnalysis();
     openMetadataDrawer(state);
     renderWorkspace(state, parts);
   });
 
   parts.insertButton.addEventListener('click', () => {
+    flushDeferredAnalysis();
     state.insertMenuOpen = !state.insertMenuOpen;
     state.moreMenuOpen = false;
     renderWorkspace(state, parts);
@@ -96146,6 +96443,7 @@ export async function showAuthoringWorkspace({
       return;
     }
 
+    flushDeferredAnalysis();
     const activeStepIndex = state.analysis.editorContext.context.stepIndex;
     const insertionStart = activeStepIndex >= 0
       ? readInsertOffsetAfterStep(state, activeStepIndex)
@@ -96159,6 +96457,7 @@ export async function showAuthoringWorkspace({
   });
 
   parts.addSceneButton.addEventListener('click', () => {
+    flushDeferredAnalysis();
     const activeStepIndex = state.analysis.editorContext.context.stepIndex;
 
     if (activeStepIndex < 0) {
@@ -96207,8 +96506,9 @@ export async function showAuthoringWorkspace({
     const { actionName, parts: actionParts } = getActiveMenuKey(actionElement);
 
     if (actionName === 'jump-to-source-line') {
+      flushDeferredAnalysis();
       focusEditorAtSourceLine(state, parts, Number(actionParts[0]));
-      refreshAnalysis(state, readSourceEditorOffset(state, parts.editorController.getSelectionStart()));
+      refreshEditorContext(state, readSourceEditorOffset(state, parts.editorController.getSelectionStart()));
       renderWorkspace(state, parts);
       return;
     }
@@ -96246,6 +96546,8 @@ export async function showAuthoringWorkspace({
         return;
       }
 
+      clearDeferredAnalysis();
+      state.analysisPending = false;
       openWorkspaceSnapshot(
         state,
         parts,
@@ -96261,6 +96563,8 @@ export async function showAuthoringWorkspace({
         return;
       }
 
+      clearDeferredAnalysis();
+      state.analysisPending = false;
       const nextWorkspaceSnapshot = await authoringStore.openDraftForShippedLesson(actionParts[0]);
 
       openWorkspaceSnapshot(
@@ -96278,6 +96582,8 @@ export async function showAuthoringWorkspace({
         return;
       }
 
+      clearDeferredAnalysis();
+      state.analysisPending = false;
       openWorkspaceSnapshot(
         state,
         parts,
@@ -96293,6 +96599,8 @@ export async function showAuthoringWorkspace({
         return;
       }
 
+      clearDeferredAnalysis();
+      state.analysisPending = false;
       openWorkspaceSnapshot(
         state,
         parts,
@@ -96316,6 +96624,8 @@ export async function showAuthoringWorkspace({
         return;
       }
 
+      clearDeferredAnalysis();
+      state.analysisPending = false;
       openWorkspaceSnapshot(
         state,
         parts,
@@ -96357,6 +96667,7 @@ export async function showAuthoringWorkspace({
     }
 
     if (actionName === 'open-metadata') {
+      flushDeferredAnalysis();
       openMetadataDrawer(state);
       renderWorkspace(state, parts);
       return;
@@ -96370,6 +96681,7 @@ export async function showAuthoringWorkspace({
     }
 
     if (actionName === 'apply-metadata') {
+      flushDeferredAnalysis();
       applyMetadataFormToScript(state, parts);
       renderWorkspace(state, parts);
       return;
@@ -96390,6 +96702,7 @@ export async function showAuthoringWorkspace({
       || actionName.startsWith('insert-show-code')
       || actionName === 'insert-theory-link'
       || actionName === 'insert-preview-action') {
+      flushDeferredAnalysis();
       insertSnippetIntoEditor(state, parts, {
         actionName: actionElement.dataset.action,
         insertionStart: readSourceEditorOffset(state, parts.editorController.getSelectionStart()),
@@ -102581,6 +102894,19 @@ async function readEditorCursorSnapshot(page) {
   });
 }
 
+async function replaceEditorSelectionText(page, nextText) {
+  await page.$eval('#authoringScriptEditor', (element, text) => {
+    if (!(element instanceof HTMLElement) || !element.authoringEditor) {
+      throw new Error('Expected the CodeMirror authoring editor host.');
+    }
+
+    const currentValue = element.authoringEditor.getValue();
+    element.authoringEditor.focus();
+    element.authoringEditor.setSelectionRange(0, currentValue.length);
+    element.authoringEditor.pasteText(text);
+  }, nextText);
+}
+
 async function setMetadataValue(page, fieldName, nextValue) {
   await page.$eval(`[data-metadata-field="${fieldName}"]`, (element, value) => {
     if (!(element instanceof HTMLInputElement || element instanceof HTMLTextAreaElement || element instanceof HTMLSelectElement)) {
@@ -102601,6 +102927,66 @@ async function readMetadataValue(page, fieldName) {
 
     return element.value;
   });
+}
+
+function buildLargeLessonBody(stepCount = 140) {
+  return Array.from({ length: stepCount }, (_, index) => {
+    const sequence = String(index + 1).padStart(3, '0');
+    const stepId = `bulk-step-${sequence}`;
+
+    return [
+      `# Step: ${stepId}`,
+      `title: Bulk Step ${sequence}`,
+      `summary: Keep the writer flow stable during very large paste operations for step ${sequence}.`,
+      `intent: Persist a large lesson body without truncating after early steps.`,
+      '',
+      `## Scene: ${stepId}-scene`,
+      '',
+      '### Narration',
+      `Bulk narration for ${stepId}.`,
+      '',
+      '### Show Code: html',
+      '```html',
+      `<div class="${stepId}">Bulk ${sequence}</div>`,
+      '```',
+      '',
+      '### Show Code: css',
+      '```css',
+      `.${stepId} {`,
+      `  color: rgb(${(index * 13) % 255}, ${(index * 29) % 255}, ${(index * 47) % 255});`,
+      '}',
+      '```',
+      ''
+    ].join('\n');
+  }).join('\n');
+}
+
+function buildLargeLessonSource(stepCount = 158) {
+  return [
+    '---',
+    'schemaVersion: 1',
+    'lessonId: imported-large-lesson',
+    'lessonTitle: Imported Large Lesson',
+    'lessonIntro: Pasted as a full lesson source through Write Mode.',
+    'status: draft',
+    'courseId: step-by-step-animator',
+    'order: 77',
+    'artifacts:',
+    '  - artifactId: html',
+    '    language: html',
+    '    label: index.html',
+    '    isPrimary: true',
+    '  - artifactId: css',
+    '    language: css',
+    '    label: style.css',
+    '    isPrimary: false',
+    'preview:',
+    '  type: dom',
+    '  title: Imported lesson preview',
+    '  address: browser://imported-large-lesson-preview',
+    '---',
+    buildLargeLessonBody(stepCount)
+  ].join('\n');
 }
 
 test('browser authoring smoke covers V2 writer body view, metadata drawer, preview sync, and validation jump flow', { timeout: 60000 }, async () => {
@@ -102687,8 +103073,8 @@ test('browser authoring smoke covers V2 writer body view, metadata drawer, previ
     await page.keyboard.type('authoring-smoke-scene');
 
     await waitForCondition(
-      async () => page.$$eval('.authoring-outline-scene', items => items.length === 2),
-      'the outline to reflect the new scene'
+      async () => page.$eval('[data-outline-kind="scene"][data-scene-id="authoring-smoke-scene"]', element => Boolean(element)).catch(() => false),
+      'the outline to reflect the new scene id'
     );
 
     const firstSceneId = await page.$eval('[data-outline-kind="scene"]', button => {
@@ -102917,6 +103303,270 @@ test('browser authoring smoke covers V2 writer body view, metadata drawer, previ
         return cursor.lineText === '### Show Code: html';
       },
       'the validation click to move the cursor to the failing show code block'
+    );
+
+    assert.deepEqual(pageErrors, []);
+    assert.deepEqual(consoleErrors, []);
+
+    await page.close();
+  } finally {
+    await browser?.close();
+    await server.close();
+  }
+});
+
+test('browser authoring smoke keeps very large lesson bodies intact through analysis and save', { timeout: 90000 }, async () => {
+  const server = await createServer({
+    configFile: path.resolve(repoRoot, 'vite.config.js'),
+    clearScreen: false,
+    logLevel: 'error',
+    server: {
+      host: '127.0.0.1',
+      port: 4175,
+      strictPort: false
+    }
+  });
+
+  let browser;
+
+  try {
+    await server.listen();
+
+    const appUrl = server.resolvedUrls?.local?.find(url => url.startsWith('http://127.0.0.1'))
+      || server.resolvedUrls?.local?.[0];
+
+    assert.ok(appUrl, 'Vite dev server did not expose a local URL.');
+
+    browser = await puppeteer.launch({
+      args: ['--disable-setuid-sandbox', '--no-sandbox'],
+      headless: true
+    });
+
+    const page = await browser.newPage();
+    const consoleErrors = [];
+    const pageErrors = [];
+
+    page.on('console', message => {
+      if (message.type() === 'error') {
+        consoleErrors.push(message.text());
+      }
+    });
+    page.on('pageerror', error => {
+      pageErrors.push(error.message);
+    });
+    page.on('dialog', dialog => {
+      void dialog.accept();
+    });
+
+    await page.goto(`${appUrl}?workspace=authoring`, { waitUntil: 'domcontentloaded' });
+
+    await waitForCondition(
+      async () => page.$('#authoringScriptEditor').then(Boolean),
+      'the authoring writer workspace'
+    );
+
+    await openPopoverAndClick(page, '#authoringMoreBtn', '#authoringMoreMenu', '[data-action="new-draft"]');
+
+    await waitForCondition(
+      async () => page.$eval('#authoringLessonTitle', element => element.textContent?.includes('New Lesson') || false),
+      'the new draft to open'
+    );
+
+    const largeLessonBody = buildLargeLessonBody();
+    const expectedLastStepId = 'bulk-step-140';
+
+    await replaceEditorSelectionText(page, largeLessonBody);
+
+    await waitForCondition(
+      async () => page.evaluate(expectedLength => {
+        const editor = document.querySelector('#authoringScriptEditor');
+        return editor instanceof HTMLElement
+          && editor.authoringEditor
+          && editor.authoringEditor.getValue().length === expectedLength;
+      }, largeLessonBody.length),
+      'the large lesson body to remain fully present in the editor'
+    );
+
+    await waitForCondition(
+      async () => page.$eval('#authoringLessonMeta', element => element.textContent?.includes('140 steps') || false),
+      'the deferred analysis to catch up with the large lesson body'
+    );
+
+    await waitForCondition(
+      async () => page.$eval('#authoringCompileChip', element => element.textContent?.includes('Valid') || false),
+      'the large lesson body to compile cleanly'
+    );
+
+    await waitForCondition(
+      async () => page.$$eval('[data-outline-kind="step"]', buttons => buttons.length === 140),
+      'the outline to show every pasted step'
+    );
+
+    await waitForCondition(
+      async () => page.$eval('[data-outline-kind="step"][data-step-id="bulk-step-140"]', element => Boolean(element)).catch(() => false),
+      'the final pasted step to exist in the outline'
+    );
+
+    await page.keyboard.down('Control');
+    await page.keyboard.press('s');
+    await page.keyboard.up('Control');
+
+    await waitForCondition(
+      async () => page.$eval('#authoringStatus', element => element.textContent?.includes('Draft saved into SQLite.') || false),
+      'the large lesson body to save into SQLite'
+    );
+
+    await page.reload({ waitUntil: 'domcontentloaded' });
+
+    await waitForCondition(
+      async () => page.evaluate(expectedLength => {
+        const editor = document.querySelector('#authoringScriptEditor');
+        return editor instanceof HTMLElement
+          && editor.authoringEditor
+          && editor.authoringEditor.getValue().length === expectedLength;
+      }, largeLessonBody.length),
+      'the reloaded large lesson body to remain fully present'
+    );
+
+    await waitForCondition(
+      async () => page.$eval(`[data-outline-kind="step"][data-step-id="${expectedLastStepId}"]`, element => Boolean(element)).catch(() => false),
+      'the reloaded outline to keep the final pasted step'
+    );
+
+    assert.deepEqual(pageErrors, []);
+    assert.deepEqual(consoleErrors, []);
+
+    await page.close();
+  } finally {
+    await browser?.close();
+    await server.close();
+  }
+});
+
+test('browser authoring smoke imports a full large lesson source without duplicating hidden frontmatter', { timeout: 90000 }, async () => {
+  const server = await createServer({
+    configFile: path.resolve(repoRoot, 'vite.config.js'),
+    clearScreen: false,
+    logLevel: 'error',
+    server: {
+      host: '127.0.0.1',
+      port: 4176,
+      strictPort: false
+    }
+  });
+
+  let browser;
+
+  try {
+    await server.listen();
+
+    const appUrl = server.resolvedUrls?.local?.find(url => url.startsWith('http://127.0.0.1'))
+      || server.resolvedUrls?.local?.[0];
+
+    assert.ok(appUrl, 'Vite dev server did not expose a local URL.');
+
+    browser = await puppeteer.launch({
+      args: ['--disable-setuid-sandbox', '--no-sandbox'],
+      headless: true
+    });
+
+    const page = await browser.newPage();
+    const consoleErrors = [];
+    const pageErrors = [];
+
+    page.on('console', message => {
+      if (message.type() === 'error') {
+        consoleErrors.push(message.text());
+      }
+    });
+    page.on('pageerror', error => {
+      pageErrors.push(error.message);
+    });
+    page.on('dialog', dialog => {
+      void dialog.accept();
+    });
+
+    await page.goto(`${appUrl}?workspace=authoring`, { waitUntil: 'domcontentloaded' });
+
+    await waitForCondition(
+      async () => page.$('#authoringScriptEditor').then(Boolean),
+      'the authoring writer workspace'
+    );
+
+    await openPopoverAndClick(page, '#authoringMoreBtn', '#authoringMoreMenu', '[data-action="new-draft"]');
+
+    await waitForCondition(
+      async () => page.$eval('#authoringLessonTitle', element => element.textContent?.includes('New Lesson') || false),
+      'the new draft to open'
+    );
+
+    const largeLessonSource = buildLargeLessonSource();
+    await replaceEditorSelectionText(page, largeLessonSource);
+
+    await waitForCondition(
+      async () => page.$eval('#authoringLessonTitle', element => element.textContent?.includes('Imported Large Lesson') || false),
+      'the imported lesson title to replace the starter metadata'
+    );
+
+    await waitForCondition(
+      async () => page.$eval('#authoringLessonMeta', element => element.textContent?.includes('158 steps') || false),
+      'the imported full lesson source to produce the full outline count'
+    );
+
+    await waitForCondition(
+      async () => page.$eval('#authoringCompileChip', element => element.textContent?.includes('Valid') || false),
+      'the imported full lesson source to compile cleanly'
+    );
+
+    await waitForCondition(
+      async () => page.$$eval('[data-outline-kind="step"]', buttons => buttons.length === 158),
+      'the outline to show all imported steps'
+    );
+
+    await waitForCondition(
+      async () => page.$eval('[data-outline-kind="step"][data-step-id="bulk-step-158"]', element => Boolean(element)).catch(() => false),
+      'the final imported step to exist in the outline'
+    );
+
+    await waitForCondition(
+      async () => page.evaluate(() => {
+        const editor = document.querySelector('#authoringScriptEditor');
+        const value = editor instanceof HTMLElement && editor.authoringEditor
+          ? editor.authoringEditor.getValue()
+          : '';
+
+        return value.startsWith('# Step: bulk-step-001')
+          && value.includes('# Step: bulk-step-158')
+          && !value.includes('schemaVersion:')
+          && !value.includes('lessonId: imported-large-lesson');
+      }),
+      'the editor body to show the imported lesson body without frontmatter duplication'
+    );
+
+    await page.keyboard.down('Control');
+    await page.keyboard.press('s');
+    await page.keyboard.up('Control');
+
+    await waitForCondition(
+      async () => page.$eval('#authoringStatus', element => element.textContent?.includes('Draft saved into SQLite.') || false),
+      'the imported full lesson source to save into SQLite'
+    );
+
+    await page.reload({ waitUntil: 'domcontentloaded' });
+
+    await waitForCondition(
+      async () => page.$('#authoringScriptEditor').then(Boolean),
+      'the authoring writer workspace after reload'
+    );
+
+    await waitForCondition(
+      async () => page.$eval('#authoringLessonTitle', element => element.textContent?.includes('Imported Large Lesson') || false),
+      'the imported lesson title to persist after reload'
+    );
+
+    await waitForCondition(
+      async () => page.$eval('[data-outline-kind="step"][data-step-id="bulk-step-158"]', element => Boolean(element)).catch(() => false),
+      'the imported final step to persist after reload'
     );
 
     assert.deepEqual(pageErrors, []);

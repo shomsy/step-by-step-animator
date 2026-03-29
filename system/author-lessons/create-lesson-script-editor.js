@@ -149,7 +149,7 @@ const dslDecorationPlugin = ViewPlugin.fromClass(class {
   }
 
   update(update) {
-    if (update.docChanged || update.selectionSet || update.viewportChanged) {
+    if (update.docChanged) {
       this.decorations = buildDslDecorations(update.state);
     }
   }
@@ -209,6 +209,7 @@ export function createLessonScriptEditor({
   readSlashMenuEligibility = () => true,
   onChange = () => {},
   onCursorChange = () => {},
+  onPasteText = () => false,
   onInsertMenuRequest = () => {},
   onEscapeRequest = () => {}
 }) {
@@ -275,6 +276,20 @@ export function createLessonScriptEditor({
             reason: 'contextmenu'
           });
           return true;
+        },
+        paste(event) {
+          const pasteText = event.clipboardData?.getData('text/plain') || '';
+
+          if (!pasteText) {
+            return false;
+          }
+
+          if (handlePastedText(pasteText)) {
+            event.preventDefault();
+            return true;
+          }
+
+          return false;
         }
       })
     ]
@@ -300,6 +315,14 @@ export function createLessonScriptEditor({
       },
       effects
     });
+  }
+
+  function handlePastedText(text) {
+    return Boolean(onPasteText({
+      text,
+      selectionStart: view.state.selection.main.from,
+      selectionEnd: view.state.selection.main.to
+    }));
   }
 
   const controller = {
@@ -340,6 +363,44 @@ export function createLessonScriptEditor({
     },
     setSelectionRange(selectionStart, selectionEnd = selectionStart, scrollIntoView = true) {
       dispatchSelection(selectionStart, selectionEnd, scrollIntoView);
+    },
+    replaceSelectionText(insertText, {
+      selectInsertedText = false,
+      scrollIntoView = true
+    } = {}) {
+      const selection = view.state.selection.main;
+      const text = String(insertText || '');
+      const selectionStart = selection.from;
+      const selectionEnd = selectionStart + text.length;
+      const effects = scrollIntoView
+        ? [EditorView.scrollIntoView(selectionStart, { y: 'center' })]
+        : [];
+
+      view.dispatch({
+        changes: {
+          from: selection.from,
+          to: selection.to,
+          insert: text
+        },
+        selection: {
+          anchor: selectInsertedText ? selectionStart : selectionEnd,
+          head: selectionEnd
+        },
+        effects
+      });
+    },
+    pasteText(text) {
+      const pasteText = String(text || '');
+
+      if (!pasteText) {
+        return;
+      }
+
+      if (handlePastedText(pasteText)) {
+        return;
+      }
+
+      controller.replaceSelectionText(pasteText);
     },
     setEditable(isEditable) {
       if (currentEditable === isEditable) {

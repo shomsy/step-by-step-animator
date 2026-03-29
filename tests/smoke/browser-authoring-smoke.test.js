@@ -90,6 +90,19 @@ async function readEditorCursorSnapshot(page) {
   });
 }
 
+async function replaceEditorSelectionText(page, nextText) {
+  await page.$eval('#authoringScriptEditor', (element, text) => {
+    if (!(element instanceof HTMLElement) || !element.authoringEditor) {
+      throw new Error('Expected the CodeMirror authoring editor host.');
+    }
+
+    const currentValue = element.authoringEditor.getValue();
+    element.authoringEditor.focus();
+    element.authoringEditor.setSelectionRange(0, currentValue.length);
+    element.authoringEditor.pasteText(text);
+  }, nextText);
+}
+
 async function setMetadataValue(page, fieldName, nextValue) {
   await page.$eval(`[data-metadata-field="${fieldName}"]`, (element, value) => {
     if (!(element instanceof HTMLInputElement || element instanceof HTMLTextAreaElement || element instanceof HTMLSelectElement)) {
@@ -110,6 +123,66 @@ async function readMetadataValue(page, fieldName) {
 
     return element.value;
   });
+}
+
+function buildLargeLessonBody(stepCount = 140) {
+  return Array.from({ length: stepCount }, (_, index) => {
+    const sequence = String(index + 1).padStart(3, '0');
+    const stepId = `bulk-step-${sequence}`;
+
+    return [
+      `# Step: ${stepId}`,
+      `title: Bulk Step ${sequence}`,
+      `summary: Keep the writer flow stable during very large paste operations for step ${sequence}.`,
+      `intent: Persist a large lesson body without truncating after early steps.`,
+      '',
+      `## Scene: ${stepId}-scene`,
+      '',
+      '### Narration',
+      `Bulk narration for ${stepId}.`,
+      '',
+      '### Show Code: html',
+      '```html',
+      `<div class="${stepId}">Bulk ${sequence}</div>`,
+      '```',
+      '',
+      '### Show Code: css',
+      '```css',
+      `.${stepId} {`,
+      `  color: rgb(${(index * 13) % 255}, ${(index * 29) % 255}, ${(index * 47) % 255});`,
+      '}',
+      '```',
+      ''
+    ].join('\n');
+  }).join('\n');
+}
+
+function buildLargeLessonSource(stepCount = 158) {
+  return [
+    '---',
+    'schemaVersion: 1',
+    'lessonId: imported-large-lesson',
+    'lessonTitle: Imported Large Lesson',
+    'lessonIntro: Pasted as a full lesson source through Write Mode.',
+    'status: draft',
+    'courseId: step-by-step-animator',
+    'order: 77',
+    'artifacts:',
+    '  - artifactId: html',
+    '    language: html',
+    '    label: index.html',
+    '    isPrimary: true',
+    '  - artifactId: css',
+    '    language: css',
+    '    label: style.css',
+    '    isPrimary: false',
+    'preview:',
+    '  type: dom',
+    '  title: Imported lesson preview',
+    '  address: browser://imported-large-lesson-preview',
+    '---',
+    buildLargeLessonBody(stepCount)
+  ].join('\n');
 }
 
 test('browser authoring smoke covers V2 writer body view, metadata drawer, preview sync, and validation jump flow', { timeout: 60000 }, async () => {
@@ -196,8 +269,8 @@ test('browser authoring smoke covers V2 writer body view, metadata drawer, previ
     await page.keyboard.type('authoring-smoke-scene');
 
     await waitForCondition(
-      async () => page.$$eval('.authoring-outline-scene', items => items.length === 2),
-      'the outline to reflect the new scene'
+      async () => page.$eval('[data-outline-kind="scene"][data-scene-id="authoring-smoke-scene"]', element => Boolean(element)).catch(() => false),
+      'the outline to reflect the new scene id'
     );
 
     const firstSceneId = await page.$eval('[data-outline-kind="scene"]', button => {
@@ -426,6 +499,270 @@ test('browser authoring smoke covers V2 writer body view, metadata drawer, previ
         return cursor.lineText === '### Show Code: html';
       },
       'the validation click to move the cursor to the failing show code block'
+    );
+
+    assert.deepEqual(pageErrors, []);
+    assert.deepEqual(consoleErrors, []);
+
+    await page.close();
+  } finally {
+    await browser?.close();
+    await server.close();
+  }
+});
+
+test('browser authoring smoke keeps very large lesson bodies intact through analysis and save', { timeout: 90000 }, async () => {
+  const server = await createServer({
+    configFile: path.resolve(repoRoot, 'vite.config.js'),
+    clearScreen: false,
+    logLevel: 'error',
+    server: {
+      host: '127.0.0.1',
+      port: 4175,
+      strictPort: false
+    }
+  });
+
+  let browser;
+
+  try {
+    await server.listen();
+
+    const appUrl = server.resolvedUrls?.local?.find(url => url.startsWith('http://127.0.0.1'))
+      || server.resolvedUrls?.local?.[0];
+
+    assert.ok(appUrl, 'Vite dev server did not expose a local URL.');
+
+    browser = await puppeteer.launch({
+      args: ['--disable-setuid-sandbox', '--no-sandbox'],
+      headless: true
+    });
+
+    const page = await browser.newPage();
+    const consoleErrors = [];
+    const pageErrors = [];
+
+    page.on('console', message => {
+      if (message.type() === 'error') {
+        consoleErrors.push(message.text());
+      }
+    });
+    page.on('pageerror', error => {
+      pageErrors.push(error.message);
+    });
+    page.on('dialog', dialog => {
+      void dialog.accept();
+    });
+
+    await page.goto(`${appUrl}?workspace=authoring`, { waitUntil: 'domcontentloaded' });
+
+    await waitForCondition(
+      async () => page.$('#authoringScriptEditor').then(Boolean),
+      'the authoring writer workspace'
+    );
+
+    await openPopoverAndClick(page, '#authoringMoreBtn', '#authoringMoreMenu', '[data-action="new-draft"]');
+
+    await waitForCondition(
+      async () => page.$eval('#authoringLessonTitle', element => element.textContent?.includes('New Lesson') || false),
+      'the new draft to open'
+    );
+
+    const largeLessonBody = buildLargeLessonBody();
+    const expectedLastStepId = 'bulk-step-140';
+
+    await replaceEditorSelectionText(page, largeLessonBody);
+
+    await waitForCondition(
+      async () => page.evaluate(expectedLength => {
+        const editor = document.querySelector('#authoringScriptEditor');
+        return editor instanceof HTMLElement
+          && editor.authoringEditor
+          && editor.authoringEditor.getValue().length === expectedLength;
+      }, largeLessonBody.length),
+      'the large lesson body to remain fully present in the editor'
+    );
+
+    await waitForCondition(
+      async () => page.$eval('#authoringLessonMeta', element => element.textContent?.includes('140 steps') || false),
+      'the deferred analysis to catch up with the large lesson body'
+    );
+
+    await waitForCondition(
+      async () => page.$eval('#authoringCompileChip', element => element.textContent?.includes('Valid') || false),
+      'the large lesson body to compile cleanly'
+    );
+
+    await waitForCondition(
+      async () => page.$$eval('[data-outline-kind="step"]', buttons => buttons.length === 140),
+      'the outline to show every pasted step'
+    );
+
+    await waitForCondition(
+      async () => page.$eval('[data-outline-kind="step"][data-step-id="bulk-step-140"]', element => Boolean(element)).catch(() => false),
+      'the final pasted step to exist in the outline'
+    );
+
+    await page.keyboard.down('Control');
+    await page.keyboard.press('s');
+    await page.keyboard.up('Control');
+
+    await waitForCondition(
+      async () => page.$eval('#authoringStatus', element => element.textContent?.includes('Draft saved into SQLite.') || false),
+      'the large lesson body to save into SQLite'
+    );
+
+    await page.reload({ waitUntil: 'domcontentloaded' });
+
+    await waitForCondition(
+      async () => page.evaluate(expectedLength => {
+        const editor = document.querySelector('#authoringScriptEditor');
+        return editor instanceof HTMLElement
+          && editor.authoringEditor
+          && editor.authoringEditor.getValue().length === expectedLength;
+      }, largeLessonBody.length),
+      'the reloaded large lesson body to remain fully present'
+    );
+
+    await waitForCondition(
+      async () => page.$eval(`[data-outline-kind="step"][data-step-id="${expectedLastStepId}"]`, element => Boolean(element)).catch(() => false),
+      'the reloaded outline to keep the final pasted step'
+    );
+
+    assert.deepEqual(pageErrors, []);
+    assert.deepEqual(consoleErrors, []);
+
+    await page.close();
+  } finally {
+    await browser?.close();
+    await server.close();
+  }
+});
+
+test('browser authoring smoke imports a full large lesson source without duplicating hidden frontmatter', { timeout: 90000 }, async () => {
+  const server = await createServer({
+    configFile: path.resolve(repoRoot, 'vite.config.js'),
+    clearScreen: false,
+    logLevel: 'error',
+    server: {
+      host: '127.0.0.1',
+      port: 4176,
+      strictPort: false
+    }
+  });
+
+  let browser;
+
+  try {
+    await server.listen();
+
+    const appUrl = server.resolvedUrls?.local?.find(url => url.startsWith('http://127.0.0.1'))
+      || server.resolvedUrls?.local?.[0];
+
+    assert.ok(appUrl, 'Vite dev server did not expose a local URL.');
+
+    browser = await puppeteer.launch({
+      args: ['--disable-setuid-sandbox', '--no-sandbox'],
+      headless: true
+    });
+
+    const page = await browser.newPage();
+    const consoleErrors = [];
+    const pageErrors = [];
+
+    page.on('console', message => {
+      if (message.type() === 'error') {
+        consoleErrors.push(message.text());
+      }
+    });
+    page.on('pageerror', error => {
+      pageErrors.push(error.message);
+    });
+    page.on('dialog', dialog => {
+      void dialog.accept();
+    });
+
+    await page.goto(`${appUrl}?workspace=authoring`, { waitUntil: 'domcontentloaded' });
+
+    await waitForCondition(
+      async () => page.$('#authoringScriptEditor').then(Boolean),
+      'the authoring writer workspace'
+    );
+
+    await openPopoverAndClick(page, '#authoringMoreBtn', '#authoringMoreMenu', '[data-action="new-draft"]');
+
+    await waitForCondition(
+      async () => page.$eval('#authoringLessonTitle', element => element.textContent?.includes('New Lesson') || false),
+      'the new draft to open'
+    );
+
+    const largeLessonSource = buildLargeLessonSource();
+    await replaceEditorSelectionText(page, largeLessonSource);
+
+    await waitForCondition(
+      async () => page.$eval('#authoringLessonTitle', element => element.textContent?.includes('Imported Large Lesson') || false),
+      'the imported lesson title to replace the starter metadata'
+    );
+
+    await waitForCondition(
+      async () => page.$eval('#authoringLessonMeta', element => element.textContent?.includes('158 steps') || false),
+      'the imported full lesson source to produce the full outline count'
+    );
+
+    await waitForCondition(
+      async () => page.$eval('#authoringCompileChip', element => element.textContent?.includes('Valid') || false),
+      'the imported full lesson source to compile cleanly'
+    );
+
+    await waitForCondition(
+      async () => page.$$eval('[data-outline-kind="step"]', buttons => buttons.length === 158),
+      'the outline to show all imported steps'
+    );
+
+    await waitForCondition(
+      async () => page.$eval('[data-outline-kind="step"][data-step-id="bulk-step-158"]', element => Boolean(element)).catch(() => false),
+      'the final imported step to exist in the outline'
+    );
+
+    await waitForCondition(
+      async () => page.evaluate(() => {
+        const editor = document.querySelector('#authoringScriptEditor');
+        const value = editor instanceof HTMLElement && editor.authoringEditor
+          ? editor.authoringEditor.getValue()
+          : '';
+
+        return value.startsWith('# Step: bulk-step-001')
+          && value.includes('# Step: bulk-step-158')
+          && !value.includes('schemaVersion:')
+          && !value.includes('lessonId: imported-large-lesson');
+      }),
+      'the editor body to show the imported lesson body without frontmatter duplication'
+    );
+
+    await page.keyboard.down('Control');
+    await page.keyboard.press('s');
+    await page.keyboard.up('Control');
+
+    await waitForCondition(
+      async () => page.$eval('#authoringStatus', element => element.textContent?.includes('Draft saved into SQLite.') || false),
+      'the imported full lesson source to save into SQLite'
+    );
+
+    await page.reload({ waitUntil: 'domcontentloaded' });
+
+    await waitForCondition(
+      async () => page.$('#authoringScriptEditor').then(Boolean),
+      'the authoring writer workspace after reload'
+    );
+
+    await waitForCondition(
+      async () => page.$eval('#authoringLessonTitle', element => element.textContent?.includes('Imported Large Lesson') || false),
+      'the imported lesson title to persist after reload'
+    );
+
+    await waitForCondition(
+      async () => page.$eval('[data-outline-kind="step"][data-step-id="bulk-step-158"]', element => Boolean(element)).catch(() => false),
+      'the imported final step to persist after reload'
     );
 
     assert.deepEqual(pageErrors, []);

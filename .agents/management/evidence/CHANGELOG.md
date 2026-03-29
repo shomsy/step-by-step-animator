@@ -15,6 +15,9 @@ Update rules:
 
 ## Current Ledger
 
+1. `[review][medium] 2026-03-29 19:36 CEST - Closed TODO-007 by removing large-paste bottlenecks from Write Mode, deferring heavy analysis after document edits, adding full lesson source paste import without hidden-frontmatter corruption, and revalidating with browser smoke plus the full test/build path`
+   owner: codex
+   actual: 45m
 1. `[review][medium] 2026-03-29 18:29 CEST - Closed TODO-006 and the requested cold review/remediation loop by tightening the Write Mode runtime: lighter outline rail, stronger DSL hierarchy, clearer slash insert path, exact outline/validation jumps, and stronger active preview verification`
    owner: codex
    actual: 1h
