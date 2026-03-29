@@ -65,6 +65,32 @@ function buildWorkspaceUrl(ownerLocation, workspaceName) {
   return nextUrl.toString();
 }
 
+function readRequestedLessonId(ownerLocation) {
+  return normalizeText(new URL(ownerLocation.href).searchParams.get('lesson'));
+}
+
+async function readInitialAuthoringWorkspace({
+  authoringStore,
+  ownerLocation
+}) {
+  const requestedLessonId = readRequestedLessonId(ownerLocation);
+
+  if (requestedLessonId) {
+    const requestedWorkspace = await authoringStore.openDraftForLessonContext(requestedLessonId);
+
+    if (requestedWorkspace.selectedDraft) {
+      return requestedWorkspace;
+    }
+  }
+
+  const initialWorkspace = authoringStore.readWorkspaceSnapshot();
+  const firstDraftId = initialWorkspace.drafts[0]?.draftId || '';
+
+  return firstDraftId
+    ? authoringStore.readWorkspaceSnapshot(firstDraftId)
+    : initialWorkspace;
+}
+
 function downloadScriptMarkdown(ownerWindow, lessonId, sourceMarkdown) {
   const blob = new Blob([sourceMarkdown], {
     type: 'text/markdown;charset=utf-8'
@@ -1781,11 +1807,10 @@ export async function showAuthoringWorkspace({
     ownerWindow,
     shippedLessons
   });
-  const initialWorkspace = authoringStore.readWorkspaceSnapshot();
-  const firstDraftId = initialWorkspace.drafts[0]?.draftId || '';
-  const initialDraftWorkspace = firstDraftId
-    ? authoringStore.readWorkspaceSnapshot(firstDraftId)
-    : initialWorkspace;
+  const initialDraftWorkspace = await readInitialAuthoringWorkspace({
+    authoringStore,
+    ownerLocation
+  });
   const state = {
     workspaceSnapshot: initialDraftWorkspace,
     editorSourceMarkdown: initialDraftWorkspace.selectedDraft?.sourceMarkdown || '',

@@ -15,6 +15,9 @@ Update rules:
 
 ## Current Ledger
 
+1. `[review][medium] 2026-03-30 01:33 CEST - Closed TODO-011 by refactoring lesson-scoped authoring entry and paired-draft synchronization so Write Mode opens the requested shipped lesson, untouched paired drafts refresh from shipped source updates, and normal player selection ignores unpaired same-id drafts`
+   owner: codex
+   actual: 20m
 1. `[review][medium] 2026-03-30 01:15 CEST - Closed TODO-010 by locking the UI-backed authoring contract into shared runtime-state labels, documenting Save / Play / Publish semantics, and adding browser smoke coverage for restoring a published version snapshot back into the draft`
    owner: codex
    actual: 1h 15m

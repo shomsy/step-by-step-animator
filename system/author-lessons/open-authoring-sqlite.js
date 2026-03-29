@@ -358,6 +358,59 @@ function summarizeLessonContract(contract) {
   };
 }
 
+function readShippedLessonRow(database, lessonId) {
+  return readRows(
+    database,
+    `SELECT lesson_id, lesson_title, source_markdown, imported_at
+     FROM shipped_lessons
+     WHERE lesson_id = ?`,
+    [lessonId]
+  )[0] || null;
+}
+
+function readPairedDraftRows(database, shippedLessonId) {
+  return readRows(
+    database,
+    `SELECT draft_id, lesson_id, lesson_title, source_markdown, source_origin, shipped_lesson_id, created_at, updated_at
+     FROM lesson_drafts
+     WHERE shipped_lesson_id = ?
+     ORDER BY updated_at DESC, lesson_id ASC`,
+    [shippedLessonId]
+  );
+}
+
+function readDraftIdForLessonContext(database, lessonId) {
+  if (!normalizeString(lessonId)) {
+    return '';
+  }
+
+  const pairedDraftRow = readRows(
+    database,
+    `SELECT draft_id
+     FROM lesson_drafts
+     WHERE shipped_lesson_id = ?
+     ORDER BY updated_at DESC, lesson_id ASC
+     LIMIT 1`,
+    [lessonId]
+  )[0];
+
+  if (pairedDraftRow?.draft_id) {
+    return pairedDraftRow.draft_id;
+  }
+
+  const directDraftRow = readRows(
+    database,
+    `SELECT draft_id
+     FROM lesson_drafts
+     WHERE lesson_id = ?
+     ORDER BY updated_at DESC, lesson_id ASC
+     LIMIT 1`,
+    [lessonId]
+  )[0];
+
+  return directDraftRow?.draft_id || '';
+}
+
 function tryReadLessonContract(sourceMarkdown) {
   try {
     return {
@@ -539,15 +592,39 @@ function upsertDraftFromMarkdown(database, {
   };
 }
 
+function refreshUntouchedPairedDrafts(database, {
+  shippedLessonId,
+  previousSourceMarkdown,
+  nextSourceMarkdown
+}) {
+  if (!normalizeString(shippedLessonId) || previousSourceMarkdown === nextSourceMarkdown) {
+    return;
+  }
+
+  readPairedDraftRows(database, shippedLessonId).forEach(draftRow => {
+    if (draftRow.source_origin !== 'paired-shipped') {
+      return;
+    }
+
+    if (draftRow.source_markdown !== previousSourceMarkdown) {
+      return;
+    }
+
+    upsertDraftFromMarkdown(database, {
+      draftId: draftRow.draft_id,
+      sourceMarkdown: nextSourceMarkdown,
+      sourceOrigin: draftRow.source_origin,
+      shippedLessonId,
+      createdAt: draftRow.created_at
+    });
+  });
+}
+
 function seedShippedLessons(database, shippedLessons) {
   shippedLessons.forEach(shippedLesson => {
-    const existingRows = readRows(
-      database,
-      'SELECT lesson_id FROM shipped_lessons WHERE lesson_id = ?',
-      [shippedLesson.lessonId]
-    );
+    const existingRow = readShippedLessonRow(database, shippedLesson.lessonId);
 
-    if (existingRows.length) {
+    if (existingRow) {
       runStatement(
         database,
         `UPDATE shipped_lessons
@@ -560,6 +637,11 @@ function seedShippedLessons(database, shippedLessons) {
           shippedLesson.lessonId
         ]
       );
+      refreshUntouchedPairedDrafts(database, {
+        shippedLessonId: shippedLesson.lessonId,
+        previousSourceMarkdown: existingRow.source_markdown,
+        nextSourceMarkdown: shippedLesson.sourceMarkdown
+      });
       return;
     }
 
@@ -604,23 +686,15 @@ function ensurePairedDrafts(database) {
 }
 
 function ensureDraftForShippedLesson(database, shippedLessonId) {
-  const existingRows = readRows(
-    database,
-    'SELECT draft_id FROM lesson_drafts WHERE shipped_lesson_id = ?',
-    [shippedLessonId]
-  );
+  const existingRows = readPairedDraftRows(database, shippedLessonId);
 
   if (existingRows.length) {
     return existingRows[0].draft_id;
   }
 
-  const shippedRows = readRows(
-    database,
-    'SELECT source_markdown FROM shipped_lessons WHERE lesson_id = ?',
-    [shippedLessonId]
-  );
+  const shippedRow = readShippedLessonRow(database, shippedLessonId);
 
-  if (!shippedRows.length) {
+  if (!shippedRow) {
     throw new Error(`Shipped lesson "${shippedLessonId}" was not found.`);
   }
 
@@ -628,7 +702,7 @@ function ensureDraftForShippedLesson(database, shippedLessonId) {
 
   upsertDraftFromMarkdown(database, {
     draftId,
-    sourceMarkdown: shippedRows[0].source_markdown,
+    sourceMarkdown: shippedRow.source_markdown,
     sourceOrigin: 'paired-shipped',
     shippedLessonId
   });
@@ -701,10 +775,10 @@ function readPlayableDraftOverrideRow(database, shippedLessonId) {
     database,
     `SELECT draft_id, lesson_id, lesson_title, source_markdown, source_origin, shipped_lesson_id, created_at, updated_at
      FROM lesson_drafts
-     WHERE shipped_lesson_id = ? OR lesson_id = ?
-     ORDER BY CASE WHEN shipped_lesson_id = ? THEN 0 ELSE 1 END, updated_at DESC
+     WHERE shipped_lesson_id = ?
+     ORDER BY updated_at DESC, lesson_id ASC
      LIMIT 1`,
-    [shippedLessonId, shippedLessonId, shippedLessonId]
+    [shippedLessonId]
   );
 
   return rows[0] || null;
@@ -811,13 +885,35 @@ export async function openAuthoringSqlite({
         return null;
       }
 
-      return buildPlayableDraftOverrideSummary(
-        readPlayableDraftOverrideRow(database, shippedLessonId)
-      );
-    },
-    async openDraftForShippedLesson(shippedLessonId) {
-      return persist(() => {
-        const draftId = ensureDraftForShippedLesson(database, shippedLessonId);
+        return buildPlayableDraftOverrideSummary(
+          readPlayableDraftOverrideRow(database, shippedLessonId)
+        );
+      },
+      async openDraftForLessonContext(lessonId) {
+        const requestedLessonId = normalizeString(lessonId);
+
+        if (!requestedLessonId) {
+          return buildWorkspaceSnapshot(database);
+        }
+
+        const directDraftId = readDraftIdForLessonContext(database, requestedLessonId);
+
+        if (directDraftId) {
+          return buildWorkspaceSnapshot(database, directDraftId);
+        }
+
+        if (!readShippedLessonRow(database, requestedLessonId)) {
+          return buildWorkspaceSnapshot(database);
+        }
+
+        return persist(() => {
+          const draftId = ensureDraftForShippedLesson(database, requestedLessonId);
+          return buildWorkspaceSnapshot(database, draftId);
+        });
+      },
+      async openDraftForShippedLesson(shippedLessonId) {
+        return persist(() => {
+          const draftId = ensureDraftForShippedLesson(database, shippedLessonId);
 
         return buildWorkspaceSnapshot(database, draftId);
       });

@@ -9446,6 +9446,8 @@ Rules:
 - `CKEditor 5` is out of the shipped path unless a concrete unresolved WYSIWYG requirement is proven later
 - outline, validation, preview, and snapshot are support surfaces around the canonical lesson script, not alternate editors
 - the normal player should prefer the latest healthy saved paired draft for the same shipped lesson so the author sees what was just saved
+- entering Write Mode with a shipped lesson query must open that lesson's paired draft instead of an unrelated most-recent draft
+- paired drafts may auto-refresh from shipped source updates only while they still match the previous shipped source exactly; once the author edits the paired draft, the store must preserve those edits
 - invalid saved drafts must fail closed back to the shipped lesson package instead of breaking the normal player path
 
 ### 3.0.2 UI-Backed Draft Truth And Recovery
@@ -10626,6 +10628,9 @@ Update rules:
 
 ## Current Ledger
 
+1. `[review][medium] 2026-03-30 01:33 CEST - Closed TODO-011 by refactoring lesson-scoped authoring entry and paired-draft synchronization so Write Mode opens the requested shipped lesson, untouched paired drafts refresh from shipped source updates, and normal player selection ignores unpaired same-id drafts`
+   owner: codex
+   actual: 20m
 1. `[review][medium] 2026-03-30 01:15 CEST - Closed TODO-010 by locking the UI-backed authoring contract into shared runtime-state labels, documenting Save / Play / Publish semantics, and adding browser smoke coverage for restoring a published version snapshot back into the draft`
    owner: codex
    actual: 1h 15m
@@ -11501,6 +11506,8 @@ The browser app now exposes a dedicated authoring workspace at `?workspace=autho
 - the editor remains DSL-aware, with slash-triggered block insertion and inline `+ Insert Block` authoring
 - drafts still compile back through the same lesson engine contract before save and publish
 - the normal player prefers the latest healthy saved paired draft for the selected shipped lesson; broken saved drafts fail closed back to the shipped lesson package
+- entering `?workspace=authoring&lesson=<shipped-lesson-id>` opens that lesson's paired draft instead of whichever draft happened to be edited most recently
+- paired drafts refresh from shipped lesson source updates until the operator edits them; edited paired drafts stay preserved
 - the authoring state model is explicit: `Draft Saved`, `Unsaved Changes`, `Playable Draft`, `Broken Draft Fallback`, `Published Lesson`, and `No Draft`
 - `Save` persists draft content to SQLite only
 - `Play` uses the latest healthy saved draft, or fails closed to the shipped lesson package when the saved draft is unhealthy
@@ -94064,6 +94071,59 @@ function summarizeLessonContract(contract) {
   };
 }
 
+function readShippedLessonRow(database, lessonId) {
+  return readRows(
+    database,
+    `SELECT lesson_id, lesson_title, source_markdown, imported_at
+     FROM shipped_lessons
+     WHERE lesson_id = ?`,
+    [lessonId]
+  )[0] || null;
+}
+
+function readPairedDraftRows(database, shippedLessonId) {
+  return readRows(
+    database,
+    `SELECT draft_id, lesson_id, lesson_title, source_markdown, source_origin, shipped_lesson_id, created_at, updated_at
+     FROM lesson_drafts
+     WHERE shipped_lesson_id = ?
+     ORDER BY updated_at DESC, lesson_id ASC`,
+    [shippedLessonId]
+  );
+}
+
+function readDraftIdForLessonContext(database, lessonId) {
+  if (!normalizeString(lessonId)) {
+    return '';
+  }
+
+  const pairedDraftRow = readRows(
+    database,
+    `SELECT draft_id
+     FROM lesson_drafts
+     WHERE shipped_lesson_id = ?
+     ORDER BY updated_at DESC, lesson_id ASC
+     LIMIT 1`,
+    [lessonId]
+  )[0];
+
+  if (pairedDraftRow?.draft_id) {
+    return pairedDraftRow.draft_id;
+  }
+
+  const directDraftRow = readRows(
+    database,
+    `SELECT draft_id
+     FROM lesson_drafts
+     WHERE lesson_id = ?
+     ORDER BY updated_at DESC, lesson_id ASC
+     LIMIT 1`,
+    [lessonId]
+  )[0];
+
+  return directDraftRow?.draft_id || '';
+}
+
 function tryReadLessonContract(sourceMarkdown) {
   try {
     return {
@@ -94245,15 +94305,39 @@ function upsertDraftFromMarkdown(database, {
   };
 }
 
+function refreshUntouchedPairedDrafts(database, {
+  shippedLessonId,
+  previousSourceMarkdown,
+  nextSourceMarkdown
+}) {
+  if (!normalizeString(shippedLessonId) || previousSourceMarkdown === nextSourceMarkdown) {
+    return;
+  }
+
+  readPairedDraftRows(database, shippedLessonId).forEach(draftRow => {
+    if (draftRow.source_origin !== 'paired-shipped') {
+      return;
+    }
+
+    if (draftRow.source_markdown !== previousSourceMarkdown) {
+      return;
+    }
+
+    upsertDraftFromMarkdown(database, {
+      draftId: draftRow.draft_id,
+      sourceMarkdown: nextSourceMarkdown,
+      sourceOrigin: draftRow.source_origin,
+      shippedLessonId,
+      createdAt: draftRow.created_at
+    });
+  });
+}
+
 function seedShippedLessons(database, shippedLessons) {
   shippedLessons.forEach(shippedLesson => {
-    const existingRows = readRows(
-      database,
-      'SELECT lesson_id FROM shipped_lessons WHERE lesson_id = ?',
-      [shippedLesson.lessonId]
-    );
+    const existingRow = readShippedLessonRow(database, shippedLesson.lessonId);
 
-    if (existingRows.length) {
+    if (existingRow) {
       runStatement(
         database,
         `UPDATE shipped_lessons
@@ -94266,6 +94350,11 @@ function seedShippedLessons(database, shippedLessons) {
           shippedLesson.lessonId
         ]
       );
+      refreshUntouchedPairedDrafts(database, {
+        shippedLessonId: shippedLesson.lessonId,
+        previousSourceMarkdown: existingRow.source_markdown,
+        nextSourceMarkdown: shippedLesson.sourceMarkdown
+      });
       return;
     }
 
@@ -94310,23 +94399,15 @@ function ensurePairedDrafts(database) {
 }
 
 function ensureDraftForShippedLesson(database, shippedLessonId) {
-  const existingRows = readRows(
-    database,
-    'SELECT draft_id FROM lesson_drafts WHERE shipped_lesson_id = ?',
-    [shippedLessonId]
-  );
+  const existingRows = readPairedDraftRows(database, shippedLessonId);
 
   if (existingRows.length) {
     return existingRows[0].draft_id;
   }
 
-  const shippedRows = readRows(
-    database,
-    'SELECT source_markdown FROM shipped_lessons WHERE lesson_id = ?',
-    [shippedLessonId]
-  );
+  const shippedRow = readShippedLessonRow(database, shippedLessonId);
 
-  if (!shippedRows.length) {
+  if (!shippedRow) {
     throw new Error(`Shipped lesson "${shippedLessonId}" was not found.`);
   }
 
@@ -94334,7 +94415,7 @@ function ensureDraftForShippedLesson(database, shippedLessonId) {
 
   upsertDraftFromMarkdown(database, {
     draftId,
-    sourceMarkdown: shippedRows[0].source_markdown,
+    sourceMarkdown: shippedRow.source_markdown,
     sourceOrigin: 'paired-shipped',
     shippedLessonId
   });
@@ -94407,10 +94488,10 @@ function readPlayableDraftOverrideRow(database, shippedLessonId) {
     database,
     `SELECT draft_id, lesson_id, lesson_title, source_markdown, source_origin, shipped_lesson_id, created_at, updated_at
      FROM lesson_drafts
-     WHERE shipped_lesson_id = ? OR lesson_id = ?
-     ORDER BY CASE WHEN shipped_lesson_id = ? THEN 0 ELSE 1 END, updated_at DESC
+     WHERE shipped_lesson_id = ?
+     ORDER BY updated_at DESC, lesson_id ASC
      LIMIT 1`,
-    [shippedLessonId, shippedLessonId, shippedLessonId]
+    [shippedLessonId]
   );
 
   return rows[0] || null;
@@ -94517,13 +94598,35 @@ export async function openAuthoringSqlite({
         return null;
       }
 
-      return buildPlayableDraftOverrideSummary(
-        readPlayableDraftOverrideRow(database, shippedLessonId)
-      );
-    },
-    async openDraftForShippedLesson(shippedLessonId) {
-      return persist(() => {
-        const draftId = ensureDraftForShippedLesson(database, shippedLessonId);
+        return buildPlayableDraftOverrideSummary(
+          readPlayableDraftOverrideRow(database, shippedLessonId)
+        );
+      },
+      async openDraftForLessonContext(lessonId) {
+        const requestedLessonId = normalizeString(lessonId);
+
+        if (!requestedLessonId) {
+          return buildWorkspaceSnapshot(database);
+        }
+
+        const directDraftId = readDraftIdForLessonContext(database, requestedLessonId);
+
+        if (directDraftId) {
+          return buildWorkspaceSnapshot(database, directDraftId);
+        }
+
+        if (!readShippedLessonRow(database, requestedLessonId)) {
+          return buildWorkspaceSnapshot(database);
+        }
+
+        return persist(() => {
+          const draftId = ensureDraftForShippedLesson(database, requestedLessonId);
+          return buildWorkspaceSnapshot(database, draftId);
+        });
+      },
+      async openDraftForShippedLesson(shippedLessonId) {
+        return persist(() => {
+          const draftId = ensureDraftForShippedLesson(database, shippedLessonId);
 
         return buildWorkspaceSnapshot(database, draftId);
       });
@@ -94862,6 +94965,32 @@ function buildWorkspaceUrl(ownerLocation, workspaceName) {
   }
 
   return nextUrl.toString();
+}
+
+function readRequestedLessonId(ownerLocation) {
+  return normalizeText(new URL(ownerLocation.href).searchParams.get('lesson'));
+}
+
+async function readInitialAuthoringWorkspace({
+  authoringStore,
+  ownerLocation
+}) {
+  const requestedLessonId = readRequestedLessonId(ownerLocation);
+
+  if (requestedLessonId) {
+    const requestedWorkspace = await authoringStore.openDraftForLessonContext(requestedLessonId);
+
+    if (requestedWorkspace.selectedDraft) {
+      return requestedWorkspace;
+    }
+  }
+
+  const initialWorkspace = authoringStore.readWorkspaceSnapshot();
+  const firstDraftId = initialWorkspace.drafts[0]?.draftId || '';
+
+  return firstDraftId
+    ? authoringStore.readWorkspaceSnapshot(firstDraftId)
+    : initialWorkspace;
 }
 
 function downloadScriptMarkdown(ownerWindow, lessonId, sourceMarkdown) {
@@ -96580,11 +96709,10 @@ export async function showAuthoringWorkspace({
     ownerWindow,
     shippedLessons
   });
-  const initialWorkspace = authoringStore.readWorkspaceSnapshot();
-  const firstDraftId = initialWorkspace.drafts[0]?.draftId || '';
-  const initialDraftWorkspace = firstDraftId
-    ? authoringStore.readWorkspaceSnapshot(firstDraftId)
-    : initialWorkspace;
+  const initialDraftWorkspace = await readInitialAuthoringWorkspace({
+    authoringStore,
+    ownerLocation
+  });
   const state = {
     workspaceSnapshot: initialDraftWorkspace,
     editorSourceMarkdown: initialDraftWorkspace.selectedDraft?.sourceMarkdown || '',
@@ -103719,6 +103847,51 @@ function buildLargeLessonSource(stepCount = 158) {
   ].join('\n');
 }
 
+function buildSyntheticLessonSource({
+  lessonId,
+  lessonTitle,
+  stepTitle
+}) {
+  return [
+    '---',
+    'schemaVersion: 1',
+    `lessonId: ${lessonId}`,
+    `lessonTitle: ${lessonTitle}`,
+    'lessonIntro: Synthetic authoring-store regression coverage.',
+    'status: draft',
+    'courseId: step-by-step-animator',
+    'order: 1',
+    'artifacts:',
+    '  - artifactId: html',
+    '    language: html',
+    '    label: index.html',
+    '    isPrimary: true',
+    'preview:',
+    '  type: dom',
+    `  title: ${lessonTitle} Preview`,
+    `  address: browser://${lessonId}-preview`,
+    'goal:',
+    `  title: ${lessonTitle} Goal`,
+    '---',
+    '',
+    '# Step: synthetic-step',
+    `title: ${stepTitle}`,
+    'summary: Keep paired draft refresh behavior deterministic.',
+    'intent: Refresh untouched paired drafts and preserve edited paired drafts.',
+    '',
+    '## Scene: synthetic-scene',
+    '',
+    '### Narration',
+    'Synthetic narration for authoring-store regression coverage.',
+    '',
+    '### Show Code: html',
+    '```html',
+    `<div class="${lessonId}">${stepTitle}</div>`,
+    '```',
+    ''
+  ].join('\n');
+}
+
 test('browser authoring smoke covers V2 writer body view, metadata drawer, preview sync, and validation jump flow', { timeout: 60000 }, async () => {
   const server = await createServer({
     configFile: path.resolve(repoRoot, 'vite.config.js'),
@@ -104419,13 +104592,6 @@ test('browser authoring smoke lets the normal player prefer a healthy saved draf
       'the authoring writer workspace'
     );
 
-    await openPopoverAndClick(
-      page,
-      '#authoringMoreBtn',
-      '#authoringMoreMenu',
-      '[data-action="open-shipped:09-human-first-script-demo"]'
-    );
-
     await waitForCondition(
       async () => page.$eval('#authoringLessonTitle', element => element.textContent?.includes('Human-First Script Demo') || false),
       'the paired 09 draft to open'
@@ -104468,13 +104634,6 @@ test('browser authoring smoke lets the normal player prefer a healthy saved draf
       'the authoring workspace after returning'
     );
 
-    await openPopoverAndClick(
-      page,
-      '#authoringMoreBtn',
-      '#authoringMoreMenu',
-      '[data-action="open-shipped:09-human-first-script-demo"]'
-    );
-
     await waitForCondition(
       async () => page.$eval('#authoringScriptEditor', element => {
         if (!(element instanceof HTMLElement) || !element.authoringEditor) {
@@ -104500,6 +104659,251 @@ test('browser authoring smoke lets the normal player prefer a healthy saved draf
     assert.equal(brokenSelection.firstStepTitle, shippedStepTitle);
     assert.equal(brokenSelection.runtimeSource, 'broken-draft-fallback');
     assert.match(brokenSelection.runtimeLabel, /Broken Draft Fallback/);
+
+    assert.deepEqual(pageErrors, []);
+    assert.deepEqual(consoleErrors, []);
+
+    await page.close();
+  } finally {
+    await browser?.close();
+    await server.close();
+  }
+});
+
+test('browser authoring smoke refreshes untouched paired drafts from shipped updates without overwriting edited paired drafts', { timeout: 90000 }, async () => {
+  const server = await createServer({
+    configFile: path.resolve(repoRoot, 'vite.config.js'),
+    clearScreen: false,
+    logLevel: 'error',
+    server: {
+      host: '127.0.0.1',
+      port: 4178,
+      strictPort: false
+    }
+  });
+
+  let browser;
+
+  try {
+    await server.listen();
+
+    const appUrl = server.resolvedUrls?.local?.find(url => url.startsWith('http://127.0.0.1'))
+      || server.resolvedUrls?.local?.[0];
+
+    assert.ok(appUrl, 'Vite dev server did not expose a local URL.');
+
+    browser = await puppeteer.launch({
+      args: ['--disable-setuid-sandbox', '--no-sandbox'],
+      headless: true
+    });
+
+    const page = await browser.newPage();
+    const consoleErrors = [];
+    const pageErrors = [];
+    const lessonId = 'synthetic-refresh-lesson';
+    const initialSource = buildSyntheticLessonSource({
+      lessonId,
+      lessonTitle: 'Synthetic Refresh Lesson',
+      stepTitle: 'Initial Shipped Step'
+    });
+    const updatedSource = buildSyntheticLessonSource({
+      lessonId,
+      lessonTitle: 'Synthetic Refresh Lesson',
+      stepTitle: 'Updated Shipped Step'
+    });
+    const editedSource = buildSyntheticLessonSource({
+      lessonId,
+      lessonTitle: 'Synthetic Refresh Lesson',
+      stepTitle: 'Edited Draft Step'
+    });
+    const laterShippedSource = buildSyntheticLessonSource({
+      lessonId,
+      lessonTitle: 'Synthetic Refresh Lesson',
+      stepTitle: 'Later Shipped Step'
+    });
+
+    page.on('console', message => {
+      if (message.type() === 'error') {
+        consoleErrors.push(message.text());
+      }
+    });
+    page.on('pageerror', error => {
+      pageErrors.push(error.message);
+    });
+
+    await page.goto(`${appUrl}?workspace=authoring`, { waitUntil: 'domcontentloaded' });
+
+    const refreshSnapshot = await page.evaluate(async ({
+      repoPath,
+      lessonId: syntheticLessonId,
+      firstSourceMarkdown,
+      secondSourceMarkdown,
+      editedSourceMarkdown,
+      laterSourceMarkdown
+    }) => {
+      const { openAuthoringSqlite } = await import(`/@fs${repoPath}/system/author-lessons/open-authoring-sqlite.js`);
+
+      async function openStore(sourceMarkdown) {
+        return openAuthoringSqlite({
+          ownerWindow: window,
+          shippedLessons: [
+            {
+              lessonId: syntheticLessonId,
+              lessonTitle: 'Synthetic Refresh Lesson',
+              sourceMarkdown
+            }
+          ]
+        });
+      }
+
+      const firstStore = await openStore(firstSourceMarkdown);
+      const firstSnapshot = await firstStore.openDraftForShippedLesson(syntheticLessonId);
+      const firstDraftId = firstSnapshot.selectedDraft?.draftId || '';
+      const firstDraftSource = firstSnapshot.selectedDraft?.sourceMarkdown || '';
+
+      const secondStore = await openStore(secondSourceMarkdown);
+      const refreshedSnapshot = await secondStore.openDraftForShippedLesson(syntheticLessonId);
+      const refreshedDraftSource = refreshedSnapshot.selectedDraft?.sourceMarkdown || '';
+      const refreshedDraftId = refreshedSnapshot.selectedDraft?.draftId || '';
+
+      const editedSnapshot = await secondStore.saveLessonDraft({
+        draftId: refreshedDraftId,
+        sourceMarkdown: editedSourceMarkdown
+      });
+
+      const thirdStore = await openStore(laterSourceMarkdown);
+      const preservedSnapshot = await thirdStore.openDraftForShippedLesson(syntheticLessonId);
+
+      return {
+        firstDraftId,
+        refreshedDraftId,
+        preservedDraftId: preservedSnapshot.selectedDraft?.draftId || '',
+        firstDraftSource,
+        refreshedDraftSource,
+        editedDraftSource: editedSnapshot.selectedDraft?.sourceMarkdown || '',
+        preservedDraftSource: preservedSnapshot.selectedDraft?.sourceMarkdown || ''
+      };
+    }, {
+      repoPath: repoRoot,
+      lessonId,
+      firstSourceMarkdown: initialSource,
+      secondSourceMarkdown: updatedSource,
+      editedSourceMarkdown: editedSource,
+      laterSourceMarkdown: laterShippedSource
+    });
+
+    assert.equal(refreshSnapshot.firstDraftId, refreshSnapshot.refreshedDraftId);
+    assert.equal(refreshSnapshot.firstDraftId, refreshSnapshot.preservedDraftId);
+    assert.match(refreshSnapshot.firstDraftSource, /Initial Shipped Step/);
+    assert.match(refreshSnapshot.refreshedDraftSource, /Updated Shipped Step/);
+    assert.match(refreshSnapshot.editedDraftSource, /Edited Draft Step/);
+    assert.match(refreshSnapshot.preservedDraftSource, /Edited Draft Step/);
+    assert.doesNotMatch(refreshSnapshot.preservedDraftSource, /Later Shipped Step/);
+
+    assert.deepEqual(pageErrors, []);
+    assert.deepEqual(consoleErrors, []);
+
+    await page.close();
+  } finally {
+    await browser?.close();
+    await server.close();
+  }
+});
+
+test('browser authoring smoke ignores an unpaired custom draft with the same lesson id during normal player selection', { timeout: 90000 }, async () => {
+  const server = await createServer({
+    configFile: path.resolve(repoRoot, 'vite.config.js'),
+    clearScreen: false,
+    logLevel: 'error',
+    server: {
+      host: '127.0.0.1',
+      port: 4178,
+      strictPort: false
+    }
+  });
+
+  let browser;
+
+  try {
+    await server.listen();
+
+    const appUrl = server.resolvedUrls?.local?.find(url => url.startsWith('http://127.0.0.1'))
+      || server.resolvedUrls?.local?.[0];
+
+    assert.ok(appUrl, 'Vite dev server did not expose a local URL.');
+
+    browser = await puppeteer.launch({
+      args: ['--disable-setuid-sandbox', '--no-sandbox'],
+      headless: true
+    });
+
+    const page = await browser.newPage();
+    const consoleErrors = [];
+    const pageErrors = [];
+    const shippedStepTitle = 'Start: Empty App Shell';
+    const unpairedDraftStepTitle = 'Custom Same Id Draft Step';
+
+    page.on('console', message => {
+      if (message.type() === 'error') {
+        consoleErrors.push(message.text());
+      }
+    });
+    page.on('pageerror', error => {
+      pageErrors.push(error.message);
+    });
+
+    await page.goto(`${appUrl}?workspace=authoring`, { waitUntil: 'domcontentloaded' });
+
+    const pairedDraftSource = await readPairedDraftSourceMarkdown(page, '09-human-first-script-demo');
+    const unpairedDraftSource = pairedDraftSource.replace(
+      'title: Start: Empty App Shell',
+      `title: ${unpairedDraftStepTitle}`
+    );
+
+    await page.evaluate(async ({
+      repoPath,
+      sourceMarkdown
+    }) => {
+      const [{ openAuthoringSqlite }, { readShippedLessonScripts }] = await Promise.all([
+        import(`/@fs${repoPath}/system/author-lessons/open-authoring-sqlite.js`),
+        import(`/@fs${repoPath}/system/author-lessons/read-shipped-lesson-scripts.js`)
+      ]);
+      const shippedLessons = await readShippedLessonScripts();
+      const store = await openAuthoringSqlite({
+        ownerWindow: window,
+        shippedLessons
+      });
+      const pairedSnapshot = await store.openDraftForShippedLesson('09-human-first-script-demo');
+      const pairedDraftId = pairedSnapshot.selectedDraft?.draftId || '';
+
+      if (!pairedDraftId) {
+        throw new Error('Expected the paired draft for 09-human-first-script-demo.');
+      }
+
+      await store.deleteLessonDraft(pairedDraftId);
+
+      const createdSnapshot = await store.createLessonDraft();
+      const customDraftId = createdSnapshot.selectedDraft?.draftId || '';
+
+      if (!customDraftId) {
+        throw new Error('Expected a new custom draft id.');
+      }
+
+      await store.saveLessonDraft({
+        draftId: customDraftId,
+        sourceMarkdown
+      });
+    }, {
+      repoPath: repoRoot,
+      sourceMarkdown: unpairedDraftSource
+    });
+
+    const selection = await readPlayerSelectionSnapshot(page, '09-human-first-script-demo');
+
+    assert.equal(selection.lessonId, '09-human-first-script-demo');
+    assert.equal(selection.firstStepTitle, shippedStepTitle);
+    assert.equal(selection.runtimeSource, 'published');
+    assert.match(selection.runtimeLabel, /Published Lesson/);
 
     assert.deepEqual(pageErrors, []);
     assert.deepEqual(consoleErrors, []);

@@ -180,6 +180,8 @@ Rules:
 - `CKEditor 5` is out of the shipped path unless a concrete unresolved WYSIWYG requirement is proven later
 - outline, validation, preview, and snapshot are support surfaces around the canonical lesson script, not alternate editors
 - the normal player should prefer the latest healthy saved paired draft for the same shipped lesson so the author sees what was just saved
+- entering Write Mode with a shipped lesson query must open that lesson's paired draft instead of an unrelated most-recent draft
+- paired drafts may auto-refresh from shipped source updates only while they still match the previous shipped source exactly; once the author edits the paired draft, the store must preserve those edits
 - invalid saved drafts must fail closed back to the shipped lesson package instead of breaking the normal player path
 
 ### 3.0.2 UI-Backed Draft Truth And Recovery
