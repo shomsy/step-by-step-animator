@@ -7,5 +7,6 @@ The active plan lives in `.agents/management/planning/PLAN.md`.
 The active implementation queue lives in `.agents/management/TODO.md`.
 The evidence ledger lives in `.agents/management/evidence/CHANGELOG.md`.
 
+- 2026-03-29 04:13 CEST - PLAN-001 completed: shipped the compact Write Mode authoring workspace, closed TODO-003, and finished the whole-system cold review/remediation loop.
 - 2026-03-26 15:26 - Product/System Refactor Realignment completed: moved lesson-engine into `system/lesson-engine/`, moved generated lesson docs into `system/lesson-engine/output/`, populated `system/foundation/` with `frontmatter/` and `markdown/`, and cleared the active follow-up queue.
 - 2026-03-26 15:34 - Production readiness review completed: fixed the stale lesson-doc sync root and updated runtime test imports to the `system/` tree; validation, build, and tests passed afterward.

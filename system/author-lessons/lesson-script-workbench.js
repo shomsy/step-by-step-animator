@@ -254,6 +254,34 @@ function readDefaultPreviewTarget(parsedLesson) {
   return normalizeString(parsedLesson?.attributes?.preview?.type) || 'dom';
 }
 
+function readFenceLanguageForArtifact(parsedLesson, artifactId) {
+  const declaredLanguage = normalizeString(
+    parsedLesson?.attributes?.artifacts?.find(artifact => artifact.artifactId === artifactId)?.language
+  );
+
+  if (declaredLanguage === 'html' || declaredLanguage === 'css') {
+    return declaredLanguage;
+  }
+
+  if (declaredLanguage === 'js' || declaredLanguage === 'template-js') {
+    return 'javascript';
+  }
+
+  if (declaredLanguage === 'shadow-css') {
+    return 'css';
+  }
+
+  if (artifactId === 'html') {
+    return 'html';
+  }
+
+  if (artifactId === 'css' || artifactId === 'shadow-css') {
+    return 'css';
+  }
+
+  return 'javascript';
+}
+
 export function buildInsertMenuItems(context) {
   if (context.kind === 'root') {
     return [
@@ -348,11 +376,7 @@ export function buildInsertSnippet(actionName, parsedLesson, scan) {
 
   if (actionName.startsWith('insert-show-code:')) {
     const artifactId = actionName.split(':')[1];
-    const fenceLanguage = artifactId === 'html'
-      ? 'html'
-      : artifactId === 'css'
-        ? 'css'
-        : 'javascript';
+    const fenceLanguage = readFenceLanguageForArtifact(parsedLesson, artifactId);
     const snippet = [
       `### Show Code: ${artifactId}`,
       `\`\`\`${fenceLanguage}`,
@@ -389,15 +413,16 @@ export function buildInsertSnippet(actionName, parsedLesson, scan) {
   }
 
   const fallbackArtifactId = primaryArtifact?.artifactId || 'html';
+  const fallbackFenceLanguage = readFenceLanguageForArtifact(parsedLesson, fallbackArtifactId);
   return createSnippet(
     [
       `### Show Code: ${fallbackArtifactId}`,
-      '```html',
+      `\`\`\`${fallbackFenceLanguage}`,
       '',
       '```',
       ''
     ].join('\n'),
-    `### Show Code: ${fallbackArtifactId}\n\`\`\`html\n`.length,
-    `### Show Code: ${fallbackArtifactId}\n\`\`\`html\n`.length
+    `### Show Code: ${fallbackArtifactId}\n\`\`\`${fallbackFenceLanguage}\n`.length,
+    `### Show Code: ${fallbackArtifactId}\n\`\`\`${fallbackFenceLanguage}\n`.length
   );
 }

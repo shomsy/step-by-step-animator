@@ -58,7 +58,19 @@ async function setEditorCursorBeforeFirstScene(page) {
   });
 }
 
-test('browser authoring smoke covers writer flow insert, save, reload persistence, and preview sync', { timeout: 60000 }, async () => {
+async function setMetadataValue(page, fieldName, nextValue) {
+  await page.$eval(`[data-metadata-field="${fieldName}"]`, (element, value) => {
+    if (!(element instanceof HTMLInputElement || element instanceof HTMLTextAreaElement || element instanceof HTMLSelectElement)) {
+      throw new Error(`Expected a metadata control for ${value}.`);
+    }
+
+    element.value = value;
+    element.dispatchEvent(new Event('input', { bubbles: true }));
+    element.dispatchEvent(new Event('change', { bubbles: true }));
+  }, nextValue);
+}
+
+test('browser authoring smoke covers writer flow insert, metadata apply, save shortcut, reload persistence, and preview sync', { timeout: 60000 }, async () => {
   const server = await createServer({
     configFile: path.resolve(repoRoot, 'vite.config.js'),
     clearScreen: false,
@@ -111,7 +123,7 @@ test('browser authoring smoke covers writer flow insert, save, reload persistenc
     await openPopoverAndClick(page, '#authoringMoreBtn', '#authoringMoreMenu', '[data-action="new-draft"]');
 
     await waitForCondition(
-      async () => page.$eval('#authoringLessonTitle', element => element.textContent?.startsWith('New Lesson') || false),
+      async () => page.$eval('#authoringLessonTitle', element => element.textContent?.includes('New Lesson') || false),
       'the new draft to open'
     );
 
@@ -121,17 +133,11 @@ test('browser authoring smoke covers writer flow insert, save, reload persistenc
       }
 
       return element.value
-        .replace(/^lessonId:\s*.+$/m, 'lessonId: authoring-smoke-lesson')
-        .replace(/^lessonTitle:\s*.+$/m, 'lessonTitle: Authoring Smoke Lesson');
+        .replace(/^lessonId:\s*.+$/m, 'lessonId: authoring-smoke-lesson');
     }));
 
     await setEditorCursorBeforeFirstScene(page);
-    await page.click('#authoringInsertBtn');
-    await waitForCondition(
-      async () => page.$eval('#authoringInsertMenu', element => !element.hidden).catch(() => false),
-      'the insert menu to open'
-    );
-    await page.click('[data-action="insert-scene"]');
+    await page.click('#authoringAddSceneBtn');
     await page.keyboard.type('authoring-smoke-scene');
 
     await waitForCondition(
@@ -156,18 +162,36 @@ test('browser authoring smoke covers writer flow insert, save, reload persistenc
     await page.keyboard.type('<div class="smoke-card">Smoke</div>');
 
     await waitForCondition(
-      async () => page.$eval('#authoringCompileChip', element => element.textContent?.includes('Clean') || false),
+      async () => page.$eval('#authoringCompileChip', element => element.textContent?.includes('Valid') || false),
       'the script to compile cleanly'
     );
 
-    await page.click('#authoringSaveDraftBtn');
+    await page.click('#authoringMetadataBtn');
+    await waitForCondition(
+      async () => page.$('#authoringMetadataDrawer:not([hidden])').then(Boolean),
+      'the metadata drawer to open'
+    );
+
+    await setMetadataValue(page, 'lessonTitle', 'Authoring Smoke Lesson');
+    await setMetadataValue(page, 'previewTitle', 'Smoke Preview');
+    await page.click('[data-action="apply-metadata"]');
+
+    await waitForCondition(
+      async () => page.$eval('#authoringLessonTitle', element => element.textContent?.includes('Authoring Smoke Lesson') || false),
+      'metadata changes to update the header title'
+    );
+
+    await page.keyboard.down('Control');
+    await page.keyboard.press('s');
+    await page.keyboard.up('Control');
+
     await waitForCondition(
       async () => page.$eval('#authoringStatus', element => element.textContent?.includes('Draft saved into SQLite.') || false),
-      'the authoring draft to save'
+      'the authoring draft to save through the shortcut'
     );
 
     await waitForCondition(
-      async () => page.$eval('#authoringPreviewFrame', frame => (frame.getAttribute('srcdoc') || '').includes('lesson-shell')),
+      async () => page.$eval('#authoringPreviewFrame', frame => (frame.getAttribute('srcdoc') || '').includes('smoke-card')),
       'the preview iframe to stay populated'
     );
 
@@ -176,7 +200,9 @@ test('browser authoring smoke covers writer flow insert, save, reload persistenc
     await waitForCondition(
       async () => page.evaluate(() => {
         const editor = document.querySelector('#authoringScriptEditor');
-        return editor instanceof HTMLTextAreaElement && editor.value.includes('authoring-smoke-lesson');
+        return editor instanceof HTMLTextAreaElement
+          && editor.value.includes('authoring-smoke-lesson')
+          && editor.value.includes('lessonTitle: Authoring Smoke Lesson');
       }),
       'SQLite persistence after reload'
     );
@@ -187,7 +213,7 @@ test('browser authoring smoke covers writer flow insert, save, reload persistenc
     );
 
     await waitForCondition(
-      async () => page.$eval('#authoringPreviewFrame', frame => (frame.getAttribute('srcdoc') || '').includes('lesson-shell')),
+      async () => page.$eval('#authoringPreviewFrame', frame => (frame.getAttribute('srcdoc') || '').includes('<!DOCTYPE html>')),
       'the preview iframe after reload'
     );
 

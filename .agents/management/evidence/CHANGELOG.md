@@ -15,6 +15,9 @@ Update rules:
 
 ## Current Ledger
 
+1. `[review][medium] 2026-03-29 04:13 CEST - Closed TODO-003 and the requested whole-system cold review by shipping the compact Write Mode workspace, fixing the export dead path and hidden-overlay hit-test bug, and revalidating with tests plus a production build`
+   owner: codex
+   actual: 3h
 1. `[feature][medium] 2026-03-28 22:00 CET - Closed TODO-001 and TODO-002 by migrating every shipped lesson to lesson.script.md and shipping a SQLite-backed lesson authoring studio with browser SCRUD, publish snapshots, export, and live compile preview`
    owner: codex
    actual: 4h

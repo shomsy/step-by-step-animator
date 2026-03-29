@@ -153,13 +153,14 @@ Each shipped lesson is authored through this canonical source contract:
 
 `lesson.script.md` keeps step, scene, narration, and one-or-more `Show Code` snapshots in one scrollable file. The legacy split source (`lesson.md`, `scenes.md`, `artifacts/`) remains only as an import/migration bridge; the shipped lesson estate uses `lesson.script.md` as the source of truth.
 
-## Authoring Studio
+## Authoring Workspace
 
 The browser app now exposes a dedicated authoring workspace at `?workspace=authoring`.
 
 - shipped lesson source is loaded as immutable input
 - editable drafts live in browser-side SQLite persistence backed by IndexedDB
 - authors can create, open, update, duplicate, delete, publish snapshots, and export `lesson.script.md`
+- Write Mode keeps the lesson script editor as the primary surface, with outline navigation, DSL block insertion, a metadata drawer, and a compact preview/validation inspector
 - the editor is DSL-aware and compiles drafts back through the same lesson engine contract before save and publish
 
 ## Notes

@@ -1,4 +1,5 @@
 import { compileLessonScript } from '../lesson-engine/compile-lesson-script.js';
+import { buildLessonScriptMarkdown } from '../lesson-engine/build-lesson-script-markdown.js';
 import { composeLivePreviewDocument } from '../animator-engine/play-lesson/04-watch-preview/show-current-preview.js';
 import { openAuthoringSqlite } from './open-authoring-sqlite.js';
 import { readShippedLessonScripts } from './read-shipped-lesson-scripts.js';
@@ -9,12 +10,19 @@ import {
   readEditorContext
 } from './lesson-script-workbench.js';
 
+const METADATA_STATUS_OPTIONS = ['draft', 'active', 'broken', 'deprecated'];
+const PREVIEW_TYPE_OPTIONS = ['dom', 'terminal', 'markdown', 'diagram', 'none'];
+
 function escapeHtml(text) {
   return String(text)
     .replaceAll('&', '&amp;')
     .replaceAll('<', '&lt;')
     .replaceAll('>', '&gt;')
     .replaceAll('"', '&quot;');
+}
+
+function normalizeText(value) {
+  return typeof value === 'string' ? value.trim() : '';
 }
 
 function buildWorkspaceUrl(ownerLocation, workspaceName) {
@@ -29,42 +37,118 @@ function buildWorkspaceUrl(ownerLocation, workspaceName) {
   return nextUrl.toString();
 }
 
+function downloadScriptMarkdown(ownerWindow, lessonId, sourceMarkdown) {
+  const blob = new Blob([sourceMarkdown], {
+    type: 'text/markdown;charset=utf-8'
+  });
+  const downloadUrl = ownerWindow.URL.createObjectURL(blob);
+  const downloadAnchor = ownerWindow.document.createElement('a');
+
+  downloadAnchor.href = downloadUrl;
+  downloadAnchor.download = `${lessonId || 'lesson'}.script.md`;
+  downloadAnchor.style.display = 'none';
+  ownerWindow.document.body.append(downloadAnchor);
+  downloadAnchor.click();
+  downloadAnchor.remove();
+  ownerWindow.URL.revokeObjectURL(downloadUrl);
+}
+
+function readArtifactDeclarations(parsedLesson) {
+  return Array.isArray(parsedLesson?.attributes?.artifacts)
+    ? parsedLesson.attributes.artifacts
+    : [];
+}
+
 function readPrimaryArtifactId(parsedLesson) {
-  return parsedLesson?.attributes?.artifacts?.find(artifact => artifact.isPrimary)?.artifactId
-    || parsedLesson?.attributes?.artifacts?.[0]?.artifactId
+  return readArtifactDeclarations(parsedLesson).find(artifact => artifact.isPrimary)?.artifactId
+    || readArtifactDeclarations(parsedLesson)[0]?.artifactId
     || '';
 }
 
-function readCompiledArtifactText(compiledLesson, stepIndex, artifactId) {
-  return (compiledLesson?.statesByStep?.[stepIndex]?.artifacts?.[artifactId] || []).join('\n');
+function readArtifactFileName(artifact) {
+  return normalizeText(artifact?.label)
+    || `${normalizeText(artifact?.artifactId) || 'artifact'}.${normalizeText(artifact?.language) || 'txt'}`;
 }
 
-function buildStatusTone(state) {
+function splitCodeText(codeText) {
+  return codeText === '' ? [] : String(codeText || '').split('\n');
+}
+
+function cloneArtifactLineMap(linesByArtifactId) {
+  return Object.fromEntries(
+    Object.entries(linesByArtifactId).map(([artifactId, lines]) => [artifactId, [...lines]])
+  );
+}
+
+function readDraftOriginLabel(sourceOrigin) {
+  if (sourceOrigin === 'paired-shipped') {
+    return 'paired draft';
+  }
+
+  if (sourceOrigin === 'duplicate') {
+    return 'duplicate draft';
+  }
+
+  return 'custom draft';
+}
+
+function buildHeaderTitle(state) {
+  const parsedLesson = state.analysis?.parsedLesson;
+  const selectedDraft = state.workspaceSnapshot.selectedDraft;
+  const lessonTitle = parsedLesson?.attributes?.lessonTitle
+    || selectedDraft?.lessonTitle
+    || 'No draft selected';
+  const order = parsedLesson?.attributes?.order;
+
+  if (Number.isInteger(order) && order > 0) {
+    return `${String(order).padStart(2, '0')} · ${lessonTitle}`;
+  }
+
+  return lessonTitle;
+}
+
+function buildHeaderMeta(state) {
+  const parsedLesson = state.analysis?.parsedLesson;
+  const selectedDraft = state.workspaceSnapshot.selectedDraft;
+
+  if (!selectedDraft) {
+    return 'Open or create a draft to start writing.';
+  }
+
+  return `${parsedLesson?.attributes?.lessonId || selectedDraft.lessonId} · ${readDraftOriginLabel(selectedDraft.sourceOrigin)}`;
+}
+
+function buildSaveChipLabel(state) {
+  return state.dirty ? 'Unsaved changes' : 'Saved';
+}
+
+function buildSaveChipTone(state) {
+  return state.dirty ? 'warning' : 'success';
+}
+
+function buildCompileChipTone(state) {
   if (state.analysis?.parseErrorMessage || state.analysis?.compileErrorMessage) {
     return 'danger';
   }
 
-  if (state.statusMessageTone) {
-    return state.statusMessageTone;
+  if (state.analysis?.compiledLesson) {
+    return 'success';
   }
 
-  return state.dirty ? 'warning' : 'success';
+  return 'muted';
 }
 
 function buildCompileChipLabel(state) {
-  const parseError = state.analysis?.parseErrorMessage;
-  const compileError = state.analysis?.compileErrorMessage;
-
-  if (parseError) {
+  if (state.analysis?.parseErrorMessage) {
     return 'Syntax issue';
   }
 
-  if (compileError) {
+  if (state.analysis?.compileErrorMessage) {
     return 'Compile issue';
   }
 
   if (state.analysis?.compiledLesson) {
-    return `Clean · ${state.analysis.compiledLesson.steps.length} steps`;
+    return `Valid · ${state.analysis.compiledLesson.steps.length} steps`;
   }
 
   return 'No compiled preview';
@@ -78,6 +162,24 @@ function buildLessonStatusLabel(state) {
   }
 
   return parsedLesson.attributes.status || 'draft';
+}
+
+function buildLessonStatusTone(state) {
+  const lessonStatus = buildLessonStatusLabel(state);
+
+  if (lessonStatus === 'active') {
+    return 'success';
+  }
+
+  if (lessonStatus === 'broken') {
+    return 'danger';
+  }
+
+  if (lessonStatus === 'deprecated') {
+    return 'warning';
+  }
+
+  return 'muted';
 }
 
 function buildContextLabel(context) {
@@ -100,6 +202,14 @@ function buildContextLabel(context) {
   return `${stepLabel} · ${sceneLabel}`;
 }
 
+function buildStatusMessageTone(state) {
+  if (state.analysis?.parseErrorMessage || state.analysis?.compileErrorMessage) {
+    return 'danger';
+  }
+
+  return state.statusMessageTone || 'muted';
+}
+
 function buildStatusMessage(state) {
   if (state.analysis?.parseErrorMessage) {
     return state.analysis.parseErrorMessage;
@@ -120,26 +230,360 @@ function buildStatusMessage(state) {
   return 'Open or create a draft to start writing.';
 }
 
-function readValidationMessages(state) {
-  const messages = [];
+function readSceneNode(editorContext, stepId, sceneId) {
+  const stepNode = editorContext?.steps?.find(step => step.stepId === stepId);
+
+  return stepNode?.scenes?.find(scene => scene.sceneId === sceneId) || null;
+}
+
+function readStepNode(editorContext, stepId) {
+  return editorContext?.steps?.find(step => step.stepId === stepId) || null;
+}
+
+function resolveValidationLocation(editorContext, message) {
+  const sceneMatch = String(message).match(/Scene "([^"]+)" in step "([^"]+)"/);
+
+  if (sceneMatch) {
+    const sceneNode = readSceneNode(editorContext, sceneMatch[2], sceneMatch[1]);
+
+    if (sceneNode) {
+      return {
+        lineNumber: sceneNode.lineNumber,
+        contextLabel: sceneNode.title || sceneNode.sceneId
+      };
+    }
+  }
+
+  const stepMatch = String(message).match(/Step "([^"]+)"/);
+
+  if (stepMatch) {
+    const stepNode = readStepNode(editorContext, stepMatch[1]);
+
+    if (stepNode) {
+      return {
+        lineNumber: stepNode.lineNumber,
+        contextLabel: stepNode.title || stepNode.stepId
+      };
+    }
+  }
+
+  if (String(message).includes('lesson.script.md')) {
+    return {
+      lineNumber: 1,
+      contextLabel: 'Frontmatter'
+    };
+  }
+
+  return {
+    lineNumber: editorContext?.context?.lineNumber || 1,
+    contextLabel: buildContextLabel(editorContext?.context)
+  };
+}
+
+function readValidationItems(state) {
+  const items = [];
+  const editorContext = state.analysis?.editorContext;
 
   if (state.analysis?.parseErrorMessage) {
-    messages.push({
+    const location = resolveValidationLocation(editorContext, state.analysis.parseErrorMessage);
+
+    items.push({
       tone: 'danger',
       label: 'Syntax',
-      message: state.analysis.parseErrorMessage
+      message: state.analysis.parseErrorMessage,
+      lineNumber: location.lineNumber,
+      contextLabel: location.contextLabel
     });
   }
 
   if (state.analysis?.compileErrorMessage) {
-    messages.push({
+    const location = resolveValidationLocation(editorContext, state.analysis.compileErrorMessage);
+
+    items.push({
       tone: 'danger',
       label: 'Compile',
-      message: state.analysis.compileErrorMessage
+      message: state.analysis.compileErrorMessage,
+      lineNumber: location.lineNumber,
+      contextLabel: location.contextLabel
     });
   }
 
-  return messages;
+  return items;
+}
+
+function readPreviewTargetContext(parsedLesson, context) {
+  const steps = Array.isArray(parsedLesson?.steps) ? parsedLesson.steps : [];
+
+  if (!steps.length) {
+    return {
+      stepIndex: -1,
+      sceneIndex: -1
+    };
+  }
+
+  if (context?.stepIndex >= 0 && steps[context.stepIndex]) {
+    const scenes = steps[context.stepIndex].scenes || [];
+
+    if (context.sceneIndex >= 0 && scenes[context.sceneIndex]) {
+      return {
+        stepIndex: context.stepIndex,
+        sceneIndex: context.sceneIndex
+      };
+    }
+
+    return {
+      stepIndex: context.stepIndex,
+      sceneIndex: Math.max(0, scenes.length - 1)
+    };
+  }
+
+  return {
+    stepIndex: 0,
+    sceneIndex: 0
+  };
+}
+
+function buildParsedPreviewModel(parsedLesson, context) {
+  const artifactDeclarations = readArtifactDeclarations(parsedLesson);
+  const steps = Array.isArray(parsedLesson?.steps) ? parsedLesson.steps : [];
+
+  if (!artifactDeclarations.length || !steps.length) {
+    return null;
+  }
+
+  const target = readPreviewTargetContext(parsedLesson, context);
+  const linesByArtifactId = Object.fromEntries(
+    artifactDeclarations.map(artifact => [artifact.artifactId, []])
+  );
+
+  for (let stepIndex = 0; stepIndex <= target.stepIndex; stepIndex += 1) {
+    const step = steps[stepIndex];
+    const scenes = Array.isArray(step.scenes) ? step.scenes : [];
+    const lastSceneIndex = stepIndex === target.stepIndex
+      ? Math.min(target.sceneIndex, Math.max(0, scenes.length - 1))
+      : scenes.length - 1;
+
+    for (let sceneIndex = 0; sceneIndex <= lastSceneIndex; sceneIndex += 1) {
+      const scene = scenes[sceneIndex];
+
+      scene.showCodeBlocks.forEach(showCodeBlock => {
+        linesByArtifactId[showCodeBlock.artifactId] = splitCodeText(showCodeBlock.codeText);
+      });
+    }
+  }
+
+  const activeStep = steps[target.stepIndex];
+  const activeScene = activeStep?.scenes?.[target.sceneIndex] || null;
+
+  return {
+    stepIndex: target.stepIndex,
+    sceneIndex: activeScene ? target.sceneIndex : -1,
+    stepId: activeStep?.stepId || '',
+    stepTitle: activeStep?.title || activeStep?.stepId || '',
+    sceneId: activeScene?.sceneId || '',
+    artifactDeclarations,
+    artifactLinesById: cloneArtifactLineMap(linesByArtifactId)
+  };
+}
+
+function buildPreviewLessonRuntime(previewModel) {
+  if (!previewModel) {
+    return null;
+  }
+
+  const artifactFileNames = Object.fromEntries(
+    previewModel.artifactDeclarations.map(artifact => [artifact.artifactId, readArtifactFileName(artifact)])
+  );
+  const previewLesson = {
+    documentLanguage: 'sr',
+    templateJsFileName: artifactFileNames['template-js'] || 'template.js',
+    shadowCssFileName: artifactFileNames['shadow-css'] || 'shadow-dom-style.css'
+  };
+
+  if (Object.hasOwn(previewModel.artifactLinesById, 'html')) {
+    previewLesson.buildHtmlAtStep = () => previewModel.artifactLinesById.html;
+  }
+
+  if (Object.hasOwn(previewModel.artifactLinesById, 'css')) {
+    previewLesson.buildCssAtStep = () => previewModel.artifactLinesById.css;
+  }
+
+  if (Object.hasOwn(previewModel.artifactLinesById, 'js')) {
+    previewLesson.buildJsAtStep = () => previewModel.artifactLinesById.js;
+  }
+
+  if (Object.hasOwn(previewModel.artifactLinesById, 'template-js')) {
+    previewLesson.buildTemplateJsAtStep = () => previewModel.artifactLinesById['template-js'];
+  }
+
+  if (Object.hasOwn(previewModel.artifactLinesById, 'shadow-css')) {
+    previewLesson.buildShadowCssAtStep = () => previewModel.artifactLinesById['shadow-css'];
+  }
+
+  return previewLesson;
+}
+
+function buildPreviewDocument(previewModel) {
+  const previewLesson = buildPreviewLessonRuntime(previewModel);
+
+  if (!previewLesson) {
+    return '';
+  }
+
+  return composeLivePreviewDocument(previewLesson, 0);
+}
+
+function readPreviewModel(state) {
+  if (state.previewModel) {
+    return {
+      ...state.previewModel,
+      isStale: false
+    };
+  }
+
+  if (state.lastHealthyPreviewModel) {
+    return {
+      ...state.lastHealthyPreviewModel,
+      isStale: true
+    };
+  }
+
+  return null;
+}
+
+function readSelectedArtifactId(state, previewModel) {
+  const availableArtifactIds = previewModel?.artifactDeclarations?.map(artifact => artifact.artifactId) || [];
+  const contextArtifactId = state.analysis?.editorContext?.context?.artifactId;
+
+  if (contextArtifactId && availableArtifactIds.includes(contextArtifactId)) {
+    return contextArtifactId;
+  }
+
+  if (availableArtifactIds.includes(state.currentArtifactId)) {
+    return state.currentArtifactId;
+  }
+
+  return availableArtifactIds[0] || '';
+}
+
+function readPreviewArtifactText(previewModel, artifactId) {
+  return (previewModel?.artifactLinesById?.[artifactId] || []).join('\n');
+}
+
+function buildPreviewContextText(previewModel) {
+  if (!previewModel) {
+    return 'No preview yet';
+  }
+
+  const stepLabel = `${previewModel.stepIndex + 1}. ${previewModel.stepTitle || previewModel.stepId}`;
+
+  if (previewModel.sceneId) {
+    return `${stepLabel} · ${previewModel.sceneId}`;
+  }
+
+  return stepLabel;
+}
+
+function buildPreviewNote(state, previewModel) {
+  if (!state.workspaceSnapshot.selectedDraft) {
+    return 'Open a draft to preview the lesson state.';
+  }
+
+  if (!previewModel) {
+    return 'Preview appears here once the script defines a readable state.';
+  }
+
+  if (state.analysis?.parseErrorMessage) {
+    return 'Showing the last valid preview while the current script is invalid.';
+  }
+
+  if (state.analysis?.compileErrorMessage) {
+    return 'Preview is synced from script snapshots while compile validation is failing.';
+  }
+
+  return 'Preview follows the active step or scene.';
+}
+
+function highlightYamlLine(line) {
+  const fieldMatch = line.match(/^(\s*)([a-zA-Z][\w.-]*:)(\s*)(.*)$/);
+
+  if (!fieldMatch) {
+    return escapeHtml(line || ' ');
+  }
+
+  return [
+    escapeHtml(fieldMatch[1]),
+    `<span class="authoring-token-key">${escapeHtml(fieldMatch[2])}</span>`,
+    escapeHtml(fieldMatch[3]),
+    fieldMatch[4]
+      ? `<span class="authoring-token-value">${escapeHtml(fieldMatch[4])}</span>`
+      : '<span class="authoring-token-value"></span>'
+  ].join('');
+}
+
+function highlightHeadingLine(line, prefix, valueClass) {
+  const value = line.slice(prefix.length);
+
+  return [
+    `<span class="authoring-token-heading">${escapeHtml(prefix)}</span>`,
+    value
+      ? `<span class="${valueClass}">${escapeHtml(value)}</span>`
+      : ''
+  ].join('');
+}
+
+function buildHighlightedScriptMarkup(sourceMarkdown, activeLineIndex) {
+  const lines = String(sourceMarkdown || '').split('\n');
+  let insideFrontmatter = false;
+  let insideCodeFence = false;
+
+  return lines.map((line, lineIndex) => {
+    const trimmedLine = normalizeText(line);
+    let lineClass = '';
+    let markup = escapeHtml(line || ' ');
+
+    if (lineIndex === 0 && trimmedLine === '---') {
+      insideFrontmatter = true;
+      lineClass = 'is-frontmatter is-boundary';
+      markup = `<span class="authoring-token-fence">${escapeHtml(line)}</span>`;
+    } else if (insideFrontmatter && trimmedLine === '---') {
+      insideFrontmatter = false;
+      lineClass = 'is-frontmatter is-boundary';
+      markup = `<span class="authoring-token-fence">${escapeHtml(line)}</span>`;
+    } else if (insideFrontmatter) {
+      lineClass = 'is-frontmatter';
+      markup = highlightYamlLine(line);
+    } else if (/^# Step:\s*/.test(line)) {
+      lineClass = 'is-step';
+      markup = highlightHeadingLine(line, '# Step: ', 'authoring-token-step');
+    } else if (/^## Scene:\s*/.test(line)) {
+      lineClass = 'is-scene';
+      markup = highlightHeadingLine(line, '## Scene: ', 'authoring-token-scene');
+    } else if (/^### Show Code:\s*/.test(line)) {
+      lineClass = 'is-section is-show-code';
+      markup = highlightHeadingLine(line, '### Show Code: ', 'authoring-token-artifact');
+    } else if (/^###\s+/.test(line)) {
+      lineClass = 'is-section';
+      markup = `<span class="authoring-token-heading">${escapeHtml(line)}</span>`;
+    } else if (/^```/.test(trimmedLine)) {
+      lineClass = 'is-code-boundary';
+      insideCodeFence = !insideCodeFence;
+      markup = `<span class="authoring-token-fence">${escapeHtml(line)}</span>`;
+    } else if (insideCodeFence) {
+      lineClass = 'is-code';
+      markup = `<span class="authoring-token-code">${escapeHtml(line || ' ')}</span>`;
+    } else if (/^\s*[a-zA-Z][\w-]*:\s*/.test(line)) {
+      lineClass = 'is-metadata';
+      markup = highlightYamlLine(line);
+    } else if (!trimmedLine) {
+      lineClass = 'is-blank';
+      markup = '&nbsp;';
+    }
+
+    return `
+      <span class="authoring-script-line${lineIndex === activeLineIndex ? ' is-active' : ''}${lineClass ? ` ${lineClass}` : ''}">${markup}</span>
+    `.trim();
+  }).join('\n');
 }
 
 function buildOutlineMarkup(state) {
@@ -162,8 +606,12 @@ function buildOutlineMarkup(state) {
           const sceneSelected = stepSelected && context?.sceneIndex === sceneIndex;
 
           return `
-            <button type="button" class="authoring-outline-scene${sceneSelected ? ' is-active' : ''}" data-action="jump-to-line:${scene.lineNumber}">
-              <span class="authoring-outline-kicker">Scene ${sceneIndex + 1}</span>
+            <button
+              type="button"
+              class="authoring-outline-scene${sceneSelected ? ' is-active' : ''}"
+              data-action="jump-to-line:${scene.lineNumber}"
+            >
+              <span class="authoring-outline-index">Scene ${sceneIndex + 1}</span>
               <strong>${escapeHtml(scene.title || scene.sceneId)}</strong>
               <small>${escapeHtml(scene.sceneId)}</small>
             </button>
@@ -172,8 +620,12 @@ function buildOutlineMarkup(state) {
 
         return `
           <div class="authoring-outline-step-group">
-            <button type="button" class="authoring-outline-step${stepSelected ? ' is-active' : ''}" data-action="jump-to-line:${step.lineNumber}">
-              <span class="authoring-outline-kicker">Step ${stepIndex + 1}</span>
+            <button
+              type="button"
+              class="authoring-outline-step${stepSelected ? ' is-active' : ''}"
+              data-action="jump-to-line:${step.lineNumber}"
+            >
+              <span class="authoring-outline-index">${stepIndex + 1}</span>
               <strong>${escapeHtml(step.title || step.stepId)}</strong>
               <small>${escapeHtml(step.stepId)}</small>
             </button>
@@ -187,77 +639,101 @@ function buildOutlineMarkup(state) {
   `;
 }
 
+function buildCompileStatusMarkup(state) {
+  const validationItems = readValidationItems(state);
+  const errorCount = validationItems.length;
+  const warningCount = 0;
+
+  if (!state.workspaceSnapshot.selectedDraft) {
+    return '<div class="authoring-empty">Open a draft to inspect compile state.</div>';
+  }
+
+  if (state.analysis?.parseErrorMessage) {
+    return `
+      <div class="authoring-compile-summary" data-tone="danger">
+        <strong>Syntax issue</strong>
+        <p>Fix the script structure before the lesson can compile again.</p>
+        <span>${errorCount} errors · ${warningCount} warnings</span>
+      </div>
+    `;
+  }
+
+  if (state.analysis?.compileErrorMessage) {
+    return `
+      <div class="authoring-compile-summary" data-tone="danger">
+        <strong>Compile issue</strong>
+        <p>The script parses, but compile validation is still failing.</p>
+        <span>${errorCount} errors · ${warningCount} warnings</span>
+      </div>
+    `;
+  }
+
+  if (!state.analysis?.compiledLesson) {
+    return `
+      <div class="authoring-compile-summary" data-tone="muted">
+        <strong>Waiting for content</strong>
+        <p>Start writing the lesson script to generate a compiled preview.</p>
+        <span>0 errors · 0 warnings</span>
+      </div>
+    `;
+  }
+
+  return `
+    <div class="authoring-compile-summary" data-tone="success">
+      <strong>Valid</strong>
+      <p>The lesson script compiles through the canonical lesson engine path.</p>
+      <span>0 errors · 0 warnings</span>
+    </div>
+  `;
+}
+
 function buildValidationMarkup(state) {
+  const validationItems = readValidationItems(state);
   const context = state.analysis?.editorContext?.context;
-  const validationMessages = readValidationMessages(state);
 
   if (!state.workspaceSnapshot.selectedDraft) {
     return '<div class="authoring-empty">Open a draft to inspect validation.</div>';
   }
 
-  if (validationMessages.length) {
+  if (!validationItems.length) {
     return `
       <div class="authoring-validation-list">
-        <div class="authoring-validation-summary is-danger">
-          <strong>${validationMessages.length} issue${validationMessages.length === 1 ? '' : 's'}</strong>
+        <div class="authoring-validation-summary" data-tone="success">
+          <strong>No errors</strong>
           <p>${escapeHtml(buildContextLabel(context))}</p>
         </div>
-        ${validationMessages.map(item => `
-          <div class="authoring-validation-item" data-tone="${item.tone}">
-            <span>${escapeHtml(item.label)}</span>
-            <p>${escapeHtml(item.message)}</p>
-          </div>
-        `).join('')}
       </div>
     `;
   }
 
   return `
     <div class="authoring-validation-list">
-      <div class="authoring-validation-summary is-success">
-        <strong>Script is clean</strong>
+      <div class="authoring-validation-summary" data-tone="danger">
+        <strong>${validationItems.length} issue${validationItems.length === 1 ? '' : 's'}</strong>
         <p>${escapeHtml(buildContextLabel(context))}</p>
       </div>
-      <div class="authoring-validation-item" data-tone="success">
-        <span>Compile</span>
-        <p>The lesson script parses and compiles successfully.</p>
-      </div>
+      ${validationItems.map(item => `
+        <button
+          type="button"
+          class="authoring-validation-item"
+          data-tone="${item.tone}"
+          data-action="jump-to-line:${item.lineNumber}"
+        >
+          <span>${escapeHtml(item.label)}</span>
+          <strong>${escapeHtml(item.contextLabel)}</strong>
+          <p>${escapeHtml(item.message)}</p>
+        </button>
+      `).join('')}
     </div>
   `;
 }
 
-function buildPreviewStepOptions(state) {
-  const compiledLesson = state.analysis?.compiledLesson;
-
-  if (!compiledLesson) {
-    return '';
+function buildSnapshotTabsMarkup(previewModel, selectedArtifactId) {
+  if (!previewModel) {
+    return '<div class="authoring-empty">No snapshot yet.</div>';
   }
 
-  return compiledLesson.steps.map((step, stepIndex) => `
-    <option value="${stepIndex}" ${stepIndex === state.previewStepIndex ? 'selected' : ''}>
-      ${stepIndex + 1}. ${escapeHtml(step.title)}
-    </option>
-  `).join('');
-}
-
-function buildPreviewMarkup(state) {
-  const compiledLesson = state.analysis?.compiledLesson;
-  const parsedLesson = state.analysis?.parsedLesson;
-
-  if (!compiledLesson) {
-    return '<div class="authoring-empty">Preview appears here once the script compiles.</div>';
-  }
-
-  const stepIndex = Math.min(
-    Math.max(0, state.previewStepIndex),
-    Math.max(0, compiledLesson.steps.length - 1)
-  );
-  const selectedArtifactId = state.currentArtifactId || readPrimaryArtifactId(parsedLesson);
-  const availableArtifactIds = Object.keys(compiledLesson.statesByStep?.[stepIndex]?.artifacts || {});
-  const snapshotArtifactId = availableArtifactIds.includes(selectedArtifactId)
-    ? selectedArtifactId
-    : availableArtifactIds[0] || selectedArtifactId;
-  const artifactButtons = (parsedLesson?.attributes?.artifacts || []).map(artifact => `
+  return previewModel.artifactDeclarations.map(artifact => `
     <button
       type="button"
       class="authoring-artifact-chip${artifact.artifactId === selectedArtifactId ? ' is-active' : ''}"
@@ -266,33 +742,14 @@ function buildPreviewMarkup(state) {
       ${escapeHtml(artifact.artifactId)}
     </button>
   `).join('');
-
-  return `
-    <div class="authoring-preview-headline">
-      <label class="authoring-preview-step">
-        <span>Preview step</span>
-        <select id="authoringPreviewStepSelect">
-          ${buildPreviewStepOptions(state)}
-        </select>
-      </label>
-      <div class="authoring-artifact-chip-list">
-        ${artifactButtons}
-      </div>
-    </div>
-    <iframe class="authoring-preview-frame" id="authoringPreviewFrame" title="Lesson authoring preview" sandbox="allow-scripts"></iframe>
-    <div class="authoring-snapshot-head">
-      <div>
-        <span class="authoring-kicker">Current artifact snapshot</span>
-        <h3>${escapeHtml(snapshotArtifactId || 'No artifact selected')}</h3>
-      </div>
-      <span class="authoring-inline-note">Step ${stepIndex + 1} of ${compiledLesson.steps.length}</span>
-    </div>
-    <pre class="authoring-snapshot-code">${escapeHtml(readCompiledArtifactText(compiledLesson, stepIndex, snapshotArtifactId))}</pre>
-  `;
 }
 
 function buildInsertMenuMarkup(state) {
-  const context = state.analysis?.editorContext?.context || { kind: 'root', stepIndex: -1, sceneIndex: -1 };
+  const context = state.analysis?.editorContext?.context || {
+    kind: 'root',
+    stepIndex: -1,
+    sceneIndex: -1
+  };
   const menuItems = buildInsertMenuItems(context);
 
   return `
@@ -313,8 +770,6 @@ function buildInsertMenuMarkup(state) {
 
 function buildMoreMenuMarkup(state) {
   const selectedDraft = state.workspaceSnapshot.selectedDraft;
-  const canPublish = Boolean(selectedDraft) && !state.analysis?.parseErrorMessage && !state.analysis?.compileErrorMessage;
-  const canExport = canPublish;
 
   return `
     <div class="authoring-popover-section">
@@ -322,10 +777,8 @@ function buildMoreMenuMarkup(state) {
       <div class="authoring-popover-list">
         <button type="button" class="authoring-popover-item" data-action="new-draft">New draft</button>
         <button type="button" class="authoring-popover-item" data-action="duplicate-draft" ${selectedDraft ? '' : 'disabled'}>Duplicate</button>
-        <button type="button" class="authoring-popover-item" data-action="publish-draft" ${canPublish ? '' : 'disabled'}>Publish snapshot</button>
-        <button type="button" class="authoring-popover-item" data-action="export-draft" ${canExport ? '' : 'disabled'}>Export markdown</button>
+        <button type="button" class="authoring-popover-item" data-action="export-draft" ${selectedDraft ? '' : 'disabled'}>Export markdown</button>
         <button type="button" class="authoring-popover-item" data-action="delete-draft" ${selectedDraft ? '' : 'disabled'}>Delete draft</button>
-        <button type="button" class="authoring-popover-item" data-action="open-metadata" ${selectedDraft ? '' : 'disabled'}>Metadata</button>
         <button type="button" class="authoring-popover-item" data-action="back-to-player">Back to player</button>
       </div>
     </div>
@@ -375,70 +828,176 @@ function buildMoreMenuMarkup(state) {
   `;
 }
 
+function readMetadataFormFromParsedLesson(parsedLesson) {
+  if (!parsedLesson) {
+    return null;
+  }
+
+  const attributes = parsedLesson.attributes || {};
+  const preview = attributes.preview || {};
+  const goal = attributes.goal || {};
+
+  return {
+    lessonId: normalizeText(attributes.lessonId),
+    lessonTitle: normalizeText(attributes.lessonTitle),
+    lessonIntro: normalizeText(attributes.lessonIntro),
+    status: normalizeText(attributes.status) || 'draft',
+    courseId: normalizeText(attributes.courseId),
+    order: String(attributes.order || 1),
+    previewType: normalizeText(preview.type) || 'dom',
+    previewTitle: normalizeText(preview.title),
+    previewAddress: normalizeText(preview.address),
+    goalTitle: normalizeText(goal.title),
+    goalImageSrc: normalizeText(goal.imageSrc),
+    goalImageAlt: normalizeText(goal.imageAlt),
+    goalImageCaption: normalizeText(goal.imageCaption)
+  };
+}
+
+function buildMetadataAttributesFromForm(parsedLesson, metadataForm) {
+  const nextAttributes = {
+    ...parsedLesson.attributes,
+    lessonId: normalizeText(metadataForm.lessonId),
+    lessonTitle: normalizeText(metadataForm.lessonTitle),
+    lessonIntro: normalizeText(metadataForm.lessonIntro),
+    status: normalizeText(metadataForm.status) || 'draft',
+    courseId: normalizeText(metadataForm.courseId),
+    order: Math.max(1, Number.parseInt(metadataForm.order, 10) || 1),
+    preview: {
+      ...(parsedLesson.attributes.preview || {}),
+      type: normalizeText(metadataForm.previewType) || 'dom',
+      title: normalizeText(metadataForm.previewTitle),
+      address: normalizeText(metadataForm.previewAddress)
+    }
+  };
+  const goal = {
+    title: normalizeText(metadataForm.goalTitle),
+    imageSrc: normalizeText(metadataForm.goalImageSrc),
+    imageAlt: normalizeText(metadataForm.goalImageAlt),
+    imageCaption: normalizeText(metadataForm.goalImageCaption)
+  };
+  const hasGoalValues = Object.values(goal).some(Boolean);
+
+  if (hasGoalValues) {
+    nextAttributes.goal = goal;
+  } else {
+    delete nextAttributes.goal;
+  }
+
+  return nextAttributes;
+}
+
+function buildOptionMarkup(options, selectedValue) {
+  return options.map(option => `
+    <option value="${option}" ${option === selectedValue ? 'selected' : ''}>${escapeHtml(option)}</option>
+  `).join('');
+}
+
 function buildMetadataDrawerMarkup(state) {
-  const parsedLesson = state.analysis?.parsedLesson;
   const selectedDraft = state.workspaceSnapshot.selectedDraft;
+  const parsedLesson = state.analysis?.parsedLesson;
+  const metadataForm = state.metadataForm;
 
   if (!selectedDraft) {
     return '<div class="authoring-empty">Open a draft to inspect metadata.</div>';
   }
 
-  if (!parsedLesson) {
+  if (!parsedLesson || !metadataForm) {
     return `
       <div class="authoring-drawer-head">
         <div>
-          <span class="authoring-kicker">Metadata</span>
-          <h2>Draft frontmatter</h2>
+          <span class="authoring-pane-label">Metadata</span>
+          <h2>Frontmatter editor</h2>
         </div>
         <button type="button" class="authoring-inline-action" data-action="close-metadata">Close</button>
       </div>
       <div class="authoring-empty">
-        The current script does not parse cleanly yet. Fix the script, then reopen this drawer.
+        Fix the lesson script first, then reopen this drawer to edit frontmatter safely.
       </div>
-      <button type="button" class="authoring-inline-action" data-action="jump-to-line:1">Jump to top</button>
+      <div class="authoring-drawer-actions">
+        <button type="button" class="authoring-inline-action" data-action="jump-to-line:1">Jump to frontmatter</button>
+      </div>
     `;
   }
-
-  const attributes = parsedLesson.attributes;
-  const artifactList = (attributes.artifacts || []).map(artifact => `
-    <li>
-      <strong>${escapeHtml(artifact.artifactId)}</strong>
-      <span>${escapeHtml(artifact.language)} · ${escapeHtml(artifact.label || '')}</span>
-    </li>
-  `).join('');
 
   return `
     <div class="authoring-drawer-head">
       <div>
-        <span class="authoring-kicker">Metadata</span>
-        <h2>Frontmatter snapshot</h2>
+        <span class="authoring-pane-label">Metadata</span>
+        <h2>Frontmatter editor</h2>
       </div>
       <button type="button" class="authoring-inline-action" data-action="close-metadata">Close</button>
     </div>
-    <dl class="authoring-metadata-grid">
-      <div><dt>lessonId</dt><dd>${escapeHtml(attributes.lessonId)}</dd></div>
-      <div><dt>lessonTitle</dt><dd>${escapeHtml(attributes.lessonTitle)}</dd></div>
-      <div><dt>lessonIntro</dt><dd>${escapeHtml(attributes.lessonIntro)}</dd></div>
-      <div><dt>status</dt><dd>${escapeHtml(attributes.status)}</dd></div>
-      <div><dt>courseId</dt><dd>${escapeHtml(attributes.courseId)}</dd></div>
-      <div><dt>order</dt><dd>${escapeHtml(String(attributes.order))}</dd></div>
-      <div><dt>preview</dt><dd>${escapeHtml(attributes.preview ? `${attributes.preview.type} · ${attributes.preview.title}` : 'none')}</dd></div>
-    </dl>
-    <div class="authoring-metadata-list">
-      <span class="authoring-kicker">Artifacts</span>
-      <ul>${artifactList}</ul>
+
+    <div class="authoring-drawer-grid">
+      <label class="authoring-drawer-field">
+        <span>lessonId</span>
+        <input type="text" value="${escapeHtml(metadataForm.lessonId)}" data-metadata-field="lessonId" />
+      </label>
+      <label class="authoring-drawer-field">
+        <span>lessonTitle</span>
+        <input type="text" value="${escapeHtml(metadataForm.lessonTitle)}" data-metadata-field="lessonTitle" />
+      </label>
+      <label class="authoring-drawer-field authoring-drawer-field-wide">
+        <span>lessonIntro</span>
+        <textarea rows="3" data-metadata-field="lessonIntro">${escapeHtml(metadataForm.lessonIntro)}</textarea>
+      </label>
+      <label class="authoring-drawer-field">
+        <span>status</span>
+        <select data-metadata-field="status">
+          ${buildOptionMarkup(METADATA_STATUS_OPTIONS, metadataForm.status)}
+        </select>
+      </label>
+      <label class="authoring-drawer-field">
+        <span>courseId</span>
+        <input type="text" value="${escapeHtml(metadataForm.courseId)}" data-metadata-field="courseId" />
+      </label>
+      <label class="authoring-drawer-field">
+        <span>order</span>
+        <input type="number" min="1" value="${escapeHtml(metadataForm.order)}" data-metadata-field="order" />
+      </label>
+      <label class="authoring-drawer-field">
+        <span>preview.type</span>
+        <select data-metadata-field="previewType">
+          ${buildOptionMarkup(PREVIEW_TYPE_OPTIONS, metadataForm.previewType)}
+        </select>
+      </label>
+      <label class="authoring-drawer-field">
+        <span>preview.title</span>
+        <input type="text" value="${escapeHtml(metadataForm.previewTitle)}" data-metadata-field="previewTitle" />
+      </label>
+      <label class="authoring-drawer-field authoring-drawer-field-wide">
+        <span>preview.address</span>
+        <input type="text" value="${escapeHtml(metadataForm.previewAddress)}" data-metadata-field="previewAddress" />
+      </label>
+      <label class="authoring-drawer-field">
+        <span>goal.title</span>
+        <input type="text" value="${escapeHtml(metadataForm.goalTitle)}" data-metadata-field="goalTitle" />
+      </label>
+      <label class="authoring-drawer-field">
+        <span>goal.imageSrc</span>
+        <input type="text" value="${escapeHtml(metadataForm.goalImageSrc)}" data-metadata-field="goalImageSrc" />
+      </label>
+      <label class="authoring-drawer-field">
+        <span>goal.imageAlt</span>
+        <input type="text" value="${escapeHtml(metadataForm.goalImageAlt)}" data-metadata-field="goalImageAlt" />
+      </label>
+      <label class="authoring-drawer-field authoring-drawer-field-wide">
+        <span>goal.imageCaption</span>
+        <textarea rows="3" data-metadata-field="goalImageCaption">${escapeHtml(metadataForm.goalImageCaption)}</textarea>
+      </label>
     </div>
-    <div class="authoring-inline-actions">
+
+    <div class="authoring-drawer-actions">
+      <button type="button" class="authoring-inline-action" data-action="apply-metadata">Apply metadata</button>
+      <button type="button" class="authoring-inline-action" data-action="reset-metadata">Reset</button>
       <button type="button" class="authoring-inline-action" data-action="jump-to-line:1">Jump to frontmatter</button>
     </div>
+
     <p class="authoring-drawer-note">
-      The writer flow keeps the lesson script as the source of truth. Use the editor for body changes and this drawer for a quick metadata readout.
+      Apply updates the frontmatter inside <code>lesson.script.md</code>. Save persists the draft into SQLite.
     </p>
   `;
-}
-
-function buildWorkspaceStatusText(state) {
-  return buildStatusMessage(state);
 }
 
 function createWorkspaceParts(ownerDocument) {
@@ -446,15 +1005,19 @@ function createWorkspaceParts(ownerDocument) {
     <div class="authoring-app">
       <header class="authoring-topbar">
         <div class="authoring-brand">
-          <span class="authoring-kicker">Lesson writer</span>
+          <span class="authoring-kicker">Write mode</span>
           <h1 id="authoringLessonTitle">Step By Step Animator</h1>
-          <p id="authoringLessonMeta">Write the lesson script from top to bottom.</p>
+          <p id="authoringLessonMeta">Open or create a draft to start writing.</p>
         </div>
+
         <div class="authoring-topbar-actions">
-          <span class="authoring-chip" id="authoringLessonStatus" data-tone="neutral">draft</span>
-          <span class="authoring-chip" id="authoringCompileChip" data-tone="neutral">No compiled preview</span>
+          <span class="authoring-chip" id="authoringSaveState" data-tone="muted">Saved</span>
+          <span class="authoring-chip" id="authoringLessonStatus" data-tone="muted">idle</span>
+          <span class="authoring-chip" id="authoringCompileChip" data-tone="muted">No compiled preview</span>
           <button type="button" id="authoringPreviewBtn">Preview</button>
           <button type="button" id="authoringSaveDraftBtn">Save</button>
+          <button type="button" id="authoringPublishBtn">Publish</button>
+          <button type="button" id="authoringMetadataBtn">Metadata</button>
           <div class="authoring-popover-shell">
             <button type="button" id="authoringMoreBtn">More</button>
             <div class="authoring-popover" id="authoringMoreMenu" hidden></div>
@@ -462,62 +1025,91 @@ function createWorkspaceParts(ownerDocument) {
         </div>
       </header>
 
-      <div class="authoring-status" id="authoringStatus" data-tone="success"></div>
+      <div class="authoring-status" id="authoringStatus" data-tone="muted"></div>
 
-      <main class="authoring-layout">
-        <aside class="authoring-pane authoring-outline-pane">
-          <div class="authoring-pane-head">
-            <div>
-              <span class="authoring-kicker">Outline</span>
-              <h2>Steps and scenes</h2>
+      <main class="authoring-shell">
+        <section class="authoring-frame">
+          <aside class="authoring-outline-pane">
+            <div class="authoring-pane-head">
+              <div>
+                <span class="authoring-pane-label">Outline</span>
+                <h2>Steps and scenes</h2>
+              </div>
+              <span class="authoring-pane-note">Jump by structure</span>
             </div>
-            <span class="authoring-inline-note">Click to jump</span>
-          </div>
-          <div id="authoringOutline"></div>
-        </aside>
+            <div id="authoringOutline"></div>
+            <div class="authoring-outline-actions">
+              <button type="button" id="authoringAddStepBtn">+ Step</button>
+              <button type="button" id="authoringAddSceneBtn">+ Scene</button>
+            </div>
+          </aside>
 
-        <section class="authoring-pane authoring-editor-pane">
-          <div class="authoring-pane-head">
-            <div>
-              <span class="authoring-kicker">Script</span>
-              <h2>One markdown file</h2>
+          <section class="authoring-editor-pane">
+            <div class="authoring-pane-head">
+              <div>
+                <span class="authoring-pane-label">Lesson script</span>
+                <h2>One continuous script</h2>
+              </div>
+              <span class="authoring-pane-note" id="authoringCursorInfo">Frontmatter or before the first step</span>
             </div>
-            <div class="authoring-editor-actions">
+
+            <div class="authoring-editor-surface">
+              <pre class="authoring-script-highlight" id="authoringScriptHighlight" aria-hidden="true"></pre>
+              <textarea id="authoringScriptEditor" spellcheck="false" placeholder="Create or open a draft to start writing."></textarea>
+            </div>
+
+            <div class="authoring-editor-footer">
+              <span id="authoringDirtyBadge" data-tone="success">Saved</span>
+              <span id="authoringLineBadge">Line 1</span>
+            </div>
+
+            <div class="authoring-editor-insert">
               <div class="authoring-popover-shell">
-                <button type="button" id="authoringInsertBtn">+ Insert</button>
+                <button type="button" id="authoringInsertBtn">/ Insert block</button>
                 <div class="authoring-popover" id="authoringInsertMenu" hidden></div>
               </div>
             </div>
-          </div>
-          <p class="authoring-helper" id="authoringCursorInfo">Use / or Cmd/Ctrl+K to insert a block at the cursor.</p>
-          <textarea id="authoringScriptEditor" spellcheck="false" placeholder="Create or open a draft to start writing."></textarea>
-          <div class="authoring-editor-footer">
-            <span id="authoringDirtyBadge">Synced</span>
-            <span id="authoringLineBadge">Line 1</span>
-          </div>
+          </section>
         </section>
 
-        <aside class="authoring-pane authoring-inspector-pane">
-          <section class="authoring-card">
-            <div class="authoring-pane-head">
-              <div>
-                <span class="authoring-kicker">Validation</span>
-                <h2>Compile status</h2>
-              </div>
+        <section class="authoring-inspector-strip" id="authoringInspectorStrip">
+          <section class="authoring-inspector-card">
+            <div class="authoring-inspector-head">
+              <span class="authoring-pane-label">Compile status</span>
+              <h2>State</h2>
+            </div>
+            <div id="authoringCompileStatus"></div>
+          </section>
+
+          <section class="authoring-inspector-card">
+            <div class="authoring-inspector-head">
+              <span class="authoring-pane-label">Errors</span>
+              <h2>Validation</h2>
             </div>
             <div id="authoringValidation"></div>
           </section>
 
-          <section class="authoring-card">
-            <div class="authoring-pane-head">
-              <div>
-                <span class="authoring-kicker">Preview</span>
-                <h2>Live step preview</h2>
-              </div>
+          <section class="authoring-inspector-card authoring-inspector-preview-card" id="authoringPreviewCard">
+            <div class="authoring-inspector-head">
+              <span class="authoring-pane-label">Preview</span>
+              <h2>Live panel</h2>
             </div>
-            <div id="authoringPreview"></div>
+            <div class="authoring-preview-meta">
+              <strong id="authoringPreviewContext">No preview yet</strong>
+              <span id="authoringPreviewNote">Preview appears here once the script defines a readable state.</span>
+            </div>
+            <iframe class="authoring-preview-frame" id="authoringPreviewFrame" title="Lesson authoring preview" sandbox="allow-scripts"></iframe>
           </section>
-        </aside>
+
+          <section class="authoring-inspector-card">
+            <div class="authoring-inspector-head">
+              <span class="authoring-pane-label">Snapshot</span>
+              <h2>Current artifact</h2>
+            </div>
+            <div class="authoring-snapshot-tabs" id="authoringSnapshotTabs"></div>
+            <pre class="authoring-snapshot-code" id="authoringSnapshotCode"></pre>
+          </section>
+        </section>
       </main>
 
       <aside class="authoring-drawer" id="authoringMetadataDrawer" hidden></aside>
@@ -527,88 +1119,129 @@ function createWorkspaceParts(ownerDocument) {
   return {
     lessonTitle: ownerDocument.getElementById('authoringLessonTitle'),
     lessonMeta: ownerDocument.getElementById('authoringLessonMeta'),
+    saveState: ownerDocument.getElementById('authoringSaveState'),
     lessonStatus: ownerDocument.getElementById('authoringLessonStatus'),
     compileChip: ownerDocument.getElementById('authoringCompileChip'),
     previewButton: ownerDocument.getElementById('authoringPreviewBtn'),
     saveDraftButton: ownerDocument.getElementById('authoringSaveDraftBtn'),
+    publishButton: ownerDocument.getElementById('authoringPublishBtn'),
+    metadataButton: ownerDocument.getElementById('authoringMetadataBtn'),
     moreButton: ownerDocument.getElementById('authoringMoreBtn'),
     moreMenu: ownerDocument.getElementById('authoringMoreMenu'),
     status: ownerDocument.getElementById('authoringStatus'),
     outline: ownerDocument.getElementById('authoringOutline'),
+    addStepButton: ownerDocument.getElementById('authoringAddStepBtn'),
+    addSceneButton: ownerDocument.getElementById('authoringAddSceneBtn'),
     editorPane: ownerDocument.getElementById('authoringScriptEditor').closest('.authoring-editor-pane'),
     editorTextarea: ownerDocument.getElementById('authoringScriptEditor'),
+    editorHighlight: ownerDocument.getElementById('authoringScriptHighlight'),
     cursorInfo: ownerDocument.getElementById('authoringCursorInfo'),
     dirtyBadge: ownerDocument.getElementById('authoringDirtyBadge'),
     lineBadge: ownerDocument.getElementById('authoringLineBadge'),
     insertButton: ownerDocument.getElementById('authoringInsertBtn'),
     insertMenu: ownerDocument.getElementById('authoringInsertMenu'),
+    compileStatus: ownerDocument.getElementById('authoringCompileStatus'),
     validation: ownerDocument.getElementById('authoringValidation'),
-    preview: ownerDocument.getElementById('authoringPreview'),
+    previewCard: ownerDocument.getElementById('authoringPreviewCard'),
+    previewContext: ownerDocument.getElementById('authoringPreviewContext'),
+    previewNote: ownerDocument.getElementById('authoringPreviewNote'),
+    previewFrame: ownerDocument.getElementById('authoringPreviewFrame'),
+    snapshotTabs: ownerDocument.getElementById('authoringSnapshotTabs'),
+    snapshotCode: ownerDocument.getElementById('authoringSnapshotCode'),
     metadataDrawer: ownerDocument.getElementById('authoringMetadataDrawer')
   };
+}
+
+function renderMetadataDrawer(state, parts) {
+  const renderKey = `${state.metadataDrawerOpen}:${state.metadataFormVersion}:${Boolean(state.analysis?.parsedLesson)}`;
+
+  if (!state.metadataDrawerOpen) {
+    parts.metadataDrawer.hidden = true;
+    return;
+  }
+
+  if (parts.metadataDrawer.dataset.renderKey !== renderKey) {
+    parts.metadataDrawer.innerHTML = buildMetadataDrawerMarkup(state);
+    parts.metadataDrawer.dataset.renderKey = renderKey;
+  }
+
+  parts.metadataDrawer.hidden = false;
+}
+
+function syncEditorSurfaceScroll(parts) {
+  parts.editorHighlight.scrollTop = parts.editorTextarea.scrollTop;
+  parts.editorHighlight.scrollLeft = parts.editorTextarea.scrollLeft;
 }
 
 function renderWorkspace(state, parts) {
   const selectedDraft = state.workspaceSnapshot.selectedDraft;
   const parsedLesson = state.analysis?.parsedLesson;
-  const compiledLesson = state.analysis?.compiledLesson;
-  const statusText = buildWorkspaceStatusText(state);
-  const context = state.analysis?.editorContext?.context || { stepIndex: -1, sceneIndex: -1, kind: 'root', lineNumber: 1 };
-  const currentArtifactId = state.currentArtifactId || readPrimaryArtifactId(parsedLesson);
+  const context = state.analysis?.editorContext?.context || {
+    kind: 'root',
+    lineNumber: 1,
+    stepIndex: -1,
+    sceneIndex: -1
+  };
+  const previewModel = readPreviewModel(state);
+  const selectedArtifactId = readSelectedArtifactId(state, previewModel);
+  const previewDocument = buildPreviewDocument(previewModel);
 
-  parts.lessonTitle.textContent = selectedDraft?.lessonTitle || 'No draft selected';
-  parts.lessonMeta.textContent = selectedDraft
-    ? `${selectedDraft.lessonId} · ${selectedDraft.sourceOrigin} · ${parsedLesson?.attributes?.courseId || 'no course'}`
-    : 'Open or create a draft to start writing.';
+  state.currentArtifactId = selectedArtifactId;
+  parts.lessonTitle.textContent = buildHeaderTitle(state);
+  parts.lessonMeta.textContent = buildHeaderMeta(state);
+  parts.saveState.textContent = buildSaveChipLabel(state);
+  parts.saveState.dataset.tone = buildSaveChipTone(state);
   parts.lessonStatus.textContent = buildLessonStatusLabel(state);
-  parts.lessonStatus.dataset.tone = selectedDraft ? 'neutral' : 'muted';
+  parts.lessonStatus.dataset.tone = buildLessonStatusTone(state);
   parts.compileChip.textContent = buildCompileChipLabel(state);
-  parts.compileChip.dataset.tone = buildStatusTone(state);
-  parts.status.textContent = statusText;
-  parts.status.dataset.tone = buildStatusTone(state);
+  parts.compileChip.dataset.tone = buildCompileChipTone(state);
+  parts.status.textContent = buildStatusMessage(state);
+  parts.status.dataset.tone = buildStatusMessageTone(state);
   parts.outline.innerHTML = buildOutlineMarkup(state);
+  parts.compileStatus.innerHTML = buildCompileStatusMarkup(state);
   parts.validation.innerHTML = buildValidationMarkup(state);
-  parts.preview.innerHTML = buildPreviewMarkup(state);
+  parts.previewContext.textContent = buildPreviewContextText(previewModel);
+  parts.previewNote.textContent = buildPreviewNote(state, previewModel);
+  parts.snapshotTabs.innerHTML = buildSnapshotTabsMarkup(previewModel, selectedArtifactId);
+  parts.snapshotCode.textContent = previewModel
+    ? readPreviewArtifactText(previewModel, selectedArtifactId)
+    : 'Preview snapshot appears here once the script defines a readable state.';
   parts.moreMenu.innerHTML = buildMoreMenuMarkup(state);
   parts.moreMenu.hidden = !state.moreMenuOpen;
   parts.insertMenu.innerHTML = buildInsertMenuMarkup(state);
   parts.insertMenu.hidden = !state.insertMenuOpen;
-  parts.metadataDrawer.innerHTML = buildMetadataDrawerMarkup(state);
-  parts.metadataDrawer.hidden = !state.metadataDrawerOpen;
+  renderMetadataDrawer(state, parts);
   parts.cursorInfo.textContent = buildContextLabel(context);
   parts.lineBadge.textContent = `Line ${context.lineNumber || 1}`;
-  parts.dirtyBadge.textContent = state.dirty ? 'Unsaved changes' : 'Synced';
+  parts.dirtyBadge.textContent = state.dirty ? 'Unsaved changes' : 'Saved';
   parts.dirtyBadge.dataset.tone = state.dirty ? 'warning' : 'success';
-  parts.editorTextarea.value = state.editorSourceMarkdown;
+
+  if (parts.editorTextarea.value !== state.editorSourceMarkdown) {
+    parts.editorTextarea.value = state.editorSourceMarkdown;
+  }
+
+  parts.editorHighlight.innerHTML = buildHighlightedScriptMarkup(
+    state.editorSourceMarkdown,
+    Math.max(0, (state.analysis?.editorContext?.lineIndex || 0))
+  );
   parts.editorTextarea.disabled = !selectedDraft;
   parts.editorTextarea.readOnly = !selectedDraft;
   parts.editorTextarea.placeholder = selectedDraft
     ? 'Write the lesson script here.'
     : 'Create or open a draft to start writing.';
   parts.saveDraftButton.disabled = !selectedDraft || !state.dirty;
+  parts.publishButton.disabled = !selectedDraft || Boolean(state.analysis?.parseErrorMessage || state.analysis?.compileErrorMessage);
   parts.previewButton.disabled = !selectedDraft;
+  parts.metadataButton.disabled = !selectedDraft;
+  parts.insertButton.disabled = !selectedDraft;
+  parts.addStepButton.disabled = !selectedDraft;
+  parts.addSceneButton.disabled = !selectedDraft || context.stepIndex < 0;
   parts.editorPane.dataset.context = context.kind;
-  parts.preview.dataset.artifact = currentArtifactId || '';
+  parts.previewFrame.srcdoc = previewDocument;
   parts.lessonTitle.ownerDocument.title = selectedDraft
-    ? `${selectedDraft.lessonTitle} · Step By Step Animator`
+    ? `${buildHeaderTitle(state)} · Step By Step Animator`
     : 'Step By Step Animator';
-
-  if (compiledLesson) {
-    const stepIndex = Math.min(
-      Math.max(0, state.previewStepIndex),
-      Math.max(0, compiledLesson.steps.length - 1)
-    );
-    const previewFrame = parts.preview.querySelector('#authoringPreviewFrame');
-    const previewStepSelect = parts.preview.querySelector('#authoringPreviewStepSelect');
-
-    if (previewFrame) {
-      previewFrame.srcdoc = composeLivePreviewDocument(compiledLesson, stepIndex);
-    }
-
-    if (previewStepSelect) {
-      previewStepSelect.value = String(stepIndex);
-    }
-  }
+  syncEditorSurfaceScroll(parts);
 }
 
 function refreshAnalysis(state, cursorOffset) {
@@ -644,10 +1277,23 @@ function refreshAnalysis(state, cursorOffset) {
     compileErrorMessage,
     editorContext
   };
-  state.previewStepIndex = editorContext.context.stepIndex >= 0
-    ? editorContext.context.stepIndex
-    : 0;
-  state.currentArtifactId = editorContext.context.artifactId || readPrimaryArtifactId(parsedLesson);
+  state.previewModel = parsedLesson
+    ? buildParsedPreviewModel(parsedLesson, editorContext.context)
+    : null;
+
+  if (state.previewModel) {
+    state.lastHealthyPreviewModel = state.previewModel;
+  }
+
+  if (editorContext.context.artifactId) {
+    state.currentArtifactId = editorContext.context.artifactId;
+  } else {
+    const fallbackArtifactId = readPrimaryArtifactId(parsedLesson);
+
+    if (!state.currentArtifactId || !readArtifactDeclarations(parsedLesson).some(artifact => artifact.artifactId === state.currentArtifactId)) {
+      state.currentArtifactId = fallbackArtifactId;
+    }
+  }
 }
 
 function maybeConfirmNavigation(state, ownerWindow) {
@@ -666,51 +1312,149 @@ function focusEditorAtLine(parts, lineStarts, lineNumber) {
   parts.editorTextarea.setSelectionRange(offset, offset);
 }
 
-function insertSnippetAtCursor(state, parts, actionName) {
-  const selectionStart = parts.editorTextarea.selectionStart ?? 0;
-  const selectionEnd = parts.editorTextarea.selectionEnd ?? selectionStart;
-  const snippet = buildInsertSnippet(actionName, state.analysis.parsedLesson, state.analysis.editorContext);
-  const currentValue = parts.editorTextarea.value;
-  const prefix = selectionStart > 0 && currentValue[selectionStart - 1] !== '\n' ? '\n' : '';
-  const suffix = selectionEnd < currentValue.length && currentValue[selectionEnd] !== '\n' ? '\n' : '';
+function buildInsertedSource({
+  currentValue,
+  snippet,
+  insertionStart,
+  insertionEnd = insertionStart
+}) {
+  const prefix = insertionStart > 0 && currentValue[insertionStart - 1] !== '\n' ? '\n' : '';
+  const suffix = insertionEnd < currentValue.length && currentValue[insertionEnd] !== '\n' ? '\n' : '';
   const nextValue = [
-    currentValue.slice(0, selectionStart),
+    currentValue.slice(0, insertionStart),
     prefix,
     snippet.text,
     suffix,
-    currentValue.slice(selectionEnd)
+    currentValue.slice(insertionEnd)
   ].join('');
-  const nextSelectionStart = selectionStart + prefix.length + snippet.selectionStart;
-  const nextSelectionEnd = selectionStart + prefix.length + snippet.selectionEnd;
 
-  state.editorSourceMarkdown = nextValue;
-  state.dirty = true;
-  state.statusMessage = 'Draft has unsaved changes.';
-  state.statusMessageTone = 'warning';
-  parts.editorTextarea.value = nextValue;
-  parts.editorTextarea.focus();
-  parts.editorTextarea.setSelectionRange(nextSelectionStart, nextSelectionEnd);
-  refreshAnalysis(state, nextSelectionStart);
+  return {
+    value: nextValue,
+    selectionStart: insertionStart + prefix.length + snippet.selectionStart,
+    selectionEnd: insertionStart + prefix.length + snippet.selectionEnd
+  };
 }
 
-function closeFloatingPanels(state) {
+function applyEditorSourceChange(state, parts, {
+  nextValue,
+  selectionStart,
+  selectionEnd = selectionStart,
+  statusMessage = 'Draft has unsaved changes.',
+  statusTone = 'warning',
+  focusEditor = true
+}) {
+  state.editorSourceMarkdown = nextValue;
+  state.dirty = true;
+  state.statusMessage = statusMessage;
+  state.statusMessageTone = statusTone;
+
+  if (parts.editorTextarea.value !== nextValue) {
+    parts.editorTextarea.value = nextValue;
+  }
+
+  if (focusEditor) {
+    parts.editorTextarea.focus();
+  }
+
+  parts.editorTextarea.setSelectionRange(selectionStart, selectionEnd);
+  refreshAnalysis(state, selectionStart);
+}
+
+function insertSnippetIntoEditor(state, parts, {
+  actionName,
+  insertionStart,
+  insertionEnd = insertionStart,
+  scan = state.analysis.editorContext
+}) {
+  const snippet = buildInsertSnippet(actionName, state.analysis.parsedLesson, scan);
+  const insertedSource = buildInsertedSource({
+    currentValue: state.editorSourceMarkdown,
+    snippet,
+    insertionStart,
+    insertionEnd
+  });
+
+  applyEditorSourceChange(state, parts, {
+    nextValue: insertedSource.value,
+    selectionStart: insertedSource.selectionStart,
+    selectionEnd: insertedSource.selectionEnd
+  });
+}
+
+function readInsertOffsetAfterStep(state, stepIndex) {
+  const nextStep = state.analysis?.editorContext?.steps?.[stepIndex + 1];
+
+  return nextStep ? nextStep.startOffset : state.editorSourceMarkdown.length;
+}
+
+function readSelectionOffsetForContext(sourceMarkdown, editorContext) {
+  const context = editorContext?.context;
+
+  if (context?.stepIndex >= 0) {
+    const stepNode = editorContext.steps?.[context.stepIndex];
+
+    if (context.sceneIndex >= 0) {
+      const sceneNode = stepNode?.scenes?.[context.sceneIndex];
+
+      if (sceneNode) {
+        const sceneOffset = sourceMarkdown.indexOf(`## Scene: ${sceneNode.sceneId}`);
+
+        if (sceneOffset >= 0) {
+          return sceneOffset;
+        }
+      }
+    }
+
+    if (stepNode) {
+      const stepOffset = sourceMarkdown.indexOf(`# Step: ${stepNode.stepId}`);
+
+      if (stepOffset >= 0) {
+        return stepOffset;
+      }
+    }
+  }
+
+  return 0;
+}
+
+function readMetadataEditorContextScan(editorContext, stepIndex) {
+  return {
+    ...editorContext,
+    context: {
+      ...(editorContext?.context || {}),
+      kind: 'step',
+      stepIndex,
+      sceneIndex: -1,
+      artifactId: '',
+      sectionType: '',
+      insideCodeFence: false
+    }
+  };
+}
+
+function closeAuthoringMenus(state) {
   state.insertMenuOpen = false;
   state.moreMenuOpen = false;
+}
+
+function closeAuthoringOverlays(state) {
+  closeAuthoringMenus(state);
   state.metadataDrawerOpen = false;
 }
 
-function openWorkspaceSnapshot(state, parts, workspaceSnapshot, statusMessage, tone = 'success') {
+function openWorkspaceSnapshot(state, parts, workspaceSnapshot, statusMessage, tone = 'success', selectionOffset = 0) {
   state.workspaceSnapshot = workspaceSnapshot;
   state.editorSourceMarkdown = workspaceSnapshot.selectedDraft?.sourceMarkdown || '';
   state.dirty = false;
   state.statusMessage = statusMessage;
   state.statusMessageTone = tone;
-  state.previewStepIndex = 0;
   state.currentArtifactId = '';
-  closeFloatingPanels(state);
+  state.metadataForm = null;
+  state.metadataFormVersion += 1;
+  closeAuthoringOverlays(state);
   parts.editorTextarea.value = state.editorSourceMarkdown;
-  parts.editorTextarea.setSelectionRange(0, 0);
-  refreshAnalysis(state, 0);
+  parts.editorTextarea.setSelectionRange(selectionOffset, selectionOffset);
+  refreshAnalysis(state, selectionOffset);
 }
 
 function getActiveMenuKey(actionElement) {
@@ -721,6 +1465,38 @@ function getActiveMenuKey(actionElement) {
     actionName,
     parts
   };
+}
+
+function openMetadataDrawer(state) {
+  state.metadataDrawerOpen = true;
+  state.metadataForm = readMetadataFormFromParsedLesson(state.analysis?.parsedLesson);
+  state.metadataFormVersion += 1;
+  closeAuthoringMenus(state);
+}
+
+function applyMetadataFormToScript(state, parts) {
+  if (!state.analysis?.parsedLesson || !state.metadataForm) {
+    state.statusMessage = 'Fix the lesson script before editing metadata.';
+    state.statusMessageTone = 'danger';
+    return;
+  }
+
+  const nextSourceMarkdown = buildLessonScriptMarkdown({
+    lessonAttributes: buildMetadataAttributesFromForm(state.analysis.parsedLesson, state.metadataForm),
+    steps: state.analysis.parsedLesson.steps
+  });
+  const selectionOffset = readSelectionOffsetForContext(nextSourceMarkdown, state.analysis.editorContext);
+
+  applyEditorSourceChange(state, parts, {
+    nextValue: nextSourceMarkdown,
+    selectionStart: selectionOffset,
+    selectionEnd: selectionOffset,
+    statusMessage: 'Metadata changes applied to the lesson script.',
+    focusEditor: false
+  });
+
+  state.metadataForm = readMetadataFormFromParsedLesson(state.analysis?.parsedLesson);
+  state.metadataFormVersion += 1;
 }
 
 export async function showAuthoringWorkspace({
@@ -744,11 +1520,14 @@ export async function showAuthoringWorkspace({
     dirty: false,
     statusMessage: 'SQLite workspace loaded.',
     statusMessageTone: 'success',
-    previewStepIndex: 0,
     currentArtifactId: '',
     insertMenuOpen: false,
     moreMenuOpen: false,
     metadataDrawerOpen: false,
+    metadataForm: null,
+    metadataFormVersion: 0,
+    previewModel: null,
+    lastHealthyPreviewModel: null,
     analysis: {
       parsedLesson: null,
       parseErrorMessage: '',
@@ -774,12 +1553,23 @@ export async function showAuthoringWorkspace({
 
   refreshAnalysis(state, 0);
 
-  async function safelyRunWorkspaceAction(workspaceAction, successMessage) {
+  async function safelyRunWorkspaceAction(workspaceAction, successMessage, readSelectionOffset = null) {
     try {
       const result = await workspaceAction();
 
       if (result?.workspaceSnapshot) {
-        openWorkspaceSnapshot(state, parts, result.workspaceSnapshot, successMessage || 'Draft updated.');
+        const selectionOffset = typeof readSelectionOffset === 'function'
+          ? readSelectionOffset(result.workspaceSnapshot)
+          : 0;
+
+        openWorkspaceSnapshot(
+          state,
+          parts,
+          result.workspaceSnapshot,
+          successMessage || 'Draft updated.',
+          'success',
+          selectionOffset
+        );
       } else {
         state.statusMessage = successMessage || 'Action completed.';
         state.statusMessageTone = 'success';
@@ -793,60 +1583,7 @@ export async function showAuthoringWorkspace({
     }
   }
 
-  parts.editorTextarea.addEventListener('input', () => {
-    state.editorSourceMarkdown = parts.editorTextarea.value;
-    state.dirty = true;
-    state.statusMessage = 'Draft has unsaved changes.';
-    state.statusMessageTone = 'warning';
-    refreshAnalysis(state, parts.editorTextarea.selectionStart ?? 0);
-    renderWorkspace(state, parts);
-  });
-
-  function syncCursorState() {
-    refreshAnalysis(state, parts.editorTextarea.selectionStart ?? 0);
-    renderWorkspace(state, parts);
-  }
-
-  parts.editorTextarea.addEventListener('keyup', syncCursorState);
-  parts.editorTextarea.addEventListener('mouseup', syncCursorState);
-  parts.editorTextarea.addEventListener('click', syncCursorState);
-  parts.editorTextarea.addEventListener('focus', syncCursorState);
-
-  parts.editorTextarea.addEventListener('keydown', event => {
-    const isCommandK = (event.metaKey || event.ctrlKey) && event.key.toLowerCase() === 'k';
-    const currentContext = state.analysis.editorContext.context;
-    const lineText = state.analysis.editorContext.lines[currentContext.lineIndex] || '';
-    const cursorColumn = (parts.editorTextarea.selectionStart ?? 0) - (state.analysis.editorContext.lineStarts[currentContext.lineIndex] || 0);
-    const slashTriggerEligible = event.key === '/'
-      && !event.metaKey
-      && !event.ctrlKey
-      && !event.altKey
-      && currentContext.kind !== 'show-code'
-      && lineText.slice(0, Math.max(0, cursorColumn)).trim() === '';
-
-    if (isCommandK || slashTriggerEligible) {
-      event.preventDefault();
-      state.insertMenuOpen = true;
-      state.moreMenuOpen = false;
-      state.metadataDrawerOpen = false;
-      renderWorkspace(state, parts);
-      return;
-    }
-
-    if (event.key === 'Escape' && (state.insertMenuOpen || state.moreMenuOpen || state.metadataDrawerOpen)) {
-      event.preventDefault();
-      closeFloatingPanels(state);
-      renderWorkspace(state, parts);
-    }
-  });
-
-  parts.previewButton.addEventListener('click', () => {
-    const previewFrame = parts.preview.querySelector('#authoringPreviewFrame');
-
-    previewFrame?.scrollIntoView({ behavior: 'smooth', block: 'start' });
-  });
-
-  parts.saveDraftButton.addEventListener('click', async () => {
+  async function saveCurrentDraft() {
     if (!state.workspaceSnapshot.selectedDraft || !state.dirty) {
       return;
     }
@@ -860,21 +1597,159 @@ export async function showAuthoringWorkspace({
       return {
         workspaceSnapshot: nextWorkspaceSnapshot
       };
-    }, 'Draft saved into SQLite.');
+    }, 'Draft saved into SQLite.', workspaceSnapshot => readSelectionOffsetForContext(
+      workspaceSnapshot.selectedDraft?.sourceMarkdown || '',
+      state.analysis.editorContext
+    ));
+  }
+
+  async function publishCurrentDraft() {
+    if (!state.workspaceSnapshot.selectedDraft || state.analysis?.parseErrorMessage || state.analysis?.compileErrorMessage) {
+      return;
+    }
+
+    await safelyRunWorkspaceAction(async () => {
+      const nextWorkspaceSnapshot = await authoringStore.publishLessonDraft(state.workspaceSnapshot.selectedDraft.draftId);
+
+      return {
+        workspaceSnapshot: nextWorkspaceSnapshot
+      };
+    }, 'Published snapshot stored in SQLite.', workspaceSnapshot => readSelectionOffsetForContext(
+      workspaceSnapshot.selectedDraft?.sourceMarkdown || '',
+      state.analysis.editorContext
+    ));
+  }
+
+  function syncCursorState() {
+    refreshAnalysis(state, parts.editorTextarea.selectionStart ?? 0);
+    renderWorkspace(state, parts);
+  }
+
+  parts.editorTextarea.addEventListener('input', () => {
+    state.editorSourceMarkdown = parts.editorTextarea.value;
+    state.dirty = true;
+    state.statusMessage = 'Draft has unsaved changes.';
+    state.statusMessageTone = 'warning';
+    refreshAnalysis(state, parts.editorTextarea.selectionStart ?? 0);
+    renderWorkspace(state, parts);
+  });
+
+  parts.editorTextarea.addEventListener('keyup', syncCursorState);
+  parts.editorTextarea.addEventListener('mouseup', syncCursorState);
+  parts.editorTextarea.addEventListener('click', syncCursorState);
+  parts.editorTextarea.addEventListener('focus', syncCursorState);
+  parts.editorTextarea.addEventListener('scroll', () => {
+    syncEditorSurfaceScroll(parts);
+  });
+
+  parts.editorTextarea.addEventListener('contextmenu', event => {
+    if (!state.workspaceSnapshot.selectedDraft) {
+      return;
+    }
+
+    event.preventDefault();
+    state.insertMenuOpen = true;
+    state.moreMenuOpen = false;
+    renderWorkspace(state, parts);
+  });
+
+  parts.editorTextarea.addEventListener('keydown', event => {
+    const isCommandK = (event.metaKey || event.ctrlKey) && event.key.toLowerCase() === 'k';
+    const currentContext = state.analysis.editorContext.context;
+    const lineText = state.analysis.editorContext.lines[currentContext.lineIndex] || '';
+    const cursorColumn = (parts.editorTextarea.selectionStart ?? 0)
+      - (state.analysis.editorContext.lineStarts[currentContext.lineIndex] || 0);
+    const slashTriggerEligible = event.key === '/'
+      && !event.metaKey
+      && !event.ctrlKey
+      && !event.altKey
+      && currentContext.kind !== 'show-code'
+      && lineText.slice(0, Math.max(0, cursorColumn)).trim() === '';
+
+    if (isCommandK || slashTriggerEligible) {
+      event.preventDefault();
+      state.insertMenuOpen = true;
+      state.moreMenuOpen = false;
+      renderWorkspace(state, parts);
+      return;
+    }
+
+    if (event.key === 'Escape' && (state.insertMenuOpen || state.moreMenuOpen || state.metadataDrawerOpen)) {
+      event.preventDefault();
+      closeAuthoringOverlays(state);
+      renderWorkspace(state, parts);
+    }
+  });
+
+  parts.previewButton.addEventListener('click', () => {
+    parts.previewCard.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  });
+
+  parts.saveDraftButton.addEventListener('click', async () => {
+    await saveCurrentDraft();
+  });
+
+  parts.publishButton.addEventListener('click', async () => {
+    await publishCurrentDraft();
+  });
+
+  parts.metadataButton.addEventListener('click', () => {
+    openMetadataDrawer(state);
+    renderWorkspace(state, parts);
   });
 
   parts.insertButton.addEventListener('click', () => {
     state.insertMenuOpen = !state.insertMenuOpen;
     state.moreMenuOpen = false;
-    state.metadataDrawerOpen = false;
     renderWorkspace(state, parts);
   });
 
   parts.moreButton.addEventListener('click', () => {
     state.moreMenuOpen = !state.moreMenuOpen;
     state.insertMenuOpen = false;
-    state.metadataDrawerOpen = false;
     renderWorkspace(state, parts);
+  });
+
+  parts.addStepButton.addEventListener('click', () => {
+    if (!state.workspaceSnapshot.selectedDraft) {
+      return;
+    }
+
+    const activeStepIndex = state.analysis.editorContext.context.stepIndex;
+    const insertionStart = activeStepIndex >= 0
+      ? readInsertOffsetAfterStep(state, activeStepIndex)
+      : state.editorSourceMarkdown.length;
+
+    insertSnippetIntoEditor(state, parts, {
+      actionName: 'insert-step',
+      insertionStart
+    });
+    renderWorkspace(state, parts);
+  });
+
+  parts.addSceneButton.addEventListener('click', () => {
+    const activeStepIndex = state.analysis.editorContext.context.stepIndex;
+
+    if (activeStepIndex < 0) {
+      return;
+    }
+
+    insertSnippetIntoEditor(state, parts, {
+      actionName: 'insert-scene',
+      insertionStart: readInsertOffsetAfterStep(state, activeStepIndex),
+      scan: readMetadataEditorContextScan(state.analysis.editorContext, activeStepIndex)
+    });
+    renderWorkspace(state, parts);
+  });
+
+  parts.metadataDrawer.addEventListener('input', event => {
+    const field = event.target?.dataset?.metadataField;
+
+    if (!field || !state.metadataForm) {
+      return;
+    }
+
+    state.metadataForm[field] = event.target.value;
   });
 
   ownerDocument.body.addEventListener('click', async event => {
@@ -883,8 +1758,8 @@ export async function showAuthoringWorkspace({
     const metadataDrawer = event.target.closest('.authoring-drawer');
 
     if (!actionElement && !popoverShell && !metadataDrawer) {
-      if (state.insertMenuOpen || state.moreMenuOpen || state.metadataDrawerOpen) {
-        closeFloatingPanels(state);
+      if (state.insertMenuOpen || state.moreMenuOpen) {
+        closeAuthoringMenus(state);
         renderWorkspace(state, parts);
       }
 
@@ -1018,26 +1893,20 @@ export async function showAuthoringWorkspace({
     }
 
     if (actionName === 'publish-draft') {
-      if (!state.workspaceSnapshot.selectedDraft || state.analysis.parseErrorMessage || state.analysis.compileErrorMessage) {
-        return;
-      }
-
-      await safelyRunWorkspaceAction(async () => {
-        const nextWorkspaceSnapshot = await authoringStore.publishLessonDraft(state.workspaceSnapshot.selectedDraft.draftId);
-
-        return {
-          workspaceSnapshot: nextWorkspaceSnapshot
-        };
-      }, 'Published snapshot stored in SQLite.');
+      await publishCurrentDraft();
       return;
     }
 
     if (actionName === 'export-draft') {
-      if (!state.workspaceSnapshot.selectedDraft || state.analysis.parseErrorMessage || state.analysis.compileErrorMessage) {
+      if (!state.workspaceSnapshot.selectedDraft) {
         return;
       }
 
-      downloadScriptMarkdown(ownerWindow, state.workspaceSnapshot.selectedDraft, state.editorSourceMarkdown);
+      downloadScriptMarkdown(
+        ownerWindow,
+        state.analysis?.parsedLesson?.attributes?.lessonId || state.workspaceSnapshot.selectedDraft.lessonId,
+        state.editorSourceMarkdown
+      );
       state.statusMessage = 'Draft exported as lesson.script.md.';
       state.statusMessageTone = 'success';
       renderWorkspace(state, parts);
@@ -1054,15 +1923,27 @@ export async function showAuthoringWorkspace({
     }
 
     if (actionName === 'open-metadata') {
-      state.metadataDrawerOpen = true;
-      state.insertMenuOpen = false;
-      state.moreMenuOpen = false;
+      openMetadataDrawer(state);
       renderWorkspace(state, parts);
       return;
     }
 
     if (actionName === 'close-metadata') {
       state.metadataDrawerOpen = false;
+      state.metadataFormVersion += 1;
+      renderWorkspace(state, parts);
+      return;
+    }
+
+    if (actionName === 'apply-metadata') {
+      applyMetadataFormToScript(state, parts);
+      renderWorkspace(state, parts);
+      return;
+    }
+
+    if (actionName === 'reset-metadata') {
+      state.metadataForm = readMetadataFormFromParsedLesson(state.analysis?.parsedLesson);
+      state.metadataFormVersion += 1;
       renderWorkspace(state, parts);
       return;
     }
@@ -1075,22 +1956,27 @@ export async function showAuthoringWorkspace({
       || actionName.startsWith('insert-show-code')
       || actionName === 'insert-theory-link'
       || actionName === 'insert-preview-action') {
-      insertSnippetAtCursor(state, parts, actionElement.dataset.action);
+      insertSnippetIntoEditor(state, parts, {
+        actionName: actionElement.dataset.action,
+        insertionStart: parts.editorTextarea.selectionStart ?? 0,
+        insertionEnd: parts.editorTextarea.selectionEnd ?? parts.editorTextarea.selectionStart ?? 0
+      });
       state.insertMenuOpen = false;
       renderWorkspace(state, parts);
     }
   });
 
-  parts.preview.addEventListener('change', event => {
-    if (event.target.id === 'authoringPreviewStepSelect') {
-      state.previewStepIndex = Number(event.target.value);
-      renderWorkspace(state, parts);
-    }
-  });
+  ownerDocument.addEventListener('keydown', async event => {
+    const isSaveShortcut = (event.metaKey || event.ctrlKey) && event.key.toLowerCase() === 's';
 
-  ownerDocument.addEventListener('keydown', event => {
+    if (isSaveShortcut) {
+      event.preventDefault();
+      await saveCurrentDraft();
+      return;
+    }
+
     if (event.key === 'Escape' && (state.insertMenuOpen || state.moreMenuOpen || state.metadataDrawerOpen)) {
-      closeFloatingPanels(state);
+      closeAuthoringOverlays(state);
       renderWorkspace(state, parts);
     }
   });
