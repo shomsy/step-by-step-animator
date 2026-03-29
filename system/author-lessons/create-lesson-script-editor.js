@@ -73,6 +73,18 @@ function readLineClassName(lineText, insideCodeFence) {
     return 'authoring-script-line is-section is-show-code';
   }
 
+  if (/^### Narration\s*$/.test(lineText)) {
+    return 'authoring-script-line is-section is-narration';
+  }
+
+  if (/^### Preview\s*$/.test(lineText)) {
+    return 'authoring-script-line is-section is-preview';
+  }
+
+  if (/^### Theory\s*$/.test(lineText)) {
+    return 'authoring-script-line is-section is-theory';
+  }
+
   if (/^###\s+/.test(lineText)) {
     return 'authoring-script-line is-section';
   }

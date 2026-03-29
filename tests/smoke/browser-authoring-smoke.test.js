@@ -46,6 +46,50 @@ async function setEditorCursorBeforeFirstScene(page) {
   });
 }
 
+async function setEditorCursorOnBlankLineAfterMarker(page, markerText) {
+  await page.$eval('#authoringScriptEditor', (element, marker) => {
+    if (!(element instanceof HTMLElement) || !element.authoringEditor) {
+      throw new Error('Expected the CodeMirror authoring editor host.');
+    }
+
+    const value = element.authoringEditor.getValue();
+    const markerIndex = value.indexOf(marker);
+
+    if (markerIndex < 0) {
+      throw new Error(`Could not find marker "${marker}".`);
+    }
+
+    const lineEnd = value.indexOf('\n', markerIndex);
+    const cursor = lineEnd >= 0 ? lineEnd + 1 : value.length;
+
+    element.authoringEditor.focus();
+    element.authoringEditor.setSelectionRange(cursor, cursor);
+  }, markerText);
+}
+
+async function readEditorCursorSnapshot(page) {
+  return page.$eval('#authoringScriptEditor', element => {
+    if (!(element instanceof HTMLElement) || !element.authoringEditor) {
+      throw new Error('Expected the CodeMirror authoring editor host.');
+    }
+
+    const value = element.authoringEditor.getValue();
+    const selectionStart = element.authoringEditor.getSelectionStart();
+    const lineStart = value.lastIndexOf('\n', Math.max(0, selectionStart - 1)) + 1;
+    const lineEndIndex = value.indexOf('\n', selectionStart);
+    const lineEnd = lineEndIndex >= 0 ? lineEndIndex : value.length;
+    const lineText = value.slice(lineStart, lineEnd);
+    const lineNumber = value.slice(0, selectionStart).split('\n').length;
+
+    return {
+      value,
+      selectionStart,
+      lineNumber,
+      lineText
+    };
+  });
+}
+
 async function setMetadataValue(page, fieldName, nextValue) {
   await page.$eval(`[data-metadata-field="${fieldName}"]`, (element, value) => {
     if (!(element instanceof HTMLInputElement || element instanceof HTMLTextAreaElement || element instanceof HTMLSelectElement)) {
@@ -156,17 +200,50 @@ test('browser authoring smoke covers V2 writer body view, metadata drawer, previ
       'the outline to reflect the new scene'
     );
 
-    await page.$eval('#authoringInsertBtn', element => {
-      if (!(element instanceof HTMLElement)) {
-        throw new Error('Expected the insert button.');
+    const firstSceneId = await page.$eval('[data-outline-kind="scene"]', button => {
+      if (!(button instanceof HTMLElement)) {
+        throw new Error('Expected the first scene outline button.');
       }
 
-      element.click();
+      return button.dataset.sceneId || '';
     });
+    const firstStepId = await page.$eval('[data-outline-kind="step"]', button => {
+      if (!(button instanceof HTMLElement)) {
+        throw new Error('Expected the first step outline button.');
+      }
+
+      return button.dataset.stepId || '';
+    });
+
+    await page.click('[data-outline-kind="scene"][data-scene-id="authoring-smoke-scene"]');
+    await waitForCondition(
+      async () => {
+        const cursor = await readEditorCursorSnapshot(page);
+        return cursor.lineText === '## Scene: authoring-smoke-scene';
+      },
+      'the outline scene button to jump to the exact scene heading'
+    );
+
+    await page.click(`[data-outline-kind="step"][data-step-id="${firstStepId}"]`);
+    await waitForCondition(
+      async () => {
+        const cursor = await readEditorCursorSnapshot(page);
+        return cursor.lineText === `# Step: ${firstStepId}`;
+      },
+      'the outline step button to jump to the exact step heading'
+    );
+
+    await setEditorCursorOnBlankLineAfterMarker(page, '## Scene: authoring-smoke-scene');
+    await page.keyboard.type('/');
     await waitForCondition(
       async () => page.$eval('#authoringInsertMenu', element => !element.hidden).catch(() => false),
-      'the contextual insert menu for the new scene'
+      'the slash-triggered insert menu for the new scene'
     );
+    const slashMenuLabels = await page.$$eval('#authoringInsertMenu .authoring-popover-item strong', items => items.map(item => item.textContent?.trim() || ''));
+    assert.ok(slashMenuLabels.includes('Insert Narration'));
+    assert.ok(slashMenuLabels.includes('Insert Show Code → HTML'));
+    assert.ok(!slashMenuLabels.includes('Insert Step'));
+
     await page.$eval('[data-action="insert-narration"]', element => {
       if (!(element instanceof HTMLElement)) {
         throw new Error('Expected the narration insert action.');
@@ -174,6 +251,13 @@ test('browser authoring smoke covers V2 writer body view, metadata drawer, previ
 
       element.click();
     });
+    await waitForCondition(
+      async () => {
+        const editor = await readEditorCursorSnapshot(page);
+        return editor.value.includes('## Scene: authoring-smoke-scene\n### Narration');
+      },
+      'the slash insert flow to add the narration template'
+    );
     await page.keyboard.type('Prvo pravimo novu scenu u writer flow-u.');
 
     await page.$eval('#authoringInsertBtn', element => {
@@ -199,6 +283,26 @@ test('browser authoring smoke covers V2 writer body view, metadata drawer, previ
     await waitForCondition(
       async () => page.$eval('#authoringCompileChip', element => element.textContent?.includes('Valid') || false),
       'the script to compile cleanly'
+    );
+
+    await page.click(`[data-outline-kind="scene"][data-scene-id="${firstSceneId}"]`);
+    await waitForCondition(
+      async () => page.$eval('#authoringPreviewContext', (element, sceneId) => element.textContent?.includes(sceneId) || false, firstSceneId),
+      'the preview context to follow the first scene'
+    );
+    await waitForCondition(
+      async () => page.$eval('#authoringPreviewFrame', frame => !(frame.getAttribute('srcdoc') || '').includes('smoke-card')),
+      'the preview to roll back to the first scene snapshot'
+    );
+
+    await page.click('[data-outline-kind="scene"][data-scene-id="authoring-smoke-scene"]');
+    await waitForCondition(
+      async () => page.$eval('#authoringPreviewContext', element => element.textContent?.includes('authoring-smoke-scene') || false),
+      'the preview context to follow the active smoke scene'
+    );
+    await waitForCondition(
+      async () => page.$eval('#authoringPreviewFrame', frame => (frame.getAttribute('srcdoc') || '').includes('smoke-card')),
+      'the preview to follow the active smoke scene state'
     );
 
     await page.click('#authoringMetadataBtn');
@@ -317,8 +421,11 @@ test('browser authoring smoke covers V2 writer body view, metadata drawer, previ
     await page.click('.authoring-validation-item');
 
     await waitForCondition(
-      async () => page.$eval('#authoringLineBadge', element => element.textContent?.trim() !== 'Line 1' || false),
-      'the validation click to move the cursor to the failing region'
+      async () => {
+        const cursor = await readEditorCursorSnapshot(page);
+        return cursor.lineText === '### Show Code: html';
+      },
+      'the validation click to move the cursor to the failing show code block'
     );
 
     assert.deepEqual(pageErrors, []);

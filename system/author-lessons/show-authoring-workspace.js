@@ -96,18 +96,6 @@ function cloneArtifactLineMap(linesByArtifactId) {
   );
 }
 
-function readDraftOriginLabel(sourceOrigin) {
-  if (sourceOrigin === 'paired-shipped') {
-    return 'paired draft';
-  }
-
-  if (sourceOrigin === 'duplicate') {
-    return 'duplicate draft';
-  }
-
-  return 'custom draft';
-}
-
 function buildHeaderTitle(state) {
   const parsedLesson = state.analysis?.parsedLesson;
   const selectedDraft = state.workspaceSnapshot.selectedDraft;
@@ -126,12 +114,18 @@ function buildHeaderTitle(state) {
 function buildHeaderMeta(state) {
   const parsedLesson = state.analysis?.parsedLesson;
   const selectedDraft = state.workspaceSnapshot.selectedDraft;
+  const steps = Array.isArray(parsedLesson?.steps) ? parsedLesson.steps : [];
+  const sceneCount = steps.reduce((count, step) => count + (Array.isArray(step.scenes) ? step.scenes.length : 0), 0);
 
   if (!selectedDraft) {
     return 'Open or create a draft to start writing.';
   }
 
-  return `${parsedLesson?.attributes?.lessonId || selectedDraft.lessonId} · ${readDraftOriginLabel(selectedDraft.sourceOrigin)}`;
+  if (steps.length) {
+    return `${steps.length} steps · ${sceneCount} scenes · metadata stays in the drawer`;
+  }
+
+  return 'Start the first step. Metadata stays in the drawer.';
 }
 
 function readWriterFallbackStartLineIndex(lines) {
@@ -300,6 +294,16 @@ function readSceneNode(editorContext, stepId, sceneId) {
   return stepNode?.scenes?.find(scene => scene.sceneId === sceneId) || null;
 }
 
+function readSceneSectionNode(editorContext, stepId, sceneId, matchSection) {
+  const sceneNode = readSceneNode(editorContext, stepId, sceneId);
+
+  if (!sceneNode || typeof matchSection !== 'function') {
+    return null;
+  }
+
+  return sceneNode.sections.find(section => matchSection(normalizeText(section.heading))) || null;
+}
+
 function readStepNode(editorContext, stepId) {
   return editorContext?.steps?.find(step => step.stepId === stepId) || null;
 }
@@ -309,6 +313,74 @@ function resolveValidationLocation(editorContext, message) {
 
   if (sceneMatch) {
     const sceneNode = readSceneNode(editorContext, sceneMatch[2], sceneMatch[1]);
+    const showCodeMatch = String(message).match(/"Show Code:\s*([^"]+)"/);
+    const referencesNarration = String(message).includes('"Narration"') || String(message).includes('define narration');
+    const referencesPreview = String(message).toLowerCase().includes('preview');
+    const referencesTheory = String(message).toLowerCase().includes('theory');
+
+    if (showCodeMatch) {
+      const sectionNode = readSceneSectionNode(
+        editorContext,
+        sceneMatch[2],
+        sceneMatch[1],
+        heading => heading.toLowerCase() === `show code: ${normalizeText(showCodeMatch[1]).toLowerCase()}`
+      );
+
+      if (sectionNode) {
+        return {
+          lineNumber: sectionNode.lineNumber,
+          contextLabel: sectionNode.heading
+        };
+      }
+    }
+
+    if (referencesNarration) {
+      const sectionNode = readSceneSectionNode(
+        editorContext,
+        sceneMatch[2],
+        sceneMatch[1],
+        heading => heading.toLowerCase() === 'narration'
+      );
+
+      if (sectionNode) {
+        return {
+          lineNumber: sectionNode.lineNumber,
+          contextLabel: sectionNode.heading
+        };
+      }
+    }
+
+    if (referencesPreview) {
+      const sectionNode = readSceneSectionNode(
+        editorContext,
+        sceneMatch[2],
+        sceneMatch[1],
+        heading => heading.toLowerCase() === 'preview'
+      );
+
+      if (sectionNode) {
+        return {
+          lineNumber: sectionNode.lineNumber,
+          contextLabel: sectionNode.heading
+        };
+      }
+    }
+
+    if (referencesTheory) {
+      const sectionNode = readSceneSectionNode(
+        editorContext,
+        sceneMatch[2],
+        sceneMatch[1],
+        heading => heading.toLowerCase() === 'theory'
+      );
+
+      if (sectionNode) {
+        return {
+          lineNumber: sectionNode.lineNumber,
+          contextLabel: sectionNode.heading
+        };
+      }
+    }
 
     if (sceneNode) {
       return {
@@ -592,6 +664,10 @@ function buildOutlineMarkup(state) {
               type="button"
               class="authoring-outline-scene${sceneSelected ? ' is-active' : ''}"
               data-action="jump-to-source-line:${scene.lineNumber}"
+              data-outline-kind="scene"
+              data-step-id="${escapeHtml(step.stepId)}"
+              data-scene-id="${escapeHtml(scene.sceneId)}"
+              aria-current="${sceneSelected ? 'true' : 'false'}"
             >
               <span class="authoring-outline-index">Scene ${sceneIndex + 1}</span>
               <strong>${escapeHtml(scene.title || scene.sceneId)}</strong>
@@ -605,6 +681,9 @@ function buildOutlineMarkup(state) {
               type="button"
               class="authoring-outline-step${stepSelected ? ' is-active' : ''}"
               data-action="jump-to-source-line:${step.lineNumber}"
+              data-outline-kind="step"
+              data-step-id="${escapeHtml(step.stepId)}"
+              aria-current="${stepSelected ? 'true' : 'false'}"
             >
               <span class="authoring-outline-index">${stepIndex + 1}</span>
               <strong>${escapeHtml(step.title || step.stepId)}</strong>
@@ -736,6 +815,7 @@ function buildInsertMenuMarkup(state) {
     <div class="authoring-popover-head">
       <strong>Insert block</strong>
       <span>${escapeHtml(buildContextLabel(context))}</span>
+      <small class="authoring-popover-note">Use <code>/</code> on an empty line or <code>Ctrl/Cmd + K</code>.</small>
     </div>
     <div class="authoring-popover-list">
       ${menuItems.map(item => `
@@ -806,6 +886,30 @@ function buildMoreMenuMarkup(state) {
       </div>
     </div>
   `;
+}
+
+function buildInsertButtonLabel(context) {
+  if (context.kind === 'root') {
+    return '+ Insert Step';
+  }
+
+  if (context.kind === 'step') {
+    return '+ Insert Scene';
+  }
+
+  return '+ Insert Block';
+}
+
+function buildInsertHintText(context) {
+  if (context.kind === 'root') {
+    return 'Use <code>/</code> to start the next step.';
+  }
+
+  if (context.kind === 'step') {
+    return 'Use <code>/</code> to add a scene, step summary, or intent.';
+  }
+
+  return 'Use <code>/</code> on an empty line or <code>Ctrl/Cmd + K</code> to add narration, show code, theory, or preview blocks.';
 }
 
 function readMetadataFormFromParsedLesson(parsedLesson) {
@@ -1049,6 +1153,7 @@ function createWorkspaceParts(ownerDocument) {
             </div>
 
             <div class="authoring-editor-insert">
+              <p class="authoring-editor-shortcut" id="authoringInsertHint">Use <code>/</code> on an empty line or <code>Ctrl/Cmd + K</code> to insert a valid DSL block.</p>
               <div class="authoring-popover-shell">
                 <button type="button" id="authoringInsertBtn">+ Insert Block</button>
                 <div class="authoring-popover" id="authoringInsertMenu" hidden></div>
@@ -1121,6 +1226,7 @@ function createWorkspaceParts(ownerDocument) {
     cursorInfo: ownerDocument.getElementById('authoringCursorInfo'),
     dirtyBadge: ownerDocument.getElementById('authoringDirtyBadge'),
     lineBadge: ownerDocument.getElementById('authoringLineBadge'),
+    insertHint: ownerDocument.getElementById('authoringInsertHint'),
     insertButton: ownerDocument.getElementById('authoringInsertBtn'),
     insertMenu: ownerDocument.getElementById('authoringInsertMenu'),
     compileStatus: ownerDocument.getElementById('authoringCompileStatus'),
@@ -1235,6 +1341,9 @@ function renderWorkspace(state, parts) {
   parts.lineBadge.textContent = `Line ${readVisibleLineNumber(state, context.lineNumber || 1)}`;
   parts.dirtyBadge.textContent = state.dirty ? 'Unsaved changes' : 'Saved';
   parts.dirtyBadge.dataset.tone = state.dirty ? 'warning' : 'success';
+  parts.insertButton.textContent = buildInsertButtonLabel(context);
+  parts.insertButton.title = 'Use / on an empty line or Ctrl/Cmd + K to open the insert menu.';
+  parts.insertHint.innerHTML = buildInsertHintText(context);
 
   if (parts.editorController.getValue() !== state.writerView.bodyMarkdown) {
     parts.editorController.setValue(state.writerView.bodyMarkdown);
