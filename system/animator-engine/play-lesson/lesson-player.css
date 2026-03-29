@@ -646,6 +646,40 @@ h1 {
   font-size: 15px;
 }
 
+.lesson-runtime-state {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 18px;
+  padding: 8px 12px;
+  border-radius: 999px;
+  border: 1px solid rgba(109,115,255,0.2);
+  background: rgba(109,115,255,0.12);
+  color: var(--accent);
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.lesson-runtime-state[data-tone="success"] {
+  border-color: rgba(54,211,153,0.24);
+  background: rgba(54,211,153,0.12);
+  color: var(--success);
+}
+
+.lesson-runtime-state[data-tone="warning"] {
+  border-color: rgba(247,183,49,0.24);
+  background: rgba(247,183,49,0.12);
+  color: var(--warning);
+}
+
+.lesson-runtime-state[data-tone="accent"] {
+  border-color: rgba(109,115,255,0.24);
+  background: rgba(109,115,255,0.12);
+  color: var(--accent);
+}
+
 .lesson-picker {
   margin-bottom: 20px;
 }

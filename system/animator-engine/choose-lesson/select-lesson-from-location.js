@@ -19,6 +19,37 @@ async function resolveSavedDraftLessonOverride({
   return null;
 }
 
+function annotatePublishedLesson(lesson) {
+  return {
+    ...lesson,
+    lessonRuntimeSource: lesson.lessonRuntimeSource || 'published',
+    lessonRuntimeSourceLabel: lesson.lessonRuntimeSourceLabel || 'Published Lesson · shipped package'
+  };
+}
+
+function normalizeDraftLesson(lesson) {
+  if (!lesson) {
+    return null;
+  }
+
+  if (lesson.lessonRuntimeSource === 'broken-draft-fallback') {
+    return lesson;
+  }
+
+  if (lesson.lessonRuntimeSource === 'playable-draft') {
+    return {
+      ...lesson,
+      lessonRuntimeSourceLabel: lesson.lessonRuntimeSourceLabel || 'Playable Draft'
+    };
+  }
+
+  return {
+    ...lesson,
+    lessonRuntimeSource: 'playable-draft',
+    lessonRuntimeSourceLabel: lesson.lessonRuntimeSourceLabel || 'Playable Draft'
+  };
+}
+
 export async function selectLessonFromLocation({
   ownerLocation,
   ownerWindow = null,
@@ -52,8 +83,9 @@ export async function selectLessonFromLocation({
     savedDraftLesson = null;
   }
 
-  const lesson = savedDraftLesson || shippedLesson;
-  const lessons = savedDraftLesson
+  const normalizedDraftLesson = normalizeDraftLesson(savedDraftLesson);
+  const lesson = normalizedDraftLesson || annotatePublishedLesson(shippedLesson);
+  const lessons = normalizedDraftLesson?.lessonRuntimeSource === 'playable-draft'
     ? registeredLessons.map(registeredLesson => registeredLesson.lessonId === selectedLesson.lessonId
       ? {
           ...registeredLesson,

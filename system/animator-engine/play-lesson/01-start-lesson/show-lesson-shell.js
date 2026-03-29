@@ -33,6 +33,26 @@ function showLessonGoal({ lessonParts, lesson }) {
     .join('');
 }
 
+function readLessonRuntimeLabel(lesson) {
+  if (typeof lesson?.lessonRuntimeSourceLabel === 'string' && lesson.lessonRuntimeSourceLabel.trim()) {
+    return lesson.lessonRuntimeSourceLabel.trim();
+  }
+
+  return 'Published Lesson · shipped package';
+}
+
+function readLessonRuntimeTone(lesson) {
+  if (lesson?.lessonRuntimeSource === 'playable-draft') {
+    return 'success';
+  }
+
+  if (lesson?.lessonRuntimeSource === 'broken-draft-fallback') {
+    return 'warning';
+  }
+
+  return 'accent';
+}
+
 export function showLessonShell({ ownerDocument, lessonParts, lesson }) {
   const hasJavaScriptFile = typeof lesson.buildJsAtStep === 'function';
   const hasTemplateJsFile = typeof lesson.buildTemplateJsAtStep === 'function';
@@ -48,6 +68,10 @@ export function showLessonShell({ ownerDocument, lessonParts, lesson }) {
   } else {
     lessonParts.lessonIntro.textContent = lesson.lessonIntro;
   }
+
+  lessonParts.lessonRuntimeState.hidden = false;
+  lessonParts.lessonRuntimeState.dataset.tone = readLessonRuntimeTone(lesson);
+  lessonParts.lessonRuntimeState.textContent = readLessonRuntimeLabel(lesson);
 
   lessonParts.previewAddress.textContent = lesson.previewAddress;
   lessonParts.livePreviewFrame.setAttribute('sandbox', 'allow-scripts');

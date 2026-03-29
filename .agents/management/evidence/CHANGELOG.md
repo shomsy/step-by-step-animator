@@ -15,6 +15,9 @@ Update rules:
 
 ## Current Ledger
 
+1. `[review][medium] 2026-03-30 01:04 CEST - Closed TODO-009 and the UI-backed authoring review loop by shipping the store-first UI lesson bridge, explicit Draft Saved / Playable Draft / Published Lesson / Broken Draft Fallback state labels, and end-to-end coverage for save, publish, and fail-closed playback`
+   owner: codex
+   actual: 2h 30m
 1. `[review][medium] 2026-03-29 20:20 CEST - Closed TODO-008 by making the normal player prefer the latest healthy saved paired draft through a read-only SQLite override seam, fail closed to the shipped lesson when the saved draft is broken, and revalidating with unit, browser, and build coverage`
    owner: codex
    actual: 35m

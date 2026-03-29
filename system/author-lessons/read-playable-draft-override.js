@@ -7,6 +7,15 @@ function readGoalImageOverride(shippedLesson) {
     : '';
 }
 
+function annotateLessonRuntime(lesson, lessonRuntimeSource, lessonRuntimeSourceLabel, sourceDraftId = '') {
+  return {
+    ...lesson,
+    lessonRuntimeSource,
+    lessonRuntimeSourceLabel,
+    ...(sourceDraftId ? { sourceDraftId } : {})
+  };
+}
+
 export async function readPlayableDraftOverride({
   ownerWindow,
   shippedLessonId,
@@ -26,21 +35,35 @@ export async function readPlayableDraftOverride({
       return null;
     }
 
-    const compiledDraftLesson = compileLessonScript({
-      scriptMarkdown: draftOverride.sourceMarkdown,
-      goalImageSrc: readGoalImageOverride(shippedLesson)
-    });
+    try {
+      const compiledDraftLesson = compileLessonScript({
+        scriptMarkdown: draftOverride.sourceMarkdown,
+        goalImageSrc: readGoalImageOverride(shippedLesson)
+      });
 
-    if (compiledDraftLesson.lessonId !== shippedLessonId) {
-      return null;
+      if (compiledDraftLesson.lessonId !== shippedLessonId) {
+        return annotateLessonRuntime(
+          shippedLesson,
+          'broken-draft-fallback',
+          'Broken Draft Fallback · Shipped lesson package',
+          draftOverride.draftId
+        );
+      }
+
+      return annotateLessonRuntime(
+        compiledDraftLesson,
+        'playable-draft',
+        `Playable Draft · SQLite · ${draftOverride.updatedAt}`,
+        draftOverride.draftId
+      );
+    } catch {
+      return annotateLessonRuntime(
+        shippedLesson,
+        'broken-draft-fallback',
+        'Broken Draft Fallback · Shipped lesson package',
+        draftOverride.draftId
+      );
     }
-
-    return {
-      ...compiledDraftLesson,
-      lessonRuntimeSource: 'saved-draft',
-      lessonRuntimeSourceLabel: `Saved draft from SQLite · ${draftOverride.updatedAt}`,
-      sourceDraftId: draftOverride.draftId
-    };
   } catch {
     return null;
   }

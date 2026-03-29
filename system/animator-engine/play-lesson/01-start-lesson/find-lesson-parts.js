@@ -23,6 +23,7 @@ export function findLessonParts(ownerDocument) {
     ownerDocument,
     lessonHeading: readRequiredElement(ownerDocument, 'lessonHeading'),
     lessonIntro: readRequiredElement(ownerDocument, 'lessonIntro'),
+    lessonRuntimeState: readRequiredElement(ownerDocument, 'lessonRuntimeState'),
     lessonPicker: readRequiredElement(ownerDocument, 'lessonPicker'),
     lessonGoal: readRequiredElement(ownerDocument, 'lessonGoal'),
     goalHeading: readRequiredElement(ownerDocument, 'goalHeading'),

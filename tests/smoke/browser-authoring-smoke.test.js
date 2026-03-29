@@ -177,7 +177,8 @@ async function readPlayerSelectionSnapshot(page, shippedLessonId) {
       lessonId: selection.lesson?.lessonId || '',
       lessonTitle: selection.lesson?.lessonTitle || '',
       firstStepTitle: selection.lesson?.steps?.[0]?.title || '',
-      runtimeSource: selection.lesson?.lessonRuntimeSource || 'shipped'
+      runtimeSource: selection.lesson?.lessonRuntimeSource || 'published',
+      runtimeLabel: selection.lesson?.lessonRuntimeSourceLabel || 'Published Lesson · shipped package'
     };
   }, {
     repoPath: repoRoot,
@@ -436,8 +437,13 @@ test('browser authoring smoke covers V2 writer body view, metadata drawer, previ
     await page.keyboard.type('<div class="smoke-card">Smoke</div>');
 
     await waitForCondition(
-      async () => page.$eval('#authoringCompileChip', element => element.textContent?.includes('Valid') || false),
+      async () => page.$eval('#authoringCompileChip', element => element.textContent?.includes('Playable Draft') || false),
       'the script to compile cleanly'
+    );
+
+    await waitForCondition(
+      async () => page.$eval('#authoringSaveState', element => element.textContent?.includes('Unsaved Changes') || false),
+      'the draft save state to switch to unsaved changes after editing'
     );
 
     await page.click(`[data-outline-kind="scene"][data-scene-id="${firstSceneId}"]`);
@@ -498,6 +504,23 @@ test('browser authoring smoke covers V2 writer body view, metadata drawer, previ
     );
 
     await waitForCondition(
+      async () => page.$eval('#authoringSaveState', element => element.textContent?.includes('Draft Saved') || false),
+      'the draft save state to become explicit after save'
+    );
+
+    await waitForCondition(
+      async () => page.$eval('#authoringPublishState', element => element.textContent?.includes('Not Published') || false),
+      'the draft to remain unpublished before publish is clicked'
+    );
+
+    await page.click('#authoringPublishBtn');
+
+    await waitForCondition(
+      async () => page.$eval('#authoringPublishState', element => element.textContent?.includes('Published Lesson') || false),
+      'the published lesson state to become explicit'
+    );
+
+    await waitForCondition(
       async () => page.$eval('#authoringPreviewFrame', frame => (frame.getAttribute('srcdoc') || '').includes('smoke-card')),
       'the preview iframe to stay populated'
     );
@@ -550,7 +573,7 @@ test('browser authoring smoke covers V2 writer body view, metadata drawer, previ
     await page.keyboard.type('\n### Show Code: html\n```html\n<div class="broken-preview">Broken</div>');
 
     await waitForCondition(
-      async () => page.$eval('#authoringCompileChip', element => element.textContent?.includes('Syntax issue') || false),
+      async () => page.$eval('#authoringCompileChip', element => element.textContent?.includes('Broken Draft') || false),
       'the broken body view source to show a syntax issue'
     );
 
@@ -671,7 +694,7 @@ test('browser authoring smoke keeps very large lesson bodies intact through anal
     );
 
     await waitForCondition(
-      async () => page.$eval('#authoringCompileChip', element => element.textContent?.includes('Valid') || false),
+      async () => page.$eval('#authoringCompileChip', element => element.textContent?.includes('Playable Draft') || false),
       'the large lesson body to compile cleanly'
     );
 
@@ -792,7 +815,7 @@ test('browser authoring smoke imports a full large lesson source without duplica
     );
 
     await waitForCondition(
-      async () => page.$eval('#authoringCompileChip', element => element.textContent?.includes('Valid') || false),
+      async () => page.$eval('#authoringCompileChip', element => element.textContent?.includes('Playable Draft') || false),
       'the imported full lesson source to compile cleanly'
     );
 
@@ -948,7 +971,8 @@ test('browser authoring smoke lets the normal player prefer a healthy saved draf
 
     assert.equal(healthySelection.lessonId, '09-human-first-script-demo');
     assert.equal(healthySelection.firstStepTitle, savedDraftStepTitle);
-    assert.equal(healthySelection.runtimeSource, 'saved-draft');
+    assert.equal(healthySelection.runtimeSource, 'playable-draft');
+    assert.match(healthySelection.runtimeLabel, /Playable Draft/);
 
     await page.goto(`${appUrl}?workspace=authoring&lesson=09-human-first-script-demo`, { waitUntil: 'domcontentloaded' });
 
@@ -987,7 +1011,8 @@ test('browser authoring smoke lets the normal player prefer a healthy saved draf
 
     assert.equal(brokenSelection.lessonId, '09-human-first-script-demo');
     assert.equal(brokenSelection.firstStepTitle, shippedStepTitle);
-    assert.equal(brokenSelection.runtimeSource, 'shipped');
+    assert.equal(brokenSelection.runtimeSource, 'broken-draft-fallback');
+    assert.match(brokenSelection.runtimeLabel, /Broken Draft Fallback/);
 
     assert.deepEqual(pageErrors, []);
     assert.deepEqual(consoleErrors, []);

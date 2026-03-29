@@ -246,10 +246,18 @@ function readVisibleLineNumber(state, sourceLineNumber) {
 }
 
 function buildSaveChipLabel(state) {
-  return state.dirty ? 'Unsaved changes' : 'Saved';
+  if (!state.workspaceSnapshot.selectedDraft) {
+    return 'No Draft';
+  }
+
+  return state.dirty ? 'Unsaved Changes' : 'Draft Saved';
 }
 
 function buildSaveChipTone(state) {
+  if (!state.workspaceSnapshot.selectedDraft) {
+    return 'muted';
+  }
+
   return state.dirty ? 'warning' : 'success';
 }
 
@@ -270,23 +278,45 @@ function buildCompileChipTone(state) {
 }
 
 function buildCompileChipLabel(state) {
+  if (!state.workspaceSnapshot.selectedDraft) {
+    return 'No Draft';
+  }
+
   if (state.analysisPending) {
-    return 'Refreshing…';
+    return 'Checking Playability…';
   }
 
   if (state.analysis?.parseErrorMessage) {
-    return 'Syntax issue';
+    return state.workspaceSnapshot.selectedDraft?.shippedLessonId
+      ? 'Broken Draft Fallback'
+      : 'Broken Draft';
   }
 
   if (state.analysis?.compileErrorMessage) {
-    return 'Compile issue';
+    return state.workspaceSnapshot.selectedDraft?.shippedLessonId
+      ? 'Broken Draft Fallback'
+      : 'Broken Draft';
   }
 
   if (state.analysis?.compiledLesson) {
-    return `Valid · ${state.analysis.compiledLesson.steps.length} steps`;
+    return `Playable Draft · ${state.analysis.compiledLesson.steps.length} steps`;
   }
 
-  return 'No compiled preview';
+  return 'Draft Not Ready';
+}
+
+function buildPublishChipTone(state) {
+  return state.workspaceSnapshot.selectedDraft?.versions?.length ? 'success' : 'muted';
+}
+
+function buildPublishChipLabel(state) {
+  if (!state.workspaceSnapshot.selectedDraft) {
+    return 'No Draft';
+  }
+
+  return state.workspaceSnapshot.selectedDraft?.versions?.length
+    ? 'Published Lesson'
+    : 'Not Published';
 }
 
 function buildContextLabel(context) {
@@ -1182,9 +1212,10 @@ function createWorkspaceParts(ownerDocument) {
           <p id="authoringLessonMeta">Open or create a draft to start writing.</p>
         </div>
 
-        <div class="authoring-topbar-actions">
-          <span class="authoring-chip" id="authoringSaveState" data-tone="muted">Saved</span>
-          <span class="authoring-chip" id="authoringCompileChip" data-tone="muted">No compiled preview</span>
+      <div class="authoring-topbar-actions">
+          <span class="authoring-chip" id="authoringSaveState" data-tone="muted">Draft Saved</span>
+          <span class="authoring-chip" id="authoringCompileChip" data-tone="muted">Draft Not Ready</span>
+          <span class="authoring-chip" id="authoringPublishState" data-tone="muted">Not Published</span>
           <button type="button" id="authoringPreviewBtn">Preview</button>
           <button type="button" id="authoringSaveDraftBtn">Save</button>
           <button type="button" id="authoringPublishBtn">Publish</button>
@@ -1234,7 +1265,7 @@ function createWorkspaceParts(ownerDocument) {
             </div>
 
             <div class="authoring-editor-footer">
-              <span id="authoringDirtyBadge" data-tone="success">Saved</span>
+              <span id="authoringDirtyBadge" data-tone="success">Draft Saved</span>
               <span id="authoringLineBadge">Line 1</span>
             </div>
 
@@ -1297,6 +1328,7 @@ function createWorkspaceParts(ownerDocument) {
     lessonMeta: ownerDocument.getElementById('authoringLessonMeta'),
     saveState: ownerDocument.getElementById('authoringSaveState'),
     compileChip: ownerDocument.getElementById('authoringCompileChip'),
+    publishState: ownerDocument.getElementById('authoringPublishState'),
     previewButton: ownerDocument.getElementById('authoringPreviewBtn'),
     saveDraftButton: ownerDocument.getElementById('authoringSaveDraftBtn'),
     publishButton: ownerDocument.getElementById('authoringPublishBtn'),
@@ -1407,6 +1439,8 @@ function renderWorkspace(state, parts) {
   parts.saveState.dataset.tone = buildSaveChipTone(state);
   parts.compileChip.textContent = buildCompileChipLabel(state);
   parts.compileChip.dataset.tone = buildCompileChipTone(state);
+  parts.publishState.textContent = buildPublishChipLabel(state);
+  parts.publishState.dataset.tone = buildPublishChipTone(state);
   parts.status.textContent = buildStatusMessage(state);
   parts.status.dataset.tone = buildStatusMessageTone(state);
   parts.outline.innerHTML = buildOutlineMarkup(state);
@@ -1425,7 +1459,7 @@ function renderWorkspace(state, parts) {
   renderMetadataDrawer(state, parts);
   parts.cursorInfo.textContent = buildContextLabel(context);
   parts.lineBadge.textContent = `Line ${readVisibleLineNumber(state, context.lineNumber || 1)}`;
-  parts.dirtyBadge.textContent = state.dirty ? 'Unsaved changes' : 'Saved';
+  parts.dirtyBadge.textContent = buildSaveChipLabel(state);
   parts.dirtyBadge.dataset.tone = state.dirty ? 'warning' : 'success';
   parts.insertButton.textContent = buildInsertButtonLabel(context);
   parts.insertButton.title = 'Use / on an empty line or Ctrl/Cmd + K to open the insert menu.';

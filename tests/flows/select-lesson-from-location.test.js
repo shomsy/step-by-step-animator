@@ -80,13 +80,47 @@ test('selectLessonFromLocation prefers a saved draft override for the selected l
     },
     resolveDraftLessonOverride: async ({ shippedLessonId }) => ({
       lessonId: shippedLessonId,
-      lessonTitle: 'Beta Draft'
+      lessonTitle: 'Beta Draft',
+      lessonRuntimeSource: 'playable-draft',
+      lessonRuntimeSourceLabel: 'Playable Draft · SQLite · 2026-03-30 00:00 CEST'
     })
   });
 
   assert.equal(selection.lesson.lessonId, 'beta');
   assert.equal(selection.lesson.lessonTitle, 'Beta Draft');
+  assert.equal(selection.lesson.lessonRuntimeSource, 'playable-draft');
   assert.equal(selection.lessons[1].lessonTitle, 'Beta Draft');
+});
+
+test('selectLessonFromLocation preserves a broken draft fallback runtime marker when one is returned', async () => {
+  const lessonDescriptors = [
+    {
+      lessonId: 'alpha',
+      lessonTitle: 'Alpha',
+      loadLesson: async () => ({ lessonId: 'alpha', lessonTitle: 'Alpha' })
+    }
+  ];
+
+  const selection = await selectLessonFromLocation({
+    ownerLocation: { href: 'https://example.test/?lesson=alpha' },
+    ownerWindow: {},
+    lessonRegistry: {
+      registeredLessons: lessonDescriptors,
+      findLesson: lessonId => lessonDescriptors.find(lesson => lesson.lessonId === lessonId),
+      getDefaultLessonId: () => lessonDescriptors[0].lessonId
+    },
+    resolveDraftLessonOverride: async () => ({
+      lessonId: 'alpha',
+      lessonTitle: 'Alpha',
+      lessonRuntimeSource: 'broken-draft-fallback',
+      lessonRuntimeSourceLabel: 'Broken Draft Fallback · Shipped lesson package'
+    })
+  });
+
+  assert.equal(selection.lesson.lessonId, 'alpha');
+  assert.equal(selection.lesson.lessonRuntimeSource, 'broken-draft-fallback');
+  assert.equal(selection.lesson.lessonRuntimeSourceLabel, 'Broken Draft Fallback · Shipped lesson package');
+  assert.equal(selection.lessons, lessonDescriptors);
 });
 
 test('selectLessonFromLocation fails closed to the shipped lesson when the draft override is unavailable', async () => {

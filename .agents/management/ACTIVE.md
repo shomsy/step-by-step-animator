@@ -24,7 +24,7 @@ flowchart LR
     end
 
     subgraph InProgress["In Progress"]
-        P1["TODO-009 | UI-backed authoring | updated 2026-03-30 00:54 CEST"]
+        P0["No active cards"]
     end
 
     subgraph Blocked["Blocked"]
@@ -35,5 +35,5 @@ flowchart LR
         V0["No active cards"]
     end
 
-    Ready --> InProgress
+Ready --> InProgress
 ```
