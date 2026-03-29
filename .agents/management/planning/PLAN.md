@@ -19,4 +19,43 @@ Update rules:
 
 ## Current Workstreams
 
-No active workstreams.
+### PLAN-007 | Make UI-backed lesson authoring the canonical source of truth
+- created_at: `2026-03-29 20:20 CEST`
+- updated_at: `2026-03-29 20:20 CEST`
+- status: `in_progress`
+- owner: `codex`
+- estimate: `2-3 iterations`
+- user goal:
+  - write, save, reopen, and play lessons entirely through Write Mode without manually creating or editing lesson source files first
+  - keep the authoring flow centered on the UI so copy-paste, step-by-step drafting, and play feel immediate
+  - move filesystem dependence out of the authoring path and into publish/export only
+- visible result:
+  - Write Mode is the canonical place where lessons are authored
+  - saved drafts live in the authoring store and reopen instantly in the editor
+  - the player uses the latest healthy saved draft or fails closed to the shipped lesson package
+  - publish/export can materialize files, but day-to-day authoring does not depend on them
+- technical execution:
+  - define the UI-backed authoring store as the canonical source of truth for in-progress lessons
+  - keep `lesson.script.md` as the authored document shape, but treat it as persisted draft content rather than a required filesystem contract for authoring
+  - separate responsibilities cleanly: authoring store for draft truth, lesson engine for validation and compilation, export/publish for filesystem materialization
+  - keep legacy source-file import/export bridges so shipped lessons can still enter and leave the new model safely
+  - preserve the fail-closed player fallback when a saved draft is broken or unplayable
+  - update authoring docs and validation coverage so the contract matches the UI-first flow
+- architecture boundaries:
+  - `system/author-lessons/**`
+  - `system/lesson-engine/**`
+  - `system/animator-engine/**`
+  - `product/education/**`
+  - `tests/**`
+  - `.agents/management/**`
+- cold review risks to watch:
+  - dual source of truth between the authoring store and the filesystem
+  - Save feeling successful without making it clear whether the result is a draft, a publish, or both
+  - export/publish diverging from the compiled lesson behavior
+  - legacy file-first paths staying on the critical path and undermining the UI-first contract
+- acceptance:
+  - a lesson can be created, edited, saved, reopened, and played from the UI-backed authoring flow without manually creating lesson source files first
+  - the author does not need filesystem folder work to begin authoring a lesson
+  - play uses the latest healthy saved draft and fails closed to the shipped lesson package when the draft is unhealthy
+  - publish/export can generate filesystem artifacts, but authoring itself does not depend on them
+  - legacy file-based shipped lessons remain importable until the migration is complete
