@@ -163,6 +163,9 @@ The browser app now exposes a dedicated authoring workspace at `?workspace=autho
 - Write Mode opens on the first real `# Step:` block instead of the raw frontmatter contract
 - metadata stays in the `Metadata` drawer while the main editor focuses on the lesson body
 - the workspace is split into `Outline | Editor | Inspector`, with live preview, compile state, validation, and snapshots kept in the right column
+- `CodeMirror` owns the canonical `lesson.script.md` editing surface in the center panel
+- `BlockNote` is lazy-loaded only inside the metadata drawer for prose-rich fields such as `lessonIntro` and `goal.imageCaption`
+- `CKEditor 5` is not part of the shipped authoring path because no unresolved WYSIWYG requirement remains
 - the editor remains DSL-aware, with slash-triggered block insertion and inline `+ Insert Block` authoring
 - drafts still compile back through the same lesson engine contract before save and publish
 

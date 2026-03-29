@@ -327,41 +327,22 @@ body:has(.authoring-app) {
   font-size: 0.8rem;
 }
 
-.authoring-script-highlight,
 #authoringScriptEditor {
   position: absolute;
   inset: 0;
-  box-sizing: border-box;
-  margin: 0;
-  padding: 18px 20px 28px;
-  border: 0;
-  outline: 0;
-  font: inherit;
-  font-size: 1rem;
-  line-height: 1.75;
-  tab-size: 2;
-  white-space: pre;
-  overflow: auto;
 }
 
-.authoring-script-highlight {
-  pointer-events: none;
-  color: var(--authoring-ink);
-}
-
-#authoringScriptEditor {
-  resize: none;
+#authoringScriptEditor[data-editor-owner="CodeMirror"] {
   background: transparent;
-  color: transparent;
-  caret-color: var(--authoring-ink);
 }
 
-#authoringScriptEditor::selection {
-  background: rgba(255, 255, 255, 0.18);
+#authoringScriptEditor .cm-editor,
+#authoringScriptEditor .cm-scroller {
+  height: 100%;
 }
 
-#authoringScriptEditor::placeholder {
-  color: rgba(255, 255, 255, 0.18);
+#authoringScriptEditor .cm-placeholder {
+  color: rgba(255, 255, 255, 0.2);
 }
 
 .authoring-script-line {
@@ -370,10 +351,6 @@ body:has(.authoring-app) {
   border-radius: 10px;
   padding: 0 8px;
   margin: 0 -8px;
-}
-
-.authoring-script-line.is-active {
-  background: rgba(255, 255, 255, 0.06);
 }
 
 .authoring-script-line.is-step,
@@ -425,10 +402,6 @@ body:has(.authoring-app) {
 
 .authoring-token-code {
   color: #d8d7d0;
-}
-
-.authoring-script-line.is-frontmatter {
-  color: var(--authoring-muted);
 }
 
 .authoring-script-line.is-code,
@@ -678,6 +651,35 @@ body:has(.authoring-app) {
   padding: 11px 12px;
   font: inherit;
   resize: vertical;
+}
+
+.authoring-drawer-field-note {
+  color: var(--authoring-subtle);
+  font-size: 0.78rem;
+  line-height: 1.5;
+}
+
+.authoring-prose-shell {
+  border-radius: 16px;
+  border: 1px solid var(--authoring-border);
+  background: var(--authoring-panel-strong);
+  overflow: hidden;
+}
+
+.authoring-prose-editor {
+  min-height: 170px;
+  padding: 12px;
+}
+
+.authoring-prose-editor .bn-editor {
+  min-height: 146px;
+  color: var(--authoring-ink);
+  font: inherit;
+  background: transparent;
+}
+
+.authoring-prose-editor .bn-container {
+  font: inherit;
 }
 
 .authoring-empty {

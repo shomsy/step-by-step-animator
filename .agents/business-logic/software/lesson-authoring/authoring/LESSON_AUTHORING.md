@@ -166,6 +166,20 @@ Migration rule:
 - legacy split source is allowed only as a migration or import path
 - do not keep both formats as active source of truth for the same lesson folder
 
+### 3.0.1 Write Mode Surface Ownership
+
+Write Mode is the default authoring surface.
+
+Rules:
+
+- `CodeMirror` owns the canonical `lesson.script.md` body editing experience
+- the editor must open on the first real `# Step:` block, not on frontmatter
+- frontmatter stays editable, but only through the metadata drawer, not as the primary Write Mode frame
+- `BlockNote` owns prose-rich metadata fields when a block editor is a better fit than a plain input
+- `BlockNote` content must serialize back into the owned frontmatter fields; it is not a second source of truth
+- `CKEditor 5` is out of the shipped path unless a concrete unresolved WYSIWYG requirement is proven later
+- outline, validation, preview, and snapshot are support surfaces around the canonical lesson script, not alternate editors
+
 ### 3.1 `lesson.md`
 
 `lesson.md` is the manifest and metadata source of truth.

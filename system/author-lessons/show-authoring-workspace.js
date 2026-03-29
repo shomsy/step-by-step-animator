@@ -9,6 +9,9 @@ import {
   buildInsertSnippet,
   readEditorContext
 } from './lesson-script-workbench.js';
+import { createLessonScriptEditor } from './create-lesson-script-editor.js';
+
+let metadataProseEditorFactoryPromise = null;
 
 const METADATA_STATUS_OPTIONS = ['draft', 'active', 'broken', 'deprecated'];
 const PREVIEW_TYPE_OPTIONS = ['dom', 'terminal', 'markdown', 'diagram', 'none'];
@@ -23,6 +26,19 @@ function escapeHtml(text) {
 
 function normalizeText(value) {
   return typeof value === 'string' ? value.trim() : '';
+}
+
+async function loadMetadataProseEditorFactory() {
+  if (!metadataProseEditorFactoryPromise) {
+    metadataProseEditorFactoryPromise = import('./create-metadata-prose-editor.js')
+      .then(module => module.createMetadataProseEditor)
+      .catch(error => {
+        metadataProseEditorFactoryPromise = null;
+        throw error;
+      });
+  }
+
+  return metadataProseEditorFactoryPromise;
 }
 
 function buildWorkspaceUrl(ownerLocation, workspaceName) {
@@ -552,107 +568,6 @@ function buildPreviewNote(state, previewModel) {
   return 'Preview follows the active step or scene.';
 }
 
-function highlightYamlLine(line) {
-  const fieldMatch = line.match(/^(\s*)([a-zA-Z][\w.-]*:)(\s*)(.*)$/);
-
-  if (!fieldMatch) {
-    return escapeHtml(line || ' ');
-  }
-
-  return [
-    escapeHtml(fieldMatch[1]),
-    `<span class="authoring-token-key">${escapeHtml(fieldMatch[2])}</span>`,
-    escapeHtml(fieldMatch[3]),
-    fieldMatch[4]
-      ? `<span class="authoring-token-value">${escapeHtml(fieldMatch[4])}</span>`
-      : '<span class="authoring-token-value"></span>'
-  ].join('');
-}
-
-function highlightHeadingLine(line, prefix, valueClass) {
-  const value = line.slice(prefix.length);
-
-  return [
-    `<span class="authoring-token-heading">${escapeHtml(prefix)}</span>`,
-    value
-      ? `<span class="${valueClass}">${escapeHtml(value)}</span>`
-      : ''
-  ].join('');
-}
-
-function highlightSectionLine(line) {
-  const showCodeMatch = line.match(/^### Show Code:\s*(.+)$/);
-
-  if (showCodeMatch) {
-    return [
-      '<span class="authoring-token-section-label">Show Code</span>',
-      `<span class="authoring-token-artifact">${escapeHtml(showCodeMatch[1])}</span>`
-    ].join(' ');
-  }
-
-  const sectionMatch = line.match(/^###\s+(.+)$/);
-
-  if (!sectionMatch) {
-    return `<span class="authoring-token-heading">${escapeHtml(line)}</span>`;
-  }
-
-  return `<span class="authoring-token-section-label">${escapeHtml(sectionMatch[1])}</span>`;
-}
-
-function buildHighlightedScriptMarkup(sourceMarkdown, activeLineIndex) {
-  const lines = String(sourceMarkdown || '').split('\n');
-  let insideFrontmatter = false;
-  let insideCodeFence = false;
-
-  return lines.map((line, lineIndex) => {
-    const trimmedLine = normalizeText(line);
-    let lineClass = '';
-    let markup = escapeHtml(line || ' ');
-
-    if (lineIndex === 0 && trimmedLine === '---') {
-      insideFrontmatter = true;
-      lineClass = 'is-frontmatter is-boundary';
-      markup = `<span class="authoring-token-fence">${escapeHtml(line)}</span>`;
-    } else if (insideFrontmatter && trimmedLine === '---') {
-      insideFrontmatter = false;
-      lineClass = 'is-frontmatter is-boundary';
-      markup = `<span class="authoring-token-fence">${escapeHtml(line)}</span>`;
-    } else if (insideFrontmatter) {
-      lineClass = 'is-frontmatter';
-      markup = highlightYamlLine(line);
-    } else if (/^# Step:\s*/.test(line)) {
-      lineClass = 'is-step';
-      markup = highlightHeadingLine(line, '# Step: ', 'authoring-token-step');
-    } else if (/^## Scene:\s*/.test(line)) {
-      lineClass = 'is-scene';
-      markup = highlightHeadingLine(line, '## Scene: ', 'authoring-token-scene');
-    } else if (/^### Show Code:\s*/.test(line)) {
-      lineClass = 'is-section is-show-code';
-      markup = highlightSectionLine(line);
-    } else if (/^###\s+/.test(line)) {
-      lineClass = 'is-section';
-      markup = highlightSectionLine(line);
-    } else if (/^```/.test(trimmedLine)) {
-      lineClass = 'is-code-boundary';
-      insideCodeFence = !insideCodeFence;
-      markup = `<span class="authoring-token-fence">${escapeHtml(line)}</span>`;
-    } else if (insideCodeFence) {
-      lineClass = 'is-code';
-      markup = `<span class="authoring-token-code">${escapeHtml(line || ' ')}</span>`;
-    } else if (/^\s*[a-zA-Z][\w-]*:\s*/.test(line)) {
-      lineClass = 'is-metadata';
-      markup = highlightYamlLine(line);
-    } else if (!trimmedLine) {
-      lineClass = 'is-blank';
-      markup = '&nbsp;';
-    }
-
-    return `
-      <span class="authoring-script-line${lineIndex === activeLineIndex ? ' is-active' : ''}${lineClass ? ` ${lineClass}` : ''}">${markup}</span>
-    `.trim();
-  }).join('\n');
-}
-
 function buildOutlineMarkup(state) {
   const outlineSteps = state.analysis?.editorContext?.steps || [];
   const context = state.analysis?.editorContext?.context;
@@ -1000,10 +915,13 @@ function buildMetadataDrawerMarkup(state) {
         <span>lessonTitle</span>
         <input type="text" value="${escapeHtml(metadataForm.lessonTitle)}" data-metadata-field="lessonTitle" />
       </label>
-      <label class="authoring-drawer-field authoring-drawer-field-wide">
+      <div class="authoring-drawer-field authoring-drawer-field-wide">
         <span>lessonIntro</span>
-        <textarea rows="3" data-metadata-field="lessonIntro">${escapeHtml(metadataForm.lessonIntro)}</textarea>
-      </label>
+        <div class="authoring-prose-shell">
+          <div class="authoring-prose-editor" data-metadata-prose="lessonIntro"></div>
+        </div>
+        <small class="authoring-drawer-field-note">BlockNote prose editor. Apply serializes this field back into frontmatter markdown.</small>
+      </div>
       <label class="authoring-drawer-field">
         <span>status</span>
         <select data-metadata-field="status">
@@ -1044,10 +962,13 @@ function buildMetadataDrawerMarkup(state) {
         <span>goal.imageAlt</span>
         <input type="text" value="${escapeHtml(metadataForm.goalImageAlt)}" data-metadata-field="goalImageAlt" />
       </label>
-      <label class="authoring-drawer-field authoring-drawer-field-wide">
+      <div class="authoring-drawer-field authoring-drawer-field-wide">
         <span>goal.imageCaption</span>
-        <textarea rows="3" data-metadata-field="goalImageCaption">${escapeHtml(metadataForm.goalImageCaption)}</textarea>
-      </label>
+        <div class="authoring-prose-shell">
+          <div class="authoring-prose-editor" data-metadata-prose="goalImageCaption"></div>
+        </div>
+        <small class="authoring-drawer-field-note">BlockNote prose editor. Apply serializes this field back into frontmatter markdown.</small>
+      </div>
     </div>
 
     <div class="authoring-drawer-actions">
@@ -1119,8 +1040,7 @@ function createWorkspaceParts(ownerDocument) {
             </div>
 
             <div class="authoring-editor-surface">
-              <pre class="authoring-script-highlight" id="authoringScriptHighlight" aria-hidden="true"></pre>
-              <textarea id="authoringScriptEditor" spellcheck="false" placeholder="Create or open a draft to start writing."></textarea>
+              <div id="authoringScriptEditor" aria-label="Lesson script editor"></div>
             </div>
 
             <div class="authoring-editor-footer">
@@ -1197,8 +1117,7 @@ function createWorkspaceParts(ownerDocument) {
     addStepButton: ownerDocument.getElementById('authoringAddStepBtn'),
     addSceneButton: ownerDocument.getElementById('authoringAddSceneBtn'),
     editorPane: ownerDocument.getElementById('authoringScriptEditor').closest('.authoring-editor-pane'),
-    editorTextarea: ownerDocument.getElementById('authoringScriptEditor'),
-    editorHighlight: ownerDocument.getElementById('authoringScriptHighlight'),
+    editorHost: ownerDocument.getElementById('authoringScriptEditor'),
     cursorInfo: ownerDocument.getElementById('authoringCursorInfo'),
     dirtyBadge: ownerDocument.getElementById('authoringDirtyBadge'),
     lineBadge: ownerDocument.getElementById('authoringLineBadge'),
@@ -1212,7 +1131,8 @@ function createWorkspaceParts(ownerDocument) {
     previewFrame: ownerDocument.getElementById('authoringPreviewFrame'),
     snapshotTabs: ownerDocument.getElementById('authoringSnapshotTabs'),
     snapshotCode: ownerDocument.getElementById('authoringSnapshotCode'),
-    metadataDrawer: ownerDocument.getElementById('authoringMetadataDrawer')
+    metadataDrawer: ownerDocument.getElementById('authoringMetadataDrawer'),
+    metadataProseEditors: {}
   };
 }
 
@@ -1220,21 +1140,60 @@ function renderMetadataDrawer(state, parts) {
   const renderKey = `${state.metadataDrawerOpen}:${state.metadataFormVersion}:${Boolean(state.analysis?.parsedLesson)}`;
 
   if (!state.metadataDrawerOpen) {
+    Object.values(parts.metadataProseEditors).forEach(editor => {
+      editor?.destroy();
+    });
+    parts.metadataProseEditors = {};
     parts.metadataDrawer.hidden = true;
     return;
   }
 
   if (parts.metadataDrawer.dataset.renderKey !== renderKey) {
+    Object.values(parts.metadataProseEditors).forEach(editor => {
+      editor?.destroy();
+    });
+    parts.metadataProseEditors = {};
     parts.metadataDrawer.innerHTML = buildMetadataDrawerMarkup(state);
     parts.metadataDrawer.dataset.renderKey = renderKey;
   }
 
-  parts.metadataDrawer.hidden = false;
-}
+  if (!state.metadataProseEditorFactory && !state.metadataProseEditorLoading) {
+    state.metadataProseEditorLoading = true;
+    void loadMetadataProseEditorFactory()
+      .then(factory => {
+        state.metadataProseEditorFactory = factory;
+      })
+      .catch(error => {
+        state.statusMessage = `Failed to load BlockNote metadata editor: ${error.message}`;
+        state.statusMessageTone = 'danger';
+      })
+      .finally(() => {
+        state.metadataProseEditorLoading = false;
+        state.onDeferredMetadataSurfaceReady?.();
+      });
+  }
 
-function syncEditorSurfaceScroll(parts) {
-  parts.editorHighlight.scrollTop = parts.editorTextarea.scrollTop;
-  parts.editorHighlight.scrollLeft = parts.editorTextarea.scrollLeft;
+  if (state.metadataProseEditorFactory && !Object.keys(parts.metadataProseEditors).length) {
+    ['lessonIntro', 'goalImageCaption'].forEach(fieldName => {
+      const hostElement = parts.metadataDrawer.querySelector(`[data-metadata-prose="${fieldName}"]`);
+
+      if (!hostElement) {
+        return;
+      }
+
+      parts.metadataProseEditors[fieldName] = state.metadataProseEditorFactory({
+        hostElement,
+        initialMarkdown: state.metadataForm?.[fieldName] || '',
+        onChange(nextMarkdown) {
+          if (state.metadataForm) {
+            state.metadataForm[fieldName] = nextMarkdown;
+          }
+        }
+      });
+    });
+  }
+
+  parts.metadataDrawer.hidden = false;
 }
 
 function renderWorkspace(state, parts) {
@@ -1277,19 +1236,14 @@ function renderWorkspace(state, parts) {
   parts.dirtyBadge.textContent = state.dirty ? 'Unsaved changes' : 'Saved';
   parts.dirtyBadge.dataset.tone = state.dirty ? 'warning' : 'success';
 
-  if (parts.editorTextarea.value !== state.writerView.bodyMarkdown) {
-    parts.editorTextarea.value = state.writerView.bodyMarkdown;
+  if (parts.editorController.getValue() !== state.writerView.bodyMarkdown) {
+    parts.editorController.setValue(state.writerView.bodyMarkdown);
   }
 
-  parts.editorHighlight.innerHTML = buildHighlightedScriptMarkup(
-    state.writerView.bodyMarkdown,
-    readVisibleLineNumber(state, (state.analysis?.editorContext?.lineNumber || 1)) - 1
-  );
-  parts.editorTextarea.disabled = !selectedDraft;
-  parts.editorTextarea.readOnly = !selectedDraft;
-  parts.editorTextarea.placeholder = selectedDraft
+  parts.editorController.setEditable(Boolean(selectedDraft));
+  parts.editorController.setPlaceholderText(selectedDraft
     ? 'Write the lesson flow here.'
-    : 'Create or open a draft to start writing.';
+    : 'Create or open a draft to start writing.');
   parts.saveDraftButton.disabled = !selectedDraft || !state.dirty;
   parts.publishButton.disabled = !selectedDraft || Boolean(state.analysis?.parseErrorMessage || state.analysis?.compileErrorMessage);
   parts.previewButton.disabled = !selectedDraft;
@@ -1302,7 +1256,6 @@ function renderWorkspace(state, parts) {
   parts.lessonTitle.ownerDocument.title = selectedDraft
     ? `${buildHeaderTitle(state)} · Step By Step Animator`
     : 'Step By Step Animator';
-  syncEditorSurfaceScroll(parts);
 }
 
 function refreshAnalysis(state, cursorOffset) {
@@ -1372,11 +1325,10 @@ function applyVisibleEditorSelection(state, parts, selectionStart, selectionEnd 
   const visibleSelectionEnd = readVisibleEditorOffset(state, selectionEnd);
 
   if (focusEditor) {
-    parts.editorTextarea.focus();
+    parts.editorController.focus();
   }
 
-  parts.editorTextarea.setSelectionRange(visibleSelectionStart, visibleSelectionEnd);
-  syncEditorSurfaceScroll(parts);
+  parts.editorController.setSelectionRange(visibleSelectionStart, visibleSelectionEnd, true);
 }
 
 function focusEditorAtSourceLine(state, parts, lineNumber) {
@@ -1430,7 +1382,7 @@ function applyEditorSourceChange(state, parts, {
   state.statusMessageTone = statusTone;
 
   refreshAnalysis(state, selectionStart);
-  parts.editorTextarea.value = state.writerView.bodyMarkdown;
+  parts.editorController.setValue(state.writerView.bodyMarkdown);
   applyVisibleEditorSelection(state, parts, selectionStart, selectionEnd, focusEditor);
 }
 
@@ -1532,7 +1484,7 @@ function openWorkspaceSnapshot(state, parts, workspaceSnapshot, statusMessage, t
       ? selectionOffset
       : readDefaultWriterSelectionOffset(state.editorSourceMarkdown)
   );
-  parts.editorTextarea.value = state.writerView.bodyMarkdown;
+  parts.editorController.setValue(state.writerView.bodyMarkdown);
   applyVisibleEditorSelection(
     state,
     parts,
@@ -1622,6 +1574,8 @@ export async function showAuthoringWorkspace({
     metadataDrawerOpen: false,
     metadataForm: null,
     metadataFormVersion: 0,
+    metadataProseEditorFactory: null,
+    metadataProseEditorLoading: false,
     previewModel: null,
     lastHealthyPreviewModel: null,
     analysis: {
@@ -1643,11 +1597,54 @@ export async function showAuthoringWorkspace({
         steps: [],
         lineStarts: []
       }
-    }
+    },
+    onDeferredMetadataSurfaceReady: null
   };
   const parts = createWorkspaceParts(ownerDocument);
+  state.onDeferredMetadataSurfaceReady = () => {
+    if (state.metadataDrawerOpen) {
+      renderWorkspace(state, parts);
+    }
+  };
 
   refreshAnalysis(state, readDefaultWriterSelectionOffset(state.editorSourceMarkdown));
+  parts.editorController = createLessonScriptEditor({
+    hostElement: parts.editorHost,
+    initialValue: state.writerView.bodyMarkdown,
+    placeholderText: state.workspaceSnapshot.selectedDraft
+      ? 'Write the lesson flow here.'
+      : 'Create or open a draft to start writing.',
+    readSlashMenuEligibility() {
+      return Boolean(state.workspaceSnapshot.selectedDraft)
+        && state.analysis?.editorContext?.context?.kind !== 'show-code';
+    },
+    onChange({ value, selectionStart }) {
+      state.editorSourceMarkdown = `${state.writerView.hiddenPrefixMarkdown}${value}`;
+      state.dirty = true;
+      state.statusMessage = 'Draft has unsaved changes.';
+      state.statusMessageTone = 'warning';
+      refreshAnalysis(state, readSourceEditorOffset(state, selectionStart));
+      renderWorkspace(state, parts);
+    },
+    onCursorChange() {
+      syncCursorState();
+    },
+    onInsertMenuRequest() {
+      if (!state.workspaceSnapshot.selectedDraft) {
+        return;
+      }
+
+      state.insertMenuOpen = true;
+      state.moreMenuOpen = false;
+      renderWorkspace(state, parts);
+    },
+    onEscapeRequest() {
+      if (state.insertMenuOpen || state.moreMenuOpen || state.metadataDrawerOpen) {
+        closeAuthoringOverlays(state);
+        renderWorkspace(state, parts);
+      }
+    }
+  });
 
   async function safelyRunWorkspaceAction(workspaceAction, successMessage, readSelectionOffset = null) {
     try {
@@ -1684,7 +1681,7 @@ export async function showAuthoringWorkspace({
       return;
     }
 
-    const selectionOffset = readSourceEditorOffset(state, parts.editorTextarea.selectionStart ?? 0);
+    const selectionOffset = readSourceEditorOffset(state, parts.editorController.getSelectionStart());
 
     await safelyRunWorkspaceAction(async () => {
       const nextWorkspaceSnapshot = await authoringStore.saveLessonDraft({
@@ -1703,7 +1700,7 @@ export async function showAuthoringWorkspace({
       return;
     }
 
-    const selectionOffset = readSourceEditorOffset(state, parts.editorTextarea.selectionStart ?? 0);
+    const selectionOffset = readSourceEditorOffset(state, parts.editorController.getSelectionStart());
 
     await safelyRunWorkspaceAction(async () => {
       const nextWorkspaceSnapshot = await authoringStore.publishLessonDraft(state.workspaceSnapshot.selectedDraft.draftId);
@@ -1715,68 +1712,12 @@ export async function showAuthoringWorkspace({
   }
 
   function syncCursorState() {
-    refreshAnalysis(state, readSourceEditorOffset(state, parts.editorTextarea.selectionStart ?? 0));
+    refreshAnalysis(state, readSourceEditorOffset(state, parts.editorController.getSelectionStart()));
     renderWorkspace(state, parts);
   }
 
-  parts.editorTextarea.addEventListener('input', () => {
-    state.editorSourceMarkdown = `${state.writerView.hiddenPrefixMarkdown}${parts.editorTextarea.value}`;
-    state.dirty = true;
-    state.statusMessage = 'Draft has unsaved changes.';
-    state.statusMessageTone = 'warning';
-    refreshAnalysis(state, readSourceEditorOffset(state, parts.editorTextarea.selectionStart ?? 0));
-    renderWorkspace(state, parts);
-  });
-
-  parts.editorTextarea.addEventListener('keyup', syncCursorState);
-  parts.editorTextarea.addEventListener('mouseup', syncCursorState);
-  parts.editorTextarea.addEventListener('click', syncCursorState);
-  parts.editorTextarea.addEventListener('focus', syncCursorState);
-  parts.editorTextarea.addEventListener('scroll', () => {
-    syncEditorSurfaceScroll(parts);
-  });
-
-  parts.editorTextarea.addEventListener('contextmenu', event => {
-    if (!state.workspaceSnapshot.selectedDraft) {
-      return;
-    }
-
-    event.preventDefault();
-    state.insertMenuOpen = true;
-    state.moreMenuOpen = false;
-    renderWorkspace(state, parts);
-  });
-
-  parts.editorTextarea.addEventListener('keydown', event => {
-    const isCommandK = (event.metaKey || event.ctrlKey) && event.key.toLowerCase() === 'k';
-    const currentContext = state.analysis.editorContext.context;
-    const lineText = state.analysis.editorContext.lines[currentContext.lineIndex] || '';
-    const cursorColumn = readSourceEditorOffset(state, parts.editorTextarea.selectionStart ?? 0)
-      - (state.analysis.editorContext.lineStarts[currentContext.lineIndex] || 0);
-    const slashTriggerEligible = event.key === '/'
-      && !event.metaKey
-      && !event.ctrlKey
-      && !event.altKey
-      && currentContext.kind !== 'show-code'
-      && lineText.slice(0, Math.max(0, cursorColumn)).trim() === '';
-
-    if (isCommandK || slashTriggerEligible) {
-      event.preventDefault();
-      state.insertMenuOpen = true;
-      state.moreMenuOpen = false;
-      renderWorkspace(state, parts);
-      return;
-    }
-
-    if (event.key === 'Escape' && (state.insertMenuOpen || state.moreMenuOpen || state.metadataDrawerOpen)) {
-      event.preventDefault();
-      closeAuthoringOverlays(state);
-      renderWorkspace(state, parts);
-    }
-  });
-
   parts.previewButton.addEventListener('click', () => {
-    refreshAnalysis(state, readSourceEditorOffset(state, parts.editorTextarea.selectionStart ?? 0));
+    refreshAnalysis(state, readSourceEditorOffset(state, parts.editorController.getSelectionStart()));
     state.statusMessage = 'Preview refreshed from the active writing context.';
     state.statusMessageTone = 'success';
     renderWorkspace(state, parts);
@@ -1839,7 +1780,7 @@ export async function showAuthoringWorkspace({
     renderWorkspace(state, parts);
   });
 
-  parts.metadataDrawer.addEventListener('input', event => {
+  function syncMetadataFieldFromEvent(event) {
     const field = event.target?.dataset?.metadataField;
 
     if (!field || !state.metadataForm) {
@@ -1847,7 +1788,10 @@ export async function showAuthoringWorkspace({
     }
 
     state.metadataForm[field] = event.target.value;
-  });
+  }
+
+  parts.metadataDrawer.addEventListener('input', syncMetadataFieldFromEvent);
+  parts.metadataDrawer.addEventListener('change', syncMetadataFieldFromEvent);
 
   ownerDocument.body.addEventListener('click', async event => {
     const actionElement = event.target.closest('[data-action]');
@@ -1871,7 +1815,7 @@ export async function showAuthoringWorkspace({
 
     if (actionName === 'jump-to-source-line') {
       focusEditorAtSourceLine(state, parts, Number(actionParts[0]));
-      refreshAnalysis(state, readSourceEditorOffset(state, parts.editorTextarea.selectionStart ?? 0));
+      refreshAnalysis(state, readSourceEditorOffset(state, parts.editorController.getSelectionStart()));
       renderWorkspace(state, parts);
       return;
     }
@@ -2055,10 +1999,10 @@ export async function showAuthoringWorkspace({
       || actionName === 'insert-preview-action') {
       insertSnippetIntoEditor(state, parts, {
         actionName: actionElement.dataset.action,
-        insertionStart: readSourceEditorOffset(state, parts.editorTextarea.selectionStart ?? 0),
+        insertionStart: readSourceEditorOffset(state, parts.editorController.getSelectionStart()),
         insertionEnd: readSourceEditorOffset(
           state,
-          parts.editorTextarea.selectionEnd ?? parts.editorTextarea.selectionStart ?? 0
+          parts.editorController.getSelectionEnd()
         )
       });
       state.insertMenuOpen = false;

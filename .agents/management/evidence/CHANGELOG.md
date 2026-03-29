@@ -15,6 +15,9 @@ Update rules:
 
 ## Current Ledger
 
+1. `[review][medium] 2026-03-29 17:43 CEST - Closed TODO-005 and the requested whole-system cold review by shipping CodeMirror as the canonical Write Mode editor, lazy-loading BlockNote for prose metadata fields, keeping CKEditor 5 out of the shipped path, and revalidating with tests plus a production build`
+   owner: codex
+   actual: 2h
 1. `[review][medium] 2026-03-29 04:45 CEST - Closed TODO-004 and re-ran the whole-system cold review by shipping Write Mode V2: hidden frontmatter body view, right inspector, lighter outline, stronger DSL hierarchy, exact save/publish cursor preservation, and V2 smoke coverage`
    owner: codex
    actual: 15m

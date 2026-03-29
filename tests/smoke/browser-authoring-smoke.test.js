@@ -32,29 +32,17 @@ async function openPopoverAndClick(page, buttonSelector, menuSelector, itemSelec
   await page.click(itemSelector);
 }
 
-async function setEditorValue(page, nextValue) {
-  await page.$eval('#authoringScriptEditor', (element, value) => {
-    if (!(element instanceof HTMLTextAreaElement)) {
-      throw new Error('Expected the authoring editor textarea.');
-    }
-
-    element.value = value;
-    element.dispatchEvent(new Event('input', { bubbles: true }));
-  }, nextValue);
-}
-
 async function setEditorCursorBeforeFirstScene(page) {
   await page.$eval('#authoringScriptEditor', element => {
-    if (!(element instanceof HTMLTextAreaElement)) {
-      throw new Error('Expected the authoring editor textarea.');
+    if (!(element instanceof HTMLElement) || !element.authoringEditor) {
+      throw new Error('Expected the CodeMirror authoring editor host.');
     }
 
-    const sceneMarkerIndex = element.value.indexOf('\n## Scene:');
-    const cursor = sceneMarkerIndex >= 0 ? sceneMarkerIndex : element.value.length;
-    element.focus();
-    element.setSelectionRange(cursor, cursor);
-    element.dispatchEvent(new MouseEvent('mouseup', { bubbles: true }));
-    element.dispatchEvent(new KeyboardEvent('keyup', { bubbles: true, key: 'ArrowLeft' }));
+    const value = element.authoringEditor.getValue();
+    const sceneMarkerIndex = value.indexOf('\n## Scene:');
+    const cursor = sceneMarkerIndex >= 0 ? sceneMarkerIndex : value.length;
+    element.authoringEditor.focus();
+    element.authoringEditor.setSelectionRange(cursor, cursor);
   });
 }
 
@@ -140,11 +128,12 @@ test('browser authoring smoke covers V2 writer body view, metadata drawer, previ
     await waitForCondition(
       async () => page.evaluate(() => {
         const editor = document.querySelector('#authoringScriptEditor');
-        return editor instanceof HTMLTextAreaElement
-          && editor.value.startsWith('# Step:')
-          && !editor.value.includes('lessonId:');
+        return editor instanceof HTMLElement
+          && editor.dataset.editorOwner === 'CodeMirror'
+          && editor.authoringEditor.getValue().startsWith('# Step:')
+          && !editor.authoringEditor.getValue().includes('lessonId:');
       }),
-      'the writer body view to hide frontmatter and open on the first step'
+      'the writer body view to hide frontmatter and open on the first step through CodeMirror'
     );
 
     await waitForCondition(
@@ -167,20 +156,44 @@ test('browser authoring smoke covers V2 writer body view, metadata drawer, previ
       'the outline to reflect the new scene'
     );
 
-    await page.click('#authoringInsertBtn');
+    await page.$eval('#authoringInsertBtn', element => {
+      if (!(element instanceof HTMLElement)) {
+        throw new Error('Expected the insert button.');
+      }
+
+      element.click();
+    });
     await waitForCondition(
       async () => page.$eval('#authoringInsertMenu', element => !element.hidden).catch(() => false),
       'the contextual insert menu for the new scene'
     );
-    await page.click('[data-action="insert-narration"]');
+    await page.$eval('[data-action="insert-narration"]', element => {
+      if (!(element instanceof HTMLElement)) {
+        throw new Error('Expected the narration insert action.');
+      }
+
+      element.click();
+    });
     await page.keyboard.type('Prvo pravimo novu scenu u writer flow-u.');
 
-    await page.click('#authoringInsertBtn');
+    await page.$eval('#authoringInsertBtn', element => {
+      if (!(element instanceof HTMLElement)) {
+        throw new Error('Expected the insert button.');
+      }
+
+      element.click();
+    });
     await waitForCondition(
       async () => page.$eval('#authoringInsertMenu', element => !element.hidden).catch(() => false),
       'the contextual code insert menu'
     );
-    await page.click('[data-action="insert-show-code:html"]');
+    await page.$eval('[data-action="insert-show-code:html"]', element => {
+      if (!(element instanceof HTMLElement)) {
+        throw new Error('Expected the HTML insert action.');
+      }
+
+      element.click();
+    });
     await page.keyboard.type('<div class="smoke-card">Smoke</div>');
 
     await waitForCondition(
@@ -192,6 +205,18 @@ test('browser authoring smoke covers V2 writer body view, metadata drawer, previ
     await waitForCondition(
       async () => page.$('#authoringMetadataDrawer:not([hidden])').then(Boolean),
       'the metadata drawer to open'
+    );
+
+    await waitForCondition(
+      async () => page.evaluate(() => {
+        const lessonIntroEditor = document.querySelector('[data-metadata-prose="lessonIntro"]');
+        const goalCaptionEditor = document.querySelector('[data-metadata-prose="goalImageCaption"]');
+        return lessonIntroEditor instanceof HTMLElement
+          && goalCaptionEditor instanceof HTMLElement
+          && lessonIntroEditor.dataset.editorOwner === 'BlockNote'
+          && goalCaptionEditor.dataset.editorOwner === 'BlockNote';
+      }),
+      'the BlockNote prose editors inside the metadata drawer'
     );
 
     await setMetadataValue(page, 'lessonTitle', 'Authoring Smoke Lesson');
@@ -223,9 +248,9 @@ test('browser authoring smoke covers V2 writer body view, metadata drawer, previ
     await waitForCondition(
       async () => page.evaluate(() => {
         const editor = document.querySelector('#authoringScriptEditor');
-        return editor instanceof HTMLTextAreaElement
-          && !editor.value.includes('lessonTitle: Authoring Smoke Lesson')
-          && editor.value.startsWith('# Step:');
+        return editor instanceof HTMLElement
+          && !editor.authoringEditor.getValue().includes('lessonTitle: Authoring Smoke Lesson')
+          && editor.authoringEditor.getValue().startsWith('# Step:');
       }),
       'SQLite persistence after reload'
     );
@@ -254,13 +279,16 @@ test('browser authoring smoke covers V2 writer body view, metadata drawer, previ
     assert.equal(await readMetadataValue(page, 'lessonId'), 'authoring-smoke-lesson');
     await page.click('[data-action="close-metadata"]');
 
-    await setEditorValue(page, await page.$eval('#authoringScriptEditor', element => {
-      if (!(element instanceof HTMLTextAreaElement)) {
-        throw new Error('Expected the authoring editor textarea.');
+    await page.$eval('#authoringScriptEditor', element => {
+      if (!(element instanceof HTMLElement) || !element.authoringEditor) {
+        throw new Error('Expected the CodeMirror authoring editor host.');
       }
 
-      return `${element.value}\n### Show Code: html\n\`\`\`html\n<div class="broken-preview">Broken</div>`;
-    }));
+      const currentValue = element.authoringEditor.getValue();
+      element.authoringEditor.focus();
+      element.authoringEditor.setSelectionRange(currentValue.length, currentValue.length);
+    });
+    await page.keyboard.type('\n### Show Code: html\n```html\n<div class="broken-preview">Broken</div>');
 
     await waitForCondition(
       async () => page.$eval('#authoringCompileChip', element => element.textContent?.includes('Syntax issue') || false),
@@ -273,13 +301,12 @@ test('browser authoring smoke covers V2 writer body view, metadata drawer, previ
     );
 
     await page.$eval('#authoringScriptEditor', element => {
-      if (!(element instanceof HTMLTextAreaElement)) {
-        throw new Error('Expected the authoring editor textarea.');
+      if (!(element instanceof HTMLElement) || !element.authoringEditor) {
+        throw new Error('Expected the CodeMirror authoring editor host.');
       }
 
-      element.focus();
-      element.setSelectionRange(0, 0);
-      element.dispatchEvent(new MouseEvent('mouseup', { bubbles: true }));
+      element.authoringEditor.focus();
+      element.authoringEditor.setSelectionRange(0, 0);
     });
 
     await waitForCondition(
