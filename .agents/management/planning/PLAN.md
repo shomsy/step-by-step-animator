@@ -21,7 +21,7 @@ Update rules:
 
 ### PLAN-007 | Make UI-backed lesson authoring the canonical source of truth
 - created_at: `2026-03-29 20:20 CEST`
-- updated_at: `2026-03-29 23:33 CEST`
+- updated_at: `2026-03-30 00:54 CEST`
 - status: `in_progress`
 - owner: `codex`
 - estimate: `2-3 iterations`
@@ -69,3 +69,4 @@ Update rules:
   - publish/export can generate filesystem artifacts, but authoring itself does not depend on them
   - legacy file-based shipped lessons remain importable until the migration is complete
   - the author can recover the last healthy compiled draft state or a recoverable snapshot after save
+  - the UI clearly distinguishes Draft Saved, Playable Draft, Published Lesson, and Broken Draft Fallback states

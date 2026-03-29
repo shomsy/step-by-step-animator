@@ -14,7 +14,7 @@ Canonical active implementation queue.
 
 ### TODO-009 | Build the first store-first bridge for UI lesson authoring
 - created_at: `2026-03-29 20:20 CEST`
-- updated_at: `2026-03-29 23:33 CEST`
+- updated_at: `2026-03-30 00:54 CEST`
 - status: `in_progress`
 - owner: `codex`
 - estimate: `1-2 iterations`
@@ -42,6 +42,7 @@ Canonical active implementation queue.
   - the player fails closed to the shipped lesson when the saved draft is broken
   - filesystem artifacts are treated as publish/export output, not the required authoring input
   - the author can recover the last healthy compiled draft state or a recoverable snapshot after save
+  - the UI clearly distinguishes Draft Saved, Playable Draft, Published Lesson, and Broken Draft Fallback states
   - validation proves the bridge from UI draft to playback works end to end
 
 ## Legacy Reference
