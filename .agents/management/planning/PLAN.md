@@ -21,7 +21,7 @@ Update rules:
 
 ### PLAN-003 | Hybrid editor architecture for lesson authoring
 - created_at: `2026-03-29 04:45 CEST`
-- updated_at: `2026-03-29 16:34 CEST`
+- updated_at: `2026-03-29 16:54 CEST`
 - status: `in_progress`
 - owner: `codex`
 - estimate: `1-2 iterations`
@@ -30,7 +30,9 @@ Update rules:
   - keep the DSL lesson script fast and precise while giving prose and metadata a friendlier rich-text surface
   - preserve the writer-first workflow and avoid turning authoring into a generic CMS
   - make Write Mode open on the first real lesson step instead of the raw frontmatter contract
+  - make Write Mode the default authoring surface, with metadata, publishing, and secondary management actions outside the main writing flow
 - visible result:
+  - Write Mode is the default authoring surface
   - CodeMirror-style surface for canonical `lesson.script.md`
   - BlockNote surface for block and prose content
   - CKEditor 5 only if a specific classic WYSIWYG surface still proves necessary
@@ -39,7 +41,12 @@ Update rules:
   - right inspector keeps preview, compile, validation, and snapshot visible while writing
   - outline reads as a compact navigation rail instead of a second dashboard
   - `/ Insert block` becomes the primary authoring path for valid DSL templates
+  - metadata, publishing, and secondary management actions stay out of the main writing flow
 - technical execution:
+  - ownership list:
+    - CodeMirror owns canonical `lesson.script.md` editing
+    - BlockNote owns prose-rich metadata and secondary structured content
+    - CKEditor 5 is out unless a concrete unresolved requirement remains
   - define a canonical lesson model and explicit ownership boundaries per content slice
   - keep `lesson.script.md` as the owner of DSL steps, scenes, narration, and code blocks
   - move prose-rich fields and metadata into a BlockNote-backed drawer or secondary workspace
@@ -68,3 +75,6 @@ Update rules:
   - CKEditor 5 is either justified or removed from the final implementation scope
   - a follow-up TODO can be sliced cleanly from this plan without ambiguity
   - the next executable slice can start from the Write Mode V2 UI rules without any further clarification
+  - opening a lesson must land the author on the first real lesson step, not on frontmatter or system metadata
+  - the right inspector remains visible as a real side panel for preview, compile, validation, and snapshot
+  - slash insert generates valid context-aware DSL templates and remains the primary authoring path

@@ -14,7 +14,7 @@ Canonical active implementation queue.
 
 ### TODO-005 | Implement writer-first Write Mode V2
 - created_at: `2026-03-29 16:34 CEST`
-- updated_at: `2026-03-29 16:34 CEST`
+- updated_at: `2026-03-29 16:54 CEST`
 - status: `in_progress`
 - estimate: `1 iteration`
 - owner: `codex`
@@ -26,11 +26,16 @@ Canonical active implementation queue.
   - make `/ Insert block` the primary context-aware authoring path with valid templates
   - keep Write Mode writer-first and keep admin/studio surfaces secondary
   - define clear ownership for CodeMirror, BlockNote, and CKEditor 5 so multiple editors never fight over the same raw content
+  - make Write Mode the default authoring surface and keep metadata, publishing, and secondary management actions out of the main writing flow
+- editor ownership:
+  - CodeMirror owns canonical `lesson.script.md` editing
+  - BlockNote owns prose-rich metadata and secondary structured content
+  - CKEditor 5 is out unless a concrete unresolved requirement remains
 - acceptance criteria:
-  - opening a lesson shows the first `Step`, not the frontmatter
-  - the inspector stays visible and useful without switching modes
+  - opening a lesson must land the author on the first real lesson step, not on frontmatter or system metadata
+  - the right inspector remains visible as a real side panel for preview, compile, validation, and snapshot
   - outline navigation is compact and secondary to the editor
-  - slash insert opens the correct context-aware DSL menu
+  - slash insert generates valid context-aware DSL templates and remains the primary authoring path
   - BlockNote is used where prose/block authoring is a better fit, not as a second source of truth
   - CKEditor 5 is only kept if a specific WYSIWYG surface still justifies it
   - the canonical lesson script remains the owned source of truth
