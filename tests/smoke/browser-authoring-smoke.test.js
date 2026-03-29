@@ -525,6 +525,42 @@ test('browser authoring smoke covers V2 writer body view, metadata drawer, previ
       'the preview iframe to stay populated'
     );
 
+    await page.click('#authoringMetadataBtn');
+    await waitForCondition(
+      async () => page.$('#authoringMetadataDrawer:not([hidden])').then(Boolean),
+      'the metadata drawer to reopen before the restore test'
+    );
+    await setMetadataValue(page, 'lessonTitle', 'Authoring Smoke Lesson Recovery');
+    await page.click('[data-action="apply-metadata"]');
+
+    await waitForCondition(
+      async () => page.$eval('#authoringLessonTitle', element => element.textContent?.includes('Recovery') || false),
+      'the recovery title to appear before restoring the published snapshot'
+    );
+
+    await page.click('[data-action="close-metadata"]');
+    await waitForCondition(
+      async () => page.$('#authoringMetadataDrawer[hidden]').then(Boolean),
+      'the metadata drawer to close before restoring the published snapshot'
+    );
+
+    await openPopoverAndClick(page, '#authoringMoreBtn', '#authoringMoreMenu', '[data-action^="restore-version:"]');
+
+    await waitForCondition(
+      async () => page.$eval('#authoringStatus', element => element.textContent?.includes('Published snapshot restored into the draft.') || false),
+      'the published snapshot to restore back into the draft'
+    );
+
+    await waitForCondition(
+      async () => page.$eval('#authoringLessonTitle', element => element.textContent?.includes('Authoring Smoke Lesson') && !element.textContent?.includes('Recovery') || false),
+      'the restored title to match the published snapshot again'
+    );
+
+    await waitForCondition(
+      async () => page.$eval('#authoringSaveState', element => element.textContent?.includes('Draft Saved') || false),
+      'the restored draft to return to a saved state'
+    );
+
     await page.reload({ waitUntil: 'domcontentloaded' });
 
     await waitForCondition(

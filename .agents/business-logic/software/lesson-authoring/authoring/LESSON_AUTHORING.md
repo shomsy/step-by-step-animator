@@ -182,6 +182,20 @@ Rules:
 - the normal player should prefer the latest healthy saved paired draft for the same shipped lesson so the author sees what was just saved
 - invalid saved drafts must fail closed back to the shipped lesson package instead of breaking the normal player path
 
+### 3.0.2 UI-Backed Draft Truth And Recovery
+
+Write Mode treats the authoring store as the canonical draft truth for in-progress lessons.
+
+Rules:
+
+- `Save` persists draft content to the authoring store only
+- `Play` uses the latest healthy saved draft from the authoring store
+- `Publish` stores a recoverable version snapshot in the authoring store
+- `Export` is a separate packaging action and does not make filesystem source files part of the authoring critical path
+- a new lesson can start entirely from the UI without any pre-existing folder or source scaffold
+- the UI must distinguish `Draft Saved`, `Unsaved Changes`, `Playable Draft`, `Broken Draft Fallback`, `Published Lesson`, and `No Draft`
+- a restored version snapshot should return the draft to a recoverable saved state, not become a competing source of truth
+
 ### 3.1 `lesson.md`
 
 `lesson.md` is the manifest and metadata source of truth.

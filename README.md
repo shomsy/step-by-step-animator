@@ -169,6 +169,12 @@ The browser app now exposes a dedicated authoring workspace at `?workspace=autho
 - the editor remains DSL-aware, with slash-triggered block insertion and inline `+ Insert Block` authoring
 - drafts still compile back through the same lesson engine contract before save and publish
 - the normal player prefers the latest healthy saved paired draft for the selected shipped lesson; broken saved drafts fail closed back to the shipped lesson package
+- the authoring state model is explicit: `Draft Saved`, `Unsaved Changes`, `Playable Draft`, `Broken Draft Fallback`, `Published Lesson`, and `No Draft`
+- `Save` persists draft content to SQLite only
+- `Play` uses the latest healthy saved draft, or fails closed to the shipped lesson package when the saved draft is unhealthy
+- `Publish` stores a recoverable version snapshot in SQLite
+- `Export` downloads the current `lesson.script.md`, but filesystem materialization is not required for day-to-day authoring
+- a restored version snapshot should return the draft to a recoverable saved state instead of acting like a second source of truth
 
 ## Notes
 

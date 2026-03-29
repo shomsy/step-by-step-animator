@@ -9448,6 +9448,20 @@ Rules:
 - the normal player should prefer the latest healthy saved paired draft for the same shipped lesson so the author sees what was just saved
 - invalid saved drafts must fail closed back to the shipped lesson package instead of breaking the normal player path
 
+### 3.0.2 UI-Backed Draft Truth And Recovery
+
+Write Mode treats the authoring store as the canonical draft truth for in-progress lessons.
+
+Rules:
+
+- `Save` persists draft content to the authoring store only
+- `Play` uses the latest healthy saved draft from the authoring store
+- `Publish` stores a recoverable version snapshot in the authoring store
+- `Export` is a separate packaging action and does not make filesystem source files part of the authoring critical path
+- a new lesson can start entirely from the UI without any pre-existing folder or source scaffold
+- the UI must distinguish `Draft Saved`, `Unsaved Changes`, `Playable Draft`, `Broken Draft Fallback`, `Published Lesson`, and `No Draft`
+- a restored version snapshot should return the draft to a recoverable saved state, not become a competing source of truth
+
 ### 3.1 `lesson.md`
 
 `lesson.md` is the manifest and metadata source of truth.
@@ -10612,6 +10626,9 @@ Update rules:
 
 ## Current Ledger
 
+1. `[review][medium] 2026-03-30 01:15 CEST - Closed TODO-010 by locking the UI-backed authoring contract into shared runtime-state labels, documenting Save / Play / Publish semantics, and adding browser smoke coverage for restoring a published version snapshot back into the draft`
+   owner: codex
+   actual: 1h 15m
 1. `[review][medium] 2026-03-30 01:04 CEST - Closed TODO-009 and the UI-backed authoring review loop by shipping the store-first UI lesson bridge, explicit Draft Saved / Playable Draft / Published Lesson / Broken Draft Fallback state labels, and end-to-end coverage for save, publish, and fail-closed playback`
    owner: codex
    actual: 2h 30m
@@ -10830,6 +10847,7 @@ The active implementation queue lives in `.agents/management/TODO.md`.
 The evidence ledger lives in `.agents/management/evidence/CHANGELOG.md`.
 
 - 2026-03-29 20:20 CEST - PLAN-006 completed: shipped a read-only player draft-override seam so the normal player prefers the latest healthy saved paired draft, fails closed to the shipped lesson when the saved draft is broken, and keeps the lesson picker deterministic.
+- 2026-03-30 01:15 CEST - PLAN-008 completed: tightened the UI-backed authoring contract with a shared runtime-state module, explicit Save/Play/Publish labels, a browser restore-version recovery proof, and updated authoring docs so the draft/play/publish contract stays explicit.
 - 2026-03-30 01:04 CEST - PLAN-007 completed: shipped the UI-backed lesson authoring bridge so Write Mode owns draft creation, save/reopen, playability state, published snapshot visibility, and fail-closed fallback semantics without requiring filesystem source scaffolds during authoring.
 - 2026-03-29 19:36 CEST - PLAN-005 completed: removed large-paste friction from Write Mode by deferring heavy analysis after document edits, keeping cursor-only updates cheap, and safely importing full lesson sources through the body-first editor without duplicating hidden frontmatter.
 - 2026-03-29 18:29 CEST - PLAN-004 completed: tightened Write Mode runtime into a calmer writer-first workspace by lightening the outline rail, strengthening the DSL hierarchy, making slash insert more explicit, improving exact validation jumps, and closing TODO-006 with a zero-finding cold review.
@@ -11483,6 +11501,12 @@ The browser app now exposes a dedicated authoring workspace at `?workspace=autho
 - the editor remains DSL-aware, with slash-triggered block insertion and inline `+ Insert Block` authoring
 - drafts still compile back through the same lesson engine contract before save and publish
 - the normal player prefers the latest healthy saved paired draft for the selected shipped lesson; broken saved drafts fail closed back to the shipped lesson package
+- the authoring state model is explicit: `Draft Saved`, `Unsaved Changes`, `Playable Draft`, `Broken Draft Fallback`, `Published Lesson`, and `No Draft`
+- `Save` persists draft content to SQLite only
+- `Play` uses the latest healthy saved draft, or fails closed to the shipped lesson package when the saved draft is unhealthy
+- `Publish` stores a recoverable version snapshot in SQLite
+- `Export` downloads the current `lesson.script.md`, but filesystem materialization is not required for day-to-day authoring
+- a restored version snapshot should return the draft to a recoverable saved state instead of acting like a second source of truth
 
 ## Notes
 
@@ -87212,6 +87236,11 @@ export function presentLessonPicker({
 }
 
 === system/animator-engine/choose-lesson/select-lesson-from-location.js ===
+import {
+  LESSON_RUNTIME_SOURCE,
+  LESSON_RUNTIME_SOURCE_LABELS
+} from '../../author-lessons/lesson-runtime-state.js';
+
 async function resolveSavedDraftLessonOverride({
   ownerWindow,
   shippedLessonId,
@@ -87236,8 +87265,8 @@ async function resolveSavedDraftLessonOverride({
 function annotatePublishedLesson(lesson) {
   return {
     ...lesson,
-    lessonRuntimeSource: lesson.lessonRuntimeSource || 'published',
-    lessonRuntimeSourceLabel: lesson.lessonRuntimeSourceLabel || 'Published Lesson · shipped package'
+    lessonRuntimeSource: lesson.lessonRuntimeSource || LESSON_RUNTIME_SOURCE.PUBLISHED,
+    lessonRuntimeSourceLabel: lesson.lessonRuntimeSourceLabel || LESSON_RUNTIME_SOURCE_LABELS.PUBLISHED
   };
 }
 
@@ -87246,21 +87275,21 @@ function normalizeDraftLesson(lesson) {
     return null;
   }
 
-  if (lesson.lessonRuntimeSource === 'broken-draft-fallback') {
+  if (lesson.lessonRuntimeSource === LESSON_RUNTIME_SOURCE.BROKEN_DRAFT_FALLBACK) {
     return lesson;
   }
 
-  if (lesson.lessonRuntimeSource === 'playable-draft') {
+  if (lesson.lessonRuntimeSource === LESSON_RUNTIME_SOURCE.PLAYABLE_DRAFT) {
     return {
       ...lesson,
-      lessonRuntimeSourceLabel: lesson.lessonRuntimeSourceLabel || 'Playable Draft'
+      lessonRuntimeSourceLabel: lesson.lessonRuntimeSourceLabel || LESSON_RUNTIME_SOURCE_LABELS.PLAYABLE_DRAFT
     };
   }
 
   return {
     ...lesson,
-    lessonRuntimeSource: 'playable-draft',
-    lessonRuntimeSourceLabel: lesson.lessonRuntimeSourceLabel || 'Playable Draft'
+    lessonRuntimeSource: LESSON_RUNTIME_SOURCE.PLAYABLE_DRAFT,
+    lessonRuntimeSourceLabel: lesson.lessonRuntimeSourceLabel || LESSON_RUNTIME_SOURCE_LABELS.PLAYABLE_DRAFT
   };
 }
 
@@ -87299,7 +87328,7 @@ export async function selectLessonFromLocation({
 
   const normalizedDraftLesson = normalizeDraftLesson(savedDraftLesson);
   const lesson = normalizedDraftLesson || annotatePublishedLesson(shippedLesson);
-  const lessons = normalizedDraftLesson?.lessonRuntimeSource === 'playable-draft'
+  const lessons = normalizedDraftLesson?.lessonRuntimeSource === LESSON_RUNTIME_SOURCE.PLAYABLE_DRAFT
     ? registeredLessons.map(registeredLesson => registeredLesson.lessonId === selectedLesson.lessonId
       ? {
           ...registeredLesson,
@@ -87427,6 +87456,10 @@ export function findLessonParts(ownerDocument) {
 
 === system/animator-engine/play-lesson/01-start-lesson/show-lesson-shell.js ===
 import { escapeInlineText } from '../escape-inline-text.js';
+import {
+  readLessonRuntimeLabel,
+  readLessonRuntimeTone
+} from '../../../author-lessons/lesson-runtime-state.js';
 
 function hideLessonGoal(lessonParts) {
   lessonParts.lessonGoal.hidden = true;
@@ -87459,26 +87492,6 @@ function showLessonGoal({ lessonParts, lesson }) {
   lessonParts.goalHomeworkList.innerHTML = homeworkItems
     .map(item => `<li>${escapeInlineText(item)}</li>`)
     .join('');
-}
-
-function readLessonRuntimeLabel(lesson) {
-  if (typeof lesson?.lessonRuntimeSourceLabel === 'string' && lesson.lessonRuntimeSourceLabel.trim()) {
-    return lesson.lessonRuntimeSourceLabel.trim();
-  }
-
-  return 'Published Lesson · shipped package';
-}
-
-function readLessonRuntimeTone(lesson) {
-  if (lesson?.lessonRuntimeSource === 'playable-draft') {
-    return 'success';
-  }
-
-  if (lesson?.lessonRuntimeSource === 'broken-draft-fallback') {
-    return 'warning';
-  }
-
-  return 'accent';
 }
 
 export function showLessonShell({ ownerDocument, lessonParts, lesson }) {
@@ -93124,6 +93137,137 @@ export function createMetadataProseEditor({
   };
 }
 
+=== system/author-lessons/lesson-runtime-state.js ===
+export const LESSON_RUNTIME_SOURCE = Object.freeze({
+  PUBLISHED: 'published',
+  PLAYABLE_DRAFT: 'playable-draft',
+  BROKEN_DRAFT_FALLBACK: 'broken-draft-fallback'
+});
+
+export const LESSON_RUNTIME_SOURCE_LABELS = Object.freeze({
+  PUBLISHED: 'Published Lesson · shipped package',
+  PLAYABLE_DRAFT: 'Playable Draft',
+  BROKEN_DRAFT_FALLBACK: 'Broken Draft Fallback · Shipped lesson package'
+});
+
+export function readLessonRuntimeLabel(lesson) {
+  if (typeof lesson?.lessonRuntimeSourceLabel === 'string' && lesson.lessonRuntimeSourceLabel.trim()) {
+    return lesson.lessonRuntimeSourceLabel.trim();
+  }
+
+  if (lesson?.lessonRuntimeSource === LESSON_RUNTIME_SOURCE.PLAYABLE_DRAFT) {
+    return LESSON_RUNTIME_SOURCE_LABELS.PLAYABLE_DRAFT;
+  }
+
+  if (lesson?.lessonRuntimeSource === LESSON_RUNTIME_SOURCE.BROKEN_DRAFT_FALLBACK) {
+    return LESSON_RUNTIME_SOURCE_LABELS.BROKEN_DRAFT_FALLBACK;
+  }
+
+  return LESSON_RUNTIME_SOURCE_LABELS.PUBLISHED;
+}
+
+export function readLessonRuntimeTone(lesson) {
+  if (lesson?.lessonRuntimeSource === LESSON_RUNTIME_SOURCE.PLAYABLE_DRAFT) {
+    return 'success';
+  }
+
+  if (lesson?.lessonRuntimeSource === LESSON_RUNTIME_SOURCE.BROKEN_DRAFT_FALLBACK) {
+    return 'warning';
+  }
+
+  return 'accent';
+}
+
+export function readPlayableDraftRuntimeLabel(updatedAt) {
+  const normalizedUpdatedAt = String(updatedAt || '').trim();
+
+  return normalizedUpdatedAt
+    ? `Playable Draft · SQLite · ${normalizedUpdatedAt}`
+    : 'Playable Draft · SQLite';
+}
+
+export function readAuthoringSaveState({ hasDraft, dirty }) {
+  if (!hasDraft) {
+    return {
+      label: 'No Draft',
+      tone: 'muted'
+    };
+  }
+
+  return dirty
+    ? {
+        label: 'Unsaved Changes',
+        tone: 'warning'
+      }
+    : {
+        label: 'Draft Saved',
+        tone: 'success'
+      };
+}
+
+export function readAuthoringCompileState({
+  hasDraft,
+  analysisPending,
+  parseErrorMessage,
+  compileErrorMessage,
+  compiledLesson,
+  hasShippedFallback
+}) {
+  if (!hasDraft) {
+    return {
+      label: 'No Draft',
+      tone: 'muted'
+    };
+  }
+
+  if (analysisPending) {
+    return {
+      label: 'Checking Playability…',
+      tone: 'muted'
+    };
+  }
+
+  if (parseErrorMessage || compileErrorMessage) {
+    return {
+      label: hasShippedFallback ? 'Broken Draft Fallback' : 'Broken Draft',
+      tone: 'danger'
+    };
+  }
+
+  if (compiledLesson) {
+    return {
+      label: `Playable Draft · ${compiledLesson.steps.length} steps`,
+      tone: 'success'
+    };
+  }
+
+  return {
+    label: 'Draft Not Ready',
+    tone: 'muted'
+  };
+}
+
+export function readAuthoringPublishState({ hasDraft, versionCount }) {
+  if (!hasDraft) {
+    return {
+      label: 'No Draft',
+      tone: 'muted'
+    };
+  }
+
+  if (versionCount > 0) {
+    return {
+      label: 'Published Lesson',
+      tone: 'success'
+    };
+  }
+
+  return {
+    label: 'Not Published',
+    tone: 'muted'
+  };
+}
+
 === system/author-lessons/lesson-script-workbench.js ===
 import { normalizeString } from '../lesson-engine/build-compiled-lesson.js';
 
@@ -94552,6 +94696,11 @@ export async function readPersistedPlayableDraftOverride({
 === system/author-lessons/read-playable-draft-override.js ===
 import { compileLessonScript } from '../lesson-engine/compile-lesson-script.js';
 import { readPersistedPlayableDraftOverride } from './open-authoring-sqlite.js';
+import {
+  LESSON_RUNTIME_SOURCE,
+  LESSON_RUNTIME_SOURCE_LABELS,
+  readPlayableDraftRuntimeLabel
+} from './lesson-runtime-state.js';
 
 function readGoalImageOverride(shippedLesson) {
   return typeof shippedLesson?.goalImageSrc === 'string'
@@ -94596,23 +94745,23 @@ export async function readPlayableDraftOverride({
       if (compiledDraftLesson.lessonId !== shippedLessonId) {
         return annotateLessonRuntime(
           shippedLesson,
-          'broken-draft-fallback',
-          'Broken Draft Fallback · Shipped lesson package',
+          LESSON_RUNTIME_SOURCE.BROKEN_DRAFT_FALLBACK,
+          LESSON_RUNTIME_SOURCE_LABELS.BROKEN_DRAFT_FALLBACK,
           draftOverride.draftId
         );
       }
 
       return annotateLessonRuntime(
         compiledDraftLesson,
-        'playable-draft',
-        `Playable Draft · SQLite · ${draftOverride.updatedAt}`,
+        LESSON_RUNTIME_SOURCE.PLAYABLE_DRAFT,
+        readPlayableDraftRuntimeLabel(draftOverride.updatedAt),
         draftOverride.draftId
       );
     } catch {
       return annotateLessonRuntime(
         shippedLesson,
-        'broken-draft-fallback',
-        'Broken Draft Fallback · Shipped lesson package',
+        LESSON_RUNTIME_SOURCE.BROKEN_DRAFT_FALLBACK,
+        LESSON_RUNTIME_SOURCE_LABELS.BROKEN_DRAFT_FALLBACK,
         draftOverride.draftId
       );
     }
@@ -94655,6 +94804,11 @@ import { openAuthoringSqlite } from './open-authoring-sqlite.js';
 import { readShippedLessonScripts } from './read-shipped-lesson-scripts.js';
 import { readLessonScript } from '../lesson-engine/read-lesson-script.js';
 import { parseFrontmatter } from '../foundation/frontmatter/parse-frontmatter.js';
+import {
+  readAuthoringCompileState,
+  readAuthoringPublishState,
+  readAuthoringSaveState
+} from './lesson-runtime-state.js';
 import {
   buildInsertMenuItems,
   buildInsertSnippet,
@@ -94893,64 +95047,6 @@ function readSourceEditorOffset(state, visibleOffset) {
 
 function readVisibleLineNumber(state, sourceLineNumber) {
   return Math.max(1, Number(sourceLineNumber || 1) - ((state.writerView?.startLineNumber || 1) - 1));
-}
-
-function buildSaveChipLabel(state) {
-  return state.dirty ? 'Unsaved Changes' : 'Draft Saved';
-}
-
-function buildSaveChipTone(state) {
-  return state.dirty ? 'warning' : 'success';
-}
-
-function buildCompileChipTone(state) {
-  if (state.analysisPending) {
-    return 'muted';
-  }
-
-  if (state.analysis?.parseErrorMessage || state.analysis?.compileErrorMessage) {
-    return 'danger';
-  }
-
-  if (state.analysis?.compiledLesson) {
-    return 'success';
-  }
-
-  return 'muted';
-}
-
-function buildCompileChipLabel(state) {
-  if (state.analysisPending) {
-    return 'Checking Playability…';
-  }
-
-  if (state.analysis?.parseErrorMessage) {
-    return state.workspaceSnapshot.selectedDraft?.shippedLessonId
-      ? 'Broken Draft Fallback'
-      : 'Broken Draft';
-  }
-
-  if (state.analysis?.compileErrorMessage) {
-    return state.workspaceSnapshot.selectedDraft?.shippedLessonId
-      ? 'Broken Draft Fallback'
-      : 'Broken Draft';
-  }
-
-  if (state.analysis?.compiledLesson) {
-    return `Playable Draft · ${state.analysis.compiledLesson.steps.length} steps`;
-  }
-
-  return 'Draft Not Ready';
-}
-
-function buildPublishChipTone(state) {
-  return state.workspaceSnapshot.selectedDraft?.versions?.length ? 'success' : 'muted';
-}
-
-function buildPublishChipLabel(state) {
-  return state.workspaceSnapshot.selectedDraft?.versions?.length
-    ? 'Published Lesson'
-    : 'Not Published';
 }
 
 function buildContextLabel(context) {
@@ -96065,16 +96161,32 @@ function renderWorkspace(state, parts) {
   const previewModel = readPreviewModel(state);
   const selectedArtifactId = readSelectedArtifactId(state, previewModel);
   const previewDocument = buildPreviewDocument(previewModel);
+  const saveState = readAuthoringSaveState({
+    hasDraft: Boolean(selectedDraft),
+    dirty: state.dirty
+  });
+  const compileState = readAuthoringCompileState({
+    hasDraft: Boolean(selectedDraft),
+    analysisPending: state.analysisPending,
+    parseErrorMessage: state.analysis?.parseErrorMessage,
+    compileErrorMessage: state.analysis?.compileErrorMessage,
+    compiledLesson: state.analysis?.compiledLesson,
+    hasShippedFallback: Boolean(selectedDraft?.shippedLessonId)
+  });
+  const publishState = readAuthoringPublishState({
+    hasDraft: Boolean(selectedDraft),
+    versionCount: selectedDraft?.versions?.length || 0
+  });
 
   state.currentArtifactId = selectedArtifactId;
   parts.lessonTitle.textContent = buildHeaderTitle(state);
   parts.lessonMeta.textContent = buildHeaderMeta(state);
-  parts.saveState.textContent = buildSaveChipLabel(state);
-  parts.saveState.dataset.tone = buildSaveChipTone(state);
-  parts.compileChip.textContent = buildCompileChipLabel(state);
-  parts.compileChip.dataset.tone = buildCompileChipTone(state);
-  parts.publishState.textContent = buildPublishChipLabel(state);
-  parts.publishState.dataset.tone = buildPublishChipTone(state);
+  parts.saveState.textContent = saveState.label;
+  parts.saveState.dataset.tone = saveState.tone;
+  parts.compileChip.textContent = compileState.label;
+  parts.compileChip.dataset.tone = compileState.tone;
+  parts.publishState.textContent = publishState.label;
+  parts.publishState.dataset.tone = publishState.tone;
   parts.status.textContent = buildStatusMessage(state);
   parts.status.dataset.tone = buildStatusMessageTone(state);
   parts.outline.innerHTML = buildOutlineMarkup(state);
@@ -96093,8 +96205,8 @@ function renderWorkspace(state, parts) {
   renderMetadataDrawer(state, parts);
   parts.cursorInfo.textContent = buildContextLabel(context);
   parts.lineBadge.textContent = `Line ${readVisibleLineNumber(state, context.lineNumber || 1)}`;
-  parts.dirtyBadge.textContent = buildSaveChipLabel(state);
-  parts.dirtyBadge.dataset.tone = state.dirty ? 'warning' : 'success';
+  parts.dirtyBadge.textContent = saveState.label;
+  parts.dirtyBadge.dataset.tone = saveState.tone;
   parts.insertButton.textContent = buildInsertButtonLabel(context);
   parts.insertButton.title = 'Use / on an empty line or Ctrl/Cmd + K to open the insert menu.';
   parts.insertHint.innerHTML = buildInsertHintText(context);
@@ -102100,6 +102212,108 @@ test('compileLessonScript rejects unknown scene artifacts', () => {
   }), /unknown artifact/);
 });
 
+=== tests/contracts/lesson-runtime-state.test.js ===
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import {
+  LESSON_RUNTIME_SOURCE,
+  LESSON_RUNTIME_SOURCE_LABELS,
+  readAuthoringCompileState,
+  readAuthoringPublishState,
+  readAuthoringSaveState,
+  readLessonRuntimeLabel,
+  readLessonRuntimeTone,
+  readPlayableDraftRuntimeLabel
+} from '../../system/author-lessons/lesson-runtime-state.js';
+
+test('lesson runtime state labels remain explicit and stable', () => {
+  assert.deepEqual(LESSON_RUNTIME_SOURCE, {
+    PUBLISHED: 'published',
+    PLAYABLE_DRAFT: 'playable-draft',
+    BROKEN_DRAFT_FALLBACK: 'broken-draft-fallback'
+  });
+
+  assert.deepEqual(LESSON_RUNTIME_SOURCE_LABELS, {
+    PUBLISHED: 'Published Lesson · shipped package',
+    PLAYABLE_DRAFT: 'Playable Draft',
+    BROKEN_DRAFT_FALLBACK: 'Broken Draft Fallback · Shipped lesson package'
+  });
+
+  assert.equal(readPlayableDraftRuntimeLabel('2026-03-30 01:15 CEST'), 'Playable Draft · SQLite · 2026-03-30 01:15 CEST');
+  assert.equal(readLessonRuntimeLabel({
+    lessonRuntimeSource: LESSON_RUNTIME_SOURCE.PLAYABLE_DRAFT
+  }), 'Playable Draft');
+  assert.equal(readLessonRuntimeTone({
+    lessonRuntimeSource: LESSON_RUNTIME_SOURCE.BROKEN_DRAFT_FALLBACK
+  }), 'warning');
+});
+
+test('authoring state helpers distinguish saved, playable, published, and recovery states', () => {
+  assert.deepEqual(readAuthoringSaveState({
+    hasDraft: false,
+    dirty: false
+  }), {
+    label: 'No Draft',
+    tone: 'muted'
+  });
+
+  assert.deepEqual(readAuthoringSaveState({
+    hasDraft: true,
+    dirty: true
+  }), {
+    label: 'Unsaved Changes',
+    tone: 'warning'
+  });
+
+  assert.deepEqual(readAuthoringSaveState({
+    hasDraft: true,
+    dirty: false
+  }), {
+    label: 'Draft Saved',
+    tone: 'success'
+  });
+
+  assert.deepEqual(readAuthoringCompileState({
+    hasDraft: true,
+    analysisPending: false,
+    parseErrorMessage: '',
+    compileErrorMessage: '',
+    compiledLesson: { steps: [{}, {}] },
+    hasShippedFallback: false
+  }), {
+    label: 'Playable Draft · 2 steps',
+    tone: 'success'
+  });
+
+  assert.deepEqual(readAuthoringCompileState({
+    hasDraft: true,
+    analysisPending: false,
+    parseErrorMessage: 'Broken parse',
+    compileErrorMessage: '',
+    compiledLesson: null,
+    hasShippedFallback: true
+  }), {
+    label: 'Broken Draft Fallback',
+    tone: 'danger'
+  });
+
+  assert.deepEqual(readAuthoringPublishState({
+    hasDraft: true,
+    versionCount: 0
+  }), {
+    label: 'Not Published',
+    tone: 'muted'
+  });
+
+  assert.deepEqual(readAuthoringPublishState({
+    hasDraft: true,
+    versionCount: 1
+  }), {
+    label: 'Published Lesson',
+    tone: 'success'
+  });
+});
+
 === tests/contracts/read-lesson-script.test.js ===
 import test from 'node:test';
 import assert from 'node:assert/strict';
@@ -103760,6 +103974,42 @@ test('browser authoring smoke covers V2 writer body view, metadata drawer, previ
     await waitForCondition(
       async () => page.$eval('#authoringPreviewFrame', frame => (frame.getAttribute('srcdoc') || '').includes('smoke-card')),
       'the preview iframe to stay populated'
+    );
+
+    await page.click('#authoringMetadataBtn');
+    await waitForCondition(
+      async () => page.$('#authoringMetadataDrawer:not([hidden])').then(Boolean),
+      'the metadata drawer to reopen before the restore test'
+    );
+    await setMetadataValue(page, 'lessonTitle', 'Authoring Smoke Lesson Recovery');
+    await page.click('[data-action="apply-metadata"]');
+
+    await waitForCondition(
+      async () => page.$eval('#authoringLessonTitle', element => element.textContent?.includes('Recovery') || false),
+      'the recovery title to appear before restoring the published snapshot'
+    );
+
+    await page.click('[data-action="close-metadata"]');
+    await waitForCondition(
+      async () => page.$('#authoringMetadataDrawer[hidden]').then(Boolean),
+      'the metadata drawer to close before restoring the published snapshot'
+    );
+
+    await openPopoverAndClick(page, '#authoringMoreBtn', '#authoringMoreMenu', '[data-action^="restore-version:"]');
+
+    await waitForCondition(
+      async () => page.$eval('#authoringStatus', element => element.textContent?.includes('Published snapshot restored into the draft.') || false),
+      'the published snapshot to restore back into the draft'
+    );
+
+    await waitForCondition(
+      async () => page.$eval('#authoringLessonTitle', element => element.textContent?.includes('Authoring Smoke Lesson') && !element.textContent?.includes('Recovery') || false),
+      'the restored title to match the published snapshot again'
+    );
+
+    await waitForCondition(
+      async () => page.$eval('#authoringSaveState', element => element.textContent?.includes('Draft Saved') || false),
+      'the restored draft to return to a saved state'
     );
 
     await page.reload({ waitUntil: 'domcontentloaded' });

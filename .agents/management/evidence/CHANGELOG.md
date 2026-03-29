@@ -15,6 +15,9 @@ Update rules:
 
 ## Current Ledger
 
+1. `[review][medium] 2026-03-30 01:15 CEST - Closed TODO-010 by locking the UI-backed authoring contract into shared runtime-state labels, documenting Save / Play / Publish semantics, and adding browser smoke coverage for restoring a published version snapshot back into the draft`
+   owner: codex
+   actual: 1h 15m
 1. `[review][medium] 2026-03-30 01:04 CEST - Closed TODO-009 and the UI-backed authoring review loop by shipping the store-first UI lesson bridge, explicit Draft Saved / Playable Draft / Published Lesson / Broken Draft Fallback state labels, and end-to-end coverage for save, publish, and fail-closed playback`
    owner: codex
    actual: 2h 30m

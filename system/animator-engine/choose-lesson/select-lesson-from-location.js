@@ -1,3 +1,8 @@
+import {
+  LESSON_RUNTIME_SOURCE,
+  LESSON_RUNTIME_SOURCE_LABELS
+} from '../../author-lessons/lesson-runtime-state.js';
+
 async function resolveSavedDraftLessonOverride({
   ownerWindow,
   shippedLessonId,
@@ -22,8 +27,8 @@ async function resolveSavedDraftLessonOverride({
 function annotatePublishedLesson(lesson) {
   return {
     ...lesson,
-    lessonRuntimeSource: lesson.lessonRuntimeSource || 'published',
-    lessonRuntimeSourceLabel: lesson.lessonRuntimeSourceLabel || 'Published Lesson · shipped package'
+    lessonRuntimeSource: lesson.lessonRuntimeSource || LESSON_RUNTIME_SOURCE.PUBLISHED,
+    lessonRuntimeSourceLabel: lesson.lessonRuntimeSourceLabel || LESSON_RUNTIME_SOURCE_LABELS.PUBLISHED
   };
 }
 
@@ -32,21 +37,21 @@ function normalizeDraftLesson(lesson) {
     return null;
   }
 
-  if (lesson.lessonRuntimeSource === 'broken-draft-fallback') {
+  if (lesson.lessonRuntimeSource === LESSON_RUNTIME_SOURCE.BROKEN_DRAFT_FALLBACK) {
     return lesson;
   }
 
-  if (lesson.lessonRuntimeSource === 'playable-draft') {
+  if (lesson.lessonRuntimeSource === LESSON_RUNTIME_SOURCE.PLAYABLE_DRAFT) {
     return {
       ...lesson,
-      lessonRuntimeSourceLabel: lesson.lessonRuntimeSourceLabel || 'Playable Draft'
+      lessonRuntimeSourceLabel: lesson.lessonRuntimeSourceLabel || LESSON_RUNTIME_SOURCE_LABELS.PLAYABLE_DRAFT
     };
   }
 
   return {
     ...lesson,
-    lessonRuntimeSource: 'playable-draft',
-    lessonRuntimeSourceLabel: lesson.lessonRuntimeSourceLabel || 'Playable Draft'
+    lessonRuntimeSource: LESSON_RUNTIME_SOURCE.PLAYABLE_DRAFT,
+    lessonRuntimeSourceLabel: lesson.lessonRuntimeSourceLabel || LESSON_RUNTIME_SOURCE_LABELS.PLAYABLE_DRAFT
   };
 }
 
@@ -85,7 +90,7 @@ export async function selectLessonFromLocation({
 
   const normalizedDraftLesson = normalizeDraftLesson(savedDraftLesson);
   const lesson = normalizedDraftLesson || annotatePublishedLesson(shippedLesson);
-  const lessons = normalizedDraftLesson?.lessonRuntimeSource === 'playable-draft'
+  const lessons = normalizedDraftLesson?.lessonRuntimeSource === LESSON_RUNTIME_SOURCE.PLAYABLE_DRAFT
     ? registeredLessons.map(registeredLesson => registeredLesson.lessonId === selectedLesson.lessonId
       ? {
           ...registeredLesson,

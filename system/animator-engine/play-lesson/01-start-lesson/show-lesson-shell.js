@@ -1,4 +1,8 @@
 import { escapeInlineText } from '../escape-inline-text.js';
+import {
+  readLessonRuntimeLabel,
+  readLessonRuntimeTone
+} from '../../../author-lessons/lesson-runtime-state.js';
 
 function hideLessonGoal(lessonParts) {
   lessonParts.lessonGoal.hidden = true;
@@ -31,26 +35,6 @@ function showLessonGoal({ lessonParts, lesson }) {
   lessonParts.goalHomeworkList.innerHTML = homeworkItems
     .map(item => `<li>${escapeInlineText(item)}</li>`)
     .join('');
-}
-
-function readLessonRuntimeLabel(lesson) {
-  if (typeof lesson?.lessonRuntimeSourceLabel === 'string' && lesson.lessonRuntimeSourceLabel.trim()) {
-    return lesson.lessonRuntimeSourceLabel.trim();
-  }
-
-  return 'Published Lesson · shipped package';
-}
-
-function readLessonRuntimeTone(lesson) {
-  if (lesson?.lessonRuntimeSource === 'playable-draft') {
-    return 'success';
-  }
-
-  if (lesson?.lessonRuntimeSource === 'broken-draft-fallback') {
-    return 'warning';
-  }
-
-  return 'accent';
 }
 
 export function showLessonShell({ ownerDocument, lessonParts, lesson }) {

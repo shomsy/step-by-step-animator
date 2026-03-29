@@ -6,6 +6,11 @@ import { readShippedLessonScripts } from './read-shipped-lesson-scripts.js';
 import { readLessonScript } from '../lesson-engine/read-lesson-script.js';
 import { parseFrontmatter } from '../foundation/frontmatter/parse-frontmatter.js';
 import {
+  readAuthoringCompileState,
+  readAuthoringPublishState,
+  readAuthoringSaveState
+} from './lesson-runtime-state.js';
+import {
   buildInsertMenuItems,
   buildInsertSnippet,
   readEditorContextFromScan,
@@ -243,80 +248,6 @@ function readSourceEditorOffset(state, visibleOffset) {
 
 function readVisibleLineNumber(state, sourceLineNumber) {
   return Math.max(1, Number(sourceLineNumber || 1) - ((state.writerView?.startLineNumber || 1) - 1));
-}
-
-function buildSaveChipLabel(state) {
-  if (!state.workspaceSnapshot.selectedDraft) {
-    return 'No Draft';
-  }
-
-  return state.dirty ? 'Unsaved Changes' : 'Draft Saved';
-}
-
-function buildSaveChipTone(state) {
-  if (!state.workspaceSnapshot.selectedDraft) {
-    return 'muted';
-  }
-
-  return state.dirty ? 'warning' : 'success';
-}
-
-function buildCompileChipTone(state) {
-  if (state.analysisPending) {
-    return 'muted';
-  }
-
-  if (state.analysis?.parseErrorMessage || state.analysis?.compileErrorMessage) {
-    return 'danger';
-  }
-
-  if (state.analysis?.compiledLesson) {
-    return 'success';
-  }
-
-  return 'muted';
-}
-
-function buildCompileChipLabel(state) {
-  if (!state.workspaceSnapshot.selectedDraft) {
-    return 'No Draft';
-  }
-
-  if (state.analysisPending) {
-    return 'Checking Playability…';
-  }
-
-  if (state.analysis?.parseErrorMessage) {
-    return state.workspaceSnapshot.selectedDraft?.shippedLessonId
-      ? 'Broken Draft Fallback'
-      : 'Broken Draft';
-  }
-
-  if (state.analysis?.compileErrorMessage) {
-    return state.workspaceSnapshot.selectedDraft?.shippedLessonId
-      ? 'Broken Draft Fallback'
-      : 'Broken Draft';
-  }
-
-  if (state.analysis?.compiledLesson) {
-    return `Playable Draft · ${state.analysis.compiledLesson.steps.length} steps`;
-  }
-
-  return 'Draft Not Ready';
-}
-
-function buildPublishChipTone(state) {
-  return state.workspaceSnapshot.selectedDraft?.versions?.length ? 'success' : 'muted';
-}
-
-function buildPublishChipLabel(state) {
-  if (!state.workspaceSnapshot.selectedDraft) {
-    return 'No Draft';
-  }
-
-  return state.workspaceSnapshot.selectedDraft?.versions?.length
-    ? 'Published Lesson'
-    : 'Not Published';
 }
 
 function buildContextLabel(context) {
@@ -1431,16 +1362,32 @@ function renderWorkspace(state, parts) {
   const previewModel = readPreviewModel(state);
   const selectedArtifactId = readSelectedArtifactId(state, previewModel);
   const previewDocument = buildPreviewDocument(previewModel);
+  const saveState = readAuthoringSaveState({
+    hasDraft: Boolean(selectedDraft),
+    dirty: state.dirty
+  });
+  const compileState = readAuthoringCompileState({
+    hasDraft: Boolean(selectedDraft),
+    analysisPending: state.analysisPending,
+    parseErrorMessage: state.analysis?.parseErrorMessage,
+    compileErrorMessage: state.analysis?.compileErrorMessage,
+    compiledLesson: state.analysis?.compiledLesson,
+    hasShippedFallback: Boolean(selectedDraft?.shippedLessonId)
+  });
+  const publishState = readAuthoringPublishState({
+    hasDraft: Boolean(selectedDraft),
+    versionCount: selectedDraft?.versions?.length || 0
+  });
 
   state.currentArtifactId = selectedArtifactId;
   parts.lessonTitle.textContent = buildHeaderTitle(state);
   parts.lessonMeta.textContent = buildHeaderMeta(state);
-  parts.saveState.textContent = buildSaveChipLabel(state);
-  parts.saveState.dataset.tone = buildSaveChipTone(state);
-  parts.compileChip.textContent = buildCompileChipLabel(state);
-  parts.compileChip.dataset.tone = buildCompileChipTone(state);
-  parts.publishState.textContent = buildPublishChipLabel(state);
-  parts.publishState.dataset.tone = buildPublishChipTone(state);
+  parts.saveState.textContent = saveState.label;
+  parts.saveState.dataset.tone = saveState.tone;
+  parts.compileChip.textContent = compileState.label;
+  parts.compileChip.dataset.tone = compileState.tone;
+  parts.publishState.textContent = publishState.label;
+  parts.publishState.dataset.tone = publishState.tone;
   parts.status.textContent = buildStatusMessage(state);
   parts.status.dataset.tone = buildStatusMessageTone(state);
   parts.outline.innerHTML = buildOutlineMarkup(state);
@@ -1459,8 +1406,8 @@ function renderWorkspace(state, parts) {
   renderMetadataDrawer(state, parts);
   parts.cursorInfo.textContent = buildContextLabel(context);
   parts.lineBadge.textContent = `Line ${readVisibleLineNumber(state, context.lineNumber || 1)}`;
-  parts.dirtyBadge.textContent = buildSaveChipLabel(state);
-  parts.dirtyBadge.dataset.tone = state.dirty ? 'warning' : 'success';
+  parts.dirtyBadge.textContent = saveState.label;
+  parts.dirtyBadge.dataset.tone = saveState.tone;
   parts.insertButton.textContent = buildInsertButtonLabel(context);
   parts.insertButton.title = 'Use / on an empty line or Ctrl/Cmd + K to open the insert menu.';
   parts.insertHint.innerHTML = buildInsertHintText(context);

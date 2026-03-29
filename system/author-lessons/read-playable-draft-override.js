@@ -1,5 +1,10 @@
 import { compileLessonScript } from '../lesson-engine/compile-lesson-script.js';
 import { readPersistedPlayableDraftOverride } from './open-authoring-sqlite.js';
+import {
+  LESSON_RUNTIME_SOURCE,
+  LESSON_RUNTIME_SOURCE_LABELS,
+  readPlayableDraftRuntimeLabel
+} from './lesson-runtime-state.js';
 
 function readGoalImageOverride(shippedLesson) {
   return typeof shippedLesson?.goalImageSrc === 'string'
@@ -44,23 +49,23 @@ export async function readPlayableDraftOverride({
       if (compiledDraftLesson.lessonId !== shippedLessonId) {
         return annotateLessonRuntime(
           shippedLesson,
-          'broken-draft-fallback',
-          'Broken Draft Fallback · Shipped lesson package',
+          LESSON_RUNTIME_SOURCE.BROKEN_DRAFT_FALLBACK,
+          LESSON_RUNTIME_SOURCE_LABELS.BROKEN_DRAFT_FALLBACK,
           draftOverride.draftId
         );
       }
 
       return annotateLessonRuntime(
         compiledDraftLesson,
-        'playable-draft',
-        `Playable Draft · SQLite · ${draftOverride.updatedAt}`,
+        LESSON_RUNTIME_SOURCE.PLAYABLE_DRAFT,
+        readPlayableDraftRuntimeLabel(draftOverride.updatedAt),
         draftOverride.draftId
       );
     } catch {
       return annotateLessonRuntime(
         shippedLesson,
-        'broken-draft-fallback',
-        'Broken Draft Fallback · Shipped lesson package',
+        LESSON_RUNTIME_SOURCE.BROKEN_DRAFT_FALLBACK,
+        LESSON_RUNTIME_SOURCE_LABELS.BROKEN_DRAFT_FALLBACK,
         draftOverride.draftId
       );
     }
