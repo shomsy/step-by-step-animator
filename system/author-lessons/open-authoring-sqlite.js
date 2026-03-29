@@ -1,7 +1,6 @@
 import initSqlJs from 'sql.js';
 import sqlWasmUrl from 'sql.js/dist/sql-wasm.wasm?url';
 import { readLessonScript } from '../lesson-engine/read-lesson-script.js';
-import { compileLessonScript } from '../lesson-engine/compile-lesson-script.js';
 import { buildLessonScriptMarkdown } from '../lesson-engine/build-lesson-script-markdown.js';
 import { normalizeString } from '../lesson-engine/build-compiled-lesson.js';
 
@@ -352,11 +351,25 @@ function readExistingDraftIds(database) {
   );
 }
 
-function summarizeCompiledLesson(compiledLesson) {
+function summarizeLessonContract(contract) {
   return {
-    lessonId: compiledLesson.meta.lessonId,
-    lessonTitle: compiledLesson.meta.lessonTitle
+    lessonId: contract.attributes.lessonId,
+    lessonTitle: contract.attributes.lessonTitle
   };
+}
+
+function tryReadLessonContract(sourceMarkdown) {
+  try {
+    return {
+      contract: readLessonScript(sourceMarkdown),
+      parseErrorMessage: ''
+    };
+  } catch (error) {
+    return {
+      contract: null,
+      parseErrorMessage: error.message
+    };
+  }
 }
 
 function ensureDraftLessonIdIsAvailable(database, lessonId, currentDraftId) {
@@ -452,6 +465,13 @@ function replaceDraftStructure(database, draftId, contract) {
   });
 }
 
+function clearDraftStructure(database, draftId) {
+  runStatement(database, 'DELETE FROM lesson_artifacts WHERE draft_id = ?', [draftId]);
+  runStatement(database, 'DELETE FROM lesson_steps WHERE draft_id = ?', [draftId]);
+  runStatement(database, 'DELETE FROM lesson_scenes WHERE draft_id = ?', [draftId]);
+  runStatement(database, 'DELETE FROM scene_show_code_blocks WHERE draft_id = ?', [draftId]);
+}
+
 function upsertDraftFromMarkdown(database, {
   draftId,
   sourceMarkdown,
@@ -459,11 +479,13 @@ function upsertDraftFromMarkdown(database, {
   shippedLessonId = null,
   createdAt = readTimestamp()
 }) {
-  const contract = readLessonScript(sourceMarkdown);
-  const compiledLesson = compileLessonScript({
-    scriptMarkdown: sourceMarkdown
-  });
-  const summary = summarizeCompiledLesson(compiledLesson);
+  const parsedLesson = tryReadLessonContract(sourceMarkdown);
+
+  if (!parsedLesson.contract) {
+    throw new Error(parsedLesson.parseErrorMessage);
+  }
+
+  const summary = summarizeLessonContract(parsedLesson.contract);
 
   ensureDraftLessonIdIsAvailable(database, summary.lessonId, draftId);
 
@@ -508,7 +530,7 @@ function upsertDraftFromMarkdown(database, {
     );
   }
 
-  replaceDraftStructure(database, draftId, contract);
+  replaceDraftStructure(database, draftId, parsedLesson.contract);
 
   return {
     draftId,
@@ -681,7 +703,7 @@ function buildWorkspaceSnapshot(database, draftId = '') {
     selectedDraft: draftId
       ? (() => {
           const draftRow = readDraftSourceMarkdown(database, draftId);
-          const contract = readLessonScript(draftRow.source_markdown);
+          const parsedLesson = tryReadLessonContract(draftRow.source_markdown);
 
           return {
             draftId: draftRow.draft_id,
@@ -692,7 +714,8 @@ function buildWorkspaceSnapshot(database, draftId = '') {
             createdAt: draftRow.created_at,
             updatedAt: draftRow.updated_at,
             sourceMarkdown: draftRow.source_markdown,
-            contract,
+            contract: parsedLesson.contract,
+            parseErrorMessage: parsedLesson.parseErrorMessage,
             versions: readVersionSummaries(database, draftId)
           };
         })()
@@ -773,21 +796,52 @@ export async function openAuthoringSqlite({
         return buildWorkspaceSnapshot(database, draftId);
       });
     },
-    async saveLessonDraft({ draftId, lessonAttributes, steps }) {
+    async saveLessonDraft({ draftId, sourceMarkdown, lessonAttributes, steps }) {
       return persist(() => {
         const existingDraft = readDraftSourceMarkdown(database, draftId);
-        const sourceMarkdown = buildLessonScriptMarkdown({
-          lessonAttributes,
-          steps
-        });
+        const nextSourceMarkdown = typeof sourceMarkdown === 'string'
+          ? sourceMarkdown
+          : buildLessonScriptMarkdown({
+            lessonAttributes,
+            steps
+          });
+        const parsedLesson = tryReadLessonContract(nextSourceMarkdown);
 
-        upsertDraftFromMarkdown(database, {
-          draftId,
-          sourceMarkdown,
-          sourceOrigin: existingDraft.source_origin,
-          shippedLessonId: existingDraft.shipped_lesson_id || null,
-          createdAt: existingDraft.created_at
-        });
+        if (parsedLesson.contract) {
+          const summary = summarizeLessonContract(parsedLesson.contract);
+
+          ensureDraftLessonIdIsAvailable(database, summary.lessonId, draftId);
+
+          runStatement(
+            database,
+            `UPDATE lesson_drafts
+             SET lesson_id = ?, lesson_title = ?, source_markdown = ?, source_origin = ?, shipped_lesson_id = ?, updated_at = ?
+             WHERE draft_id = ?`,
+            [
+              summary.lessonId,
+              summary.lessonTitle,
+              nextSourceMarkdown,
+              existingDraft.source_origin,
+              existingDraft.shipped_lesson_id || null,
+              readTimestamp(),
+              draftId
+            ]
+          );
+          replaceDraftStructure(database, draftId, parsedLesson.contract);
+        } else {
+          runStatement(
+            database,
+            `UPDATE lesson_drafts
+             SET source_markdown = ?, updated_at = ?
+             WHERE draft_id = ?`,
+            [
+              nextSourceMarkdown,
+              readTimestamp(),
+              draftId
+            ]
+          );
+          clearDraftStructure(database, draftId);
+        }
 
         return buildWorkspaceSnapshot(database, draftId);
       });
