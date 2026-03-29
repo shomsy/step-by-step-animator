@@ -1,4 +1,30 @@
-export async function selectLessonFromLocation({ ownerLocation, lessonRegistry = null }) {
+async function resolveSavedDraftLessonOverride({
+  ownerWindow,
+  shippedLessonId,
+  shippedLesson,
+  resolveDraftLessonOverride
+}) {
+  if (typeof resolveDraftLessonOverride === 'function') {
+    return resolveDraftLessonOverride({
+      ownerWindow,
+      shippedLessonId,
+      shippedLesson
+    });
+  }
+
+  if (!ownerWindow) {
+    return null;
+  }
+
+  return null;
+}
+
+export async function selectLessonFromLocation({
+  ownerLocation,
+  ownerWindow = null,
+  lessonRegistry = null,
+  resolveDraftLessonOverride = null
+}) {
   const {
     registeredLessons,
     findLesson,
@@ -12,8 +38,32 @@ export async function selectLessonFromLocation({ ownerLocation, lessonRegistry =
     throw new Error('No lesson package could be selected.');
   }
 
+  const shippedLesson = await selectedLesson.loadLesson();
+  let savedDraftLesson = null;
+
+  try {
+    savedDraftLesson = await resolveSavedDraftLessonOverride({
+      ownerWindow,
+      shippedLessonId: selectedLesson.lessonId,
+      shippedLesson,
+      resolveDraftLessonOverride
+    });
+  } catch {
+    savedDraftLesson = null;
+  }
+
+  const lesson = savedDraftLesson || shippedLesson;
+  const lessons = savedDraftLesson
+    ? registeredLessons.map(registeredLesson => registeredLesson.lessonId === selectedLesson.lessonId
+      ? {
+          ...registeredLesson,
+          lessonTitle: lesson.lessonTitle
+        }
+      : registeredLesson)
+    : registeredLessons;
+
   return {
-    lesson: await selectedLesson.loadLesson(),
-    lessons: registeredLessons
+    lesson,
+    lessons
   };
 }

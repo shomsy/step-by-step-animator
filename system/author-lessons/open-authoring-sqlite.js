@@ -696,6 +696,37 @@ function readDraftSourceMarkdown(database, draftId) {
   return rows[0];
 }
 
+function readPlayableDraftOverrideRow(database, shippedLessonId) {
+  const rows = readRows(
+    database,
+    `SELECT draft_id, lesson_id, lesson_title, source_markdown, source_origin, shipped_lesson_id, created_at, updated_at
+     FROM lesson_drafts
+     WHERE shipped_lesson_id = ? OR lesson_id = ?
+     ORDER BY CASE WHEN shipped_lesson_id = ? THEN 0 ELSE 1 END, updated_at DESC
+     LIMIT 1`,
+    [shippedLessonId, shippedLessonId, shippedLessonId]
+  );
+
+  return rows[0] || null;
+}
+
+function buildPlayableDraftOverrideSummary(draftRow) {
+  if (!draftRow) {
+    return null;
+  }
+
+  return {
+    draftId: draftRow.draft_id,
+    lessonId: draftRow.lesson_id,
+    lessonTitle: draftRow.lesson_title,
+    shippedLessonId: draftRow.shipped_lesson_id || '',
+    sourceOrigin: draftRow.source_origin,
+    createdAt: draftRow.created_at,
+    updatedAt: draftRow.updated_at,
+    sourceMarkdown: draftRow.source_markdown
+  };
+}
+
 function buildWorkspaceSnapshot(database, draftId = '') {
   return {
     shippedLessons: readShippedSummaries(database),
@@ -774,6 +805,15 @@ export async function openAuthoringSqlite({
   return {
     readWorkspaceSnapshot(selectedDraftId = '') {
       return buildWorkspaceSnapshot(database, selectedDraftId);
+    },
+    readPlayableDraftOverride(shippedLessonId) {
+      if (!normalizeString(shippedLessonId)) {
+        return null;
+      }
+
+      return buildPlayableDraftOverrideSummary(
+        readPlayableDraftOverrideRow(database, shippedLessonId)
+      );
     },
     async openDraftForShippedLesson(shippedLessonId) {
       return persist(() => {
@@ -917,4 +957,32 @@ export async function openAuthoringSqlite({
       });
     }
   };
+}
+
+export async function readPersistedPlayableDraftOverride({
+  ownerWindow,
+  shippedLessonId
+}) {
+  if (!ownerWindow || !normalizeString(shippedLessonId)) {
+    return null;
+  }
+
+  const storedBytes = await readPersistedDatabaseBytes(ownerWindow);
+
+  if (!storedBytes) {
+    return null;
+  }
+
+  const SQL = await createSqlRuntime();
+  const database = new SQL.Database(storedBytes);
+
+  try {
+    createSchema(database);
+
+    return buildPlayableDraftOverrideSummary(
+      readPlayableDraftOverrideRow(database, shippedLessonId)
+    );
+  } finally {
+    database.close();
+  }
 }

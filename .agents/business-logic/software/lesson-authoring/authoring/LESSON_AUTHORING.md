@@ -179,6 +179,8 @@ Rules:
 - `BlockNote` content must serialize back into the owned frontmatter fields; it is not a second source of truth
 - `CKEditor 5` is out of the shipped path unless a concrete unresolved WYSIWYG requirement is proven later
 - outline, validation, preview, and snapshot are support surfaces around the canonical lesson script, not alternate editors
+- the normal player should prefer the latest healthy saved paired draft for the same shipped lesson so the author sees what was just saved
+- invalid saved drafts must fail closed back to the shipped lesson package instead of breaking the normal player path
 
 ### 3.1 `lesson.md`
 

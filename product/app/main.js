@@ -20,12 +20,15 @@ async function bootstrap() {
 
   await import('../../system/animator-engine/play-lesson/lesson-player.css');
 
-  const [{ playLesson }, { selectLessonFromLocation }] = await Promise.all([
+  const [{ playLesson }, { selectLessonFromLocation }, { readPlayableDraftOverride }] = await Promise.all([
     import('../../system/animator-engine/play-lesson/play-lesson.pipeline.js'),
-    import('../../system/animator-engine/choose-lesson/select-lesson-from-location.js')
+    import('../../system/animator-engine/choose-lesson/select-lesson-from-location.js'),
+    import('../../system/author-lessons/read-playable-draft-override.js')
   ]);
   const lessonSelection = await selectLessonFromLocation({
-    ownerLocation: window.location
+    ownerLocation: window.location,
+    ownerWindow: window,
+    resolveDraftLessonOverride: readPlayableDraftOverride
   });
   const authoringButton = document.getElementById('authoringBtn');
 

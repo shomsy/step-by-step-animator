@@ -96,11 +96,93 @@ async function replaceEditorSelectionText(page, nextText) {
       throw new Error('Expected the CodeMirror authoring editor host.');
     }
 
-    const currentValue = element.authoringEditor.getValue();
     element.authoringEditor.focus();
+    const currentValue = element.authoringEditor.getValue();
     element.authoringEditor.setSelectionRange(0, currentValue.length);
     element.authoringEditor.pasteText(text);
   }, nextText);
+}
+
+async function readPairedDraftSourceMarkdown(page, shippedLessonId) {
+  return page.evaluate(async ({ repoPath, lessonId }) => {
+    const [{ openAuthoringSqlite }, { readShippedLessonScripts }] = await Promise.all([
+      import(`/@fs${repoPath}/system/author-lessons/open-authoring-sqlite.js`),
+      import(`/@fs${repoPath}/system/author-lessons/read-shipped-lesson-scripts.js`)
+    ]);
+    const shippedLessons = await readShippedLessonScripts();
+    const store = await openAuthoringSqlite({
+      ownerWindow: window,
+      shippedLessons
+    });
+    const snapshot = await store.openDraftForShippedLesson(lessonId);
+    const draftSourceMarkdown = snapshot.selectedDraft?.sourceMarkdown || '';
+
+    if (!draftSourceMarkdown) {
+      throw new Error(`Expected a paired draft source for "${lessonId}".`);
+    }
+
+    return draftSourceMarkdown;
+  }, {
+    repoPath: repoRoot,
+    lessonId: shippedLessonId
+  });
+}
+
+async function savePairedDraftSourceMarkdown(page, shippedLessonId, sourceMarkdown) {
+  return page.evaluate(async ({ repoPath, lessonId, nextSourceMarkdown }) => {
+    const [{ openAuthoringSqlite }, { readShippedLessonScripts }] = await Promise.all([
+      import(`/@fs${repoPath}/system/author-lessons/open-authoring-sqlite.js`),
+      import(`/@fs${repoPath}/system/author-lessons/read-shipped-lesson-scripts.js`)
+    ]);
+    const shippedLessons = await readShippedLessonScripts();
+    const store = await openAuthoringSqlite({
+      ownerWindow: window,
+      shippedLessons
+    });
+    const snapshot = await store.openDraftForShippedLesson(lessonId);
+    const draftId = snapshot.selectedDraft?.draftId || '';
+
+    if (!draftId) {
+      throw new Error(`Expected a paired draft id for "${lessonId}".`);
+    }
+
+    const savedSnapshot = await store.saveLessonDraft({
+      draftId,
+      sourceMarkdown: nextSourceMarkdown
+    });
+
+    return savedSnapshot.selectedDraft?.sourceMarkdown || '';
+  }, {
+    repoPath: repoRoot,
+    lessonId: shippedLessonId,
+    nextSourceMarkdown: sourceMarkdown
+  });
+}
+
+async function readPlayerSelectionSnapshot(page, shippedLessonId) {
+  return page.evaluate(async ({ repoPath, lessonId }) => {
+    const [{ selectLessonFromLocation }, { readPlayableDraftOverride }] = await Promise.all([
+      import(`/@fs${repoPath}/system/animator-engine/choose-lesson/select-lesson-from-location.js`),
+      import(`/@fs${repoPath}/system/author-lessons/read-playable-draft-override.js`)
+    ]);
+    const selection = await selectLessonFromLocation({
+      ownerLocation: {
+        href: `${window.location.origin}/?lesson=${lessonId}`
+      },
+      ownerWindow: window,
+      resolveDraftLessonOverride: readPlayableDraftOverride
+    });
+
+    return {
+      lessonId: selection.lesson?.lessonId || '',
+      lessonTitle: selection.lesson?.lessonTitle || '',
+      firstStepTitle: selection.lesson?.steps?.[0]?.title || '',
+      runtimeSource: selection.lesson?.lessonRuntimeSource || 'shipped'
+    };
+  }, {
+    repoPath: repoRoot,
+    lessonId: shippedLessonId
+  });
 }
 
 async function setMetadataValue(page, fieldName, nextValue) {
@@ -764,6 +846,148 @@ test('browser authoring smoke imports a full large lesson source without duplica
       async () => page.$eval('[data-outline-kind="step"][data-step-id="bulk-step-158"]', element => Boolean(element)).catch(() => false),
       'the imported final step to persist after reload'
     );
+
+    assert.deepEqual(pageErrors, []);
+    assert.deepEqual(consoleErrors, []);
+
+    await page.close();
+  } finally {
+    await browser?.close();
+    await server.close();
+  }
+});
+
+test('browser authoring smoke lets the normal player prefer a healthy saved draft and fail closed on a broken one', { timeout: 90000 }, async () => {
+  const server = await createServer({
+    configFile: path.resolve(repoRoot, 'vite.config.js'),
+    clearScreen: false,
+    logLevel: 'error',
+    server: {
+      host: '127.0.0.1',
+      port: 4178,
+      strictPort: false
+    }
+  });
+
+  let browser;
+
+  try {
+    await server.listen();
+
+    const appUrl = server.resolvedUrls?.local?.find(url => url.startsWith('http://127.0.0.1'))
+      || server.resolvedUrls?.local?.[0];
+
+    assert.ok(appUrl, 'Vite dev server did not expose a local URL.');
+
+    browser = await puppeteer.launch({
+      args: ['--disable-setuid-sandbox', '--no-sandbox'],
+      headless: true
+    });
+
+    const page = await browser.newPage();
+    const consoleErrors = [];
+    const pageErrors = [];
+    const savedDraftStepTitle = 'Saved Draft Step Title';
+    const shippedStepTitle = 'Start: Empty App Shell';
+
+    page.on('console', message => {
+      if (message.type() === 'error') {
+        consoleErrors.push(message.text());
+      }
+    });
+    page.on('pageerror', error => {
+      pageErrors.push(error.message);
+    });
+    page.on('dialog', dialog => {
+      void dialog.accept();
+    });
+
+    await page.goto(`${appUrl}?workspace=authoring&lesson=09-human-first-script-demo`, { waitUntil: 'domcontentloaded' });
+
+    await waitForCondition(
+      async () => page.$('#authoringScriptEditor').then(Boolean),
+      'the authoring writer workspace'
+    );
+
+    await openPopoverAndClick(
+      page,
+      '#authoringMoreBtn',
+      '#authoringMoreMenu',
+      '[data-action="open-shipped:09-human-first-script-demo"]'
+    );
+
+    await waitForCondition(
+      async () => page.$eval('#authoringLessonTitle', element => element.textContent?.includes('Human-First Script Demo') || false),
+      'the paired 09 draft to open'
+    );
+    await waitForCondition(
+      async () => page.$eval('#authoringScriptEditor', element => {
+        if (!(element instanceof HTMLElement) || !element.authoringEditor) {
+          throw new Error('Expected the CodeMirror authoring editor host.');
+        }
+
+        return element.authoringEditor.getValue().includes('title: Start: Empty App Shell');
+      }).catch(() => false),
+      'the paired 09 draft body to reach the editor'
+    );
+
+    const pairedDraftSource = await readPairedDraftSourceMarkdown(page, '09-human-first-script-demo');
+    const healthyDraftSource = pairedDraftSource.replace(
+      'title: Start: Empty App Shell',
+      'title: Saved Draft Step Title'
+    );
+    const savedHealthyDraftSource = await savePairedDraftSourceMarkdown(
+      page,
+      '09-human-first-script-demo',
+      healthyDraftSource
+    );
+
+    assert.ok(savedHealthyDraftSource.includes('title: Saved Draft Step Title'));
+
+    const healthySelection = await readPlayerSelectionSnapshot(page, '09-human-first-script-demo');
+
+    assert.equal(healthySelection.lessonId, '09-human-first-script-demo');
+    assert.equal(healthySelection.firstStepTitle, savedDraftStepTitle);
+    assert.equal(healthySelection.runtimeSource, 'saved-draft');
+
+    await page.goto(`${appUrl}?workspace=authoring&lesson=09-human-first-script-demo`, { waitUntil: 'domcontentloaded' });
+
+    await waitForCondition(
+      async () => page.$('#authoringScriptEditor').then(Boolean),
+      'the authoring workspace after returning'
+    );
+
+    await openPopoverAndClick(
+      page,
+      '#authoringMoreBtn',
+      '#authoringMoreMenu',
+      '[data-action="open-shipped:09-human-first-script-demo"]'
+    );
+
+    await waitForCondition(
+      async () => page.$eval('#authoringScriptEditor', element => {
+        if (!(element instanceof HTMLElement) || !element.authoringEditor) {
+          throw new Error('Expected the CodeMirror authoring editor host.');
+        }
+
+        return element.authoringEditor.getValue().includes('title: Saved Draft Step Title');
+      }).catch(() => false),
+      'the edited 09 draft to reopen'
+    );
+
+    const savedBrokenDraftSource = await savePairedDraftSourceMarkdown(
+      page,
+      '09-human-first-script-demo',
+      'broken lesson body'
+    );
+
+    assert.equal(savedBrokenDraftSource, 'broken lesson body');
+
+    const brokenSelection = await readPlayerSelectionSnapshot(page, '09-human-first-script-demo');
+
+    assert.equal(brokenSelection.lessonId, '09-human-first-script-demo');
+    assert.equal(brokenSelection.firstStepTitle, shippedStepTitle);
+    assert.equal(brokenSelection.runtimeSource, 'shipped');
 
     assert.deepEqual(pageErrors, []);
     assert.deepEqual(consoleErrors, []);

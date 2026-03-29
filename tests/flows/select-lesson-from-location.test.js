@@ -55,3 +55,88 @@ test('selectLessonFromLocation falls back to the default lesson when no query is
   assert.equal(selection.lesson.lessonId, 'alpha');
   assert.equal(selection.lessons, lessonDescriptors);
 });
+
+test('selectLessonFromLocation prefers a saved draft override for the selected lesson when one is playable', async () => {
+  const lessonDescriptors = [
+    {
+      lessonId: 'alpha',
+      lessonTitle: 'Alpha',
+      loadLesson: async () => ({ lessonId: 'alpha', lessonTitle: 'Alpha' })
+    },
+    {
+      lessonId: 'beta',
+      lessonTitle: 'Beta',
+      loadLesson: async () => ({ lessonId: 'beta', lessonTitle: 'Beta' })
+    }
+  ];
+
+  const selection = await selectLessonFromLocation({
+    ownerLocation: { href: 'https://example.test/?lesson=beta' },
+    ownerWindow: {},
+    lessonRegistry: {
+      registeredLessons: lessonDescriptors,
+      findLesson: lessonId => lessonDescriptors.find(lesson => lesson.lessonId === lessonId),
+      getDefaultLessonId: () => lessonDescriptors[0].lessonId
+    },
+    resolveDraftLessonOverride: async ({ shippedLessonId }) => ({
+      lessonId: shippedLessonId,
+      lessonTitle: 'Beta Draft'
+    })
+  });
+
+  assert.equal(selection.lesson.lessonId, 'beta');
+  assert.equal(selection.lesson.lessonTitle, 'Beta Draft');
+  assert.equal(selection.lessons[1].lessonTitle, 'Beta Draft');
+});
+
+test('selectLessonFromLocation fails closed to the shipped lesson when the draft override is unavailable', async () => {
+  const lessonDescriptors = [
+    {
+      lessonId: 'alpha',
+      lessonTitle: 'Alpha',
+      loadLesson: async () => ({ lessonId: 'alpha', lessonTitle: 'Alpha' })
+    }
+  ];
+
+  const selection = await selectLessonFromLocation({
+    ownerLocation: { href: 'https://example.test/?lesson=alpha' },
+    ownerWindow: {},
+    lessonRegistry: {
+      registeredLessons: lessonDescriptors,
+      findLesson: lessonId => lessonDescriptors.find(lesson => lesson.lessonId === lessonId),
+      getDefaultLessonId: () => lessonDescriptors[0].lessonId
+    },
+    resolveDraftLessonOverride: async () => null
+  });
+
+  assert.equal(selection.lesson.lessonId, 'alpha');
+  assert.equal(selection.lesson.lessonTitle, 'Alpha');
+  assert.equal(selection.lessons, lessonDescriptors);
+});
+
+test('selectLessonFromLocation fails closed to the shipped lesson when the draft override resolver throws', async () => {
+  const lessonDescriptors = [
+    {
+      lessonId: 'alpha',
+      lessonTitle: 'Alpha',
+      loadLesson: async () => ({ lessonId: 'alpha', lessonTitle: 'Alpha' })
+    }
+  ];
+
+  const selection = await selectLessonFromLocation({
+    ownerLocation: { href: 'https://example.test/?lesson=alpha' },
+    ownerWindow: {},
+    lessonRegistry: {
+      registeredLessons: lessonDescriptors,
+      findLesson: lessonId => lessonDescriptors.find(lesson => lesson.lessonId === lessonId),
+      getDefaultLessonId: () => lessonDescriptors[0].lessonId
+    },
+    resolveDraftLessonOverride: async () => {
+      throw new Error('SQLite unavailable');
+    }
+  });
+
+  assert.equal(selection.lesson.lessonId, 'alpha');
+  assert.equal(selection.lesson.lessonTitle, 'Alpha');
+  assert.equal(selection.lessons, lessonDescriptors);
+});

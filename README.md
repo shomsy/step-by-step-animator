@@ -168,6 +168,7 @@ The browser app now exposes a dedicated authoring workspace at `?workspace=autho
 - `CKEditor 5` is not part of the shipped authoring path because no unresolved WYSIWYG requirement remains
 - the editor remains DSL-aware, with slash-triggered block insertion and inline `+ Insert Block` authoring
 - drafts still compile back through the same lesson engine contract before save and publish
+- the normal player prefers the latest healthy saved paired draft for the selected shipped lesson; broken saved drafts fail closed back to the shipped lesson package
 
 ## Notes
 
