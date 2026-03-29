@@ -11,7 +11,7 @@ Step By Step Animator is an interactive lesson engine for HTML, CSS, and JavaScr
 - `.agents/management/ACTIVE.md` mirrors the current active task and bug board.
 - `.agents/business-logic/README.md` defines the plain-language business meaning.
 - `product/app/index.html` and `product/app/main.js` are the live app entry points.
-- `product/education/lessons/01-build-sidebar/source/lesson.md` is the default shipped lesson source for the cold-start experience.
+- `product/education/lessons/01-build-sidebar/source/lesson.script.md` is the default shipped lesson source for the cold-start experience.
 - `system/lesson-engine/register-lesson-packages/index.js` registers the live lesson set and declares the default lesson id.
 
 ## Repository Map
@@ -145,13 +145,13 @@ Source-only lessons live under:
 product/education/lessons/<lesson-slug>/source/
 ```
 
-Each shipped lesson is now authored through this canonical source contract:
+Each shipped lesson is authored through this canonical source contract:
 
 - `lesson.script.md`
 - optional `theory.md`
 - optional `assets/`
 
-`lesson.script.md` keeps step, scene, narration, and one-or-more `Show Code` snapshots in one scrollable file. The legacy split compiler remains only as an import/migration bridge; the shipped lesson estate no longer uses `lesson.md`, `scenes.md`, or `artifacts/` as active source of truth.
+`lesson.script.md` keeps step, scene, narration, and one-or-more `Show Code` snapshots in one scrollable file. The legacy split source (`lesson.md`, `scenes.md`, `artifacts/`) remains only as an import/migration bridge; the shipped lesson estate uses `lesson.script.md` as the source of truth.
 
 ## Authoring Studio
 
