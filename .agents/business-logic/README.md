@@ -13,9 +13,8 @@ Every business note, idea, and lesson definition should answer:
 
 ## Domains
 
-- `content/` = lesson goals, user story, visible teaching path, and step-by-step learning
+- `content/` = lesson goals, user story, visible teaching path, step-by-step learning, and the canonical user-facing lesson composition contract in `content/LessonAuthoringRules.md`
 - `software/lesson-authoring/architecture/LESSON_ARCHITECTURE.md` = the live lesson architecture and source-of-truth model
-- `software/lesson-authoring/authoring/LESSON_AUTHORING.md` = the live lesson writing and operational authoring contract
 - `software/` = discovery, compilation, playback, and runtime behavior
 
 ## Rule

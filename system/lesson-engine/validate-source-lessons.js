@@ -3,7 +3,8 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { compileSourceLesson } from './compile-source-lesson.js';
 
-const currentDir = path.dirname(fileURLToPath(import.meta.url));
+const currentFile = fileURLToPath(import.meta.url);
+const currentDir = path.dirname(currentFile);
 const lessonsRoot = path.resolve(currentDir, '../../product/education/lessons');
 
 function collectLessonFolders() {
@@ -28,14 +29,44 @@ function validateLessonSource({ lessonSlug, sourceRoot }) {
     0
   );
 
-  console.log(`${lessonSlug}: ok (${compiledLesson.steps.length} steps, ${sceneCount} scenes, ${sourceFormat})`);
+  return `${lessonSlug}: ok (${compiledLesson.steps.length} steps, ${sceneCount} scenes, ${sourceFormat})`;
 }
 
-function main() {
+export function readSourceLessonValidationReport() {
   const lessonFolders = collectLessonFolders();
+  const outputLines = lessonFolders.map(validateLessonSource);
 
-  lessonFolders.forEach(validateLessonSource);
-  console.log(`Validated ${lessonFolders.length} lesson source packages.`);
+  outputLines.push(`Validated ${lessonFolders.length} lesson source packages.`);
+
+  return {
+    lessonCount: lessonFolders.length,
+    outputLines
+  };
 }
 
-main();
+async function flushValidationReport(lines) {
+  const report = `${lines.join('\n')}\n`;
+
+  await new Promise((resolve, reject) => {
+    process.stdout.write(report, error => {
+      if (error) {
+        reject(error);
+        return;
+      }
+
+      resolve();
+    });
+  });
+}
+
+async function main() {
+  const { outputLines } = readSourceLessonValidationReport();
+  await flushValidationReport(outputLines);
+}
+
+if (process.argv[1] && path.resolve(process.argv[1]) === currentFile) {
+  main().catch(error => {
+    console.error(error);
+    process.exitCode = 1;
+  });
+}

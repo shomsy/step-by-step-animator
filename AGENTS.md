@@ -151,9 +151,11 @@ Agents MUST follow this order in this repository:
    - Files under `product/education/lessons/**/source/` are off the critical path for creating and editing drafts. They exist as shipped lesson materialization plus import/export compatibility inputs.
    - Legacy file-based lessons remain importable during migration, but they are not the preferred path for new day-to-day authoring.
 12. **Lesson Authoring Documentation Path**:
-   - The live repo-local lesson architecture and authoring contract is documented in:
+   - The live repo-local lesson architecture and user-facing lesson composition contract is documented in:
+     - `.agents/business-logic/content/LessonAuthoringRules.md`
      - `.agents/business-logic/software/lesson-authoring/architecture/LESSON_ARCHITECTURE.md`
-     - `.agents/business-logic/software/lesson-authoring/authoring/LESSON_AUTHORING.md`
+   - `.agents/business-logic/content/LessonAuthoringRules.md` is the only canonical user-facing document for how an author composes a lesson.
+   - Older repo-local lesson authoring notes or removed paths are legacy/internal reference only when they appear in repo history.
    - If mounted reusable docs under `.agents/.rules/project-local/governance/app-architecture/lesson-architecture*.md` still show older file-first examples, treat them as reusable baseline or migration reference, not as the live default authoring workflow for this repo.
 
 Keep this file short. Long procedures belong in governance docs, and active

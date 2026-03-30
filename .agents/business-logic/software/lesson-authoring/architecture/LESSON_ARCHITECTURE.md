@@ -2,7 +2,11 @@
 
 This file defines the live repo-local lesson architecture contract.
 
-It exists because the mounted reusable architecture docs are read-only in this repo and may still contain migration-era file-first examples. This file is the local operational truth for lesson authoring.
+It exists because the mounted reusable architecture docs are read-only in this repo and may still contain migration-era file-first examples. This file is the local operational truth for lesson architecture.
+
+This is not the canonical user-facing guide for composing lesson content. The only canonical author-facing composition guide is:
+
+- `.agents/business-logic/content/LessonAuthoringRules.md`
 
 ## 1. Canonical Model
 

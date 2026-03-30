@@ -9187,8 +9187,11 @@ Repo-local docs and queues live in the visible `.agents/` tree.
 There are no repo-local overlays inside `.rules/`; local project guidance lives
 in the visible `.agents/` tree.
 
-For lesson authoring, the live repo-local contract is documented in the visible
-`.agents/business-logic/software/lesson-authoring/**` tree. Mounted
+For lesson authoring, the live repo-local user-facing composition contract is
+`.agents/business-logic/content/LessonAuthoringRules.md`, and the supporting
+engineering architecture contract is
+`.agents/business-logic/software/lesson-authoring/architecture/LESSON_ARCHITECTURE.md`.
+Mounted
 `.agents/.rules/project-local/governance/app-architecture/lesson-architecture*.md`
 files remain reusable baseline or migration references and are not the live
 default authoring contract for this repo.
@@ -9212,8 +9215,8 @@ Every idea, plan, architecture decision, and lesson change must answer:
 6. `.rules/governance/security/README.md`
 7. `language-specific/README.md`
 8. `business-logic/README.md`
-9. `business-logic/software/lesson-authoring/architecture/LESSON_ARCHITECTURE.md`
-10. `business-logic/software/lesson-authoring/authoring/LESSON_AUTHORING.md`
+9. `business-logic/content/LessonAuthoringRules.md`
+10. `business-logic/software/lesson-authoring/architecture/LESSON_ARCHITECTURE.md`
 11. `management/README.md`
 12. `management/ACTIVE.md`
 13. `management/TIMELINE.md`
@@ -9263,21 +9266,263 @@ Every business note, idea, and lesson definition should answer:
 
 ## Domains
 
-- `content/` = lesson goals, user story, visible teaching path, and step-by-step learning
+- `content/` = lesson goals, user story, visible teaching path, step-by-step learning, and the canonical user-facing lesson composition contract in `content/LessonAuthoringRules.md`
 - `software/lesson-authoring/architecture/LESSON_ARCHITECTURE.md` = the live lesson architecture and source-of-truth model
-- `software/lesson-authoring/authoring/LESSON_AUTHORING.md` = the live lesson writing and operational authoring contract
 - `software/` = discovery, compilation, playback, and runtime behavior
 
 ## Rule
 
 - Write the user-facing meaning before implementation detail.
 
+=== .agents/business-logic/content/LessonAuthoringRules.md ===
+# Pravila za sastavljanje lekcije
+
+Ovo je jedini važeći dokument za autora koji piše lekciju u Step By Step Animator sistemu.
+
+Ako autor želi da sastavi novu lekciju, menja postojeću ili proveri da li je sadržaj validan, ovaj dokument je kanonski izvor istine.
+
+Svi drugi repo-lokalni dokumenti služe ili za arhitekturu, ili za migraciju, ili za internu implementaciju. Ne koriste se kao glavni vodič za pisanje lekcije.
+
+## 1. Osnovni princip
+
+Lekcija se piše u Write Mode-u kao jedan tok:
+
+`Step -> Scene -> Narration -> Show Code`
+
+Autor ne kreće od foldera, niti od ručnog pravljenja `lesson.md`, `scenes.md`, `theory.md` ili `artifacts/`.
+
+Za dnevni rad važi sledeće:
+
+- pišeš u Write Mode-u
+- `Save` čuva draft u Authoring Store-u
+- `Play` pušta poslednji zdravi sačuvani draft
+- `Publish` i `Export` su posebni koraci i nisu uslov da lekcija postoji
+
+## 2. Oblik dokumenta
+
+Kanonski authored shape lekcije ostaje `lesson.script.md`.
+
+Sastoji se iz dva dela:
+
+### 2.1 Frontmatter
+
+Frontmatter je zaglavlje između `---` i `---`.
+
+U njemu žive metadata i tehničke definicije lekcije, na primer:
+
+- `schemaVersion`
+- `lessonId`
+- `lessonTitle`
+- `lessonIntro`
+- `status`
+- `courseId`
+- `order`
+- `artifacts`
+- `preview`
+
+Frontmatter je deo validne lekcije, ali nije glavni autorski tok.
+
+### 2.2 Body
+
+Body počinje odmah ispod frontmatter-a.
+
+Prvi stvarni sadržaj tela, ne računajući prazne redove, mora biti:
+
+```md
+# Step: <step-id>
+```
+
+## 3. Obavezna struktura
+
+### 3.1 Step
+
+Svaki korak mora da počne ovako:
+
+```md
+# Step: <step-id>
+title:
+summary:
+intent:
+```
+
+Pravila:
+
+- `step-id` mora biti stabilan i machine-safe
+- koristi `kebab-case`
+- svaki Step mora imati `title`, `summary` i `intent`
+- jedan Step treba da predstavlja jedan pedagoški cilj
+
+### 3.2 Scene
+
+Svaki Step mora imati najmanje jednu scenu:
+
+```md
+## Scene: <scene-id>
+```
+
+Pravila:
+
+- svaki Step mora imati bar jednu `Scene`
+- `scene-id` mora biti jedinstven u celoj lekciji
+- koristi `kebab-case`
+
+### 3.3 Narration
+
+Svaka scena mora imati naraciju:
+
+```md
+### Narration
+```
+
+Pravila:
+
+- `Narration` je obavezna u svakoj sceni
+- naracija mora da objasni šta se upravo menja
+- naracija treba da usmeri pažnju studenta na ono što se vidi u Preview-u
+
+### 3.4 Show Code
+
+Svaka scena mora imati najmanje jedan prikaz koda:
+
+````md
+### Show Code: <artifact-id>
+```html
+...
+```
+````
+
+Pravila:
+
+- svaka scena mora imati bar jedan `Show Code`
+- jedan `Show Code` blok prikazuje kompletan snapshot fajla u tom trenutku
+- nisu dozvoljeni isečci tipa `...`, patch-evi, ni “ostatak ostaje isti”
+- jezik code fence-a mora odgovarati artifact tipu koji prikazuješ
+
+## 4. Stroga parser pravila
+
+Ovo su pravila bez kojih lekcija nije validna:
+
+- prvi stvarni sadržaj posle frontmatter-a mora biti `# Step:`
+- svi Step i Scene ID-jevi moraju biti jedinstveni
+- ID-jevi moraju biti u `kebab-case` formatu
+- svaki Step mora imati `title`, `summary` i `intent`
+- svaki Step mora imati bar jednu `Scene`
+- svaka `Scene` mora imati `Narration`
+- svaka `Scene` mora imati bar jedan `Show Code`
+- svaki `Show Code` mora biti potpun i validan snapshot
+- jezik code fence-a mora odgovarati konkretnom artifact tipu
+
+Ako prekršiš ova pravila, dobijaš broken lesson ili validation error.
+
+## 5. Pedagoška pravila
+
+Ovo nisu samo parser pravila. Ovo je i način na koji lekcija treba da diše.
+
+### 5.1 Jedan Step = jedan pedagoški cilj
+
+Jedan Step ne mora nužno biti jedan jedini UI element.
+
+Ali mora biti jedna jasna celina koju student može da razume kao jednu fazu rada.
+
+### 5.2 Prvo vizuelni shell, pa logika
+
+Za UI i web komponente redosled je:
+
+1. napravi čitljiv vizuelni shell
+2. zatim uvodi ponašanje i logiku
+3. uvodi logiku deo po deo, bez skakanja
+
+### 5.3 Svaka scena mora da ostavi stabilan trag
+
+Student mora da vidi rezultat scene.
+
+Ne pravi scene koje ne ostavljaju nikakav jasan vizuelni ili kodni ishod.
+
+### 5.4 Ne mešaj više nepovezanih stvari u istoj sceni
+
+Jedna scena treba da objašnjava jednu logičnu promenu ili jednu blisko povezanu grupu promena.
+
+## 6. Minimalni validni primer
+
+````md
+---
+schemaVersion: 1
+lessonId: human-first-example
+lessonTitle: Human First Example
+lessonIntro: Build a tiny card.
+status: active
+courseId: demo-course
+order: 1
+artifacts:
+  - artifactId: html
+    language: html
+    label: index.html
+    isPrimary: true
+preview:
+  type: dom
+  title: Preview
+  address: browser://preview-url
+---
+
+# Step: empty-shell
+title: Start from an empty shell
+summary: Kreiramo prazan prostor za rad.
+intent: Vizuelna neutralnost pre prve promene.
+
+## Scene: start-intro
+
+### Narration
+Počinjemo od bazičnog HTML-a. Ovo je naša prazna tabla na kojoj ćemo graditi.
+
+### Show Code: html
+```html
+<div class="app-shell"></div>
+```
+````
+
+## 7. Brza autorska provera
+
+Pre nego što klikneš `Save`, proveri sledeće:
+
+- da li prvi stvarni red body-ja počinje sa `# Step:`
+- da li svaki Step ima `title`, `summary` i `intent`
+- da li svaki Step ima bar jednu `Scene`
+- da li svaka `Scene` ima `Narration`
+- da li svaka `Scene` ima bar jedan `Show Code`
+- da li su svi snapshoti kompletni
+- da li su svi ID-jevi jedinstveni i u `kebab-case` formatu
+- da li naracija objašnjava šta student treba da vidi
+
+## 8. Šta je legacy
+
+Sledeće nije glavni put za novog autora:
+
+- ručno pravljenje lesson foldera pre početka rada
+- početak od `lesson.md`, `scenes.md`, `theory.md` i `artifacts/`
+- tretiranje filesystem fajlova kao glavnog draft source-of-truth sloja
+
+Takvi formati mogu i dalje postojati zbog migracije, importa i publish/export toka, ali nisu kanonski način da autor sastavi lekciju.
+
+## 9. Status ovog dokumenta
+
+Ovaj dokument je:
+
+- kanonski user-facing contract za sastavljanje lekcije
+- važeći za Write Mode i normalan authoring tok
+- važniji od starijih repo-lokalnih authoring vodiča kada postoji razlika
+
+Ako postoji nedoumica između ovog dokumenta i starog authoring teksta, važi ovaj dokument.
+
 === .agents/business-logic/software/lesson-authoring/architecture/LESSON_ARCHITECTURE.md ===
 # Lesson Architecture
 
 This file defines the live repo-local lesson architecture contract.
 
-It exists because the mounted reusable architecture docs are read-only in this repo and may still contain migration-era file-first examples. This file is the local operational truth for lesson authoring.
+It exists because the mounted reusable architecture docs are read-only in this repo and may still contain migration-era file-first examples. This file is the local operational truth for lesson architecture.
+
+This is not the canonical user-facing guide for composing lesson content. The only canonical author-facing composition guide is:
+
+- `.agents/business-logic/content/LessonAuthoringRules.md`
 
 ## 1. Canonical Model
 
@@ -9385,194 +9630,6 @@ The system is intentionally migrating without breaking shipped lesson compatibil
 - legacy file-based lessons remain importable
 - UI-first authoring is the preferred path for new work
 - publish/export keeps the repository compatible with shipped source materialization
-
-=== .agents/business-logic/software/lesson-authoring/authoring/LESSON_AUTHORING.md ===
-# Lesson Authoring
-
-This file defines the live lesson writing contract for Step By Step Animator.
-
-## 1. Live Authoring Truth
-
-The live default is UI-first authoring.
-
-- Write Mode is the default authoring surface.
-- The browser-backed authoring store is the draft source of truth for in-progress lessons.
-- The canonical authored document shape remains `lesson.script.md`.
-- During normal authoring that `lesson.script.md` shape is persisted through the authoring store, not through a required filesystem scaffold.
-- Files under `product/education/lessons/**/source/` are publish/export outputs and migration compatibility inputs, not the required starting point for a new lesson.
-
-## 2. What The Author Does
-
-The day-to-day path is:
-
-1. open Write Mode
-2. write the lesson body as `Step -> Scene -> Narration -> Show Code`
-3. click `Save`
-4. click `Play`
-5. optionally `Publish` or `Export`
-
-The author does not need to create `lesson.md`, `scenes.md`, `theory.md`, or `artifacts/` before a lesson can exist.
-
-## 3. Operational Contract
-
-### 3.1 Save
-
-`Save` persists the draft to the authoring store only.
-
-Meaning:
-
-- draft text is stored in the browser-backed authoring store
-- the author stays in Write Mode
-- filesystem files are not required
-
-### 3.2 Play
-
-`Play` compiles from the latest healthy saved draft.
-
-Meaning:
-
-- the lesson engine validates the saved draft
-- if the draft is healthy, the lesson engine compiles it into the canonical lesson package
-- the animator engine plays only the compiled lesson package
-- if the saved draft is broken, the system fails closed to the shipped lesson package
-- if the lesson id belongs to an unpaired custom draft, the normal player can still open that healthy saved draft directly by lesson id
-
-### 3.3 Publish
-
-`Publish` is the explicit snapshot or shipped-output step.
-
-Meaning:
-
-- the authoring workflow records a recoverable published snapshot
-- shipped output materialization stays explicit; it is not implied by `Save`
-
-### 3.4 Export
-
-`Export` materializes filesystem artifacts.
-
-Meaning:
-
-- export can write or download `lesson.script.md`
-- export or publish may materialize repository-facing lesson files
-- filesystem artifacts are off the critical path for creating or editing drafts
-
-## 4. Write Mode Surface
-
-Write Mode must stay writer-first.
-
-- the center editor owns the lesson body
-- the left outline is structure navigation
-- the right inspector is preview, compile, validation, snapshot, and step-diff feedback
-- metadata stays secondary in the drawer
-- frontmatter is editable, but it is not the first frame
-
-Surface ownership:
-
-- `CodeMirror` owns the canonical `lesson.script.md` editing surface
-- `BlockNote` owns prose-rich metadata fields inside the metadata drawer when a block editor is the best fit
-- `CKEditor 5` is not part of the shipped authoring path unless a concrete unresolved requirement proves otherwise
-
-## 5. Runtime Labels
-
-The terminology must stay explicit:
-
-- `Draft Saved`
-- `Unsaved Changes`
-- `Playable Draft`
-- `Broken Draft Fallback`
-- `Published Lesson`
-- `No Draft`
-- `Authoring Store`
-- `Shipped Lesson Package`
-- `Publish/Export Artifacts`
-
-## 6. Canonical Lesson Shape
-
-The canonical authored document shape is still `lesson.script.md`.
-
-Rules:
-
-- frontmatter carries lesson metadata such as `lessonId`, `lessonTitle`, `lessonIntro`, `status`, `courseId`, `order`, `artifacts`, and `preview`
-- each step is declared as `# Step: <stepId>`
-- each step defines `title`, `summary`, and `intent`
-- each scene is declared as `## Scene: <sceneId>`
-- each scene defines `### Narration`
-- each scene defines one-or-more `### Show Code: <artifactId>` blocks
-- `Show Code` uses fenced code blocks that match the artifact language
-- `theory.md` stays optional and external when a lesson needs separate theory prose
-
-Canonical shape:
-
-````md
----
-schemaVersion: 1
-lessonId: 09-human-first-script-demo
-lessonTitle: Human-First Script Demo
-lessonIntro: Build a tiny callout card from one lesson script.
-status: active
-courseId: step-by-step-animator
-order: 9
-artifacts:
-  - artifactId: html
-    language: html
-    label: index.html
-    isPrimary: true
-preview:
-  type: dom
-  title: Script preview
-  address: browser://09-human-first-script-demo-preview
----
-
-# Step: add-card-html
-title: HTML: Add the Card
-summary: Insert the first real component shell.
-intent: Show semantic structure before styling.
-
-## Scene: add-card-html-scene
-
-### Narration
-First we place the visible card shell into the app shell.
-
-### Show Code: html
-```html
-<div class="app-shell">
-  <aside class="callout-card"></aside>
-</div>
-```
-````
-
-## 7. Filesystem And Migration Posture
-
-Filesystem lesson folders still matter, but not as the live default authoring path.
-
-- shipped lessons can still be materialized under `product/education/lessons/<lesson-slug>/source/`
-- `lesson.script.md` is the preferred shipped lesson source file
-- optional shipped companions remain `theory.md` and `assets/`
-- legacy split source such as `lesson.md`, `scenes.md`, and `artifacts/` remains importable only as migration or compatibility input
-- do not present the split file set as the preferred authoring path for new day-to-day work
-
-## 8. Paired Draft Rules
-
-When a shipped lesson is opened in Write Mode, the system may pair it to a draft.
-
-Rules:
-
-- the normal player prefers the latest healthy saved paired draft for the same shipped lesson
-- the normal player can also open a healthy unpaired custom draft when the browser lesson id matches that draft exactly
-- invalid paired drafts fail closed to the shipped lesson package
-- entering Write Mode with `?workspace=authoring&lesson=<shipped-lesson-id>` must open that lesson's paired draft instead of an unrelated most-recent draft
-- Write Mode must keep the browser `lesson` query aligned with the active draft context so refresh and back-to-player do not drift to a different lesson
-- paired drafts may auto-refresh from shipped source updates only while they still match the previous shipped source exactly
-- once the author edits the paired draft, the store must preserve those edits
-
-## 9. Migration Posture
-
-The repo is intentionally in migration, not denial.
-
-- legacy shipped file-based lessons still exist
-- they remain importable
-- they are not the preferred path for new day-to-day authoring
-- the system is moving toward UI-first authoring without breaking shipped lesson compatibility
 
 === .agents/language-specific/README.md ===
 # `language-specific/` — Project Overlay Space
@@ -10232,6 +10289,9 @@ Update rules:
 
 ## Current Ledger
 
+1. `[doc][medium] 2026-03-30 23:35 CEST - Closed TODO-018 by making .agents/business-logic/content/LessonAuthoringRules.md the only repo-local canonical user-facing lesson composition guide, removing the competing repo-local lesson authoring doc, repointing AGENTS and README layers, and tightening shipped lesson validation around a direct report seam`
+   owner: codex
+   actual: 45m
 1. `[feature][medium] 2026-03-30 04:14 CEST - Closed TODO-017 by shipping one shared step-level artifact diff engine, rendering git-style added and removed lines in both playback and Write Mode, and proving the shared contract through browser and contract coverage`
    owner: codex
    actual: 45m
@@ -10473,12 +10533,13 @@ The active plan lives in `.agents/management/planning/PLAN.md`.
 The active implementation queue lives in `.agents/management/TODO.md`.
 The evidence ledger lives in `.agents/management/evidence/CHANGELOG.md`.
 
-- 2026-03-30 03:23 CEST - PLAN-009 completed: added shared human-readable authoring diagnostics so Write Mode keeps one validation truth across the right inspector and inline editor lint markers, with plain-language guidance and exact location jumps.
-- 2026-03-30 03:38 CEST - PLAN-010 completed: made real browser paste deterministic in Write Mode so full lesson sources and large multi-step lesson bodies replace the starter scaffold correctly, then proved the behavior through the actual `paste` event path with save and reload coverage.
+- 2026-03-30 23:35 CEST - PLAN-012 completed: repackaged lesson documentation around one Serbian canonical author-facing contract, removed the competing repo-local lesson authoring guide, and tightened the shipped lesson validation seam so smoke coverage no longer depends on child-process stdout behavior.
 - 2026-03-30 04:14 CEST - PLAN-011 completed: added one shared step-level artifact diff truth so playback and Write Mode both show git-style added and removed lines for the active artifact, then proved the contract with browser and contract coverage.
-- 2026-03-29 20:20 CEST - PLAN-006 completed: shipped a read-only player draft-override seam so the normal player prefers the latest healthy saved paired draft, fails closed to the shipped lesson when the saved draft is broken, and keeps the lesson picker deterministic.
+- 2026-03-30 03:38 CEST - PLAN-010 completed: made real browser paste deterministic in Write Mode so full lesson sources and large multi-step lesson bodies replace the starter scaffold correctly, then proved the behavior through the actual `paste` event path with save and reload coverage.
+- 2026-03-30 03:23 CEST - PLAN-009 completed: added shared human-readable authoring diagnostics so Write Mode keeps one validation truth across the right inspector and inline editor lint markers, with plain-language guidance and exact location jumps.
 - 2026-03-30 01:15 CEST - PLAN-008 completed: tightened the UI-backed authoring contract with a shared runtime-state module, explicit Save/Play/Publish labels, a browser restore-version recovery proof, and updated authoring docs so the draft/play/publish contract stays explicit.
 - 2026-03-30 01:04 CEST - PLAN-007 completed: shipped the UI-backed lesson authoring bridge so Write Mode owns draft creation, save/reopen, playability state, published snapshot visibility, and fail-closed fallback semantics without requiring filesystem source scaffolds during authoring.
+- 2026-03-29 20:20 CEST - PLAN-006 completed: shipped a read-only player draft-override seam so the normal player prefers the latest healthy saved paired draft, fails closed to the shipped lesson when the saved draft is broken, and keeps the lesson picker deterministic.
 - 2026-03-29 19:36 CEST - PLAN-005 completed: removed large-paste friction from Write Mode by deferring heavy analysis after document edits, keeping cursor-only updates cheap, and safely importing full lesson sources through the body-first editor without duplicating hidden frontmatter.
 - 2026-03-29 18:29 CEST - PLAN-004 completed: tightened Write Mode runtime into a calmer writer-first workspace by lightening the outline rail, strengthening the DSL hierarchy, making slash insert more explicit, improving exact validation jumps, and closing TODO-006 with a zero-finding cold review.
 - 2026-03-29 17:43 CEST - PLAN-003 completed: shipped the hybrid Write Mode authoring surface with CodeMirror owning canonical `lesson.script.md`, lazy-loaded BlockNote metadata prose editors, maintained the writer-first layout, and closed TODO-005 after a zero-finding cold review/remediation loop.
@@ -10781,6 +10842,9 @@ Suggested file naming:
 
 - `YYYY-MM-DD-<scope>-review.md`
 
+=== .codex ===
+
+
 === .gitignore ===
 node_modules/
 dist/
@@ -10967,9 +11031,11 @@ Agents MUST follow this order in this repository:
    - Files under `product/education/lessons/**/source/` are off the critical path for creating and editing drafts. They exist as shipped lesson materialization plus import/export compatibility inputs.
    - Legacy file-based lessons remain importable during migration, but they are not the preferred path for new day-to-day authoring.
 12. **Lesson Authoring Documentation Path**:
-   - The live repo-local lesson architecture and authoring contract is documented in:
+   - The live repo-local lesson architecture and user-facing lesson composition contract is documented in:
+     - `.agents/business-logic/content/LessonAuthoringRules.md`
      - `.agents/business-logic/software/lesson-authoring/architecture/LESSON_ARCHITECTURE.md`
-     - `.agents/business-logic/software/lesson-authoring/authoring/LESSON_AUTHORING.md`
+   - `.agents/business-logic/content/LessonAuthoringRules.md` is the only canonical user-facing document for how an author composes a lesson.
+   - Older repo-local lesson authoring notes or removed paths are legacy/internal reference only when they appear in repo history.
    - If mounted reusable docs under `.agents/.rules/project-local/governance/app-architecture/lesson-architecture*.md` still show older file-first examples, treat them as reusable baseline or migration reference, not as the live default authoring workflow for this repo.
 
 Keep this file short. Long procedures belong in governance docs, and active
@@ -10988,6 +11054,7 @@ Step By Step Animator is an interactive lesson engine for HTML, CSS, and JavaScr
 - `.agents/management/TIMELINE.md` defines the timestamp and estimation law.
 - `.agents/management/ACTIVE.md` mirrors the current active task and bug board.
 - `.agents/business-logic/README.md` defines the plain-language business meaning.
+- `.agents/business-logic/content/LessonAuthoringRules.md` is the only canonical user-facing guide for composing a lesson.
 - `product/app/index.html` and `product/app/main.js` are the live app entry points.
 - `product/education/lessons/01-build-sidebar/source/lesson.script.md` is the default shipped lesson source for the cold-start experience.
 - `system/lesson-engine/register-lesson-packages/index.js` registers the live lesson set and declares the default lesson id.
@@ -11124,6 +11191,14 @@ npm run sync:lesson-documents
 ## Lesson Drafts, Shipped Files, And Migration
 
 Normal lesson authoring starts in Write Mode.
+
+For the author-facing content rules, use only:
+
+```txt
+.agents/business-logic/content/LessonAuthoringRules.md
+```
+
+That document is the canonical lesson composition guide. Architecture docs and migration docs support engineering work, but they do not replace the author-facing rules for how to compose a lesson.
 
 - the canonical authored document shape is still `lesson.script.md`
 - during normal authoring that document lives in the browser-backed authoring store, not in a required filesystem scaffold
@@ -103001,7 +103076,8 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { compileSourceLesson } from './compile-source-lesson.js';
 
-const currentDir = path.dirname(fileURLToPath(import.meta.url));
+const currentFile = fileURLToPath(import.meta.url);
+const currentDir = path.dirname(currentFile);
 const lessonsRoot = path.resolve(currentDir, '../../product/education/lessons');
 
 function collectLessonFolders() {
@@ -103026,17 +103102,47 @@ function validateLessonSource({ lessonSlug, sourceRoot }) {
     0
   );
 
-  console.log(`${lessonSlug}: ok (${compiledLesson.steps.length} steps, ${sceneCount} scenes, ${sourceFormat})`);
+  return `${lessonSlug}: ok (${compiledLesson.steps.length} steps, ${sceneCount} scenes, ${sourceFormat})`;
 }
 
-function main() {
+export function readSourceLessonValidationReport() {
   const lessonFolders = collectLessonFolders();
+  const outputLines = lessonFolders.map(validateLessonSource);
 
-  lessonFolders.forEach(validateLessonSource);
-  console.log(`Validated ${lessonFolders.length} lesson source packages.`);
+  outputLines.push(`Validated ${lessonFolders.length} lesson source packages.`);
+
+  return {
+    lessonCount: lessonFolders.length,
+    outputLines
+  };
 }
 
-main();
+async function flushValidationReport(lines) {
+  const report = `${lines.join('\n')}\n`;
+
+  await new Promise((resolve, reject) => {
+    process.stdout.write(report, error => {
+      if (error) {
+        reject(error);
+        return;
+      }
+
+      resolve();
+    });
+  });
+}
+
+async function main() {
+  const { outputLines } = readSourceLessonValidationReport();
+  await flushValidationReport(outputLines);
+}
+
+if (process.argv[1] && path.resolve(process.argv[1]) === currentFile) {
+  main().catch(error => {
+    console.error(error);
+    process.exitCode = 1;
+  });
+}
 
 === tests/contracts/build-artifact-line-diff.test.js ===
 import test from 'node:test';
@@ -106576,22 +106682,14 @@ test('browser authoring smoke keeps Save store-only while Publish remains the ex
 === tests/smoke/validate-source-lessons.test.js ===
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { execFile } from 'node:child_process';
-import { promisify } from 'node:util';
-import path from 'node:path';
-import { fileURLToPath } from 'node:url';
+import { readSourceLessonValidationReport } from '../../system/lesson-engine/validate-source-lessons.js';
 
-const execFileAsync = promisify(execFile);
-const currentDir = path.dirname(fileURLToPath(import.meta.url));
-const repoRoot = path.resolve(currentDir, '../../');
+test('validate-source-lessons reports healthy shipped source lessons', () => {
+  const { lessonCount, outputLines } = readSourceLessonValidationReport();
 
-test('validate-source-lessons passes on the shipped source-only lessons', async () => {
-  const { stdout } = await execFileAsync('node', ['system/lesson-engine/validate-source-lessons.js'], {
-    cwd: repoRoot,
-    maxBuffer: 1024 * 1024
-  });
-
-  assert.match(stdout, /Validated \d+ lesson source packages\./);
+  assert.ok(lessonCount > 0);
+  assert.equal(outputLines.length, lessonCount + 1);
+  assert.match(outputLines.at(-1) || '', /Validated \d+ lesson source packages\./);
 });
 
 === vite.config.js ===

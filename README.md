@@ -10,6 +10,7 @@ Step By Step Animator is an interactive lesson engine for HTML, CSS, and JavaScr
 - `.agents/management/TIMELINE.md` defines the timestamp and estimation law.
 - `.agents/management/ACTIVE.md` mirrors the current active task and bug board.
 - `.agents/business-logic/README.md` defines the plain-language business meaning.
+- `.agents/business-logic/content/LessonAuthoringRules.md` is the only canonical user-facing guide for composing a lesson.
 - `product/app/index.html` and `product/app/main.js` are the live app entry points.
 - `product/education/lessons/01-build-sidebar/source/lesson.script.md` is the default shipped lesson source for the cold-start experience.
 - `system/lesson-engine/register-lesson-packages/index.js` registers the live lesson set and declares the default lesson id.
@@ -146,6 +147,14 @@ npm run sync:lesson-documents
 ## Lesson Drafts, Shipped Files, And Migration
 
 Normal lesson authoring starts in Write Mode.
+
+For the author-facing content rules, use only:
+
+```txt
+.agents/business-logic/content/LessonAuthoringRules.md
+```
+
+That document is the canonical lesson composition guide. Architecture docs and migration docs support engineering work, but they do not replace the author-facing rules for how to compose a lesson.
 
 - the canonical authored document shape is still `lesson.script.md`
 - during normal authoring that document lives in the browser-backed authoring store, not in a required filesystem scaffold

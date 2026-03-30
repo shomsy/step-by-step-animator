@@ -18,8 +18,11 @@ Repo-local docs and queues live in the visible `.agents/` tree.
 There are no repo-local overlays inside `.rules/`; local project guidance lives
 in the visible `.agents/` tree.
 
-For lesson authoring, the live repo-local contract is documented in the visible
-`.agents/business-logic/software/lesson-authoring/**` tree. Mounted
+For lesson authoring, the live repo-local user-facing composition contract is
+`.agents/business-logic/content/LessonAuthoringRules.md`, and the supporting
+engineering architecture contract is
+`.agents/business-logic/software/lesson-authoring/architecture/LESSON_ARCHITECTURE.md`.
+Mounted
 `.agents/.rules/project-local/governance/app-architecture/lesson-architecture*.md`
 files remain reusable baseline or migration references and are not the live
 default authoring contract for this repo.
@@ -43,8 +46,8 @@ Every idea, plan, architecture decision, and lesson change must answer:
 6. `.rules/governance/security/README.md`
 7. `language-specific/README.md`
 8. `business-logic/README.md`
-9. `business-logic/software/lesson-authoring/architecture/LESSON_ARCHITECTURE.md`
-10. `business-logic/software/lesson-authoring/authoring/LESSON_AUTHORING.md`
+9. `business-logic/content/LessonAuthoringRules.md`
+10. `business-logic/software/lesson-authoring/architecture/LESSON_ARCHITECTURE.md`
 11. `management/README.md`
 12. `management/ACTIVE.md`
 13. `management/TIMELINE.md`

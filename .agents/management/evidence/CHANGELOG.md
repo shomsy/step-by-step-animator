@@ -15,6 +15,9 @@ Update rules:
 
 ## Current Ledger
 
+1. `[doc][medium] 2026-03-30 23:35 CEST - Closed TODO-018 by making .agents/business-logic/content/LessonAuthoringRules.md the only repo-local canonical user-facing lesson composition guide, removing the competing repo-local lesson authoring doc, repointing AGENTS and README layers, and tightening shipped lesson validation around a direct report seam`
+   owner: codex
+   actual: 45m
 1. `[feature][medium] 2026-03-30 04:14 CEST - Closed TODO-017 by shipping one shared step-level artifact diff engine, rendering git-style added and removed lines in both playback and Write Mode, and proving the shared contract through browser and contract coverage`
    owner: codex
    actual: 45m
