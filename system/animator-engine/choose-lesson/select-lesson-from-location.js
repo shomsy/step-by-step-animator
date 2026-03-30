@@ -38,6 +38,11 @@ function annotatePublishedLesson(lesson) {
   };
 }
 
+function isPlayableDraftRuntimeSource(lessonRuntimeSource) {
+  return lessonRuntimeSource === LESSON_RUNTIME_SOURCE.PLAYABLE_DRAFT
+    || lessonRuntimeSource === LESSON_RUNTIME_SOURCE.PLAYABLE_DRAFT_BACKUP;
+}
+
 function normalizeDraftLesson(lesson) {
   if (!lesson) {
     return null;
@@ -47,10 +52,14 @@ function normalizeDraftLesson(lesson) {
     return lesson;
   }
 
-  if (lesson.lessonRuntimeSource === LESSON_RUNTIME_SOURCE.PLAYABLE_DRAFT) {
+  if (isPlayableDraftRuntimeSource(lesson.lessonRuntimeSource)) {
     return {
       ...lesson,
-      lessonRuntimeSourceLabel: lesson.lessonRuntimeSourceLabel || LESSON_RUNTIME_SOURCE_LABELS.PLAYABLE_DRAFT
+      lessonRuntimeSourceLabel: lesson.lessonRuntimeSourceLabel || (
+        lesson.lessonRuntimeSource === LESSON_RUNTIME_SOURCE.PLAYABLE_DRAFT_BACKUP
+          ? LESSON_RUNTIME_SOURCE_LABELS.PLAYABLE_DRAFT_BACKUP
+          : LESSON_RUNTIME_SOURCE_LABELS.PLAYABLE_DRAFT
+      )
     };
   }
 
@@ -62,7 +71,7 @@ function normalizeDraftLesson(lesson) {
 }
 
 function buildLessonsForSelection(registeredLessons, lesson) {
-  if (!lesson || lesson.lessonRuntimeSource !== LESSON_RUNTIME_SOURCE.PLAYABLE_DRAFT) {
+  if (!lesson || !isPlayableDraftRuntimeSource(lesson.lessonRuntimeSource)) {
     return registeredLessons;
   }
 

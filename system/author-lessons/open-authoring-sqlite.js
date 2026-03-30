@@ -3,6 +3,7 @@ import sqlWasmUrl from 'sql.js/dist/sql-wasm.wasm?url';
 import { readLessonScript } from '../lesson-engine/read-lesson-script.js';
 import { buildLessonScriptMarkdown } from '../lesson-engine/build-lesson-script-markdown.js';
 import { normalizeString } from '../lesson-engine/build-compiled-lesson.js';
+import { openAuthoringLessonBackup } from './open-authoring-lesson-backup.js';
 
 const STORAGE_KEY = 'step-by-step-animator.authoring.sqlite.v1';
 const PERSISTENCE_DATABASE_NAME = 'step-by-step-animator-authoring';
@@ -44,6 +45,12 @@ function decodeDatabaseBytes(encodedBytes) {
   }
 
   return bytes;
+}
+
+function readTimestampOrderValue(timestamp) {
+  const parsedTimestamp = Date.parse(normalizeString(timestamp));
+
+  return Number.isNaN(parsedTimestamp) ? 0 : parsedTimestamp;
 }
 
 function openPersistenceDatabase(ownerWindow) {
@@ -314,6 +321,41 @@ async function readPersistedDatabaseBytes(ownerWindow) {
   }
 }
 
+async function readPersistedDatabaseState(ownerWindow) {
+  try {
+    return {
+      storedBytes: await readPersistedDatabaseBytes(ownerWindow),
+      readErrorMessage: ''
+    };
+  } catch (error) {
+    return {
+      storedBytes: null,
+      readErrorMessage: error.message || 'Failed to read the authoring SQLite snapshot.'
+    };
+  }
+}
+
+function openPersistedDatabase(SQL, storedBytes) {
+  if (!storedBytes) {
+    return {
+      database: new SQL.Database(),
+      openErrorMessage: ''
+    };
+  }
+
+  try {
+    return {
+      database: new SQL.Database(storedBytes),
+      openErrorMessage: ''
+    };
+  } catch (error) {
+    return {
+      database: new SQL.Database(),
+      openErrorMessage: error.message || 'Failed to open the authoring SQLite snapshot.'
+    };
+  }
+}
+
 async function persistDatabase(database, ownerWindow) {
   const bytes = database.export();
 
@@ -530,7 +572,8 @@ function upsertDraftFromMarkdown(database, {
   sourceMarkdown,
   sourceOrigin,
   shippedLessonId = null,
-  createdAt = readTimestamp()
+  createdAt = readTimestamp(),
+  updatedAt = readTimestamp()
 }) {
   const parsedLesson = tryReadLessonContract(sourceMarkdown);
 
@@ -542,7 +585,6 @@ function upsertDraftFromMarkdown(database, {
 
   ensureDraftLessonIdIsAvailable(database, summary.lessonId, draftId);
 
-  const now = readTimestamp();
   const existingRows = readRows(
     database,
     'SELECT draft_id FROM lesson_drafts WHERE draft_id = ?',
@@ -561,7 +603,7 @@ function upsertDraftFromMarkdown(database, {
         sourceMarkdown,
         sourceOrigin,
         shippedLessonId,
-        now,
+        updatedAt,
         draftId
       ]
     );
@@ -578,7 +620,7 @@ function upsertDraftFromMarkdown(database, {
         sourceOrigin,
         shippedLessonId,
         createdAt,
-        now
+        updatedAt
       ]
     );
   }
@@ -770,6 +812,178 @@ function readDraftSourceMarkdown(database, draftId) {
   return rows[0];
 }
 
+function readDraftRowByDraftId(database, draftId) {
+  if (!normalizeString(draftId)) {
+    return null;
+  }
+
+  return readRows(
+    database,
+    `SELECT draft_id, lesson_id, lesson_title, source_markdown, source_origin, shipped_lesson_id, created_at, updated_at
+     FROM lesson_drafts
+     WHERE draft_id = ?
+     LIMIT 1`,
+    [draftId]
+  )[0] || null;
+}
+
+function readDraftRestoreConflictRow(database, {
+  lessonId = '',
+  shippedLessonId = ''
+}) {
+  if (normalizeString(shippedLessonId)) {
+    return readRows(
+      database,
+      `SELECT draft_id, lesson_id, lesson_title, source_markdown, source_origin, shipped_lesson_id, created_at, updated_at
+       FROM lesson_drafts
+       WHERE shipped_lesson_id = ?
+       ORDER BY updated_at DESC, lesson_id ASC
+       LIMIT 1`,
+      [shippedLessonId]
+    )[0] || null;
+  }
+
+  if (!normalizeString(lessonId)) {
+    return null;
+  }
+
+  return readRows(
+    database,
+    `SELECT draft_id, lesson_id, lesson_title, source_markdown, source_origin, shipped_lesson_id, created_at, updated_at
+     FROM lesson_drafts
+     WHERE lesson_id = ? AND shipped_lesson_id IS NULL
+     ORDER BY updated_at DESC, lesson_id ASC
+     LIMIT 1`,
+    [lessonId]
+  )[0] || null;
+}
+
+function restoreDraftBackups(database, draftBackups) {
+  let restoredDraftCount = 0;
+
+  draftBackups.forEach(draftBackup => {
+    if (!draftBackup?.draftId || !normalizeString(draftBackup.sourceMarkdown)) {
+      return;
+    }
+
+    if (draftBackup.tracksShippedSource && normalizeString(draftBackup.shippedLessonId)) {
+      return;
+    }
+
+    const exactDraftRow = readDraftRowByDraftId(database, draftBackup.draftId);
+    const conflictingDraftRow = readDraftRestoreConflictRow(database, draftBackup);
+    const targetDraftRow = exactDraftRow || conflictingDraftRow;
+    const existingUpdatedAt = readTimestampOrderValue(targetDraftRow?.updated_at);
+    const backupUpdatedAt = readTimestampOrderValue(draftBackup.updatedAt || draftBackup.createdAt);
+
+    if (targetDraftRow && existingUpdatedAt >= backupUpdatedAt) {
+      return;
+    }
+
+    const restoredDraftId = targetDraftRow?.draft_id || draftBackup.draftId;
+    const restoredCreatedAt = targetDraftRow?.created_at || draftBackup.createdAt || draftBackup.updatedAt || readTimestamp();
+    const restoredUpdatedAt = draftBackup.updatedAt || draftBackup.createdAt || readTimestamp();
+    const restoredSourceOrigin = draftBackup.sourceOrigin || targetDraftRow?.source_origin || (draftBackup.shippedLessonId ? 'paired-shipped' : 'custom');
+    const restoredShippedLessonId = draftBackup.shippedLessonId || targetDraftRow?.shipped_lesson_id || null;
+    const parsedDraftBackup = tryReadLessonContract(draftBackup.sourceMarkdown);
+
+    if (parsedDraftBackup.contract) {
+      upsertDraftFromMarkdown(database, {
+        draftId: restoredDraftId,
+        sourceMarkdown: draftBackup.sourceMarkdown,
+        sourceOrigin: restoredSourceOrigin,
+        shippedLessonId: restoredShippedLessonId,
+        createdAt: restoredCreatedAt,
+        updatedAt: restoredUpdatedAt
+      });
+      restoredDraftCount += 1;
+      return;
+    }
+
+    const restoredLessonId = normalizeString(draftBackup.lessonId) || targetDraftRow?.lesson_id || '';
+    const restoredLessonTitle = normalizeString(draftBackup.lessonTitle) || targetDraftRow?.lesson_title || restoredLessonId;
+
+    if (!restoredLessonId || !restoredLessonTitle) {
+      return;
+    }
+
+    ensureDraftLessonIdIsAvailable(database, restoredLessonId, restoredDraftId);
+
+    if (targetDraftRow) {
+      runStatement(
+        database,
+        `UPDATE lesson_drafts
+         SET lesson_id = ?, lesson_title = ?, source_markdown = ?, source_origin = ?, shipped_lesson_id = ?, updated_at = ?
+         WHERE draft_id = ?`,
+        [
+          restoredLessonId,
+          restoredLessonTitle,
+          draftBackup.sourceMarkdown,
+          restoredSourceOrigin,
+          restoredShippedLessonId,
+          restoredUpdatedAt,
+          restoredDraftId
+        ]
+      );
+    } else {
+      runStatement(
+        database,
+        `INSERT INTO lesson_drafts (draft_id, lesson_id, lesson_title, source_markdown, source_origin, shipped_lesson_id, created_at, updated_at)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+        [
+          restoredDraftId,
+          restoredLessonId,
+          restoredLessonTitle,
+          draftBackup.sourceMarkdown,
+          restoredSourceOrigin,
+          restoredShippedLessonId,
+          restoredCreatedAt,
+          restoredUpdatedAt
+        ]
+      );
+    }
+
+    clearDraftStructure(database, restoredDraftId);
+    restoredDraftCount += 1;
+  });
+
+  return restoredDraftCount;
+}
+
+function buildStoreRecoveryState({
+  readErrorMessage = '',
+  openErrorMessage = '',
+  restoredDraftCount = 0
+}) {
+  const draftLabel = restoredDraftCount === 1 ? 'draft' : 'drafts';
+
+  if (readErrorMessage || openErrorMessage) {
+    if (restoredDraftCount > 0) {
+      return {
+        storeRecoveryNotice: `SQLite snapshot could not be opened. Restored ${restoredDraftCount} ${draftLabel} from lesson.script.md backups.`,
+        storeRecoveryTone: 'warning'
+      };
+    }
+
+    return {
+      storeRecoveryNotice: 'SQLite snapshot could not be opened and no lesson.script.md backups were available.',
+      storeRecoveryTone: 'danger'
+    };
+  }
+
+  if (restoredDraftCount > 0) {
+    return {
+      storeRecoveryNotice: `SQLite snapshot was missing. Restored ${restoredDraftCount} ${draftLabel} from lesson.script.md backups.`,
+      storeRecoveryTone: 'warning'
+    };
+  }
+
+  return {
+    storeRecoveryNotice: '',
+    storeRecoveryTone: 'success'
+  };
+}
+
 function readPlayableDraftOverrideRow(database, shippedLessonId) {
   const rows = readRows(
     database,
@@ -830,10 +1044,15 @@ function buildPlayableDraftOverrideSummary(draftRow) {
   };
 }
 
-function buildWorkspaceSnapshot(database, draftId = '') {
+function buildWorkspaceSnapshot(database, draftId = '', {
+  storeRecoveryNotice = '',
+  storeRecoveryTone = 'success'
+} = {}) {
   return {
     shippedLessons: readShippedSummaries(database),
     drafts: readDraftSummaries(database),
+    storeRecoveryNotice,
+    storeRecoveryTone,
     selectedDraft: draftId
       ? (() => {
           const draftRow = readDraftSourceMarkdown(database, draftId);
@@ -889,15 +1108,32 @@ export async function openAuthoringSqlite({
   shippedLessons
 }) {
   const SQL = await createSqlRuntime();
-  const storedBytes = await readPersistedDatabaseBytes(ownerWindow);
-  const database = storedBytes ? new SQL.Database(storedBytes) : new SQL.Database();
+  const authoringLessonBackup = await openAuthoringLessonBackup({
+    ownerWindow
+  });
+  const persistedDatabaseState = await readPersistedDatabaseState(ownerWindow);
+  const { database, openErrorMessage } = openPersistedDatabase(SQL, persistedDatabaseState.storedBytes);
+  let draftBackups = [];
+
+  try {
+    draftBackups = await authoringLessonBackup.readDraftBackups();
+  } catch {
+    draftBackups = [];
+  }
 
   createSchema(database);
-  runTransaction(database, () => {
+  const restoredDraftCount = runTransaction(database, () => {
     seedShippedLessons(database, shippedLessons);
+    const restoredCount = restoreDraftBackups(database, draftBackups);
     ensurePairedDrafts(database);
+    return restoredCount;
   });
   await persistDatabase(database, ownerWindow);
+  const storeRecoveryState = buildStoreRecoveryState({
+    readErrorMessage: persistedDatabaseState.readErrorMessage,
+    openErrorMessage,
+    restoredDraftCount
+  });
 
   async function persist(work) {
     const result = runTransaction(database, work);
@@ -905,50 +1141,111 @@ export async function openAuthoringSqlite({
     return result;
   }
 
+  function readWorkspaceSnapshotWithRecovery(selectedDraftId = '') {
+    return buildWorkspaceSnapshot(database, selectedDraftId, storeRecoveryState);
+  }
+
+  function readTracksShippedSource(selectedDraft) {
+    if (!normalizeString(selectedDraft?.shippedLessonId)) {
+      return false;
+    }
+
+    const shippedLessonRow = readShippedLessonRow(database, selectedDraft.shippedLessonId);
+
+    return Boolean(
+      shippedLessonRow
+      && shippedLessonRow.source_markdown === selectedDraft.sourceMarkdown
+    );
+  }
+
+  async function writeSelectedDraftBackup(workspaceSnapshot) {
+    if (!workspaceSnapshot?.selectedDraft) {
+      return {
+        status: 'unavailable',
+        backupFileName: 'lesson.script.md',
+        backupLocation: ''
+      };
+    }
+
+    try {
+      return await authoringLessonBackup.writeDraftBackup({
+        draftId: workspaceSnapshot.selectedDraft.draftId,
+        lessonId: workspaceSnapshot.selectedDraft.lessonId,
+        lessonTitle: workspaceSnapshot.selectedDraft.lessonTitle,
+        sourceMarkdown: workspaceSnapshot.selectedDraft.sourceMarkdown,
+        sourceOrigin: workspaceSnapshot.selectedDraft.sourceOrigin,
+        shippedLessonId: workspaceSnapshot.selectedDraft.shippedLessonId,
+        createdAt: workspaceSnapshot.selectedDraft.createdAt,
+        updatedAt: workspaceSnapshot.selectedDraft.updatedAt,
+        tracksShippedSource: readTracksShippedSource(workspaceSnapshot.selectedDraft)
+      });
+    } catch (error) {
+      return {
+        status: 'failed',
+        backupFileName: 'lesson.script.md',
+        backupLocation: '',
+        errorMessage: error.message || 'Failed to write the lesson.script.md backup.'
+      };
+    }
+  }
+
+  async function removeDraftBackup(draftId) {
+    try {
+      return await authoringLessonBackup.removeDraftBackup(draftId);
+    } catch (error) {
+      return {
+        status: 'failed',
+        backupFileName: 'lesson.script.md',
+        backupLocation: '',
+        errorMessage: error.message || 'Failed to remove the lesson.script.md backup.'
+      };
+    }
+  }
+
   return {
     readWorkspaceSnapshot(selectedDraftId = '') {
-      return buildWorkspaceSnapshot(database, selectedDraftId);
+      return readWorkspaceSnapshotWithRecovery(selectedDraftId);
     },
     readPlayableDraftOverride(shippedLessonId) {
       if (!normalizeString(shippedLessonId)) {
         return null;
       }
 
-        return buildPlayableDraftOverrideSummary(
-          readPlayableDraftOverrideRow(database, shippedLessonId)
-        );
-      },
-      async openDraftForLessonContext(lessonId) {
-        const requestedLessonId = normalizeString(lessonId);
+      return buildPlayableDraftOverrideSummary(
+        readPlayableDraftOverrideRow(database, shippedLessonId)
+      );
+    },
+    async openDraftForLessonContext(lessonId) {
+      const requestedLessonId = normalizeString(lessonId);
 
-        if (!requestedLessonId) {
-          return buildWorkspaceSnapshot(database);
-        }
+      if (!requestedLessonId) {
+        return readWorkspaceSnapshotWithRecovery();
+      }
 
-        const directDraftId = readDraftIdForLessonContext(database, requestedLessonId);
+      const directDraftId = readDraftIdForLessonContext(database, requestedLessonId);
 
-        if (directDraftId) {
-          return buildWorkspaceSnapshot(database, directDraftId);
-        }
+      if (directDraftId) {
+        return readWorkspaceSnapshotWithRecovery(directDraftId);
+      }
 
-        if (!readShippedLessonRow(database, requestedLessonId)) {
-          return buildWorkspaceSnapshot(database);
-        }
+      if (!readShippedLessonRow(database, requestedLessonId)) {
+        return readWorkspaceSnapshotWithRecovery();
+      }
 
-        return persist(() => {
-          const draftId = ensureDraftForShippedLesson(database, requestedLessonId);
-          return buildWorkspaceSnapshot(database, draftId);
-        });
-      },
-      async openDraftForShippedLesson(shippedLessonId) {
-        return persist(() => {
-          const draftId = ensureDraftForShippedLesson(database, shippedLessonId);
+      return persist(() => {
+        const draftId = ensureDraftForShippedLesson(database, requestedLessonId);
+        return readWorkspaceSnapshotWithRecovery(draftId);
+      });
+    },
+    async openDraftForShippedLesson(shippedLessonId) {
+      return persist(() => {
+        const draftId = ensureDraftForShippedLesson(database, shippedLessonId);
 
-        return buildWorkspaceSnapshot(database, draftId);
+        return readWorkspaceSnapshotWithRecovery(draftId);
       });
     },
     async createLessonDraft() {
-      return persist(() => {
+      const nextWorkspaceSnapshot = await persist(() => {
         const sourceMarkdown = buildEmptyLessonScript(readExistingDraftIds(database));
         const draftId = createOpaqueId('draft');
 
@@ -958,11 +1255,14 @@ export async function openAuthoringSqlite({
           sourceOrigin: 'custom'
         });
 
-        return buildWorkspaceSnapshot(database, draftId);
+        return readWorkspaceSnapshotWithRecovery(draftId);
       });
+
+      nextWorkspaceSnapshot.backupStatus = await writeSelectedDraftBackup(nextWorkspaceSnapshot);
+      return nextWorkspaceSnapshot;
     },
     async saveLessonDraft({ draftId, sourceMarkdown, lessonAttributes, steps }) {
-      return persist(() => {
+      const nextWorkspaceSnapshot = await persist(() => {
         const existingDraft = readDraftSourceMarkdown(database, draftId);
         const nextSourceMarkdown = typeof sourceMarkdown === 'string'
           ? sourceMarkdown
@@ -971,6 +1271,7 @@ export async function openAuthoringSqlite({
             steps
           });
         const parsedLesson = tryReadLessonContract(nextSourceMarkdown);
+        const savedAt = readTimestamp();
 
         if (parsedLesson.contract) {
           const summary = summarizeLessonContract(parsedLesson.contract);
@@ -988,7 +1289,7 @@ export async function openAuthoringSqlite({
               nextSourceMarkdown,
               existingDraft.source_origin,
               existingDraft.shipped_lesson_id || null,
-              readTimestamp(),
+              savedAt,
               draftId
             ]
           );
@@ -1001,18 +1302,21 @@ export async function openAuthoringSqlite({
              WHERE draft_id = ?`,
             [
               nextSourceMarkdown,
-              readTimestamp(),
+              savedAt,
               draftId
             ]
           );
           clearDraftStructure(database, draftId);
         }
 
-        return buildWorkspaceSnapshot(database, draftId);
+        return readWorkspaceSnapshotWithRecovery(draftId);
       });
+
+      nextWorkspaceSnapshot.backupStatus = await writeSelectedDraftBackup(nextWorkspaceSnapshot);
+      return nextWorkspaceSnapshot;
     },
     async duplicateLessonDraft(draftId) {
-      return persist(() => {
+      const nextWorkspaceSnapshot = await persist(() => {
         const existingDraft = readDraftSourceMarkdown(database, draftId);
         const duplicatedMarkdown = createDuplicateLessonScript(database, existingDraft.source_markdown);
         const duplicatedDraftId = createOpaqueId('draft');
@@ -1023,17 +1327,30 @@ export async function openAuthoringSqlite({
           sourceOrigin: 'duplicate'
         });
 
-        return buildWorkspaceSnapshot(database, duplicatedDraftId);
+        return readWorkspaceSnapshotWithRecovery(duplicatedDraftId);
       });
+
+      nextWorkspaceSnapshot.backupStatus = await writeSelectedDraftBackup(nextWorkspaceSnapshot);
+      return nextWorkspaceSnapshot;
     },
     async deleteLessonDraft(draftId) {
-      return persist(() => {
+      const existingDraft = readDraftSourceMarkdown(database, draftId);
+      const backupStatus = await removeDraftBackup(existingDraft.draft_id);
+
+      if (backupStatus.status === 'failed') {
+        throw new Error(backupStatus.errorMessage || 'Failed to remove the lesson.script.md backup.');
+      }
+
+      const nextWorkspaceSnapshot = await persist(() => {
         runStatement(database, 'DELETE FROM lesson_versions WHERE draft_id = ?', [draftId]);
         runStatement(database, 'DELETE FROM lesson_drafts WHERE draft_id = ?', [draftId]);
 
         const nextDraft = readDraftSummaries(database)[0]?.draftId || '';
-        return buildWorkspaceSnapshot(database, nextDraft);
+        return readWorkspaceSnapshotWithRecovery(nextDraft);
       });
+
+      nextWorkspaceSnapshot.backupStatus = backupStatus;
+      return nextWorkspaceSnapshot;
     },
     async publishLessonDraft(draftId) {
       return persist(() => {
@@ -1052,11 +1369,11 @@ export async function openAuthoringSqlite({
           ]
         );
 
-        return buildWorkspaceSnapshot(database, draftId);
+        return readWorkspaceSnapshotWithRecovery(draftId);
       });
     },
     async restoreLessonDraftVersion({ draftId, versionId }) {
-      return persist(() => {
+      const nextWorkspaceSnapshot = await persist(() => {
         const existingDraft = readDraftSourceMarkdown(database, draftId);
         const versionRows = readRows(
           database,
@@ -1078,8 +1395,11 @@ export async function openAuthoringSqlite({
           createdAt: existingDraft.created_at
         });
 
-        return buildWorkspaceSnapshot(database, draftId);
+        return readWorkspaceSnapshotWithRecovery(draftId);
       });
+
+      nextWorkspaceSnapshot.backupStatus = await writeSelectedDraftBackup(nextWorkspaceSnapshot);
+      return nextWorkspaceSnapshot;
     }
   };
 }
@@ -1093,14 +1413,19 @@ export async function readPersistedPlayableDraftOverride({
     return null;
   }
 
-  const storedBytes = await readPersistedDatabaseBytes(ownerWindow);
+  const persistedDatabaseState = await readPersistedDatabaseState(ownerWindow);
 
-  if (!storedBytes) {
+  if (!persistedDatabaseState.storedBytes) {
     return null;
   }
 
   const SQL = await createSqlRuntime();
-  const database = new SQL.Database(storedBytes);
+  const { database, openErrorMessage } = openPersistedDatabase(SQL, persistedDatabaseState.storedBytes);
+
+  if (openErrorMessage) {
+    database.close();
+    return null;
+  }
 
   try {
     createSchema(database);

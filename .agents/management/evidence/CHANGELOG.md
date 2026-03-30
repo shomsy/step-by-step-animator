@@ -15,6 +15,9 @@ Update rules:
 
 ## Current Ledger
 
+1. `[feature][medium] 2026-03-31 01:52 CEST - Closed TODO-019 by mirroring saved authoring drafts into browser-owned lesson.script.md backups, restoring those backups when the SQLite snapshot is missing, preserving the new playable-draft-backup runtime label through player selection, and proving healthy plus broken recovery through flow and browser-smoke coverage`
+   owner: codex
+   actual: 2h
 1. `[doc][medium] 2026-03-30 23:35 CEST - Closed TODO-018 by making .agents/business-logic/content/LessonAuthoringRules.md the only repo-local canonical user-facing lesson composition guide, removing the competing repo-local lesson authoring doc, repointing AGENTS and README layers, and tightening shipped lesson validation around a direct report seam`
    owner: codex
    actual: 45m

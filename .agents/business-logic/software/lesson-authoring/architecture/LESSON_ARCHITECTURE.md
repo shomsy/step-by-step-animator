@@ -13,7 +13,8 @@ This is not the canonical user-facing guide for composing lesson content. The on
 The lesson system now has three distinct truths:
 
 1. `Authoring Store`
-   - the draft truth for in-progress lessons
+   - the SQLite-backed draft truth for in-progress lessons
+   - `Save` also mirrors the exact `lesson.script.md` into a browser-owned backup so the draft can be restored if the SQLite snapshot is missing
    - owned by Write Mode
 2. `Shipped Lesson Package`
    - the runtime truth used by the animator
@@ -32,20 +33,22 @@ Filesystem lesson files are off the critical path for creating and editing draft
 flowchart TD
   A[Write Mode] --> B[Authoring Store]
   B --> C[Save]
-  C --> D[Latest healthy saved draft]
-  D --> E[Lesson Engine validate + compile]
-  E --> F[Shipped Lesson Package]
-  F --> G[Animator Engine]
-  G --> H[Play lesson]
+  C --> D[Browser lesson.script.md backup]
+  C --> E[Latest healthy saved draft]
+  D --> E
+  E --> F[Lesson Engine validate + compile]
+  F --> G[Shipped Lesson Package]
+  G --> H[Animator Engine]
+  H --> I[Play lesson]
 
-  B --> I[Publish]
-  I --> J[Recoverable snapshot]
+  B --> J[Publish]
+  J --> K[Recoverable snapshot]
 
-  B --> K[Export]
-  K --> L[Publish/Export Artifacts]
+  B --> L[Export]
+  L --> M[Publish/Export Artifacts]
 
-  M[Legacy file-based lesson inputs] --> E
-  L --> E
+  N[Legacy file-based lesson inputs] --> F
+  M --> F
 ```
 
 ## 3. Boundary Ownership
@@ -70,8 +73,10 @@ Do not let support logic blur them back into one mixed lesson CMS flow.
 
 - `Save`
   - persist draft content to the authoring store
+  - mirror the same `lesson.script.md` into the browser backup boundary when that boundary is available
 - `Play`
   - compile from the latest healthy saved draft
+  - if the SQLite snapshot is unavailable, recover from the mirrored `lesson.script.md` backup
   - fail closed to the shipped lesson package when the draft is unhealthy
   - when the selected lesson id belongs to an unpaired custom draft, play can select that healthy saved draft directly without a shipped filesystem package
 - `Publish`

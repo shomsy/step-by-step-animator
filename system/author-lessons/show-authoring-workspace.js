@@ -383,17 +383,36 @@ function buildStatusMessageTone(state) {
   return state.statusMessageTone || 'muted';
 }
 
+function readRecoveryStatusMessage(state) {
+  const recoveryNotice = normalizeText(state.workspaceSnapshot?.storeRecoveryNotice);
+  const currentStatusMessage = normalizeText(state.statusMessage);
+
+  if (!recoveryNotice || currentStatusMessage !== recoveryNotice) {
+    return '';
+  }
+
+  return recoveryNotice;
+}
+
 function buildStatusMessage(state) {
   if (state.analysisPending && state.statusMessage) {
     return state.statusMessage;
   }
 
   if (state.analysis?.parseErrorMessage) {
-    return state.analysis.parseErrorMessage;
+    const recoveryStatusMessage = readRecoveryStatusMessage(state);
+
+    return recoveryStatusMessage
+      ? `${recoveryStatusMessage} Current draft error: ${state.analysis.parseErrorMessage}`
+      : state.analysis.parseErrorMessage;
   }
 
   if (state.analysis?.compileErrorMessage) {
-    return state.analysis.compileErrorMessage;
+    const recoveryStatusMessage = readRecoveryStatusMessage(state);
+
+    return recoveryStatusMessage
+      ? `${recoveryStatusMessage} Current draft error: ${state.analysis.compileErrorMessage}`
+      : state.analysis.compileErrorMessage;
   }
 
   if (state.statusMessage) {
@@ -1810,6 +1829,51 @@ function closeAuthoringOverlays(state) {
   state.metadataDrawerOpen = false;
 }
 
+function readWorkspaceActionStatus(baseStatusMessage, workspaceSnapshot, baseTone = 'success') {
+  const statusMessage = normalizeText(baseStatusMessage) || 'Draft updated.';
+  const backupStatus = workspaceSnapshot?.backupStatus;
+
+  if (!backupStatus) {
+    return {
+      statusMessage,
+      statusMessageTone: baseTone
+    };
+  }
+
+  if (backupStatus.status === 'written') {
+    return {
+      statusMessage: `${statusMessage} lesson.script.md backup written.`,
+      statusMessageTone: baseTone
+    };
+  }
+
+  if (backupStatus.status === 'removed') {
+    return {
+      statusMessage: `${statusMessage} lesson.script.md backup removed.`,
+      statusMessageTone: baseTone
+    };
+  }
+
+  if (backupStatus.status === 'unavailable') {
+    return {
+      statusMessage: `${statusMessage} lesson.script.md backup unavailable in this browser.`,
+      statusMessageTone: 'warning'
+    };
+  }
+
+  if (backupStatus.status === 'failed') {
+    return {
+      statusMessage: `${statusMessage} lesson.script.md backup failed: ${normalizeText(backupStatus.errorMessage) || 'Unknown backup write error.'}`,
+      statusMessageTone: 'warning'
+    };
+  }
+
+  return {
+    statusMessage,
+    statusMessageTone: baseTone
+  };
+}
+
 function openWorkspaceSnapshot(state, parts, workspaceSnapshot, statusMessage, tone = 'success', selectionOffset = null) {
   state.workspaceSnapshot = workspaceSnapshot;
   state.editorSourceMarkdown = workspaceSnapshot.selectedDraft?.sourceMarkdown || '';
@@ -1913,8 +1977,10 @@ export async function showAuthoringWorkspace({
       startLineNumber: 1
     },
     dirty: false,
-    statusMessage: 'SQLite workspace loaded.',
-    statusMessageTone: 'success',
+    statusMessage: initialDraftWorkspace.storeRecoveryNotice || 'SQLite workspace loaded.',
+    statusMessageTone: initialDraftWorkspace.storeRecoveryNotice
+      ? (initialDraftWorkspace.storeRecoveryTone || 'warning')
+      : 'success',
     currentArtifactId: '',
     insertMenuOpen: false,
     moreMenuOpen: false,
@@ -2087,18 +2153,23 @@ export async function showAuthoringWorkspace({
         const selectionOffset = typeof readSelectionOffset === 'function'
           ? readSelectionOffset(result.workspaceSnapshot)
           : null;
+        const workspaceActionStatus = readWorkspaceActionStatus(
+          result.statusMessage || successMessage || 'Draft updated.',
+          result.workspaceSnapshot,
+          result.statusMessageTone || 'success'
+        );
 
         openWorkspaceSnapshot(
           state,
           parts,
           result.workspaceSnapshot,
-          successMessage || 'Draft updated.',
-          'success',
+          workspaceActionStatus.statusMessage,
+          workspaceActionStatus.statusMessageTone,
           selectionOffset
         );
       } else {
-        state.statusMessage = successMessage || 'Action completed.';
-        state.statusMessageTone = 'success';
+        state.statusMessage = result?.statusMessage || successMessage || 'Action completed.';
+        state.statusMessageTone = result?.statusMessageTone || 'success';
       }
 
       renderWorkspace(state, parts);
@@ -2339,11 +2410,15 @@ export async function showAuthoringWorkspace({
 
       clearDeferredAnalysis();
       state.analysisPending = false;
+      const newDraftWorkspaceSnapshot = await authoringStore.createLessonDraft();
+      const newDraftStatus = readWorkspaceActionStatus('New draft created.', newDraftWorkspaceSnapshot);
+
       openWorkspaceSnapshot(
         state,
         parts,
-        await authoringStore.createLessonDraft(),
-        'New draft created.'
+        newDraftWorkspaceSnapshot,
+        newDraftStatus.statusMessage,
+        newDraftStatus.statusMessageTone
       );
       renderWorkspace(state, parts);
       return;
@@ -2356,11 +2431,15 @@ export async function showAuthoringWorkspace({
 
       clearDeferredAnalysis();
       state.analysisPending = false;
+      const duplicatedWorkspaceSnapshot = await authoringStore.duplicateLessonDraft(state.workspaceSnapshot.selectedDraft.draftId);
+      const duplicatedDraftStatus = readWorkspaceActionStatus('Draft duplicated.', duplicatedWorkspaceSnapshot);
+
       openWorkspaceSnapshot(
         state,
         parts,
-        await authoringStore.duplicateLessonDraft(state.workspaceSnapshot.selectedDraft.draftId),
-        'Draft duplicated.'
+        duplicatedWorkspaceSnapshot,
+        duplicatedDraftStatus.statusMessage,
+        duplicatedDraftStatus.statusMessageTone
       );
       renderWorkspace(state, parts);
       return;
@@ -2381,11 +2460,15 @@ export async function showAuthoringWorkspace({
 
       clearDeferredAnalysis();
       state.analysisPending = false;
+      const deletedWorkspaceSnapshot = await authoringStore.deleteLessonDraft(state.workspaceSnapshot.selectedDraft.draftId);
+      const deletedDraftStatus = readWorkspaceActionStatus('Draft deleted.', deletedWorkspaceSnapshot);
+
       openWorkspaceSnapshot(
         state,
         parts,
-        await authoringStore.deleteLessonDraft(state.workspaceSnapshot.selectedDraft.draftId),
-        'Draft deleted.'
+        deletedWorkspaceSnapshot,
+        deletedDraftStatus.statusMessage,
+        deletedDraftStatus.statusMessageTone
       );
       renderWorkspace(state, parts);
       return;

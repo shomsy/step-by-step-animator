@@ -1,12 +1,14 @@
 export const LESSON_RUNTIME_SOURCE = Object.freeze({
   PUBLISHED: 'published',
   PLAYABLE_DRAFT: 'playable-draft',
+  PLAYABLE_DRAFT_BACKUP: 'playable-draft-backup',
   BROKEN_DRAFT_FALLBACK: 'broken-draft-fallback'
 });
 
 export const LESSON_RUNTIME_SOURCE_LABELS = Object.freeze({
   PUBLISHED: 'Published Lesson · shipped package',
   PLAYABLE_DRAFT: 'Playable Draft',
+  PLAYABLE_DRAFT_BACKUP: 'Playable Draft Backup',
   BROKEN_DRAFT_FALLBACK: 'Broken Draft Fallback · Shipped lesson package'
 });
 
@@ -17,6 +19,10 @@ export function readLessonRuntimeLabel(lesson) {
 
   if (lesson?.lessonRuntimeSource === LESSON_RUNTIME_SOURCE.PLAYABLE_DRAFT) {
     return LESSON_RUNTIME_SOURCE_LABELS.PLAYABLE_DRAFT;
+  }
+
+  if (lesson?.lessonRuntimeSource === LESSON_RUNTIME_SOURCE.PLAYABLE_DRAFT_BACKUP) {
+    return LESSON_RUNTIME_SOURCE_LABELS.PLAYABLE_DRAFT_BACKUP;
   }
 
   if (lesson?.lessonRuntimeSource === LESSON_RUNTIME_SOURCE.BROKEN_DRAFT_FALLBACK) {
@@ -31,6 +37,10 @@ export function readLessonRuntimeTone(lesson) {
     return 'success';
   }
 
+  if (lesson?.lessonRuntimeSource === LESSON_RUNTIME_SOURCE.PLAYABLE_DRAFT_BACKUP) {
+    return 'warning';
+  }
+
   if (lesson?.lessonRuntimeSource === LESSON_RUNTIME_SOURCE.BROKEN_DRAFT_FALLBACK) {
     return 'warning';
   }
@@ -38,12 +48,13 @@ export function readLessonRuntimeTone(lesson) {
   return 'accent';
 }
 
-export function readPlayableDraftRuntimeLabel(updatedAt) {
+export function readPlayableDraftRuntimeLabel(updatedAt, persistenceLabel = 'SQLite') {
   const normalizedUpdatedAt = String(updatedAt || '').trim();
+  const normalizedPersistenceLabel = String(persistenceLabel || '').trim() || 'SQLite';
 
   return normalizedUpdatedAt
-    ? `Playable Draft · SQLite · ${normalizedUpdatedAt}`
-    : 'Playable Draft · SQLite';
+    ? `Playable Draft · ${normalizedPersistenceLabel} · ${normalizedUpdatedAt}`
+    : `Playable Draft · ${normalizedPersistenceLabel}`;
 }
 
 export function readAuthoringSaveState({ hasDraft, dirty }) {

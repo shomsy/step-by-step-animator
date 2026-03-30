@@ -1,5 +1,6 @@
 import { compileLessonScript } from '../lesson-engine/compile-lesson-script.js';
 import { readPersistedPlayableDraftOverride } from './open-authoring-sqlite.js';
+import { readPersistedPlayableDraftBackup } from './open-authoring-lesson-backup.js';
 import {
   LESSON_RUNTIME_SOURCE,
   LESSON_RUNTIME_SOURCE_LABELS,
@@ -25,6 +26,44 @@ function annotateLessonRuntime(lesson, lessonRuntimeSource, lessonRuntimeSourceL
   };
 }
 
+function compileDraftOverride({
+  draftOverride,
+  expectedLessonId,
+  hasShippedFallback,
+  shippedLesson,
+  lessonRuntimeSource,
+  lessonRuntimeSourceLabel
+}) {
+  if (!draftOverride?.sourceMarkdown) {
+    return null;
+  }
+
+  const compiledDraftLesson = compileLessonScript({
+    scriptMarkdown: draftOverride.sourceMarkdown,
+    goalImageSrc: hasShippedFallback ? readGoalImageOverride(shippedLesson) : ''
+  });
+
+  if (compiledDraftLesson.lessonId !== expectedLessonId) {
+    if (!hasShippedFallback) {
+      return null;
+    }
+
+    return annotateLessonRuntime(
+      shippedLesson,
+      LESSON_RUNTIME_SOURCE.BROKEN_DRAFT_FALLBACK,
+      LESSON_RUNTIME_SOURCE_LABELS.BROKEN_DRAFT_FALLBACK,
+      draftOverride.draftId
+    );
+  }
+
+  return annotateLessonRuntime(
+    compiledDraftLesson,
+    lessonRuntimeSource,
+    lessonRuntimeSourceLabel,
+    draftOverride.draftId
+  );
+}
+
 export async function readPlayableDraftOverride({
   ownerWindow,
   requestedLessonId = '',
@@ -46,34 +85,18 @@ export async function readPlayableDraftOverride({
     });
 
     if (!draftOverride?.sourceMarkdown) {
-      return null;
+      throw new Error('No SQLite draft override was found.');
     }
 
     try {
-      const compiledDraftLesson = compileLessonScript({
-        scriptMarkdown: draftOverride.sourceMarkdown,
-        goalImageSrc: hasShippedFallback ? readGoalImageOverride(shippedLesson) : ''
+      return compileDraftOverride({
+        draftOverride,
+        expectedLessonId,
+        hasShippedFallback,
+        shippedLesson,
+        lessonRuntimeSource: LESSON_RUNTIME_SOURCE.PLAYABLE_DRAFT,
+        lessonRuntimeSourceLabel: readPlayableDraftRuntimeLabel(draftOverride.updatedAt, 'SQLite')
       });
-
-      if (compiledDraftLesson.lessonId !== expectedLessonId) {
-        if (!hasShippedFallback) {
-          return null;
-        }
-
-        return annotateLessonRuntime(
-          shippedLesson,
-          LESSON_RUNTIME_SOURCE.BROKEN_DRAFT_FALLBACK,
-          LESSON_RUNTIME_SOURCE_LABELS.BROKEN_DRAFT_FALLBACK,
-          draftOverride.draftId
-        );
-      }
-
-      return annotateLessonRuntime(
-        compiledDraftLesson,
-        LESSON_RUNTIME_SOURCE.PLAYABLE_DRAFT,
-        readPlayableDraftRuntimeLabel(draftOverride.updatedAt),
-        draftOverride.draftId
-      );
     } catch {
       if (!hasShippedFallback) {
         return null;
@@ -87,6 +110,43 @@ export async function readPlayableDraftOverride({
       );
     }
   } catch {
-    return null;
+    try {
+      const draftBackup = await readPersistedPlayableDraftBackup({
+        ownerWindow,
+        requestedLessonId,
+        shippedLessonId
+      });
+
+      if (!draftBackup?.sourceMarkdown || draftBackup.tracksShippedSource) {
+        return null;
+      }
+
+      try {
+        return compileDraftOverride({
+          draftOverride: draftBackup,
+          expectedLessonId,
+          hasShippedFallback,
+          shippedLesson,
+          lessonRuntimeSource: LESSON_RUNTIME_SOURCE.PLAYABLE_DRAFT_BACKUP,
+          lessonRuntimeSourceLabel: readPlayableDraftRuntimeLabel(
+            draftBackup.updatedAt,
+            'lesson.script.md backup'
+          )
+        });
+      } catch {
+        if (!hasShippedFallback) {
+          return null;
+        }
+
+        return annotateLessonRuntime(
+          shippedLesson,
+          LESSON_RUNTIME_SOURCE.BROKEN_DRAFT_FALLBACK,
+          LESSON_RUNTIME_SOURCE_LABELS.BROKEN_DRAFT_FALLBACK,
+          draftBackup.draftId
+        );
+      }
+    } catch {
+      return null;
+    }
   }
 }

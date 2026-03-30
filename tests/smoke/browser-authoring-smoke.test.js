@@ -194,6 +194,82 @@ async function savePairedDraftSourceMarkdown(page, shippedLessonId, sourceMarkdo
   });
 }
 
+async function readLatestDraftBackup(page, {
+  requestedLessonId = '',
+  shippedLessonId = ''
+}) {
+  return page.evaluate(async ({ repoPath, requestedId, shippedId }) => {
+    const { readPersistedPlayableDraftBackup } = await import(
+      `/@fs${repoPath}/system/author-lessons/open-authoring-lesson-backup.js`
+    );
+    const draftBackup = await readPersistedPlayableDraftBackup({
+      ownerWindow: window,
+      requestedLessonId: requestedId,
+      shippedLessonId: shippedId
+    });
+
+    return draftBackup
+      ? {
+          draftId: draftBackup.draftId,
+          lessonId: draftBackup.lessonId,
+          lessonTitle: draftBackup.lessonTitle,
+          shippedLessonId: draftBackup.shippedLessonId,
+          sourceOrigin: draftBackup.sourceOrigin,
+          createdAt: draftBackup.createdAt,
+          updatedAt: draftBackup.updatedAt,
+          sourceMarkdown: draftBackup.sourceMarkdown,
+          backupFileName: draftBackup.backupFileName,
+          backupLocation: draftBackup.backupLocation,
+          tracksShippedSource: draftBackup.tracksShippedSource
+        }
+      : null;
+  }, {
+    repoPath: repoRoot,
+    requestedId: requestedLessonId,
+    shippedId: shippedLessonId
+  });
+}
+
+async function deletePersistedSqliteSnapshot(page) {
+  await page.evaluate(async () => {
+    const storageKey = 'step-by-step-animator.authoring.sqlite.v1';
+
+    if (!window.indexedDB) {
+      window.localStorage.removeItem(storageKey);
+      return;
+    }
+
+    const persistenceDatabase = await new Promise((resolve, reject) => {
+      const openRequest = window.indexedDB.open('step-by-step-animator-authoring', 1);
+
+      openRequest.onerror = () => {
+        reject(openRequest.error || new Error('Failed to open the authoring IndexedDB database.'));
+      };
+      openRequest.onsuccess = () => {
+        resolve(openRequest.result);
+      };
+    });
+
+    try {
+      await new Promise((resolve, reject) => {
+        const transaction = persistenceDatabase.transaction('sqlite_snapshots', 'readwrite');
+        const objectStore = transaction.objectStore('sqlite_snapshots');
+
+        transaction.onerror = () => {
+          reject(transaction.error || new Error('Failed to delete the persisted SQLite snapshot.'));
+        };
+        transaction.oncomplete = () => {
+          resolve();
+        };
+
+        objectStore.delete(storageKey);
+      });
+    } finally {
+      persistenceDatabase.close();
+    }
+  });
+}
+
 async function readPlayerSelectionSnapshot(page, lessonId) {
   return page.evaluate(async ({ repoPath, lessonId }) => {
     const [{ selectLessonFromLocation }, { readPlayableDraftOverride }] = await Promise.all([
@@ -1498,11 +1574,45 @@ test('browser authoring smoke lets the normal player prefer a healthy saved draf
     assert.equal(savedBrokenDraftSource, 'broken lesson body');
 
     const brokenSelection = await readPlayerSelectionSnapshot(page, '09-human-first-script-demo');
+    const brokenDraftBackup = await readLatestDraftBackup(page, {
+      shippedLessonId: '09-human-first-script-demo'
+    });
 
     assert.equal(brokenSelection.lessonId, '09-human-first-script-demo');
     assert.equal(brokenSelection.firstStepTitle, shippedStepTitle);
     assert.equal(brokenSelection.runtimeSource, 'broken-draft-fallback');
     assert.match(brokenSelection.runtimeLabel, /Broken Draft Fallback/);
+    assert.equal(brokenDraftBackup?.sourceMarkdown, 'broken lesson body');
+
+    await deletePersistedSqliteSnapshot(page);
+
+    const brokenSelectionAfterSnapshotLoss = await readPlayerSelectionSnapshot(page, '09-human-first-script-demo');
+
+    assert.equal(brokenSelectionAfterSnapshotLoss.lessonId, '09-human-first-script-demo');
+    assert.equal(brokenSelectionAfterSnapshotLoss.firstStepTitle, shippedStepTitle);
+    assert.equal(brokenSelectionAfterSnapshotLoss.runtimeSource, 'broken-draft-fallback');
+
+    await page.reload({ waitUntil: 'domcontentloaded' });
+    await waitForCondition(
+      async () => page.$('#authoringScriptEditor').then(Boolean),
+      'the authoring workspace after restoring the broken backup'
+    );
+    await waitForCondition(
+      async () => page.$eval('#authoringStatus', element => (
+        element.textContent?.includes('SQLite snapshot was missing. Restored 1 draft from lesson.script.md backups.')
+      ) || false).catch(() => false),
+      'the authoring recovery notice after restoring the broken backup'
+    );
+    await waitForCondition(
+      async () => page.$eval('#authoringScriptEditor', element => {
+        if (!(element instanceof HTMLElement) || !element.authoringEditor) {
+          throw new Error('Expected the CodeMirror authoring editor host.');
+        }
+
+        return element.authoringEditor.getValue() === 'broken lesson body';
+      }).catch(() => false),
+      'the exact broken draft source to be restored from the lesson.script.md backup'
+    );
 
     assert.deepEqual(pageErrors, []);
     assert.deepEqual(consoleErrors, []);
@@ -1759,7 +1869,7 @@ test('browser authoring smoke ignores an unpaired custom draft with the same les
   }
 });
 
-test('browser authoring smoke keeps Save store-only while Publish remains the explicit snapshot step', { timeout: 90000 }, async () => {
+test('browser authoring smoke mirrors Save into a lesson.script.md backup while Publish remains the explicit snapshot step', { timeout: 90000 }, async () => {
   const server = await createServer({
     configFile: path.resolve(repoRoot, 'vite.config.js'),
     clearScreen: false,
@@ -1840,6 +1950,10 @@ test('browser authoring smoke keeps Save store-only while Publish remains the ex
       'the draft to save into the authoring store'
     );
 
+    const savedDraftSourceAfterSave = await readPairedDraftSourceMarkdown(page, lessonId);
+    const draftBackupAfterSave = await readLatestDraftBackup(page, {
+      shippedLessonId: lessonId
+    });
     const playerSelectionAfterSave = await readPlayerSelectionSnapshot(page, lessonId);
     const shippedSourceAfterSave = await fs.readFile(shippedLessonFilePath, 'utf8');
     const editorSnapshotAfterSave = await readEditorCursorSnapshot(page);
@@ -1849,6 +1963,11 @@ test('browser authoring smoke keeps Save store-only while Publish remains the ex
       await page.$eval('#authoringPublishState', element => element.textContent?.trim() || ''),
       'Not Published'
     );
+    assert.equal(draftBackupAfterSave?.backupFileName, 'lesson.script.md');
+    assert.equal(draftBackupAfterSave?.shippedLessonId, lessonId);
+    assert.equal(draftBackupAfterSave?.tracksShippedSource, false);
+    assert.equal(draftBackupAfterSave?.sourceMarkdown, savedDraftSourceAfterSave);
+    assert.match(draftBackupAfterSave?.backupLocation || '', /lesson\.script\.md$/);
     assert.equal(playerSelectionAfterSave.runtimeSource, 'playable-draft');
     assert.equal(playerSelectionAfterSave.firstStepTitle, savedDraftStepTitle);
     assert.equal(shippedSourceAfterSave, originalShippedSource);
@@ -1858,6 +1977,36 @@ test('browser authoring smoke keeps Save store-only while Publish remains the ex
     await waitForCondition(
       async () => page.$eval('#authoringPublishState', element => element.textContent?.includes('Published Lesson') || false).catch(() => false),
       'the publish state to show an explicit published snapshot'
+    );
+
+    await deletePersistedSqliteSnapshot(page);
+
+    const playerSelectionAfterSnapshotLoss = await readPlayerSelectionSnapshot(page, lessonId);
+
+    assert.equal(playerSelectionAfterSnapshotLoss.runtimeSource, 'playable-draft-backup');
+    assert.equal(playerSelectionAfterSnapshotLoss.firstStepTitle, savedDraftStepTitle);
+    assert.match(playerSelectionAfterSnapshotLoss.runtimeLabel, /lesson\.script\.md backup/);
+
+    await page.reload({ waitUntil: 'domcontentloaded' });
+    await waitForCondition(
+      async () => page.$('#authoringScriptEditor').then(Boolean),
+      'the authoring workspace after SQLite snapshot deletion'
+    );
+    await waitForCondition(
+      async () => page.$eval('#authoringStatus', element => (
+        element.textContent?.includes('SQLite snapshot was missing. Restored 1 draft from lesson.script.md backups.')
+      ) || false).catch(() => false),
+      'the authoring recovery notice after restoring from the lesson.script.md backup'
+    );
+    await waitForCondition(
+      async () => page.$eval('#authoringScriptEditor', element => {
+        if (!(element instanceof HTMLElement) || !element.authoringEditor) {
+          throw new Error('Expected the CodeMirror authoring editor host.');
+        }
+
+        return element.authoringEditor.getValue().includes('title: Store Only Saved Draft Step');
+      }).catch(() => false),
+      'the restored lesson source from the lesson.script.md backup'
     );
 
     assert.deepEqual(pageErrors, []);

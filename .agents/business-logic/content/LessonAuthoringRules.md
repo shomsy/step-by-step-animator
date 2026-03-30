@@ -17,7 +17,7 @@ Autor ne kreće od foldera, niti od ručnog pravljenja `lesson.md`, `scenes.md`,
 Za dnevni rad važi sledeće:
 
 - pišeš u Write Mode-u
-- `Save` čuva draft u Authoring Store-u
+- `Save` čuva draft u Authoring Store-u i pravi isti `lesson.script.md` browser backup za oporavak ako SQLite snapshot nestane
 - `Play` pušta poslednji zdravi sačuvani draft
 - `Publish` i `Export` su posebni koraci i nisu uslov da lekcija postoji
 

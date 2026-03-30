@@ -134,6 +134,38 @@ test('selectLessonFromLocation picks a healthy custom draft when the explicit qu
   assert.equal(selection.lessons[0].lessonTitle, 'Custom Lesson Draft');
 });
 
+test('selectLessonFromLocation preserves a playable draft backup runtime marker when one is returned', async () => {
+  const lessonDescriptors = [
+    {
+      lessonId: 'alpha',
+      lessonTitle: 'Alpha',
+      loadLesson: async () => ({ lessonId: 'alpha', lessonTitle: 'Alpha' })
+    }
+  ];
+
+  const selection = await selectLessonFromLocation({
+    ownerLocation: { href: 'https://example.test/?lesson=alpha' },
+    ownerWindow: {},
+    lessonRegistry: {
+      registeredLessons: lessonDescriptors,
+      findLesson: lessonId => lessonDescriptors.find(lesson => lesson.lessonId === lessonId),
+      getDefaultLessonId: () => lessonDescriptors[0].lessonId
+    },
+    resolveDraftLessonOverride: async () => ({
+      lessonId: 'alpha',
+      lessonTitle: 'Alpha Draft Backup',
+      lessonRuntimeSource: 'playable-draft-backup',
+      lessonRuntimeSourceLabel: 'Playable Draft · lesson.script.md backup · 2026-03-31 00:00 CEST'
+    })
+  });
+
+  assert.equal(selection.lesson.lessonId, 'alpha');
+  assert.equal(selection.lesson.lessonTitle, 'Alpha Draft Backup');
+  assert.equal(selection.lesson.lessonRuntimeSource, 'playable-draft-backup');
+  assert.equal(selection.lesson.lessonRuntimeSourceLabel, 'Playable Draft · lesson.script.md backup · 2026-03-31 00:00 CEST');
+  assert.equal(selection.lessons[0].lessonTitle, 'Alpha Draft Backup');
+});
+
 test('selectLessonFromLocation preserves a broken draft fallback runtime marker when one is returned', async () => {
   const lessonDescriptors = [
     {

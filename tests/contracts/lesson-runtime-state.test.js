@@ -15,21 +15,33 @@ test('lesson runtime state labels remain explicit and stable', () => {
   assert.deepEqual(LESSON_RUNTIME_SOURCE, {
     PUBLISHED: 'published',
     PLAYABLE_DRAFT: 'playable-draft',
+    PLAYABLE_DRAFT_BACKUP: 'playable-draft-backup',
     BROKEN_DRAFT_FALLBACK: 'broken-draft-fallback'
   });
 
   assert.deepEqual(LESSON_RUNTIME_SOURCE_LABELS, {
     PUBLISHED: 'Published Lesson · shipped package',
     PLAYABLE_DRAFT: 'Playable Draft',
+    PLAYABLE_DRAFT_BACKUP: 'Playable Draft Backup',
     BROKEN_DRAFT_FALLBACK: 'Broken Draft Fallback · Shipped lesson package'
   });
 
   assert.equal(readPlayableDraftRuntimeLabel('2026-03-30 01:15 CEST'), 'Playable Draft · SQLite · 2026-03-30 01:15 CEST');
+  assert.equal(
+    readPlayableDraftRuntimeLabel('2026-03-31 10:45 CEST', 'lesson.script.md backup'),
+    'Playable Draft · lesson.script.md backup · 2026-03-31 10:45 CEST'
+  );
   assert.equal(readLessonRuntimeLabel({
     lessonRuntimeSource: LESSON_RUNTIME_SOURCE.PLAYABLE_DRAFT
   }), 'Playable Draft');
+  assert.equal(readLessonRuntimeLabel({
+    lessonRuntimeSource: LESSON_RUNTIME_SOURCE.PLAYABLE_DRAFT_BACKUP
+  }), 'Playable Draft Backup');
   assert.equal(readLessonRuntimeTone({
     lessonRuntimeSource: LESSON_RUNTIME_SOURCE.BROKEN_DRAFT_FALLBACK
+  }), 'warning');
+  assert.equal(readLessonRuntimeTone({
+    lessonRuntimeSource: LESSON_RUNTIME_SOURCE.PLAYABLE_DRAFT_BACKUP
   }), 'warning');
 });
 
