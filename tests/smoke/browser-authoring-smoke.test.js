@@ -699,6 +699,30 @@ test('browser authoring smoke covers V2 writer body view, metadata drawer, previ
       'a validation item for the syntax issue'
     );
 
+    await waitForCondition(
+      async () => page.$eval('.authoring-validation-item p', element => element.textContent?.includes('duplira sekciju') || false).catch(() => false),
+      'a human-readable validation message for the syntax issue'
+    );
+
+    await waitForCondition(
+      async () => page.evaluate(() => {
+        const lines = Array.from(document.querySelectorAll('#authoringScriptEditor .cm-line'));
+        const line = lines.find(element => {
+          const titledChild = element.querySelector?.('[title]');
+
+          return element.textContent?.trim() === '### Show Code: html'
+            && (titledChild?.getAttribute('title') || '').includes('duplira sekciju');
+        });
+
+        if (!(line instanceof HTMLElement)) {
+          return false;
+        }
+
+        return true;
+      }).catch(() => false),
+      'the linted editor line to carry a human-readable hover title'
+    );
+
     await page.click('.authoring-validation-item');
 
     await waitForCondition(

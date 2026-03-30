@@ -10231,6 +10231,9 @@ Update rules:
 
 ## Current Ledger
 
+1. `[feature][medium] 2026-03-30 03:23 CEST - Closed TODO-015 by adding shared human-readable Write Mode diagnostics, reusing the same normalized validation data in the right inspector and inline editor linting, and proving the new guidance path with contract plus browser-smoke coverage`
+   owner: codex
+   actual: 30m
 1. `[review][medium] 2026-03-30 02:43 CEST - Closed TODO-014 by binding Write Mode URL context to the active draft, letting the normal player boot healthy UI-only custom drafts by lesson id, and adding selector plus browser-smoke coverage for the authoring/player seam`
    owner: codex
    actual: 10m
@@ -10463,6 +10466,7 @@ The active plan lives in `.agents/management/planning/PLAN.md`.
 The active implementation queue lives in `.agents/management/TODO.md`.
 The evidence ledger lives in `.agents/management/evidence/CHANGELOG.md`.
 
+- 2026-03-30 03:23 CEST - PLAN-009 completed: added shared human-readable authoring diagnostics so Write Mode keeps one validation truth across the right inspector and inline editor lint markers, with plain-language guidance and exact location jumps.
 - 2026-03-29 20:20 CEST - PLAN-006 completed: shipped a read-only player draft-override seam so the normal player prefers the latest healthy saved paired draft, fails closed to the shipped lesson when the saved draft is broken, and keeps the lesson picker deterministic.
 - 2026-03-30 01:15 CEST - PLAN-008 completed: tightened the UI-backed authoring contract with a shared runtime-state module, explicit Save/Play/Publish labels, a browser restore-version recovery proof, and updated authoring docs so the draft/play/publish contract stays explicit.
 - 2026-03-30 01:04 CEST - PLAN-007 completed: shipped the UI-backed lesson authoring bridge so Write Mode owns draft creation, save/reopen, playability state, published snapshot visibility, and fail-closed fallback semantics without requiring filesystem source scaffolds during authoring.
@@ -91967,6 +91971,34 @@ body:has(.authoring-app) {
   color: var(--authoring-muted);
 }
 
+.authoring-script-line.has-diagnostic {
+  box-shadow:
+    inset 3px 0 0 rgba(255, 145, 127, 0.94),
+    0 0 0 1px rgba(255, 145, 127, 0.16);
+}
+
+.authoring-script-line.has-diagnostic.is-diagnostic-warning {
+  box-shadow:
+    inset 3px 0 0 rgba(226, 188, 104, 0.94),
+    0 0 0 1px rgba(226, 188, 104, 0.14);
+}
+
+.authoring-diagnostic-mark.is-error {
+  text-decoration-line: underline;
+  text-decoration-style: wavy;
+  text-decoration-color: rgba(255, 145, 127, 0.88);
+  text-underline-offset: 0.24em;
+  text-decoration-thickness: 1.5px;
+}
+
+.authoring-diagnostic-mark.is-warning {
+  text-decoration-line: underline;
+  text-decoration-style: wavy;
+  text-decoration-color: rgba(226, 188, 104, 0.88);
+  text-underline-offset: 0.24em;
+  text-decoration-thickness: 1.5px;
+}
+
 .authoring-script-line.is-step:first-child {
   margin-top: 0;
 }
@@ -92086,6 +92118,12 @@ body:has(.authoring-app) {
   margin: 0;
   color: var(--authoring-muted);
   line-height: 1.5;
+}
+
+.authoring-validation-item small {
+  color: var(--authoring-subtle);
+  font-size: 0.74rem;
+  line-height: 1.45;
 }
 
 .authoring-validation-item[data-tone="danger"] {
@@ -92343,7 +92381,13 @@ code {
 }
 
 === system/author-lessons/create-lesson-script-editor.js ===
-import { Compartment, EditorState, RangeSetBuilder } from '@codemirror/state';
+import {
+  Compartment,
+  EditorState,
+  RangeSetBuilder,
+  StateEffect,
+  StateField
+} from '@codemirror/state';
 import { markdown } from '@codemirror/lang-markdown';
 import {
   Decoration,
@@ -92502,6 +92546,116 @@ const dslDecorationPlugin = ViewPlugin.fromClass(class {
   decorations: plugin => plugin.decorations
 });
 
+function clampEditorLineNumber(doc, lineNumber) {
+  const normalizedLineNumber = Number(lineNumber) || 1;
+
+  return Math.max(1, Math.min(doc.lines || 1, normalizedLineNumber));
+}
+
+function readDiagnosticSeverity(diagnostics) {
+  return diagnostics.some(diagnostic => diagnostic.severity === 'warning')
+    ? 'warning'
+    : 'error';
+}
+
+function buildDiagnosticTooltipLabel(diagnostic) {
+  const contextLabel = typeof diagnostic.contextLabel === 'string'
+    ? diagnostic.contextLabel.trim()
+    : '';
+
+  return contextLabel
+    ? `${diagnostic.label} · ${contextLabel}`
+    : diagnostic.label;
+}
+
+function readDiagnosticsByLine(doc, diagnostics) {
+  const diagnosticsByLine = new Map();
+
+  (Array.isArray(diagnostics) ? diagnostics : []).forEach(diagnostic => {
+    const lineNumber = clampEditorLineNumber(doc, diagnostic.lineNumber);
+    const nextDiagnostic = {
+      ...diagnostic,
+      lineNumber
+    };
+    const lineDiagnostics = diagnosticsByLine.get(lineNumber) || [];
+
+    lineDiagnostics.push(nextDiagnostic);
+    diagnosticsByLine.set(lineNumber, lineDiagnostics);
+  });
+
+  return diagnosticsByLine;
+}
+
+function buildAuthoringDiagnosticDecorations(doc, diagnostics) {
+  const builder = new RangeSetBuilder();
+  const diagnosticsByLine = readDiagnosticsByLine(doc, diagnostics);
+
+  diagnosticsByLine.forEach((lineDiagnostics, lineNumber) => {
+    const line = doc.line(lineNumber);
+    const severity = readDiagnosticSeverity(lineDiagnostics);
+    const tooltipText = lineDiagnostics
+      .map(diagnostic => `${buildDiagnosticTooltipLabel(diagnostic)}\n${diagnostic.message}`)
+      .join('\n\n');
+
+    builder.add(line.from, line.from, Decoration.line({
+      class: `authoring-script-line has-diagnostic is-diagnostic-${severity}`
+    }));
+
+    if (line.from < line.to) {
+      builder.add(line.from, line.to, Decoration.mark({
+        class: `authoring-diagnostic-mark is-${severity}`,
+        attributes: {
+          title: tooltipText,
+          'aria-label': tooltipText
+        }
+      }));
+    }
+  });
+
+  return builder.finish();
+}
+
+function readAuthoringDiagnosticState(doc, diagnostics) {
+  const normalizedDiagnostics = Array.isArray(diagnostics)
+    ? diagnostics.map(diagnostic => ({
+        severity: 'error',
+        ...diagnostic,
+        lineNumber: clampEditorLineNumber(doc, diagnostic.lineNumber)
+      }))
+    : [];
+
+  return {
+    items: normalizedDiagnostics,
+    decorations: buildAuthoringDiagnosticDecorations(doc, normalizedDiagnostics)
+  };
+}
+
+const setAuthoringDiagnosticsEffect = StateEffect.define();
+
+const authoringDiagnosticsField = StateField.define({
+  create(state) {
+    return readAuthoringDiagnosticState(state.doc, []);
+  },
+  update(value, transaction) {
+    let nextDiagnostics = value.items;
+    let diagnosticsUpdated = false;
+
+    transaction.effects.forEach(effect => {
+      if (effect.is(setAuthoringDiagnosticsEffect)) {
+        nextDiagnostics = effect.value;
+        diagnosticsUpdated = true;
+      }
+    });
+
+    if (!transaction.docChanged && !diagnosticsUpdated) {
+      return value;
+    }
+
+    return readAuthoringDiagnosticState(transaction.state.doc, nextDiagnostics);
+  },
+  provide: field => EditorView.decorations.from(field, diagnosticState => diagnosticState.decorations)
+});
+
 const authoringEditorTheme = EditorView.theme({
   '&': {
     height: '100%',
@@ -92542,6 +92696,13 @@ const authoringEditorTheme = EditorView.theme({
   '.cm-panels': {
     background: 'transparent',
     color: 'var(--authoring-ink)'
+  },
+  '.cm-tooltip': {
+    borderRadius: '14px',
+    border: '1px solid rgba(255, 145, 127, 0.38)',
+    background: 'rgba(14, 12, 12, 0.96)',
+    boxShadow: '0 18px 40px rgba(0, 0, 0, 0.42)',
+    color: 'var(--authoring-ink)'
   }
 }, {
   dark: true
@@ -92563,6 +92724,7 @@ export function createLessonScriptEditor({
   let isApplyingExternalValue = false;
   let currentEditable = true;
   let currentPlaceholderText = placeholderText;
+  let currentDiagnosticsSignature = '[]';
 
   const state = EditorState.create({
     doc: initialValue,
@@ -92571,6 +92733,7 @@ export function createLessonScriptEditor({
       markdown(),
       authoringEditorTheme,
       dslDecorationPlugin,
+      authoringDiagnosticsField,
       editableCompartment.of(EditorView.editable.of(true)),
       placeholderCompartment.of(placeholderExtension(placeholderText)),
       EditorView.updateListener.of(update => {
@@ -92767,6 +92930,32 @@ export function createLessonScriptEditor({
       view.dispatch({
         effects: placeholderCompartment.reconfigure(placeholderExtension(text || ''))
       });
+    },
+    setDiagnostics(diagnostics) {
+      const nextDiagnostics = Array.isArray(diagnostics)
+        ? diagnostics.map(diagnostic => ({
+            lineNumber: diagnostic.lineNumber,
+            label: String(diagnostic.label || 'Validation'),
+            contextLabel: String(diagnostic.contextLabel || ''),
+            message: String(diagnostic.message || ''),
+            severity: String(diagnostic.severity || 'error')
+          }))
+        : [];
+      const nextSignature = JSON.stringify(nextDiagnostics);
+
+      if (nextSignature === currentDiagnosticsSignature) {
+        return;
+      }
+
+      currentDiagnosticsSignature = nextSignature;
+      view.dispatch({
+        effects: setAuthoringDiagnosticsEffect.of(nextDiagnostics)
+      });
+    },
+    getDiagnostics() {
+      return view.state.field(authoringDiagnosticsField).items.map(diagnostic => ({
+        ...diagnostic
+      }));
     }
   };
 
@@ -94540,6 +94729,523 @@ export async function readPersistedPlayableDraftOverride({
   }
 }
 
+=== system/author-lessons/read-authoring-diagnostics.js ===
+function normalizeText(value) {
+  return typeof value === 'string' ? value.trim() : '';
+}
+
+function escapeRegExp(value) {
+  return String(value).replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+}
+
+function readStepNode(editorContext, stepId) {
+  return editorContext?.steps?.find(step => step.stepId === stepId) || null;
+}
+
+function readSceneNode(editorContext, stepId, sceneId) {
+  const stepNode = readStepNode(editorContext, stepId);
+
+  return stepNode?.scenes?.find(scene => scene.sceneId === sceneId) || null;
+}
+
+function readSceneSectionNode(editorContext, stepId, sceneId, matchSection) {
+  const sceneNode = readSceneNode(editorContext, stepId, sceneId);
+
+  if (!sceneNode || typeof matchSection !== 'function') {
+    return null;
+  }
+
+  return sceneNode.sections.find(section => matchSection(normalizeText(section.heading))) || null;
+}
+
+function findLineNumber(lines, pattern, startIndex = 0) {
+  for (let lineIndex = Math.max(0, startIndex); lineIndex < lines.length; lineIndex += 1) {
+    if (pattern.test(lines[lineIndex])) {
+      return lineIndex + 1;
+    }
+  }
+
+  return 1;
+}
+
+function findNestedFrontmatterLine(lines, parentField, childField) {
+  const parentLineNumber = findLineNumber(lines, new RegExp(`^${escapeRegExp(parentField)}:\\s*$`));
+  const parentLineIndex = Math.max(0, parentLineNumber - 1);
+
+  for (let lineIndex = parentLineIndex + 1; lineIndex < lines.length; lineIndex += 1) {
+    const line = lines[lineIndex];
+
+    if (/^---\s*$/.test(line)) {
+      break;
+    }
+
+    if (/^\S/.test(line)) {
+      break;
+    }
+
+    if (new RegExp(`^\\s+${escapeRegExp(childField)}:\\s*`).test(line)) {
+      return lineIndex + 1;
+    }
+  }
+
+  return parentLineNumber;
+}
+
+function resolveFrontmatterLocation(editorContext, fieldPath = '') {
+  const lines = Array.isArray(editorContext?.lines) ? editorContext.lines : [];
+  const normalizedFieldPath = normalizeText(fieldPath);
+
+  if (!normalizedFieldPath) {
+    return {
+      lineNumber: 1,
+      contextLabel: 'Metadata'
+    };
+  }
+
+  if (normalizedFieldPath === 'artifacts') {
+    return {
+      lineNumber: findLineNumber(lines, /^artifacts:\s*$/),
+      contextLabel: 'Metadata · artifacts'
+    };
+  }
+
+  if (normalizedFieldPath.includes('.')) {
+    const [parentField, childField] = normalizedFieldPath.split('.');
+
+    return {
+      lineNumber: findNestedFrontmatterLine(lines, parentField, childField),
+      contextLabel: `Metadata · ${normalizedFieldPath}`
+    };
+  }
+
+  return {
+    lineNumber: findLineNumber(lines, new RegExp(`^${escapeRegExp(normalizedFieldPath)}:\\s*`)),
+    contextLabel: `Metadata · ${normalizedFieldPath}`
+  };
+}
+
+function readMetadataLocationFromMessage(editorContext, message) {
+  const rawMessage = String(message || '');
+  const missingFieldMatch = rawMessage.match(/^lesson\.script\.md must define ([\w.]+)\.$/);
+
+  if (missingFieldMatch) {
+    return resolveFrontmatterLocation(editorContext, missingFieldMatch[1]);
+  }
+
+  if (rawMessage === 'lesson.script.md must define a preview object.') {
+    return resolveFrontmatterLocation(editorContext, 'preview');
+  }
+
+  if (rawMessage === 'lesson.script.md must declare at least one artifact.') {
+    return resolveFrontmatterLocation(editorContext, 'artifacts');
+  }
+
+  if (rawMessage.includes('lesson.script.md status')) {
+    return resolveFrontmatterLocation(editorContext, 'status');
+  }
+
+  if (rawMessage.includes('lesson.script.md order')) {
+    return resolveFrontmatterLocation(editorContext, 'order');
+  }
+
+  if (rawMessage.includes('lesson.script.md preview.type')) {
+    return resolveFrontmatterLocation(editorContext, 'preview.type');
+  }
+
+  if (rawMessage.includes('theory.file')) {
+    return resolveFrontmatterLocation(editorContext, 'theory.file');
+  }
+
+  if (
+    rawMessage.startsWith('Artifact declaration at index ')
+    || rawMessage.includes('Artifact "')
+    || rawMessage.startsWith('Each lesson.script.md artifact declaration')
+    || rawMessage.includes('Artifact ID must use kebab-case')
+  ) {
+    return resolveFrontmatterLocation(editorContext, 'artifacts');
+  }
+
+  if (rawMessage.includes('lesson.script.md')) {
+    return resolveFrontmatterLocation(editorContext);
+  }
+
+  return null;
+}
+
+export function resolveAuthoringDiagnosticLocation(editorContext, message) {
+  const rawMessage = String(message || '');
+  const metadataLocation = readMetadataLocationFromMessage(editorContext, rawMessage);
+
+  if (metadataLocation) {
+    return metadataLocation;
+  }
+
+  const sceneMatch = rawMessage.match(/Scene "([^"]+)" in step "([^"]+)"/);
+
+  if (sceneMatch) {
+    const stepId = sceneMatch[2];
+    const sceneId = sceneMatch[1];
+    const sceneNode = readSceneNode(editorContext, stepId, sceneId);
+    const showCodeMatch = rawMessage.match(/"Show Code:\s*([^"]+)"/);
+    const referencesNarration = rawMessage.includes('"Narration"') || rawMessage.includes('define narration');
+    const referencesPreview = rawMessage.toLowerCase().includes('preview');
+    const referencesTheory = rawMessage.toLowerCase().includes('theory');
+
+    if (showCodeMatch) {
+      const sectionNode = readSceneSectionNode(
+        editorContext,
+        stepId,
+        sceneId,
+        heading => heading.toLowerCase() === `show code: ${normalizeText(showCodeMatch[1]).toLowerCase()}`
+      );
+
+      if (sectionNode) {
+        return {
+          lineNumber: sectionNode.lineNumber,
+          contextLabel: sectionNode.heading
+        };
+      }
+    }
+
+    if (referencesNarration) {
+      const sectionNode = readSceneSectionNode(
+        editorContext,
+        stepId,
+        sceneId,
+        heading => heading.toLowerCase() === 'narration'
+      );
+
+      if (sectionNode) {
+        return {
+          lineNumber: sectionNode.lineNumber,
+          contextLabel: sectionNode.heading
+        };
+      }
+    }
+
+    if (referencesPreview) {
+      const sectionNode = readSceneSectionNode(
+        editorContext,
+        stepId,
+        sceneId,
+        heading => heading.toLowerCase() === 'preview'
+      );
+
+      if (sectionNode) {
+        return {
+          lineNumber: sectionNode.lineNumber,
+          contextLabel: sectionNode.heading
+        };
+      }
+    }
+
+    if (referencesTheory) {
+      const sectionNode = readSceneSectionNode(
+        editorContext,
+        stepId,
+        sceneId,
+        heading => heading.toLowerCase() === 'theory'
+      );
+
+      if (sectionNode) {
+        return {
+          lineNumber: sectionNode.lineNumber,
+          contextLabel: sectionNode.heading
+        };
+      }
+    }
+
+    if (sceneNode) {
+      return {
+        lineNumber: sceneNode.lineNumber,
+        contextLabel: sceneNode.title || sceneNode.sceneId
+      };
+    }
+  }
+
+  const stepMatch = rawMessage.match(/Step "([^"]+)"/);
+
+  if (stepMatch) {
+    const stepNode = readStepNode(editorContext, stepMatch[1]);
+
+    if (stepNode) {
+      return {
+        lineNumber: stepNode.lineNumber,
+        contextLabel: stepNode.title || stepNode.stepId
+      };
+    }
+  }
+
+  return {
+    lineNumber: editorContext?.context?.lineNumber || 1,
+    contextLabel: editorContext?.context?.stepIndex >= 0
+      ? `Step ${editorContext.context.stepIndex + 1}`
+      : 'Lesson script'
+  };
+}
+
+function buildMetadataMessage(fieldName) {
+  return `U Metadata drawer-u nedostaje "${fieldName}". Otvori Metadata i popuni to polje.`;
+}
+
+function buildHumanDiagnosticMessage(rawMessage) {
+  const message = String(rawMessage || '').trim();
+  const missingFieldMatch = message.match(/^lesson\.script\.md must define ([\w.]+)\.$/);
+
+  if (missingFieldMatch) {
+    return buildMetadataMessage(missingFieldMatch[1]);
+  }
+
+  if (message === 'lesson.script.md must define a preview object.') {
+    return 'U Metadata drawer-u nedostaje ceo "preview" blok. Otvori Metadata i popuni Preview type, title i address.';
+  }
+
+  if (message === 'lesson.script.md must declare at least one artifact.') {
+    return 'Lekcija nema nijedan artifact. Otvori Metadata i dodaj bar jedan artifact koji scena može da koristi.';
+  }
+
+  const sceneBeforeStepMatch = message.match(/^Scene heading "([^"]+)" appears before any step heading\.$/);
+
+  if (sceneBeforeStepMatch) {
+    return `Scene "${sceneBeforeStepMatch[1]}" je upisana pre prvog Step-a. Prvo dodaj "# Step: ..." pa tek onda "## Scene: ...".`;
+  }
+
+  if (message === 'Each "Step" heading must define a step id.') {
+    return 'Step heading nema id. Napiši ga kao "# Step: moj-step-id".';
+  }
+
+  if (message === 'lesson.script.md body must start with a step heading.') {
+    return 'Telo lekcije mora da počne sa "# Step: ...". Trenutno pre prvog step-a postoji nepodržan sadržaj.';
+  }
+
+  if (message === 'lesson.script.md must declare at least one step.') {
+    return 'Lekcija nema nijedan Step. Dodaj bar jedan "# Step: ..." blok da bi tok mogao da krene.';
+  }
+
+  const missingSceneIdMatch = message.match(/^Step "([^"]+)" contains a scene without a scene id\.$/);
+
+  if (missingSceneIdMatch) {
+    return `U step-u "${missingSceneIdMatch[1]}" postoji scene bez id-a. Napiši heading kao "## Scene: moj-scene-id".`;
+  }
+
+  const sceneSectionBeforeSceneMatch = message.match(/^Step "([^"]+)" contains a scene section before any scene heading\.$/);
+
+  if (sceneSectionBeforeSceneMatch) {
+    return `U step-u "${sceneSectionBeforeSceneMatch[1]}" postoji sekcija pre scene. Dodaj "## Scene: ..." pre Narration ili Show Code blokova.`;
+  }
+
+  const missingSceneStartMatch = message.match(/^Scene "([^"]+)" in step "([^"]+)" must start with a "Narration" or "Show Code" section\.$/);
+
+  if (missingSceneStartMatch) {
+    return `Scena "${missingSceneStartMatch[1]}" mora da krene sa "### Narration" ili "### Show Code: ...". Trenutno prvi blok u sceni nije podržan.`;
+  }
+
+  const stepNoSceneMatch = message.match(/^Step "([^"]+)" must contain at least one scene\.$/);
+
+  if (stepNoSceneMatch) {
+    return `Step "${stepNoSceneMatch[1]}" nema nijednu scenu. Dodaj bar jedan "## Scene: ..." blok unutar stepa.`;
+  }
+
+  const duplicateSceneMatch = message.match(/^Step "([^"]+)" defines scene "([^"]+)" more than once\.$/);
+
+  if (duplicateSceneMatch) {
+    return `Step "${duplicateSceneMatch[1]}" ima dupliranu scenu "${duplicateSceneMatch[2]}". Zadrži samo jedan scene id u istom step-u.`;
+  }
+
+  const stepFieldMatch = message.match(/^Step "([^"]+)" must define (title|summary|intent)\.$/);
+
+  if (stepFieldMatch) {
+    return `Step "${stepFieldMatch[1]}" nema "${stepFieldMatch[2]}:". Dodaj to polje odmah ispod step heading-a.`;
+  }
+
+  const unsupportedStepFieldMatch = message.match(/^Step "([^"]+)" uses unsupported metadata field "([^"]+)"\.$/);
+
+  if (unsupportedStepFieldMatch) {
+    return `Step "${unsupportedStepFieldMatch[1]}" koristi nepodržano polje "${unsupportedStepFieldMatch[2]}". Koristi samo dozvoljena step polja kao title, summary i intent.`;
+  }
+
+  const unsupportedStepContentMatch = message.match(/^Step "([^"]+)" contains unsupported metadata content: "(.+)"\.$/);
+
+  if (unsupportedStepContentMatch) {
+    return `U step-u "${unsupportedStepContentMatch[1]}" postoji red koji ne pripada step metadata delu: "${unsupportedStepContentMatch[2]}".`;
+  }
+
+  const focusNeedlesMatch = message.match(/^Step "([^"]+)" must express focusHtmlNeedles as a YAML list item\.$/);
+
+  if (focusNeedlesMatch) {
+    return `Step "${focusNeedlesMatch[1]}" mora da piše "focusHtmlNeedles" kao YAML listu sa crtama, ne kao običan tekst.`;
+  }
+
+  const missingNarrationMatch = message.match(/^Scene "([^"]+)" in step "([^"]+)" must define(?: a "Narration" section| narration)\.$/);
+
+  if (missingNarrationMatch) {
+    return `Sceni "${missingNarrationMatch[1]}" fali "### Narration". Dodaj taj blok i ispod napiši objašnjenje za scenu.`;
+  }
+
+  const missingShowCodeMatch = message.match(/^Scene "([^"]+)" in step "([^"]+)" must define at least one "Show Code" section\.$/);
+
+  if (missingShowCodeMatch) {
+    return `Sceni "${missingShowCodeMatch[1]}" fali makar jedan "### Show Code: ..." blok. Dodaj kod koji ta scena prikazuje.`;
+  }
+
+  const missingArtifactNameMatch = message.match(/^Scene "([^"]+)" in step "([^"]+)" must name the artifact in "Show Code: <artifactId>"\.$/);
+
+  if (missingArtifactNameMatch) {
+    return `U sceni "${missingArtifactNameMatch[1]}" Show Code heading nema artifact id. Napiši ga kao "### Show Code: html" ili drugi važeći artifact id.`;
+  }
+
+  const wrappedCodeMatch = message.match(/^Scene "([^"]+)" in step "([^"]+)" must wrap "Show Code: ([^"]+)" in a fenced code block\.$/);
+
+  if (wrappedCodeMatch) {
+    return `Show Code blok za "${wrappedCodeMatch[3]}" nije pravilno zatvoren. Otvori ga sa \`\`\` i zatvori sa \`\`\` oko koda.`;
+  }
+
+  const codeFenceMatch = message.match(/^Scene "([^"]+)" in step "([^"]+)" must use a ([\w-]+) code fence for artifact "([^"]+)"\.$/);
+
+  if (codeFenceMatch) {
+    return `Show Code blok za "${codeFenceMatch[4]}" koristi pogrešan code fence. Za ovaj artifact koristi \`\`\`${codeFenceMatch[3]}\`.`;
+  }
+
+  const unknownArtifactMatch = message.match(/^Scene "([^"]+)" in step "([^"]+)" references unknown(?: active)? artifact "([^"]+)"\.$/);
+
+  if (unknownArtifactMatch) {
+    return `Scena "${unknownArtifactMatch[1]}" koristi nepoznat artifact "${unknownArtifactMatch[3]}". Dodaj taj artifact u Metadata ili koristi postojeći artifact id.`;
+  }
+
+  const unsupportedSectionMatch = message.match(/^Scene "([^"]+)" in step "([^"]+)" uses unsupported section "([^"]+)"\.$/);
+
+  if (unsupportedSectionMatch) {
+    return `Scena "${unsupportedSectionMatch[1]}" koristi nepodržanu sekciju "${unsupportedSectionMatch[3]}". Koristi Narration, Show Code, Preview ili Theory.`;
+  }
+
+  const duplicateSectionMatch = message.match(/^Scene "([^"]+)" in step "([^"]+)" defines "([^"]+)" more than once\.$/);
+
+  if (duplicateSectionMatch) {
+    return `Scena "${duplicateSectionMatch[1]}" duplira sekciju "${duplicateSectionMatch[3]}". Zadrži samo jedan isti blok u istoj sceni.`;
+  }
+
+  const previewObjectMatch = message.match(/^Scene "([^"]+)" in step "([^"]+)" must define preview as an object\.$/);
+
+  if (previewObjectMatch) {
+    return `Preview blok u sceni "${previewObjectMatch[1]}" nije validan YAML objekat. Koristi redove kao "action:" i "target:".`;
+  }
+
+  const previewTargetMatch = message.match(/^Scene "([^"]+)" in step "([^"]+)" must define preview\.target when preview\.action is "([^"]+)"\.$/);
+
+  if (previewTargetMatch) {
+    return `Preview blok u sceni "${previewTargetMatch[1]}" nema "target:" za action "${previewTargetMatch[3]}". Dodaj target koji preview treba da menja.`;
+  }
+
+  const previewYamlMatch = message.match(/^Failed to parse preview in scene "([^"]+)": (.+)$/);
+
+  if (previewYamlMatch) {
+    return `Preview blok u sceni "${previewYamlMatch[1]}" nije dobar YAML. Proveri uvlačenje i format polja kao "action:" i "target:".`;
+  }
+
+  const theoryObjectMatch = message.match(/^Scene "([^"]+)" in step "([^"]+)" must define theory as an object\.$/);
+
+  if (theoryObjectMatch) {
+    return `Theory blok u sceni "${theoryObjectMatch[1]}" nije validan YAML objekat. Koristi red kao "anchor: ...".`;
+  }
+
+  const theoryAnchorMatch = message.match(/^Scene "([^"]+)" in step "([^"]+)" must define theory\.anchor\.$/);
+
+  if (theoryAnchorMatch) {
+    return `Theory blok u sceni "${theoryAnchorMatch[1]}" nema "anchor:". Dodaj anchor koji postoji u theory sadržaju.`;
+  }
+
+  const theoryYamlMatch = message.match(/^Failed to parse theory in scene "([^"]+)": (.+)$/);
+
+  if (theoryYamlMatch) {
+    return `Theory blok u sceni "${theoryYamlMatch[1]}" nije dobar YAML. Proveri uvlačenje i napiši "anchor: ..." u zasebnom redu.`;
+  }
+
+  const theoryDisabledMatch = message.match(/^Lesson scenes reference theory anchors, but the lesson manifest does not enable theory\.$/);
+
+  if (theoryDisabledMatch) {
+    return 'Neka scena koristi Theory anchor, ali Metadata nema uključen theory režim. U Metadata uključi theory ili ukloni theory reference iz scene.';
+  }
+
+  const missingTheoryMarkdownMatch = message.match(/^Scene "([^"]+)" in step "([^"]+)" references theory\.anchor "([^"]+)" but theory\.md was not provided\.$/);
+
+  if (missingTheoryMarkdownMatch) {
+    return `Scena "${missingTheoryMarkdownMatch[1]}" traži theory anchor "${missingTheoryMarkdownMatch[3]}", ali nema theory sadržaja za tu lekciju.`;
+  }
+
+  const unknownTheoryAnchorMatch = message.match(/^Scene "([^"]+)" in step "([^"]+)" references unknown theory\.anchor "([^"]+)"\.$/);
+
+  if (unknownTheoryAnchorMatch) {
+    return `Scena "${unknownTheoryAnchorMatch[1]}" koristi theory anchor "${unknownTheoryAnchorMatch[3]}" koji ne postoji u theory sadržaju.`;
+  }
+
+  const theoryFileMatch = message.match(/^lesson\.script\.md must define theory\.file when theory\.enabled is true\.$/);
+
+  if (theoryFileMatch) {
+    return buildMetadataMessage('theory.file');
+  }
+
+  const missingTheoryMarkdownCompileMatch = message.match(/^lesson\.script\.md declares theory\.enabled=true but no theoryMarkdown was provided\.$/);
+
+  if (missingTheoryMarkdownCompileMatch) {
+    return 'Theory je uključen u Metadata, ali uz lekciju nema theory sadržaja koji može da se kompajlira.';
+  }
+
+  const invalidOneOfMatch = message.match(/^(.+?) must be one of: (.+)\.$/);
+
+  if (invalidOneOfMatch) {
+    return `${invalidOneOfMatch[1]} ima nevažeću vrednost. Koristi jednu od dozvoljenih opcija: ${invalidOneOfMatch[2]}.`;
+  }
+
+  const positiveIntegerMatch = message.match(/^(.+?) must be a positive integer\.$/);
+
+  if (positiveIntegerMatch) {
+    return `${positiveIntegerMatch[1]} mora da bude pozitivan ceo broj.`;
+  }
+
+  const kebabCaseMatch = message.match(/^(.+?) must use kebab-case\. Received "([^"]+)"\.$/);
+
+  if (kebabCaseMatch) {
+    return `${kebabCaseMatch[1]} mora da bude u kebab-case formatu. Zameni "${kebabCaseMatch[2]}" vrednošću kao "primer-id".`;
+  }
+
+  return `Ovaj deo lekcije nije validan po trenutnim pravilima. ${message}`;
+}
+
+function createAuthoringDiagnostic(originLabel, editorContext, rawMessage) {
+  const location = resolveAuthoringDiagnosticLocation(editorContext, rawMessage);
+
+  return {
+    tone: 'danger',
+    label: originLabel,
+    rawMessage,
+    humanMessage: buildHumanDiagnosticMessage(rawMessage),
+    lineNumber: location.lineNumber,
+    contextLabel: location.contextLabel
+  };
+}
+
+export function readAuthoringDiagnostics({
+  analysisPending = false,
+  analysis = null
+} = {}) {
+  if (analysisPending) {
+    return [];
+  }
+
+  const diagnostics = [];
+  const editorContext = analysis?.editorContext || null;
+
+  if (analysis?.parseErrorMessage) {
+    diagnostics.push(createAuthoringDiagnostic('Syntax', editorContext, analysis.parseErrorMessage));
+  }
+
+  if (analysis?.compileErrorMessage) {
+    diagnostics.push(createAuthoringDiagnostic('Compile', editorContext, analysis.compileErrorMessage));
+  }
+
+  return diagnostics;
+}
+
 === system/author-lessons/read-playable-draft-override.js ===
 import { compileLessonScript } from '../lesson-engine/compile-lesson-script.js';
 import { readPersistedPlayableDraftOverride } from './open-authoring-sqlite.js';
@@ -94680,6 +95386,7 @@ import {
   scanLessonScriptSource
 } from './lesson-script-workbench.js';
 import { createLessonScriptEditor } from './create-lesson-script-editor.js';
+import { readAuthoringDiagnostics } from './read-authoring-diagnostics.js';
 
 let metadataProseEditorFactoryPromise = null;
 
@@ -95021,167 +95728,35 @@ function buildStatusMessage(state) {
   return 'Open or create a draft to start writing.';
 }
 
-function readSceneNode(editorContext, stepId, sceneId) {
-  const stepNode = editorContext?.steps?.find(step => step.stepId === stepId);
-
-  return stepNode?.scenes?.find(scene => scene.sceneId === sceneId) || null;
-}
-
-function readSceneSectionNode(editorContext, stepId, sceneId, matchSection) {
-  const sceneNode = readSceneNode(editorContext, stepId, sceneId);
-
-  if (!sceneNode || typeof matchSection !== 'function') {
-    return null;
-  }
-
-  return sceneNode.sections.find(section => matchSection(normalizeText(section.heading))) || null;
-}
-
-function readStepNode(editorContext, stepId) {
-  return editorContext?.steps?.find(step => step.stepId === stepId) || null;
-}
-
-function resolveValidationLocation(editorContext, message) {
-  const sceneMatch = String(message).match(/Scene "([^"]+)" in step "([^"]+)"/);
-
-  if (sceneMatch) {
-    const sceneNode = readSceneNode(editorContext, sceneMatch[2], sceneMatch[1]);
-    const showCodeMatch = String(message).match(/"Show Code:\s*([^"]+)"/);
-    const referencesNarration = String(message).includes('"Narration"') || String(message).includes('define narration');
-    const referencesPreview = String(message).toLowerCase().includes('preview');
-    const referencesTheory = String(message).toLowerCase().includes('theory');
-
-    if (showCodeMatch) {
-      const sectionNode = readSceneSectionNode(
-        editorContext,
-        sceneMatch[2],
-        sceneMatch[1],
-        heading => heading.toLowerCase() === `show code: ${normalizeText(showCodeMatch[1]).toLowerCase()}`
-      );
-
-      if (sectionNode) {
-        return {
-          lineNumber: sectionNode.lineNumber,
-          contextLabel: sectionNode.heading
-        };
-      }
-    }
-
-    if (referencesNarration) {
-      const sectionNode = readSceneSectionNode(
-        editorContext,
-        sceneMatch[2],
-        sceneMatch[1],
-        heading => heading.toLowerCase() === 'narration'
-      );
-
-      if (sectionNode) {
-        return {
-          lineNumber: sectionNode.lineNumber,
-          contextLabel: sectionNode.heading
-        };
-      }
-    }
-
-    if (referencesPreview) {
-      const sectionNode = readSceneSectionNode(
-        editorContext,
-        sceneMatch[2],
-        sceneMatch[1],
-        heading => heading.toLowerCase() === 'preview'
-      );
-
-      if (sectionNode) {
-        return {
-          lineNumber: sectionNode.lineNumber,
-          contextLabel: sectionNode.heading
-        };
-      }
-    }
-
-    if (referencesTheory) {
-      const sectionNode = readSceneSectionNode(
-        editorContext,
-        sceneMatch[2],
-        sceneMatch[1],
-        heading => heading.toLowerCase() === 'theory'
-      );
-
-      if (sectionNode) {
-        return {
-          lineNumber: sectionNode.lineNumber,
-          contextLabel: sectionNode.heading
-        };
-      }
-    }
-
-    if (sceneNode) {
-      return {
-        lineNumber: sceneNode.lineNumber,
-        contextLabel: sceneNode.title || sceneNode.sceneId
-      };
-    }
-  }
-
-  const stepMatch = String(message).match(/Step "([^"]+)"/);
-
-  if (stepMatch) {
-    const stepNode = readStepNode(editorContext, stepMatch[1]);
-
-    if (stepNode) {
-      return {
-        lineNumber: stepNode.lineNumber,
-        contextLabel: stepNode.title || stepNode.stepId
-      };
-    }
-  }
-
-  if (String(message).includes('lesson.script.md')) {
-    return {
-      lineNumber: 1,
-      contextLabel: 'Frontmatter'
-    };
-  }
-
-  return {
-    lineNumber: editorContext?.context?.lineNumber || 1,
-    contextLabel: buildContextLabel(editorContext?.context)
-  };
-}
-
 function readValidationItems(state) {
-  if (state.analysisPending) {
-    return [];
+  return readAuthoringDiagnostics({
+    analysisPending: state.analysisPending,
+    analysis: state.analysis
+  });
+}
+
+function buildValidationLocationNote(state, item) {
+  const metadataLocation = String(item.contextLabel || '').startsWith('Metadata');
+
+  if (metadataLocation || item.lineNumber < (state.writerView?.startLineNumber || 1)) {
+    return `${item.contextLabel} · otvori Metadata`;
   }
 
-  const items = [];
-  const editorContext = state.analysis?.editorContext;
+  return `Line ${readVisibleLineNumber(state, item.lineNumber)} · ${item.contextLabel}`;
+}
 
-  if (state.analysis?.parseErrorMessage) {
-    const location = resolveValidationLocation(editorContext, state.analysis.parseErrorMessage);
+function readEditorValidationDiagnostics(state) {
+  const visibleStartLineNumber = state.writerView?.startLineNumber || 1;
 
-    items.push({
-      tone: 'danger',
-      label: 'Syntax',
-      message: state.analysis.parseErrorMessage,
-      lineNumber: location.lineNumber,
-      contextLabel: location.contextLabel
-    });
-  }
-
-  if (state.analysis?.compileErrorMessage) {
-    const location = resolveValidationLocation(editorContext, state.analysis.compileErrorMessage);
-
-    items.push({
-      tone: 'danger',
-      label: 'Compile',
-      message: state.analysis.compileErrorMessage,
-      lineNumber: location.lineNumber,
-      contextLabel: location.contextLabel
-    });
-  }
-
-  return items;
+  return readValidationItems(state).map(item => ({
+    lineNumber: item.lineNumber < visibleStartLineNumber
+      ? 1
+      : readVisibleLineNumber(state, item.lineNumber),
+    label: item.label,
+    contextLabel: item.contextLabel,
+    message: item.humanMessage,
+    severity: item.tone === 'warning' ? 'warning' : 'error'
+  }));
 }
 
 function readPreviewTargetContext(parsedLesson, context) {
@@ -95539,10 +96114,12 @@ function buildValidationMarkup(state) {
           class="authoring-validation-item"
           data-tone="${item.tone}"
           data-action="jump-to-source-line:${item.lineNumber}"
+          title="${escapeHtml(item.rawMessage)}"
         >
           <span>${escapeHtml(item.label)}</span>
           <strong>${escapeHtml(item.contextLabel)}</strong>
-          <p>${escapeHtml(item.message)}</p>
+          <p>${escapeHtml(item.humanMessage)}</p>
+          <small>${escapeHtml(buildValidationLocationNote(state, item))}</small>
         </button>
       `).join('')}
     </div>
@@ -96126,6 +96703,7 @@ function renderWorkspace(state, parts) {
   parts.insertButton.textContent = buildInsertButtonLabel(context);
   parts.insertButton.title = 'Use / on an empty line or Ctrl/Cmd + K to open the insert menu.';
   parts.insertHint.innerHTML = buildInsertHintText(context);
+  parts.editorController.setDiagnostics(readEditorValidationDiagnostics(state));
 
   if (parts.editorController.getValue() !== state.writerView.bodyMarkdown) {
     parts.editorController.setValue(state.writerView.bodyMarkdown);
@@ -102233,6 +102811,103 @@ test('authoring state helpers distinguish saved, playable, published, and recove
   });
 });
 
+=== tests/contracts/read-authoring-diagnostics.test.js ===
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import { readEditorContextFromScan, scanLessonScriptSource } from '../../system/author-lessons/lesson-script-workbench.js';
+import { readAuthoringDiagnostics } from '../../system/author-lessons/read-authoring-diagnostics.js';
+
+function buildLessonSource(lines) {
+  return [
+    '---',
+    'schemaVersion: 1',
+    'lessonId: lint-smoke',
+    'lessonTitle: Lint Smoke',
+    'lessonIntro: Human-readable diagnostics coverage.',
+    'status: draft',
+    'courseId: step-by-step-animator',
+    'order: 1',
+    'artifacts:',
+    '  - artifactId: html',
+    '    language: html',
+    '    label: index.html',
+    '    isPrimary: true',
+    'preview:',
+    '  title: Preview',
+    '  address: browser://lint-smoke',
+    '---',
+    ...lines
+  ].join('\n');
+}
+
+test('readAuthoringDiagnostics translates metadata validation into metadata drawer guidance', () => {
+  const sourceMarkdown = buildLessonSource([
+    '# Step: intro-step',
+    'title: Intro step',
+    'summary: Explain the first move.',
+    'intent: Start the lesson.',
+    '',
+    '## Scene: intro-scene',
+    '',
+    '### Narration',
+    'Explain the scene.',
+    '',
+    '### Show Code: html',
+    '```html',
+    '<div>Hello</div>',
+    '```'
+  ]);
+  const editorScan = scanLessonScriptSource(sourceMarkdown, null);
+  const diagnostics = readAuthoringDiagnostics({
+    analysis: {
+      editorContext: readEditorContextFromScan(editorScan, 0),
+      parseErrorMessage: 'lesson.script.md must define preview.type.'
+    }
+  });
+
+  assert.equal(diagnostics.length, 1);
+  assert.equal(diagnostics[0].contextLabel, 'Metadata · preview.type');
+  assert.equal(diagnostics[0].lineNumber, 14);
+  assert.equal(
+    diagnostics[0].humanMessage,
+    'U Metadata drawer-u nedostaje "preview.type". Otvori Metadata i popuni to polje.'
+  );
+});
+
+test('readAuthoringDiagnostics points broken show-code fences to the failing section with human copy', () => {
+  const sourceMarkdown = buildLessonSource([
+    '# Step: intro-step',
+    'title: Intro step',
+    'summary: Explain the first move.',
+    'intent: Start the lesson.',
+    '',
+    '## Scene: intro-scene',
+    '',
+    '### Narration',
+    'Explain the scene.',
+    '',
+    '### Show Code: html',
+    '```html',
+    '<div>Hello</div>'
+  ]);
+  const showCodeOffset = sourceMarkdown.indexOf('### Show Code: html');
+  const editorScan = scanLessonScriptSource(sourceMarkdown, null);
+  const diagnostics = readAuthoringDiagnostics({
+    analysis: {
+      editorContext: readEditorContextFromScan(editorScan, showCodeOffset),
+      parseErrorMessage: 'Scene "intro-scene" in step "intro-step" must wrap "Show Code: html" in a fenced code block.'
+    }
+  });
+
+  assert.equal(diagnostics.length, 1);
+  assert.equal(diagnostics[0].contextLabel, 'Show Code: html');
+  assert.equal(diagnostics[0].lineNumber, 28);
+  assert.equal(
+    diagnostics[0].humanMessage,
+    'Show Code blok za "html" nije pravilno zatvoren. Otvori ga sa ``` i zatvori sa ``` oko koda.'
+  );
+});
+
 === tests/contracts/read-lesson-script.test.js ===
 import test from 'node:test';
 import assert from 'node:assert/strict';
@@ -104109,6 +104784,30 @@ test('browser authoring smoke covers V2 writer body view, metadata drawer, previ
     await waitForCondition(
       async () => page.$$('.authoring-validation-item').then(items => items.length > 0),
       'a validation item for the syntax issue'
+    );
+
+    await waitForCondition(
+      async () => page.$eval('.authoring-validation-item p', element => element.textContent?.includes('duplira sekciju') || false).catch(() => false),
+      'a human-readable validation message for the syntax issue'
+    );
+
+    await waitForCondition(
+      async () => page.evaluate(() => {
+        const lines = Array.from(document.querySelectorAll('#authoringScriptEditor .cm-line'));
+        const line = lines.find(element => {
+          const titledChild = element.querySelector?.('[title]');
+
+          return element.textContent?.trim() === '### Show Code: html'
+            && (titledChild?.getAttribute('title') || '').includes('duplira sekciju');
+        });
+
+        if (!(line instanceof HTMLElement)) {
+          return false;
+        }
+
+        return true;
+      }).catch(() => false),
+      'the linted editor line to carry a human-readable hover title'
     );
 
     await page.click('.authoring-validation-item');

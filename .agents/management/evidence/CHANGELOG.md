@@ -15,6 +15,9 @@ Update rules:
 
 ## Current Ledger
 
+1. `[feature][medium] 2026-03-30 03:23 CEST - Closed TODO-015 by adding shared human-readable Write Mode diagnostics, reusing the same normalized validation data in the right inspector and inline editor linting, and proving the new guidance path with contract plus browser-smoke coverage`
+   owner: codex
+   actual: 30m
 1. `[review][medium] 2026-03-30 02:43 CEST - Closed TODO-014 by binding Write Mode URL context to the active draft, letting the normal player boot healthy UI-only custom drafts by lesson id, and adding selector plus browser-smoke coverage for the authoring/player seam`
    owner: codex
    actual: 10m

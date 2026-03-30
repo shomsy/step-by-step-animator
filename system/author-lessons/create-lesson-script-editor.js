@@ -1,4 +1,10 @@
-import { Compartment, EditorState, RangeSetBuilder } from '@codemirror/state';
+import {
+  Compartment,
+  EditorState,
+  RangeSetBuilder,
+  StateEffect,
+  StateField
+} from '@codemirror/state';
 import { markdown } from '@codemirror/lang-markdown';
 import {
   Decoration,
@@ -157,6 +163,116 @@ const dslDecorationPlugin = ViewPlugin.fromClass(class {
   decorations: plugin => plugin.decorations
 });
 
+function clampEditorLineNumber(doc, lineNumber) {
+  const normalizedLineNumber = Number(lineNumber) || 1;
+
+  return Math.max(1, Math.min(doc.lines || 1, normalizedLineNumber));
+}
+
+function readDiagnosticSeverity(diagnostics) {
+  return diagnostics.some(diagnostic => diagnostic.severity === 'warning')
+    ? 'warning'
+    : 'error';
+}
+
+function buildDiagnosticTooltipLabel(diagnostic) {
+  const contextLabel = typeof diagnostic.contextLabel === 'string'
+    ? diagnostic.contextLabel.trim()
+    : '';
+
+  return contextLabel
+    ? `${diagnostic.label} · ${contextLabel}`
+    : diagnostic.label;
+}
+
+function readDiagnosticsByLine(doc, diagnostics) {
+  const diagnosticsByLine = new Map();
+
+  (Array.isArray(diagnostics) ? diagnostics : []).forEach(diagnostic => {
+    const lineNumber = clampEditorLineNumber(doc, diagnostic.lineNumber);
+    const nextDiagnostic = {
+      ...diagnostic,
+      lineNumber
+    };
+    const lineDiagnostics = diagnosticsByLine.get(lineNumber) || [];
+
+    lineDiagnostics.push(nextDiagnostic);
+    diagnosticsByLine.set(lineNumber, lineDiagnostics);
+  });
+
+  return diagnosticsByLine;
+}
+
+function buildAuthoringDiagnosticDecorations(doc, diagnostics) {
+  const builder = new RangeSetBuilder();
+  const diagnosticsByLine = readDiagnosticsByLine(doc, diagnostics);
+
+  diagnosticsByLine.forEach((lineDiagnostics, lineNumber) => {
+    const line = doc.line(lineNumber);
+    const severity = readDiagnosticSeverity(lineDiagnostics);
+    const tooltipText = lineDiagnostics
+      .map(diagnostic => `${buildDiagnosticTooltipLabel(diagnostic)}\n${diagnostic.message}`)
+      .join('\n\n');
+
+    builder.add(line.from, line.from, Decoration.line({
+      class: `authoring-script-line has-diagnostic is-diagnostic-${severity}`
+    }));
+
+    if (line.from < line.to) {
+      builder.add(line.from, line.to, Decoration.mark({
+        class: `authoring-diagnostic-mark is-${severity}`,
+        attributes: {
+          title: tooltipText,
+          'aria-label': tooltipText
+        }
+      }));
+    }
+  });
+
+  return builder.finish();
+}
+
+function readAuthoringDiagnosticState(doc, diagnostics) {
+  const normalizedDiagnostics = Array.isArray(diagnostics)
+    ? diagnostics.map(diagnostic => ({
+        severity: 'error',
+        ...diagnostic,
+        lineNumber: clampEditorLineNumber(doc, diagnostic.lineNumber)
+      }))
+    : [];
+
+  return {
+    items: normalizedDiagnostics,
+    decorations: buildAuthoringDiagnosticDecorations(doc, normalizedDiagnostics)
+  };
+}
+
+const setAuthoringDiagnosticsEffect = StateEffect.define();
+
+const authoringDiagnosticsField = StateField.define({
+  create(state) {
+    return readAuthoringDiagnosticState(state.doc, []);
+  },
+  update(value, transaction) {
+    let nextDiagnostics = value.items;
+    let diagnosticsUpdated = false;
+
+    transaction.effects.forEach(effect => {
+      if (effect.is(setAuthoringDiagnosticsEffect)) {
+        nextDiagnostics = effect.value;
+        diagnosticsUpdated = true;
+      }
+    });
+
+    if (!transaction.docChanged && !diagnosticsUpdated) {
+      return value;
+    }
+
+    return readAuthoringDiagnosticState(transaction.state.doc, nextDiagnostics);
+  },
+  provide: field => EditorView.decorations.from(field, diagnosticState => diagnosticState.decorations)
+});
+
 const authoringEditorTheme = EditorView.theme({
   '&': {
     height: '100%',
@@ -197,6 +313,13 @@ const authoringEditorTheme = EditorView.theme({
   '.cm-panels': {
     background: 'transparent',
     color: 'var(--authoring-ink)'
+  },
+  '.cm-tooltip': {
+    borderRadius: '14px',
+    border: '1px solid rgba(255, 145, 127, 0.38)',
+    background: 'rgba(14, 12, 12, 0.96)',
+    boxShadow: '0 18px 40px rgba(0, 0, 0, 0.42)',
+    color: 'var(--authoring-ink)'
   }
 }, {
   dark: true
@@ -218,6 +341,7 @@ export function createLessonScriptEditor({
   let isApplyingExternalValue = false;
   let currentEditable = true;
   let currentPlaceholderText = placeholderText;
+  let currentDiagnosticsSignature = '[]';
 
   const state = EditorState.create({
     doc: initialValue,
@@ -226,6 +350,7 @@ export function createLessonScriptEditor({
       markdown(),
       authoringEditorTheme,
       dslDecorationPlugin,
+      authoringDiagnosticsField,
       editableCompartment.of(EditorView.editable.of(true)),
       placeholderCompartment.of(placeholderExtension(placeholderText)),
       EditorView.updateListener.of(update => {
@@ -422,6 +547,32 @@ export function createLessonScriptEditor({
       view.dispatch({
         effects: placeholderCompartment.reconfigure(placeholderExtension(text || ''))
       });
+    },
+    setDiagnostics(diagnostics) {
+      const nextDiagnostics = Array.isArray(diagnostics)
+        ? diagnostics.map(diagnostic => ({
+            lineNumber: diagnostic.lineNumber,
+            label: String(diagnostic.label || 'Validation'),
+            contextLabel: String(diagnostic.contextLabel || ''),
+            message: String(diagnostic.message || ''),
+            severity: String(diagnostic.severity || 'error')
+          }))
+        : [];
+      const nextSignature = JSON.stringify(nextDiagnostics);
+
+      if (nextSignature === currentDiagnosticsSignature) {
+        return;
+      }
+
+      currentDiagnosticsSignature = nextSignature;
+      view.dispatch({
+        effects: setAuthoringDiagnosticsEffect.of(nextDiagnostics)
+      });
+    },
+    getDiagnostics() {
+      return view.state.field(authoringDiagnosticsField).items.map(diagnostic => ({
+        ...diagnostic
+      }));
     }
   };
 

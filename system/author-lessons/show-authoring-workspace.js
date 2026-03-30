@@ -17,6 +17,7 @@ import {
   scanLessonScriptSource
 } from './lesson-script-workbench.js';
 import { createLessonScriptEditor } from './create-lesson-script-editor.js';
+import { readAuthoringDiagnostics } from './read-authoring-diagnostics.js';
 
 let metadataProseEditorFactoryPromise = null;
 
@@ -358,167 +359,35 @@ function buildStatusMessage(state) {
   return 'Open or create a draft to start writing.';
 }
 
-function readSceneNode(editorContext, stepId, sceneId) {
-  const stepNode = editorContext?.steps?.find(step => step.stepId === stepId);
-
-  return stepNode?.scenes?.find(scene => scene.sceneId === sceneId) || null;
-}
-
-function readSceneSectionNode(editorContext, stepId, sceneId, matchSection) {
-  const sceneNode = readSceneNode(editorContext, stepId, sceneId);
-
-  if (!sceneNode || typeof matchSection !== 'function') {
-    return null;
-  }
-
-  return sceneNode.sections.find(section => matchSection(normalizeText(section.heading))) || null;
-}
-
-function readStepNode(editorContext, stepId) {
-  return editorContext?.steps?.find(step => step.stepId === stepId) || null;
-}
-
-function resolveValidationLocation(editorContext, message) {
-  const sceneMatch = String(message).match(/Scene "([^"]+)" in step "([^"]+)"/);
-
-  if (sceneMatch) {
-    const sceneNode = readSceneNode(editorContext, sceneMatch[2], sceneMatch[1]);
-    const showCodeMatch = String(message).match(/"Show Code:\s*([^"]+)"/);
-    const referencesNarration = String(message).includes('"Narration"') || String(message).includes('define narration');
-    const referencesPreview = String(message).toLowerCase().includes('preview');
-    const referencesTheory = String(message).toLowerCase().includes('theory');
-
-    if (showCodeMatch) {
-      const sectionNode = readSceneSectionNode(
-        editorContext,
-        sceneMatch[2],
-        sceneMatch[1],
-        heading => heading.toLowerCase() === `show code: ${normalizeText(showCodeMatch[1]).toLowerCase()}`
-      );
-
-      if (sectionNode) {
-        return {
-          lineNumber: sectionNode.lineNumber,
-          contextLabel: sectionNode.heading
-        };
-      }
-    }
-
-    if (referencesNarration) {
-      const sectionNode = readSceneSectionNode(
-        editorContext,
-        sceneMatch[2],
-        sceneMatch[1],
-        heading => heading.toLowerCase() === 'narration'
-      );
-
-      if (sectionNode) {
-        return {
-          lineNumber: sectionNode.lineNumber,
-          contextLabel: sectionNode.heading
-        };
-      }
-    }
-
-    if (referencesPreview) {
-      const sectionNode = readSceneSectionNode(
-        editorContext,
-        sceneMatch[2],
-        sceneMatch[1],
-        heading => heading.toLowerCase() === 'preview'
-      );
-
-      if (sectionNode) {
-        return {
-          lineNumber: sectionNode.lineNumber,
-          contextLabel: sectionNode.heading
-        };
-      }
-    }
-
-    if (referencesTheory) {
-      const sectionNode = readSceneSectionNode(
-        editorContext,
-        sceneMatch[2],
-        sceneMatch[1],
-        heading => heading.toLowerCase() === 'theory'
-      );
-
-      if (sectionNode) {
-        return {
-          lineNumber: sectionNode.lineNumber,
-          contextLabel: sectionNode.heading
-        };
-      }
-    }
-
-    if (sceneNode) {
-      return {
-        lineNumber: sceneNode.lineNumber,
-        contextLabel: sceneNode.title || sceneNode.sceneId
-      };
-    }
-  }
-
-  const stepMatch = String(message).match(/Step "([^"]+)"/);
-
-  if (stepMatch) {
-    const stepNode = readStepNode(editorContext, stepMatch[1]);
-
-    if (stepNode) {
-      return {
-        lineNumber: stepNode.lineNumber,
-        contextLabel: stepNode.title || stepNode.stepId
-      };
-    }
-  }
-
-  if (String(message).includes('lesson.script.md')) {
-    return {
-      lineNumber: 1,
-      contextLabel: 'Frontmatter'
-    };
-  }
-
-  return {
-    lineNumber: editorContext?.context?.lineNumber || 1,
-    contextLabel: buildContextLabel(editorContext?.context)
-  };
-}
-
 function readValidationItems(state) {
-  if (state.analysisPending) {
-    return [];
+  return readAuthoringDiagnostics({
+    analysisPending: state.analysisPending,
+    analysis: state.analysis
+  });
+}
+
+function buildValidationLocationNote(state, item) {
+  const metadataLocation = String(item.contextLabel || '').startsWith('Metadata');
+
+  if (metadataLocation || item.lineNumber < (state.writerView?.startLineNumber || 1)) {
+    return `${item.contextLabel} · otvori Metadata`;
   }
 
-  const items = [];
-  const editorContext = state.analysis?.editorContext;
+  return `Line ${readVisibleLineNumber(state, item.lineNumber)} · ${item.contextLabel}`;
+}
 
-  if (state.analysis?.parseErrorMessage) {
-    const location = resolveValidationLocation(editorContext, state.analysis.parseErrorMessage);
+function readEditorValidationDiagnostics(state) {
+  const visibleStartLineNumber = state.writerView?.startLineNumber || 1;
 
-    items.push({
-      tone: 'danger',
-      label: 'Syntax',
-      message: state.analysis.parseErrorMessage,
-      lineNumber: location.lineNumber,
-      contextLabel: location.contextLabel
-    });
-  }
-
-  if (state.analysis?.compileErrorMessage) {
-    const location = resolveValidationLocation(editorContext, state.analysis.compileErrorMessage);
-
-    items.push({
-      tone: 'danger',
-      label: 'Compile',
-      message: state.analysis.compileErrorMessage,
-      lineNumber: location.lineNumber,
-      contextLabel: location.contextLabel
-    });
-  }
-
-  return items;
+  return readValidationItems(state).map(item => ({
+    lineNumber: item.lineNumber < visibleStartLineNumber
+      ? 1
+      : readVisibleLineNumber(state, item.lineNumber),
+    label: item.label,
+    contextLabel: item.contextLabel,
+    message: item.humanMessage,
+    severity: item.tone === 'warning' ? 'warning' : 'error'
+  }));
 }
 
 function readPreviewTargetContext(parsedLesson, context) {
@@ -876,10 +745,12 @@ function buildValidationMarkup(state) {
           class="authoring-validation-item"
           data-tone="${item.tone}"
           data-action="jump-to-source-line:${item.lineNumber}"
+          title="${escapeHtml(item.rawMessage)}"
         >
           <span>${escapeHtml(item.label)}</span>
           <strong>${escapeHtml(item.contextLabel)}</strong>
-          <p>${escapeHtml(item.message)}</p>
+          <p>${escapeHtml(item.humanMessage)}</p>
+          <small>${escapeHtml(buildValidationLocationNote(state, item))}</small>
         </button>
       `).join('')}
     </div>
@@ -1463,6 +1334,7 @@ function renderWorkspace(state, parts) {
   parts.insertButton.textContent = buildInsertButtonLabel(context);
   parts.insertButton.title = 'Use / on an empty line or Ctrl/Cmd + K to open the insert menu.';
   parts.insertHint.innerHTML = buildInsertHintText(context);
+  parts.editorController.setDiagnostics(readEditorValidationDiagnostics(state));
 
   if (parts.editorController.getValue() !== state.writerView.bodyMarkdown) {
     parts.editorController.setValue(state.writerView.bodyMarkdown);

@@ -7,6 +7,7 @@ The active plan lives in `.agents/management/planning/PLAN.md`.
 The active implementation queue lives in `.agents/management/TODO.md`.
 The evidence ledger lives in `.agents/management/evidence/CHANGELOG.md`.
 
+- 2026-03-30 03:23 CEST - PLAN-009 completed: added shared human-readable authoring diagnostics so Write Mode keeps one validation truth across the right inspector and inline editor lint markers, with plain-language guidance and exact location jumps.
 - 2026-03-29 20:20 CEST - PLAN-006 completed: shipped a read-only player draft-override seam so the normal player prefers the latest healthy saved paired draft, fails closed to the shipped lesson when the saved draft is broken, and keeps the lesson picker deterministic.
 - 2026-03-30 01:15 CEST - PLAN-008 completed: tightened the UI-backed authoring contract with a shared runtime-state module, explicit Save/Play/Publish labels, a browser restore-version recovery proof, and updated authoring docs so the draft/play/publish contract stays explicit.
 - 2026-03-30 01:04 CEST - PLAN-007 completed: shipped the UI-backed lesson authoring bridge so Write Mode owns draft creation, save/reopen, playability state, published snapshot visibility, and fail-closed fallback semantics without requiring filesystem source scaffolds during authoring.
