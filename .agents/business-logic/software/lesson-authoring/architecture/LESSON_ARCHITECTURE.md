@@ -58,6 +58,7 @@ These seams must stay separate and banal:
 - `compile bridge`
 - `playback state`
 - `publish/export`
+- `artifact diff`
 
 Do not let support logic blur them back into one mixed lesson CMS flow.
 

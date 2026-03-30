@@ -1,4 +1,5 @@
 import { compileLessonScript } from '../lesson-engine/compile-lesson-script.js';
+import { buildArtifactLineDiff } from '../lesson-engine/build-artifact-line-diff.js';
 import { buildLessonScriptMarkdown } from '../lesson-engine/build-lesson-script-markdown.js';
 import { composeLivePreviewDocument } from '../animator-engine/play-lesson/04-watch-preview/show-current-preview.js';
 import { openAuthoringSqlite } from './open-authoring-sqlite.js';
@@ -469,18 +470,15 @@ function readPreviewTargetContext(parsedLesson, context) {
   };
 }
 
-function buildParsedPreviewModel(parsedLesson, context) {
-  const artifactDeclarations = readArtifactDeclarations(parsedLesson);
+function buildPreviewArtifactLinesByTarget(parsedLesson, artifactDeclarations, target) {
   const steps = Array.isArray(parsedLesson?.steps) ? parsedLesson.steps : [];
-
-  if (!artifactDeclarations.length || !steps.length) {
-    return null;
-  }
-
-  const target = readPreviewTargetContext(parsedLesson, context);
   const linesByArtifactId = Object.fromEntries(
     artifactDeclarations.map(artifact => [artifact.artifactId, []])
   );
+
+  if (target.stepIndex < 0 || !steps[target.stepIndex]) {
+    return cloneArtifactLineMap(linesByArtifactId);
+  }
 
   for (let stepIndex = 0; stepIndex <= target.stepIndex; stepIndex += 1) {
     const step = steps[stepIndex];
@@ -498,6 +496,59 @@ function buildParsedPreviewModel(parsedLesson, context) {
     }
   }
 
+  return cloneArtifactLineMap(linesByArtifactId);
+}
+
+function readPreviousPreviewTargetContext(parsedLesson, target) {
+  const steps = Array.isArray(parsedLesson?.steps) ? parsedLesson.steps : [];
+
+  if (target.stepIndex < 0 || !steps[target.stepIndex]) {
+    return null;
+  }
+
+  if (target.sceneIndex > 0) {
+    return {
+      stepIndex: target.stepIndex,
+      sceneIndex: target.sceneIndex - 1
+    };
+  }
+
+  if (target.stepIndex === 0) {
+    return null;
+  }
+
+  const previousStep = steps[target.stepIndex - 1];
+  const previousScenes = Array.isArray(previousStep?.scenes) ? previousStep.scenes : [];
+
+  return {
+    stepIndex: target.stepIndex - 1,
+    sceneIndex: Math.max(0, previousScenes.length - 1)
+  };
+}
+
+function buildPreviewDiffBasisLabel(target, previousTarget) {
+  if (!previousTarget) {
+    return 'Compared with the empty lesson start.';
+  }
+
+  if (target.stepIndex === previousTarget.stepIndex) {
+    return 'Compared with the previous scene in this step.';
+  }
+
+  return 'Compared with the previous completed step.';
+}
+
+function buildParsedPreviewModel(parsedLesson, context) {
+  const artifactDeclarations = readArtifactDeclarations(parsedLesson);
+  const steps = Array.isArray(parsedLesson?.steps) ? parsedLesson.steps : [];
+
+  if (!artifactDeclarations.length || !steps.length) {
+    return null;
+  }
+
+  const target = readPreviewTargetContext(parsedLesson, context);
+  const previousTarget = readPreviousPreviewTargetContext(parsedLesson, target);
+  const linesByArtifactId = buildPreviewArtifactLinesByTarget(parsedLesson, artifactDeclarations, target);
   const activeStep = steps[target.stepIndex];
   const activeScene = activeStep?.scenes?.[target.sceneIndex] || null;
 
@@ -508,7 +559,11 @@ function buildParsedPreviewModel(parsedLesson, context) {
     stepTitle: activeStep?.title || activeStep?.stepId || '',
     sceneId: activeScene?.sceneId || '',
     artifactDeclarations,
-    artifactLinesById: cloneArtifactLineMap(linesByArtifactId)
+    artifactLinesById: linesByArtifactId,
+    previousArtifactLinesById: previousTarget
+      ? buildPreviewArtifactLinesByTarget(parsedLesson, artifactDeclarations, previousTarget)
+      : Object.fromEntries(artifactDeclarations.map(artifact => [artifact.artifactId, []])),
+    diffBasisLabel: buildPreviewDiffBasisLabel(target, previousTarget)
   };
 }
 
@@ -594,6 +649,17 @@ function readSelectedArtifactId(state, previewModel) {
 
 function readPreviewArtifactText(previewModel, artifactId) {
   return (previewModel?.artifactLinesById?.[artifactId] || []).join('\n');
+}
+
+function readPreviewArtifactDiff(previewModel, artifactId) {
+  if (!previewModel || !artifactId) {
+    return null;
+  }
+
+  return buildArtifactLineDiff(
+    previewModel.previousArtifactLinesById?.[artifactId] || [],
+    previewModel.artifactLinesById?.[artifactId] || []
+  );
 }
 
 function buildPreviewContextText(previewModel) {
@@ -818,6 +884,56 @@ function buildSnapshotTabsMarkup(previewModel, selectedArtifactId) {
       ${escapeHtml(artifact.artifactId)}
     </button>
   `).join('');
+}
+
+function buildArtifactDiffSummaryMarkup(previewModel, selectedArtifactId) {
+  if (!previewModel || !selectedArtifactId) {
+    return '<div class="authoring-empty">No diff yet.</div>';
+  }
+
+  const diff = readPreviewArtifactDiff(previewModel, selectedArtifactId);
+
+  if (!diff || !diff.hasChanges) {
+    return `
+      <div class="authoring-diff-summary" data-tone="muted">
+        <strong>No line changes</strong>
+        <p>${escapeHtml(selectedArtifactId)} stays the same at this point.</p>
+        <span>${escapeHtml(previewModel.diffBasisLabel || 'Compared with the previous lesson state.')}</span>
+      </div>
+    `;
+  }
+
+  return `
+    <div class="authoring-diff-summary" data-tone="success">
+      <strong>${diff.addedCount} added · ${diff.removedCount} removed</strong>
+      <p>${escapeHtml(selectedArtifactId)} changes in this step.</p>
+      <span>${escapeHtml(previewModel.diffBasisLabel || 'Compared with the previous lesson state.')}</span>
+    </div>
+  `;
+}
+
+function buildArtifactDiffMarkup(previewModel, selectedArtifactId) {
+  if (!previewModel || !selectedArtifactId) {
+    return '<div class="authoring-empty">No diff yet.</div>';
+  }
+
+  const diff = readPreviewArtifactDiff(previewModel, selectedArtifactId);
+
+  if (!diff || !diff.entries.length) {
+    return '<div class="authoring-empty">No diff yet.</div>';
+  }
+
+  return `
+    <div class="authoring-diff-lines">
+      ${diff.entries.map(entry => `
+        <div class="authoring-diff-line is-${entry.kind}${entry.isEmptyLine ? ' is-empty' : ''}" data-change-kind="${entry.kind}">
+          <span class="authoring-diff-marker" aria-hidden="true">${entry.kind === 'added' ? '+' : entry.kind === 'removed' ? '-' : '·'}</span>
+          <span class="authoring-diff-number">${String(entry.currentLineNumber ?? entry.previousLineNumber ?? '').padStart(2, '0')}</span>
+          <span class="authoring-diff-line-code">${entry.isEmptyLine ? '&nbsp;' : escapeHtml(entry.lineText)}</span>
+        </div>
+      `).join('')}
+    </div>
+  `;
 }
 
 function buildInsertMenuMarkup(state) {
@@ -1216,6 +1332,15 @@ function createWorkspaceParts(ownerDocument) {
               <div class="authoring-snapshot-tabs" id="authoringSnapshotTabs"></div>
               <pre class="authoring-snapshot-code" id="authoringSnapshotCode"></pre>
             </section>
+
+            <section class="authoring-inspector-card">
+              <div class="authoring-inspector-head">
+                <span class="authoring-pane-label">Step diff</span>
+                <h2>What changed</h2>
+              </div>
+              <div id="authoringDiffSummary"></div>
+              <div class="authoring-diff-code" id="authoringDiffCode"></div>
+            </section>
           </aside>
         </section>
       </main>
@@ -1256,6 +1381,8 @@ function createWorkspaceParts(ownerDocument) {
     previewFrame: ownerDocument.getElementById('authoringPreviewFrame'),
     snapshotTabs: ownerDocument.getElementById('authoringSnapshotTabs'),
     snapshotCode: ownerDocument.getElementById('authoringSnapshotCode'),
+    diffSummary: ownerDocument.getElementById('authoringDiffSummary'),
+    diffCode: ownerDocument.getElementById('authoringDiffCode'),
     metadataDrawer: ownerDocument.getElementById('authoringMetadataDrawer'),
     metadataProseEditors: {}
   };
@@ -1369,6 +1496,8 @@ function renderWorkspace(state, parts) {
   parts.snapshotCode.textContent = previewModel
     ? readPreviewArtifactText(previewModel, selectedArtifactId)
     : 'Preview snapshot appears here once the script defines a readable state.';
+  parts.diffSummary.innerHTML = buildArtifactDiffSummaryMarkup(previewModel, selectedArtifactId);
+  parts.diffCode.innerHTML = buildArtifactDiffMarkup(previewModel, selectedArtifactId);
   parts.moreMenu.innerHTML = buildMoreMenuMarkup(state);
   parts.moreMenu.hidden = !state.moreMenuOpen;
   parts.insertMenu.innerHTML = buildInsertMenuMarkup(state);

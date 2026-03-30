@@ -9333,6 +9333,7 @@ These seams must stay separate and banal:
 - `compile bridge`
 - `playback state`
 - `publish/export`
+- `artifact diff`
 
 Do not let support logic blur them back into one mixed lesson CMS flow.
 
@@ -9461,7 +9462,7 @@ Write Mode must stay writer-first.
 
 - the center editor owns the lesson body
 - the left outline is structure navigation
-- the right inspector is preview, compile, validation, and snapshot feedback
+- the right inspector is preview, compile, validation, snapshot, and step-diff feedback
 - metadata stays secondary in the drawer
 - frontmatter is editable, but it is not the first frame
 
@@ -10231,6 +10232,9 @@ Update rules:
 
 ## Current Ledger
 
+1. `[feature][medium] 2026-03-30 04:14 CEST - Closed TODO-017 by shipping one shared step-level artifact diff engine, rendering git-style added and removed lines in both playback and Write Mode, and proving the shared contract through browser and contract coverage`
+   owner: codex
+   actual: 45m
 1. `[bug][medium] 2026-03-30 03:38 CEST - Closed TODO-016 by fixing real browser paste replacement in Write Mode so full lesson sources and large multi-step lesson bodies replace the starter scaffold correctly, then proving save and reload through the actual paste event path`
    owner: codex
    actual: 30m
@@ -10471,6 +10475,7 @@ The evidence ledger lives in `.agents/management/evidence/CHANGELOG.md`.
 
 - 2026-03-30 03:23 CEST - PLAN-009 completed: added shared human-readable authoring diagnostics so Write Mode keeps one validation truth across the right inspector and inline editor lint markers, with plain-language guidance and exact location jumps.
 - 2026-03-30 03:38 CEST - PLAN-010 completed: made real browser paste deterministic in Write Mode so full lesson sources and large multi-step lesson bodies replace the starter scaffold correctly, then proved the behavior through the actual `paste` event path with save and reload coverage.
+- 2026-03-30 04:14 CEST - PLAN-011 completed: added one shared step-level artifact diff truth so playback and Write Mode both show git-style added and removed lines for the active artifact, then proved the contract with browser and contract coverage.
 - 2026-03-29 20:20 CEST - PLAN-006 completed: shipped a read-only player draft-override seam so the normal player prefers the latest healthy saved paired draft, fails closed to the shipped lesson when the saved draft is broken, and keeps the lesson picker deterministic.
 - 2026-03-30 01:15 CEST - PLAN-008 completed: tightened the UI-backed authoring contract with a shared runtime-state module, explicit Save/Play/Publish labels, a browser restore-version recovery proof, and updated authoring docs so the draft/play/publish contract stays explicit.
 - 2026-03-30 01:04 CEST - PLAN-007 completed: shipped the UI-backed lesson authoring bridge so Write Mode owns draft creation, save/reopen, playability state, published snapshot visibility, and fail-closed fallback semantics without requiring filesystem source scaffolds during authoring.
@@ -11153,7 +11158,7 @@ The browser app now exposes a dedicated authoring workspace at `?workspace=autho
 - authors can create, open, update, duplicate, delete, publish snapshots, and export `lesson.script.md`
 - Write Mode opens on the first real `# Step:` block instead of the raw frontmatter contract
 - metadata stays in the `Metadata` drawer while the main editor focuses on the lesson body
-- the workspace is split into `Outline | Editor | Inspector`, with live preview, compile state, validation, and snapshots kept in the right column
+- the workspace is split into `Outline | Editor | Inspector`, with live preview, compile state, validation, snapshots, and step-level artifact diff kept in the right column
 - `CodeMirror` owns the canonical `lesson.script.md` editing surface in the center panel
 - `BlockNote` is lazy-loaded only inside the metadata drawer for prose-rich fields such as `lessonIntro` and `goal.imageCaption`
 - `CKEditor 5` is not part of the shipped authoring path because no unresolved WYSIWYG requirement remains
@@ -87454,24 +87459,10 @@ export function showStepTimeline({
 }
 
 === system/animator-engine/play-lesson/03-watch-code/compare-code-lines.js ===
+import { buildArtifactLineDiff } from '../../../lesson-engine/build-artifact-line-diff.js';
+
 export function compareCodeLines(currentLines, previousLines) {
-  let previousLineIndex = 0;
-
-  return currentLines.map(lineText => {
-    const matchesPreviousLine =
-      previousLineIndex < previousLines.length &&
-      lineText === previousLines[previousLineIndex];
-
-    if (matchesPreviousLine) {
-      previousLineIndex += 1;
-    }
-
-    return {
-      lineText,
-      isNewLine: !matchesPreviousLine,
-      isEmptyLine: lineText === ''
-    };
-  });
+  return buildArtifactLineDiff(previousLines, currentLines);
 }
 
 === system/animator-engine/play-lesson/03-watch-code/describe-css-line-role.js ===
@@ -87507,7 +87498,7 @@ export function escapeCodeText(value) {
 
 === system/animator-engine/play-lesson/03-watch-code/scroll-to-added-line.js ===
 export function scrollToAddedLine(container) {
-  const addedLine = container.querySelector('[data-added="true"]');
+  const addedLine = container.querySelector('[data-changed="true"]') || container.querySelector('[data-added="true"]');
 
   if (!addedLine) {
     return;
@@ -87542,30 +87533,36 @@ function showCodePane(container, buildLinesAtStep, currentStepNumber, paneType =
   let revealOrder = 0;
   const currentLines = buildLinesAtStep(currentStepNumber);
   const previousLines = currentStepNumber > 0 ? buildLinesAtStep(currentStepNumber - 1) : [];
-  const renderedLines = compareCodeLines(currentLines, previousLines);
-  const hasAddedLines = renderedLines.some(entry => entry.isNewLine && !entry.isEmptyLine);
+  const diff = compareCodeLines(currentLines, previousLines);
+  const renderedLines = diff.entries;
+  const hasChangedLines = diff.hasChanges;
 
   container.innerHTML = renderedLines.map(entry => {
     lineNumber += 1;
     const lineMarkup = entry.isEmptyLine ? '&nbsp;' : escapeCodeText(entry.lineText);
     const lineKind = paneType === 'css' ? describeCssLineRole(entry.lineText) : 'plain';
-    const shouldStaggerReveal = (paneType === 'css' || paneType === 'js') && entry.isNewLine && !entry.isEmptyLine;
+    const isAddedLine = entry.kind === 'added';
+    const isRemovedLine = entry.kind === 'removed';
+    const shouldStaggerReveal = (paneType === 'css' || paneType === 'js') && isAddedLine && !entry.isEmptyLine;
     const inlineStyle = shouldStaggerReveal ? ` style="--reveal-order:${revealOrder};"` : '';
-    const isFocusedTarget = paneType === 'html' && isFocusedHtmlLine(entry.lineText, focusHtmlNeedles);
+    const isFocusedTarget = paneType === 'html' && !isRemovedLine && isFocusedHtmlLine(entry.lineText, focusHtmlNeedles);
+    const displayLineNumber = entry.currentLineNumber ?? entry.previousLineNumber ?? lineNumber;
+    const diffMarker = isAddedLine ? '+' : isRemovedLine ? '-' : '·';
 
     if (shouldStaggerReveal) {
       revealOrder += 1;
     }
 
     return `
-      <div class="live-line${entry.isNewLine ? ' is-added' : ''}${entry.isEmptyLine ? ' is-empty' : ''}${isFocusedTarget ? ' is-focus-target' : ''}${paneType === 'css' ? ` is-css-${lineKind}` : ''}" data-pane="${paneType}"${entry.isNewLine ? ' data-added="true"' : ''}${inlineStyle}>
-        <span class="live-line-number">${String(lineNumber).padStart(2, '0')}</span>
+      <div class="live-line is-${entry.kind}${entry.isEmptyLine ? ' is-empty' : ''}${isFocusedTarget ? ' is-focus-target' : ''}${paneType === 'css' ? ` is-css-${lineKind}` : ''}" data-pane="${paneType}" data-change-kind="${entry.kind}"${entry.kind !== 'unchanged' ? ' data-changed="true"' : ''}${isAddedLine ? ' data-added="true"' : ''}${inlineStyle}>
+        <span class="live-line-marker" aria-hidden="true">${diffMarker}</span>
+        <span class="live-line-number">${String(displayLineNumber).padStart(2, '0')}</span>
         <span class="live-line-code">${lineMarkup}</span>
       </div>
     `;
   }).join('');
 
-  return hasAddedLines;
+  return hasChangedLines;
 }
 
 const TAG_TO_PANE = {
@@ -87741,8 +87738,12 @@ function composePreviewJavaScript(lesson, currentStepNumber) {
 }
 
 export function composeLivePreviewDocument(lesson, currentStepNumber) {
-  const htmlMarkup = lesson.buildHtmlAtStep(currentStepNumber).join('\n');
-  const cssMarkup = lesson.buildCssAtStep(currentStepNumber).join('\n');
+  const htmlMarkup = typeof lesson.buildHtmlAtStep === 'function'
+    ? lesson.buildHtmlAtStep(currentStepNumber).join('\n')
+    : '';
+  const cssMarkup = typeof lesson.buildCssAtStep === 'function'
+    ? lesson.buildCssAtStep(currentStepNumber).join('\n')
+    : '';
   const jsMarkup = composePreviewJavaScript(lesson, currentStepNumber);
   const cssBlock = cssMarkup ? `<style>${escapeClosingHtmlTag(cssMarkup, 'style')}</style>` : '';
   const jsBlock = jsMarkup ? `<script>${escapeClosingHtmlTag(jsMarkup, 'script')}<\/script>` : '';
@@ -88483,7 +88484,7 @@ body { padding: 24px 0 24px 24px; }
 
 .live-line {
   display: grid;
-  grid-template-columns: 48px 1fr;
+  grid-template-columns: 20px 48px 1fr;
   gap: 14px;
   padding: 0 16px;
   align-items: start;
@@ -88501,9 +88502,16 @@ body { padding: 24px 0 24px 24px; }
 
 .live-line.is-added {
   background:
-    linear-gradient(90deg, rgba(109,115,255,0.22), rgba(109,115,255,0.06) 60%, transparent);
-  box-shadow: inset 3px 0 0 rgba(109,115,255,0.65);
+    linear-gradient(90deg, rgba(34, 197, 94, 0.22), rgba(34, 197, 94, 0.06) 60%, transparent);
+  box-shadow: inset 3px 0 0 rgba(34, 197, 94, 0.78);
   opacity: 1;
+}
+
+.live-line.is-removed {
+  background:
+    linear-gradient(90deg, rgba(248, 113, 113, 0.18), rgba(248, 113, 113, 0.04) 60%, transparent);
+  box-shadow: inset 3px 0 0 rgba(248, 113, 113, 0.72);
+  opacity: 0.9;
 }
 
 .live-line[data-pane="css"].is-added,
@@ -88514,6 +88522,20 @@ body { padding: 24px 0 24px 24px; }
   animation-delay: calc(var(--reveal-order, 0) * 110ms * var(--lesson-animation-duration-factor, 1));
 }
 
+.live-line-marker {
+  text-align: center;
+  user-select: none;
+  color: rgba(237,242,255,0.38);
+}
+
+.live-line.is-added .live-line-marker {
+  color: #86efac;
+}
+
+.live-line.is-removed .live-line-marker {
+  color: #fca5a5;
+}
+
 .live-line-number {
   text-align: right;
   color: var(--muted);
@@ -88522,7 +88544,11 @@ body { padding: 24px 0 24px 24px; }
 }
 
 .live-line.is-added .live-line-number {
-  color: var(--accent-hover);
+  color: #86efac;
+}
+
+.live-line.is-removed .live-line-number {
+  color: #fca5a5;
 }
 
 .live-line-code {
@@ -88538,9 +88564,16 @@ body { padding: 24px 0 24px 24px; }
 }
 
 .live-line.is-added .live-line-code {
-  color: var(--text);
+  color: #f0fdf4;
   font-weight: 700;
-  text-shadow: 0 0 18px rgba(109,115,255,0.14);
+  text-shadow: 0 0 18px rgba(34, 197, 94, 0.12);
+}
+
+.live-line.is-removed .live-line-code {
+  color: #fecaca;
+  text-decoration: line-through;
+  text-decoration-thickness: 1px;
+  text-decoration-color: rgba(248, 113, 113, 0.72);
 }
 
 .live-line[data-pane="css"].is-added.is-css-selector .live-line-code,
@@ -88571,6 +88604,10 @@ body { padding: 24px 0 24px 24px; }
   color: #facc15;
 }
 
+.live-line.is-focus-target .live-line-marker {
+  color: #facc15;
+}
+
 .live-line.is-focus-target .live-line-code {
   color: #fff6bf;
   font-weight: 700;
@@ -88597,6 +88634,10 @@ body { padding: 24px 0 24px 24px; }
   color: #b45309;
 }
 
+[data-theme="light"] .live-line.is-focus-target .live-line-marker {
+  color: #b45309;
+}
+
 [data-theme="light"] .live-line.is-focus-target .live-line-code {
   color: #7c2d12;
   text-shadow: none;
@@ -88608,6 +88649,29 @@ body { padding: 24px 0 24px 24px; }
 
 [data-theme="light"] .live-line.is-added .live-line-code {
   text-shadow: none;
+}
+
+[data-theme="light"] .live-line-marker {
+  color: rgba(30,41,59,0.28);
+}
+
+[data-theme="light"] .live-line.is-added .live-line-code {
+  color: #166534;
+}
+
+[data-theme="light"] .live-line.is-added .live-line-number,
+[data-theme="light"] .live-line.is-added .live-line-marker {
+  color: #15803d;
+}
+
+[data-theme="light"] .live-line.is-removed .live-line-code {
+  color: #b91c1c;
+  text-decoration-color: rgba(220, 38, 38, 0.6);
+}
+
+[data-theme="light"] .live-line.is-removed .live-line-number,
+[data-theme="light"] .live-line.is-removed .live-line-marker {
+  color: #b91c1c;
 }
 
 @keyframes liveLineReveal {
@@ -92173,6 +92237,103 @@ body:has(.authoring-app) {
   line-height: 1.6;
 }
 
+.authoring-diff-summary {
+  display: grid;
+  gap: 6px;
+  margin-bottom: 12px;
+}
+
+.authoring-diff-summary strong {
+  font-size: 0.95rem;
+}
+
+.authoring-diff-summary p,
+.authoring-diff-summary span {
+  margin: 0;
+  color: var(--authoring-muted);
+}
+
+.authoring-diff-code {
+  min-height: 220px;
+  padding: 12px 0;
+  border-radius: 16px;
+  border: 1px solid var(--authoring-border);
+  background: var(--authoring-panel-strong);
+  overflow: auto;
+}
+
+.authoring-diff-lines {
+  display: grid;
+  gap: 2px;
+}
+
+.authoring-diff-line {
+  display: grid;
+  grid-template-columns: 18px 42px 1fr;
+  gap: 12px;
+  padding: 0 14px;
+  min-height: 28px;
+  align-items: start;
+  color: var(--authoring-muted);
+}
+
+.authoring-diff-line.is-added {
+  background: linear-gradient(90deg, rgba(34, 197, 94, 0.16), rgba(34, 197, 94, 0.04) 60%, transparent);
+  box-shadow: inset 3px 0 0 rgba(34, 197, 94, 0.72);
+  color: #dafbe1;
+}
+
+.authoring-diff-line.is-removed {
+  background: linear-gradient(90deg, rgba(248, 113, 113, 0.14), rgba(248, 113, 113, 0.04) 60%, transparent);
+  box-shadow: inset 3px 0 0 rgba(248, 113, 113, 0.68);
+  color: #fecaca;
+}
+
+.authoring-diff-marker,
+.authoring-diff-number {
+  user-select: none;
+}
+
+.authoring-diff-marker {
+  text-align: center;
+  color: rgba(236, 236, 231, 0.38);
+}
+
+.authoring-diff-number {
+  text-align: right;
+  color: rgba(236, 236, 231, 0.48);
+}
+
+.authoring-diff-line.is-added .authoring-diff-marker,
+.authoring-diff-line.is-added .authoring-diff-number {
+  color: #86efac;
+}
+
+.authoring-diff-line.is-removed .authoring-diff-marker,
+.authoring-diff-line.is-removed .authoring-diff-number {
+  color: #fca5a5;
+}
+
+.authoring-diff-code {
+  font-family: 'JetBrains Mono', 'Fira Code', 'IBM Plex Mono', monospace;
+  font-size: 0.88rem;
+  line-height: 1.6;
+}
+
+.authoring-diff-line-code {
+  white-space: pre;
+}
+
+.authoring-diff-line.is-removed .authoring-diff-line-code {
+  text-decoration: line-through;
+  text-decoration-thickness: 1px;
+  text-decoration-color: rgba(248, 113, 113, 0.72);
+}
+
+.authoring-diff-line.is-empty .authoring-diff-line-code {
+  color: transparent;
+}
+
 .authoring-popover-shell {
   position: relative;
 }
@@ -95372,6 +95533,7 @@ export async function readShippedLessonScripts() {
 
 === system/author-lessons/show-authoring-workspace.js ===
 import { compileLessonScript } from '../lesson-engine/compile-lesson-script.js';
+import { buildArtifactLineDiff } from '../lesson-engine/build-artifact-line-diff.js';
 import { buildLessonScriptMarkdown } from '../lesson-engine/build-lesson-script-markdown.js';
 import { composeLivePreviewDocument } from '../animator-engine/play-lesson/04-watch-preview/show-current-preview.js';
 import { openAuthoringSqlite } from './open-authoring-sqlite.js';
@@ -95842,18 +96004,15 @@ function readPreviewTargetContext(parsedLesson, context) {
   };
 }
 
-function buildParsedPreviewModel(parsedLesson, context) {
-  const artifactDeclarations = readArtifactDeclarations(parsedLesson);
+function buildPreviewArtifactLinesByTarget(parsedLesson, artifactDeclarations, target) {
   const steps = Array.isArray(parsedLesson?.steps) ? parsedLesson.steps : [];
-
-  if (!artifactDeclarations.length || !steps.length) {
-    return null;
-  }
-
-  const target = readPreviewTargetContext(parsedLesson, context);
   const linesByArtifactId = Object.fromEntries(
     artifactDeclarations.map(artifact => [artifact.artifactId, []])
   );
+
+  if (target.stepIndex < 0 || !steps[target.stepIndex]) {
+    return cloneArtifactLineMap(linesByArtifactId);
+  }
 
   for (let stepIndex = 0; stepIndex <= target.stepIndex; stepIndex += 1) {
     const step = steps[stepIndex];
@@ -95871,6 +96030,59 @@ function buildParsedPreviewModel(parsedLesson, context) {
     }
   }
 
+  return cloneArtifactLineMap(linesByArtifactId);
+}
+
+function readPreviousPreviewTargetContext(parsedLesson, target) {
+  const steps = Array.isArray(parsedLesson?.steps) ? parsedLesson.steps : [];
+
+  if (target.stepIndex < 0 || !steps[target.stepIndex]) {
+    return null;
+  }
+
+  if (target.sceneIndex > 0) {
+    return {
+      stepIndex: target.stepIndex,
+      sceneIndex: target.sceneIndex - 1
+    };
+  }
+
+  if (target.stepIndex === 0) {
+    return null;
+  }
+
+  const previousStep = steps[target.stepIndex - 1];
+  const previousScenes = Array.isArray(previousStep?.scenes) ? previousStep.scenes : [];
+
+  return {
+    stepIndex: target.stepIndex - 1,
+    sceneIndex: Math.max(0, previousScenes.length - 1)
+  };
+}
+
+function buildPreviewDiffBasisLabel(target, previousTarget) {
+  if (!previousTarget) {
+    return 'Compared with the empty lesson start.';
+  }
+
+  if (target.stepIndex === previousTarget.stepIndex) {
+    return 'Compared with the previous scene in this step.';
+  }
+
+  return 'Compared with the previous completed step.';
+}
+
+function buildParsedPreviewModel(parsedLesson, context) {
+  const artifactDeclarations = readArtifactDeclarations(parsedLesson);
+  const steps = Array.isArray(parsedLesson?.steps) ? parsedLesson.steps : [];
+
+  if (!artifactDeclarations.length || !steps.length) {
+    return null;
+  }
+
+  const target = readPreviewTargetContext(parsedLesson, context);
+  const previousTarget = readPreviousPreviewTargetContext(parsedLesson, target);
+  const linesByArtifactId = buildPreviewArtifactLinesByTarget(parsedLesson, artifactDeclarations, target);
   const activeStep = steps[target.stepIndex];
   const activeScene = activeStep?.scenes?.[target.sceneIndex] || null;
 
@@ -95881,7 +96093,11 @@ function buildParsedPreviewModel(parsedLesson, context) {
     stepTitle: activeStep?.title || activeStep?.stepId || '',
     sceneId: activeScene?.sceneId || '',
     artifactDeclarations,
-    artifactLinesById: cloneArtifactLineMap(linesByArtifactId)
+    artifactLinesById: linesByArtifactId,
+    previousArtifactLinesById: previousTarget
+      ? buildPreviewArtifactLinesByTarget(parsedLesson, artifactDeclarations, previousTarget)
+      : Object.fromEntries(artifactDeclarations.map(artifact => [artifact.artifactId, []])),
+    diffBasisLabel: buildPreviewDiffBasisLabel(target, previousTarget)
   };
 }
 
@@ -95967,6 +96183,17 @@ function readSelectedArtifactId(state, previewModel) {
 
 function readPreviewArtifactText(previewModel, artifactId) {
   return (previewModel?.artifactLinesById?.[artifactId] || []).join('\n');
+}
+
+function readPreviewArtifactDiff(previewModel, artifactId) {
+  if (!previewModel || !artifactId) {
+    return null;
+  }
+
+  return buildArtifactLineDiff(
+    previewModel.previousArtifactLinesById?.[artifactId] || [],
+    previewModel.artifactLinesById?.[artifactId] || []
+  );
 }
 
 function buildPreviewContextText(previewModel) {
@@ -96191,6 +96418,56 @@ function buildSnapshotTabsMarkup(previewModel, selectedArtifactId) {
       ${escapeHtml(artifact.artifactId)}
     </button>
   `).join('');
+}
+
+function buildArtifactDiffSummaryMarkup(previewModel, selectedArtifactId) {
+  if (!previewModel || !selectedArtifactId) {
+    return '<div class="authoring-empty">No diff yet.</div>';
+  }
+
+  const diff = readPreviewArtifactDiff(previewModel, selectedArtifactId);
+
+  if (!diff || !diff.hasChanges) {
+    return `
+      <div class="authoring-diff-summary" data-tone="muted">
+        <strong>No line changes</strong>
+        <p>${escapeHtml(selectedArtifactId)} stays the same at this point.</p>
+        <span>${escapeHtml(previewModel.diffBasisLabel || 'Compared with the previous lesson state.')}</span>
+      </div>
+    `;
+  }
+
+  return `
+    <div class="authoring-diff-summary" data-tone="success">
+      <strong>${diff.addedCount} added · ${diff.removedCount} removed</strong>
+      <p>${escapeHtml(selectedArtifactId)} changes in this step.</p>
+      <span>${escapeHtml(previewModel.diffBasisLabel || 'Compared with the previous lesson state.')}</span>
+    </div>
+  `;
+}
+
+function buildArtifactDiffMarkup(previewModel, selectedArtifactId) {
+  if (!previewModel || !selectedArtifactId) {
+    return '<div class="authoring-empty">No diff yet.</div>';
+  }
+
+  const diff = readPreviewArtifactDiff(previewModel, selectedArtifactId);
+
+  if (!diff || !diff.entries.length) {
+    return '<div class="authoring-empty">No diff yet.</div>';
+  }
+
+  return `
+    <div class="authoring-diff-lines">
+      ${diff.entries.map(entry => `
+        <div class="authoring-diff-line is-${entry.kind}${entry.isEmptyLine ? ' is-empty' : ''}" data-change-kind="${entry.kind}">
+          <span class="authoring-diff-marker" aria-hidden="true">${entry.kind === 'added' ? '+' : entry.kind === 'removed' ? '-' : '·'}</span>
+          <span class="authoring-diff-number">${String(entry.currentLineNumber ?? entry.previousLineNumber ?? '').padStart(2, '0')}</span>
+          <span class="authoring-diff-line-code">${entry.isEmptyLine ? '&nbsp;' : escapeHtml(entry.lineText)}</span>
+        </div>
+      `).join('')}
+    </div>
+  `;
 }
 
 function buildInsertMenuMarkup(state) {
@@ -96589,6 +96866,15 @@ function createWorkspaceParts(ownerDocument) {
               <div class="authoring-snapshot-tabs" id="authoringSnapshotTabs"></div>
               <pre class="authoring-snapshot-code" id="authoringSnapshotCode"></pre>
             </section>
+
+            <section class="authoring-inspector-card">
+              <div class="authoring-inspector-head">
+                <span class="authoring-pane-label">Step diff</span>
+                <h2>What changed</h2>
+              </div>
+              <div id="authoringDiffSummary"></div>
+              <div class="authoring-diff-code" id="authoringDiffCode"></div>
+            </section>
           </aside>
         </section>
       </main>
@@ -96629,6 +96915,8 @@ function createWorkspaceParts(ownerDocument) {
     previewFrame: ownerDocument.getElementById('authoringPreviewFrame'),
     snapshotTabs: ownerDocument.getElementById('authoringSnapshotTabs'),
     snapshotCode: ownerDocument.getElementById('authoringSnapshotCode'),
+    diffSummary: ownerDocument.getElementById('authoringDiffSummary'),
+    diffCode: ownerDocument.getElementById('authoringDiffCode'),
     metadataDrawer: ownerDocument.getElementById('authoringMetadataDrawer'),
     metadataProseEditors: {}
   };
@@ -96742,6 +97030,8 @@ function renderWorkspace(state, parts) {
   parts.snapshotCode.textContent = previewModel
     ? readPreviewArtifactText(previewModel, selectedArtifactId)
     : 'Preview snapshot appears here once the script defines a readable state.';
+  parts.diffSummary.innerHTML = buildArtifactDiffSummaryMarkup(previewModel, selectedArtifactId);
+  parts.diffCode.innerHTML = buildArtifactDiffMarkup(previewModel, selectedArtifactId);
   parts.moreMenu.innerHTML = buildMoreMenuMarkup(state);
   parts.moreMenu.hidden = !state.moreMenuOpen;
   parts.insertMenu.innerHTML = buildInsertMenuMarkup(state);
@@ -98246,6 +98536,212 @@ export function renderMarkdown(markdown) {
   }
 
   return htmlParts.join('\n');
+}
+
+=== system/lesson-engine/build-artifact-line-diff.js ===
+const EXACT_MIDDLE_DIFF_CELL_LIMIT = 40000;
+
+function normalizeLines(lines) {
+  return Array.isArray(lines)
+    ? lines.map(line => String(line))
+    : [];
+}
+
+function readCommonPrefixLength(previousLines, currentLines) {
+  const maxLength = Math.min(previousLines.length, currentLines.length);
+  let index = 0;
+
+  while (index < maxLength && previousLines[index] === currentLines[index]) {
+    index += 1;
+  }
+
+  return index;
+}
+
+function readCommonSuffixLength(previousLines, currentLines, prefixLength) {
+  const maxSuffixLength = Math.min(previousLines.length, currentLines.length) - prefixLength;
+  let suffixLength = 0;
+
+  while (
+    suffixLength < maxSuffixLength
+    && previousLines[previousLines.length - 1 - suffixLength] === currentLines[currentLines.length - 1 - suffixLength]
+  ) {
+    suffixLength += 1;
+  }
+
+  return suffixLength;
+}
+
+function createDiffEntry(kind, lineText, previousLineNumber, currentLineNumber) {
+  return {
+    kind,
+    lineText,
+    previousLineNumber,
+    currentLineNumber,
+    isEmptyLine: lineText === ''
+  };
+}
+
+function buildUnchangedEntries(lines, previousLineOffset, currentLineOffset) {
+  return lines.map((lineText, index) => createDiffEntry(
+    'unchanged',
+    lineText,
+    previousLineOffset + index + 1,
+    currentLineOffset + index + 1
+  ));
+}
+
+function buildFallbackChangedEntries(previousLines, currentLines, previousLineOffset, currentLineOffset) {
+  const removedEntries = previousLines.map((lineText, index) => createDiffEntry(
+    'removed',
+    lineText,
+    previousLineOffset + index + 1,
+    null
+  ));
+  const addedEntries = currentLines.map((lineText, index) => createDiffEntry(
+    'added',
+    lineText,
+    null,
+    currentLineOffset + index + 1
+  ));
+
+  return [...removedEntries, ...addedEntries];
+}
+
+function buildExactMiddleEntries(previousLines, currentLines, previousLineOffset, currentLineOffset) {
+  const rowCount = previousLines.length + 1;
+  const columnCount = currentLines.length + 1;
+  const table = Array.from({ length: rowCount }, () => new Uint32Array(columnCount));
+
+  for (let previousIndex = previousLines.length - 1; previousIndex >= 0; previousIndex -= 1) {
+    for (let currentIndex = currentLines.length - 1; currentIndex >= 0; currentIndex -= 1) {
+      if (previousLines[previousIndex] === currentLines[currentIndex]) {
+        table[previousIndex][currentIndex] = table[previousIndex + 1][currentIndex + 1] + 1;
+        continue;
+      }
+
+      table[previousIndex][currentIndex] = Math.max(
+        table[previousIndex + 1][currentIndex],
+        table[previousIndex][currentIndex + 1]
+      );
+    }
+  }
+
+  const entries = [];
+  let previousIndex = 0;
+  let currentIndex = 0;
+
+  while (previousIndex < previousLines.length && currentIndex < currentLines.length) {
+    if (previousLines[previousIndex] === currentLines[currentIndex]) {
+      entries.push(createDiffEntry(
+        'unchanged',
+        previousLines[previousIndex],
+        previousLineOffset + previousIndex + 1,
+        currentLineOffset + currentIndex + 1
+      ));
+      previousIndex += 1;
+      currentIndex += 1;
+      continue;
+    }
+
+    if (table[previousIndex + 1][currentIndex] >= table[previousIndex][currentIndex + 1]) {
+      entries.push(createDiffEntry(
+        'removed',
+        previousLines[previousIndex],
+        previousLineOffset + previousIndex + 1,
+        null
+      ));
+      previousIndex += 1;
+      continue;
+    }
+
+    entries.push(createDiffEntry(
+      'added',
+      currentLines[currentIndex],
+      null,
+      currentLineOffset + currentIndex + 1
+    ));
+    currentIndex += 1;
+  }
+
+  while (previousIndex < previousLines.length) {
+    entries.push(createDiffEntry(
+      'removed',
+      previousLines[previousIndex],
+      previousLineOffset + previousIndex + 1,
+      null
+    ));
+    previousIndex += 1;
+  }
+
+  while (currentIndex < currentLines.length) {
+    entries.push(createDiffEntry(
+      'added',
+      currentLines[currentIndex],
+      null,
+      currentLineOffset + currentIndex + 1
+    ));
+    currentIndex += 1;
+  }
+
+  return entries;
+}
+
+function buildMiddleEntries(previousLines, currentLines, previousLineOffset, currentLineOffset) {
+  if (!previousLines.length && !currentLines.length) {
+    return [];
+  }
+
+  if (!previousLines.length || !currentLines.length) {
+    return buildFallbackChangedEntries(previousLines, currentLines, previousLineOffset, currentLineOffset);
+  }
+
+  if (previousLines.length * currentLines.length > EXACT_MIDDLE_DIFF_CELL_LIMIT) {
+    return buildFallbackChangedEntries(previousLines, currentLines, previousLineOffset, currentLineOffset);
+  }
+
+  return buildExactMiddleEntries(previousLines, currentLines, previousLineOffset, currentLineOffset);
+}
+
+export function buildArtifactLineDiff(previousLines, currentLines) {
+  const normalizedPreviousLines = normalizeLines(previousLines);
+  const normalizedCurrentLines = normalizeLines(currentLines);
+  const prefixLength = readCommonPrefixLength(normalizedPreviousLines, normalizedCurrentLines);
+  const suffixLength = readCommonSuffixLength(normalizedPreviousLines, normalizedCurrentLines, prefixLength);
+  const previousMiddleEnd = normalizedPreviousLines.length - suffixLength;
+  const currentMiddleEnd = normalizedCurrentLines.length - suffixLength;
+  const unchangedPrefix = buildUnchangedEntries(
+    normalizedPreviousLines.slice(0, prefixLength),
+    0,
+    0
+  );
+  const changedMiddle = buildMiddleEntries(
+    normalizedPreviousLines.slice(prefixLength, previousMiddleEnd),
+    normalizedCurrentLines.slice(prefixLength, currentMiddleEnd),
+    prefixLength,
+    prefixLength
+  );
+  const unchangedSuffix = buildUnchangedEntries(
+    normalizedPreviousLines.slice(previousMiddleEnd),
+    previousMiddleEnd,
+    currentMiddleEnd
+  );
+  const entries = [
+    ...unchangedPrefix,
+    ...changedMiddle,
+    ...unchangedSuffix
+  ];
+  const addedCount = entries.filter(entry => entry.kind === 'added').length;
+  const removedCount = entries.filter(entry => entry.kind === 'removed').length;
+  const unchangedCount = entries.filter(entry => entry.kind === 'unchanged').length;
+
+  return {
+    entries,
+    addedCount,
+    removedCount,
+    unchangedCount,
+    hasChanges: addedCount > 0 || removedCount > 0
+  };
 }
 
 === system/lesson-engine/build-compiled-lesson.js ===
@@ -102542,6 +103038,50 @@ function main() {
 
 main();
 
+=== tests/contracts/build-artifact-line-diff.test.js ===
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import { buildArtifactLineDiff } from '../../system/lesson-engine/build-artifact-line-diff.js';
+
+test('buildArtifactLineDiff keeps unchanged lines and marks inserted additions', () => {
+  const diff = buildArtifactLineDiff(
+    ['<div>', '  <p>Old</p>', '</div>'],
+    ['<div>', '  <p>Old</p>', '  <span>New</span>', '</div>']
+  );
+
+  assert.equal(diff.addedCount, 1);
+  assert.equal(diff.removedCount, 0);
+  assert.deepEqual(
+    diff.entries.map(entry => [entry.kind, entry.lineText, entry.previousLineNumber, entry.currentLineNumber]),
+    [
+      ['unchanged', '<div>', 1, 1],
+      ['unchanged', '  <p>Old</p>', 2, 2],
+      ['added', '  <span>New</span>', null, 3],
+      ['unchanged', '</div>', 3, 4]
+    ]
+  );
+});
+
+test('buildArtifactLineDiff marks replaced lines as removed and added with stable neighbors', () => {
+  const diff = buildArtifactLineDiff(
+    ['<div>', '  <p>Before</p>', '  <small>Keep</small>', '</div>'],
+    ['<div>', '  <section>After</section>', '  <small>Keep</small>', '</div>']
+  );
+
+  assert.equal(diff.addedCount, 1);
+  assert.equal(diff.removedCount, 1);
+  assert.deepEqual(
+    diff.entries.map(entry => [entry.kind, entry.lineText, entry.previousLineNumber, entry.currentLineNumber]),
+    [
+      ['unchanged', '<div>', 1, 1],
+      ['removed', '  <p>Before</p>', 2, null],
+      ['added', '  <section>After</section>', null, 2],
+      ['unchanged', '  <small>Keep</small>', 3, 3],
+      ['unchanged', '</div>', 4, 4]
+    ]
+  );
+});
+
 === tests/contracts/build-lesson-script-from-source.test.js ===
 import test from 'node:test';
 import assert from 'node:assert/strict';
@@ -104515,6 +105055,64 @@ function buildSyntheticLessonSource({
   ].join('\n');
 }
 
+function buildDiffLessonSource() {
+  return [
+    '---',
+    'schemaVersion: 1',
+    'lessonId: diff-proof-lesson',
+    'lessonTitle: Diff Proof Lesson',
+    'lessonIntro: Verify git-style artifact diffs in Write Mode and playback.',
+    'status: draft',
+    'courseId: step-by-step-animator',
+    'order: 99',
+    'artifacts:',
+    '  - artifactId: html',
+    '    language: html',
+    '    label: index.html',
+    '    isPrimary: true',
+    'preview:',
+    '  type: dom',
+    '  title: Diff Proof Preview',
+    '  address: browser://diff-proof-preview',
+    '---',
+    '',
+    '# Step: before-state',
+    'title: Before State',
+    'summary: Start from the original markup.',
+    'intent: Establish the initial html snapshot.',
+    '',
+    '## Scene: before-scene',
+    '',
+    '### Narration',
+    'Show the starting markup.',
+    '',
+    '### Show Code: html',
+    '```html',
+    '<div class="user-card">',
+    '  <p>Before</p>',
+    '</div>',
+    '```',
+    '',
+    '# Step: after-state',
+    'title: After State',
+    'summary: Replace the old paragraph with the new heading.',
+    'intent: Make line removal and addition obvious.',
+    '',
+    '## Scene: after-scene',
+    '',
+    '### Narration',
+    'Swap the old markup for the new final line.',
+    '',
+    '### Show Code: html',
+    '```html',
+    '<div class="user-card">',
+    '  <h2>After</h2>',
+    '</div>',
+    '```',
+    ''
+  ].join('\n');
+}
+
 test('browser authoring smoke covers V2 writer body view, metadata drawer, preview sync, and validation jump flow', { timeout: 60000 }, async () => {
   const server = await createServer({
     configFile: path.resolve(repoRoot, 'vite.config.js'),
@@ -105059,6 +105657,140 @@ test('browser authoring smoke plays a healthy custom draft through the normal pl
           && Array.from(element.options).some(option => option.value === expectedLessonId);
       }, customLessonId).catch(() => false),
       'the lesson picker to include the custom draft id'
+    );
+
+    assert.deepEqual(pageErrors, []);
+    assert.deepEqual(consoleErrors, []);
+
+    await page.close();
+  } finally {
+    await browser?.close();
+    await server.close();
+  }
+});
+
+test('browser authoring smoke shows the same added and removed artifact diff in Write Mode and playback', { timeout: 60000 }, async () => {
+  const server = await createServer({
+    configFile: path.resolve(repoRoot, 'vite.config.js'),
+    clearScreen: false,
+    logLevel: 'error',
+    server: {
+      host: '127.0.0.1',
+      port: 41755,
+      strictPort: false
+    }
+  });
+
+  let browser;
+
+  try {
+    await server.listen();
+
+    const appUrl = server.resolvedUrls?.local?.find(url => url.startsWith('http://127.0.0.1'))
+      || server.resolvedUrls?.local?.[0];
+
+    assert.ok(appUrl, 'Vite dev server did not expose a local URL.');
+
+    browser = await puppeteer.launch({
+      args: ['--disable-setuid-sandbox', '--no-sandbox'],
+      headless: true
+    });
+
+    const page = await browser.newPage();
+    const consoleErrors = [];
+    const pageErrors = [];
+
+    page.on('console', message => {
+      if (message.type() === 'error') {
+        consoleErrors.push(message.text());
+      }
+    });
+    page.on('pageerror', error => {
+      pageErrors.push(error.message);
+    });
+    page.on('dialog', dialog => {
+      void dialog.accept();
+    });
+
+    await page.goto(`${appUrl}?workspace=authoring`, { waitUntil: 'domcontentloaded' });
+
+    await waitForCondition(
+      async () => page.$('#authoringScriptEditor').then(Boolean),
+      'the authoring workspace for diff coverage'
+    );
+
+    await openPopoverAndClick(page, '#authoringMoreBtn', '#authoringMoreMenu', '[data-action="new-draft"]');
+
+    await waitForCondition(
+      async () => page.$eval('#authoringLessonTitle', element => element.textContent?.includes('New Lesson') || false),
+      'the diff proof draft to open'
+    );
+
+    await replaceEditorSelectionText(page, buildDiffLessonSource());
+
+    await waitForCondition(
+      async () => page.$eval('#authoringLessonTitle', element => element.textContent?.includes('Diff Proof Lesson') || false),
+      'the diff proof lesson title to render'
+    );
+
+    await page.click('[data-outline-kind="step"][data-step-id="after-state"]');
+
+    await waitForCondition(
+      async () => page.$eval('#authoringDiffSummary', element => element.textContent?.includes('1 added · 1 removed') || false).catch(() => false),
+      'the Write Mode diff summary to show one added and one removed line'
+    );
+
+    await waitForCondition(
+      async () => page.evaluate(() => {
+        const diffRoot = document.querySelector('#authoringDiffCode');
+        const removedLine = diffRoot?.querySelector?.('.authoring-diff-line.is-removed .authoring-diff-line-code');
+        const addedLine = diffRoot?.querySelector?.('.authoring-diff-line.is-added .authoring-diff-line-code');
+
+        return removedLine?.textContent?.includes('<p>Before</p>')
+          && addedLine?.textContent?.includes('<h2>After</h2>');
+      }).catch(() => false),
+      'the Write Mode diff to show both the removed and added html lines'
+    );
+
+    await page.keyboard.down('Control');
+    await page.keyboard.press('s');
+    await page.keyboard.up('Control');
+
+    await waitForCondition(
+      async () => page.$eval('#authoringSaveState', element => element.textContent?.includes('Draft Saved') || false),
+      'the diff proof draft to save before playback'
+    );
+
+    await page.goto(`${appUrl}?lesson=diff-proof-lesson`, { waitUntil: 'domcontentloaded' });
+
+    await waitForCondition(
+      async () => page.$eval('#lessonHeading', element => element.textContent?.includes('Diff Proof Lesson') || false).catch(() => false),
+      'the player to boot the diff proof lesson'
+    );
+
+    await waitForCondition(
+      async () => page.$eval('#nextBtn', element => element.disabled === false).catch(() => false),
+      'the second lesson step to become reachable'
+    );
+    await page.$eval('#nextBtn', element => {
+      element.click();
+    });
+
+    await waitForCondition(
+      async () => page.$eval('#stepNumber', element => element.textContent?.startsWith('Prizor 2 /') || false).catch(() => false),
+      'the player to move to the second step'
+    );
+
+    await waitForCondition(
+      async () => page.evaluate(() => {
+        const htmlPane = document.getElementById('liveHtmlPane');
+        const removedLine = htmlPane?.querySelector?.('.live-line.is-removed .live-line-code');
+        const addedLine = htmlPane?.querySelector?.('.live-line.is-added .live-line-code');
+
+        return removedLine?.textContent?.includes('<p>Before</p>')
+          && addedLine?.textContent?.includes('<h2>After</h2>');
+      }).catch(() => false),
+      'the player html pane to show the same removed and added diff lines'
     );
 
     assert.deepEqual(pageErrors, []);

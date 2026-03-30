@@ -352,6 +352,64 @@ function buildSyntheticLessonSource({
   ].join('\n');
 }
 
+function buildDiffLessonSource() {
+  return [
+    '---',
+    'schemaVersion: 1',
+    'lessonId: diff-proof-lesson',
+    'lessonTitle: Diff Proof Lesson',
+    'lessonIntro: Verify git-style artifact diffs in Write Mode and playback.',
+    'status: draft',
+    'courseId: step-by-step-animator',
+    'order: 99',
+    'artifacts:',
+    '  - artifactId: html',
+    '    language: html',
+    '    label: index.html',
+    '    isPrimary: true',
+    'preview:',
+    '  type: dom',
+    '  title: Diff Proof Preview',
+    '  address: browser://diff-proof-preview',
+    '---',
+    '',
+    '# Step: before-state',
+    'title: Before State',
+    'summary: Start from the original markup.',
+    'intent: Establish the initial html snapshot.',
+    '',
+    '## Scene: before-scene',
+    '',
+    '### Narration',
+    'Show the starting markup.',
+    '',
+    '### Show Code: html',
+    '```html',
+    '<div class="user-card">',
+    '  <p>Before</p>',
+    '</div>',
+    '```',
+    '',
+    '# Step: after-state',
+    'title: After State',
+    'summary: Replace the old paragraph with the new heading.',
+    'intent: Make line removal and addition obvious.',
+    '',
+    '## Scene: after-scene',
+    '',
+    '### Narration',
+    'Swap the old markup for the new final line.',
+    '',
+    '### Show Code: html',
+    '```html',
+    '<div class="user-card">',
+    '  <h2>After</h2>',
+    '</div>',
+    '```',
+    ''
+  ].join('\n');
+}
+
 test('browser authoring smoke covers V2 writer body view, metadata drawer, preview sync, and validation jump flow', { timeout: 60000 }, async () => {
   const server = await createServer({
     configFile: path.resolve(repoRoot, 'vite.config.js'),
@@ -896,6 +954,140 @@ test('browser authoring smoke plays a healthy custom draft through the normal pl
           && Array.from(element.options).some(option => option.value === expectedLessonId);
       }, customLessonId).catch(() => false),
       'the lesson picker to include the custom draft id'
+    );
+
+    assert.deepEqual(pageErrors, []);
+    assert.deepEqual(consoleErrors, []);
+
+    await page.close();
+  } finally {
+    await browser?.close();
+    await server.close();
+  }
+});
+
+test('browser authoring smoke shows the same added and removed artifact diff in Write Mode and playback', { timeout: 60000 }, async () => {
+  const server = await createServer({
+    configFile: path.resolve(repoRoot, 'vite.config.js'),
+    clearScreen: false,
+    logLevel: 'error',
+    server: {
+      host: '127.0.0.1',
+      port: 41755,
+      strictPort: false
+    }
+  });
+
+  let browser;
+
+  try {
+    await server.listen();
+
+    const appUrl = server.resolvedUrls?.local?.find(url => url.startsWith('http://127.0.0.1'))
+      || server.resolvedUrls?.local?.[0];
+
+    assert.ok(appUrl, 'Vite dev server did not expose a local URL.');
+
+    browser = await puppeteer.launch({
+      args: ['--disable-setuid-sandbox', '--no-sandbox'],
+      headless: true
+    });
+
+    const page = await browser.newPage();
+    const consoleErrors = [];
+    const pageErrors = [];
+
+    page.on('console', message => {
+      if (message.type() === 'error') {
+        consoleErrors.push(message.text());
+      }
+    });
+    page.on('pageerror', error => {
+      pageErrors.push(error.message);
+    });
+    page.on('dialog', dialog => {
+      void dialog.accept();
+    });
+
+    await page.goto(`${appUrl}?workspace=authoring`, { waitUntil: 'domcontentloaded' });
+
+    await waitForCondition(
+      async () => page.$('#authoringScriptEditor').then(Boolean),
+      'the authoring workspace for diff coverage'
+    );
+
+    await openPopoverAndClick(page, '#authoringMoreBtn', '#authoringMoreMenu', '[data-action="new-draft"]');
+
+    await waitForCondition(
+      async () => page.$eval('#authoringLessonTitle', element => element.textContent?.includes('New Lesson') || false),
+      'the diff proof draft to open'
+    );
+
+    await replaceEditorSelectionText(page, buildDiffLessonSource());
+
+    await waitForCondition(
+      async () => page.$eval('#authoringLessonTitle', element => element.textContent?.includes('Diff Proof Lesson') || false),
+      'the diff proof lesson title to render'
+    );
+
+    await page.click('[data-outline-kind="step"][data-step-id="after-state"]');
+
+    await waitForCondition(
+      async () => page.$eval('#authoringDiffSummary', element => element.textContent?.includes('1 added · 1 removed') || false).catch(() => false),
+      'the Write Mode diff summary to show one added and one removed line'
+    );
+
+    await waitForCondition(
+      async () => page.evaluate(() => {
+        const diffRoot = document.querySelector('#authoringDiffCode');
+        const removedLine = diffRoot?.querySelector?.('.authoring-diff-line.is-removed .authoring-diff-line-code');
+        const addedLine = diffRoot?.querySelector?.('.authoring-diff-line.is-added .authoring-diff-line-code');
+
+        return removedLine?.textContent?.includes('<p>Before</p>')
+          && addedLine?.textContent?.includes('<h2>After</h2>');
+      }).catch(() => false),
+      'the Write Mode diff to show both the removed and added html lines'
+    );
+
+    await page.keyboard.down('Control');
+    await page.keyboard.press('s');
+    await page.keyboard.up('Control');
+
+    await waitForCondition(
+      async () => page.$eval('#authoringSaveState', element => element.textContent?.includes('Draft Saved') || false),
+      'the diff proof draft to save before playback'
+    );
+
+    await page.goto(`${appUrl}?lesson=diff-proof-lesson`, { waitUntil: 'domcontentloaded' });
+
+    await waitForCondition(
+      async () => page.$eval('#lessonHeading', element => element.textContent?.includes('Diff Proof Lesson') || false).catch(() => false),
+      'the player to boot the diff proof lesson'
+    );
+
+    await waitForCondition(
+      async () => page.$eval('#nextBtn', element => element.disabled === false).catch(() => false),
+      'the second lesson step to become reachable'
+    );
+    await page.$eval('#nextBtn', element => {
+      element.click();
+    });
+
+    await waitForCondition(
+      async () => page.$eval('#stepNumber', element => element.textContent?.startsWith('Prizor 2 /') || false).catch(() => false),
+      'the player to move to the second step'
+    );
+
+    await waitForCondition(
+      async () => page.evaluate(() => {
+        const htmlPane = document.getElementById('liveHtmlPane');
+        const removedLine = htmlPane?.querySelector?.('.live-line.is-removed .live-line-code');
+        const addedLine = htmlPane?.querySelector?.('.live-line.is-added .live-line-code');
+
+        return removedLine?.textContent?.includes('<p>Before</p>')
+          && addedLine?.textContent?.includes('<h2>After</h2>');
+      }).catch(() => false),
+      'the player html pane to show the same removed and added diff lines'
     );
 
     assert.deepEqual(pageErrors, []);

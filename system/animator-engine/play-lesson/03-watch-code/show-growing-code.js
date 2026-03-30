@@ -21,30 +21,36 @@ function showCodePane(container, buildLinesAtStep, currentStepNumber, paneType =
   let revealOrder = 0;
   const currentLines = buildLinesAtStep(currentStepNumber);
   const previousLines = currentStepNumber > 0 ? buildLinesAtStep(currentStepNumber - 1) : [];
-  const renderedLines = compareCodeLines(currentLines, previousLines);
-  const hasAddedLines = renderedLines.some(entry => entry.isNewLine && !entry.isEmptyLine);
+  const diff = compareCodeLines(currentLines, previousLines);
+  const renderedLines = diff.entries;
+  const hasChangedLines = diff.hasChanges;
 
   container.innerHTML = renderedLines.map(entry => {
     lineNumber += 1;
     const lineMarkup = entry.isEmptyLine ? '&nbsp;' : escapeCodeText(entry.lineText);
     const lineKind = paneType === 'css' ? describeCssLineRole(entry.lineText) : 'plain';
-    const shouldStaggerReveal = (paneType === 'css' || paneType === 'js') && entry.isNewLine && !entry.isEmptyLine;
+    const isAddedLine = entry.kind === 'added';
+    const isRemovedLine = entry.kind === 'removed';
+    const shouldStaggerReveal = (paneType === 'css' || paneType === 'js') && isAddedLine && !entry.isEmptyLine;
     const inlineStyle = shouldStaggerReveal ? ` style="--reveal-order:${revealOrder};"` : '';
-    const isFocusedTarget = paneType === 'html' && isFocusedHtmlLine(entry.lineText, focusHtmlNeedles);
+    const isFocusedTarget = paneType === 'html' && !isRemovedLine && isFocusedHtmlLine(entry.lineText, focusHtmlNeedles);
+    const displayLineNumber = entry.currentLineNumber ?? entry.previousLineNumber ?? lineNumber;
+    const diffMarker = isAddedLine ? '+' : isRemovedLine ? '-' : '·';
 
     if (shouldStaggerReveal) {
       revealOrder += 1;
     }
 
     return `
-      <div class="live-line${entry.isNewLine ? ' is-added' : ''}${entry.isEmptyLine ? ' is-empty' : ''}${isFocusedTarget ? ' is-focus-target' : ''}${paneType === 'css' ? ` is-css-${lineKind}` : ''}" data-pane="${paneType}"${entry.isNewLine ? ' data-added="true"' : ''}${inlineStyle}>
-        <span class="live-line-number">${String(lineNumber).padStart(2, '0')}</span>
+      <div class="live-line is-${entry.kind}${entry.isEmptyLine ? ' is-empty' : ''}${isFocusedTarget ? ' is-focus-target' : ''}${paneType === 'css' ? ` is-css-${lineKind}` : ''}" data-pane="${paneType}" data-change-kind="${entry.kind}"${entry.kind !== 'unchanged' ? ' data-changed="true"' : ''}${isAddedLine ? ' data-added="true"' : ''}${inlineStyle}>
+        <span class="live-line-marker" aria-hidden="true">${diffMarker}</span>
+        <span class="live-line-number">${String(displayLineNumber).padStart(2, '0')}</span>
         <span class="live-line-code">${lineMarkup}</span>
       </div>
     `;
   }).join('');
 
-  return hasAddedLines;
+  return hasChangedLines;
 }
 
 const TAG_TO_PANE = {

@@ -91,8 +91,12 @@ function composePreviewJavaScript(lesson, currentStepNumber) {
 }
 
 export function composeLivePreviewDocument(lesson, currentStepNumber) {
-  const htmlMarkup = lesson.buildHtmlAtStep(currentStepNumber).join('\n');
-  const cssMarkup = lesson.buildCssAtStep(currentStepNumber).join('\n');
+  const htmlMarkup = typeof lesson.buildHtmlAtStep === 'function'
+    ? lesson.buildHtmlAtStep(currentStepNumber).join('\n')
+    : '';
+  const cssMarkup = typeof lesson.buildCssAtStep === 'function'
+    ? lesson.buildCssAtStep(currentStepNumber).join('\n')
+    : '';
   const jsMarkup = composePreviewJavaScript(lesson, currentStepNumber);
   const cssBlock = cssMarkup ? `<style>${escapeClosingHtmlTag(cssMarkup, 'style')}</style>` : '';
   const jsBlock = jsMarkup ? `<script>${escapeClosingHtmlTag(jsMarkup, 'script')}<\/script>` : '';

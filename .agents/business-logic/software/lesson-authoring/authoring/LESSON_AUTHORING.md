@@ -73,7 +73,7 @@ Write Mode must stay writer-first.
 
 - the center editor owns the lesson body
 - the left outline is structure navigation
-- the right inspector is preview, compile, validation, and snapshot feedback
+- the right inspector is preview, compile, validation, snapshot, and step-diff feedback
 - metadata stays secondary in the drawer
 - frontmatter is editable, but it is not the first frame
 

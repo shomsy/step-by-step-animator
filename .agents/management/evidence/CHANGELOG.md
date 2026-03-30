@@ -15,6 +15,9 @@ Update rules:
 
 ## Current Ledger
 
+1. `[feature][medium] 2026-03-30 04:14 CEST - Closed TODO-017 by shipping one shared step-level artifact diff engine, rendering git-style added and removed lines in both playback and Write Mode, and proving the shared contract through browser and contract coverage`
+   owner: codex
+   actual: 45m
 1. `[bug][medium] 2026-03-30 03:38 CEST - Closed TODO-016 by fixing real browser paste replacement in Write Mode so full lesson sources and large multi-step lesson bodies replace the starter scaffold correctly, then proving save and reload through the actual paste event path`
    owner: codex
    actual: 30m
