@@ -3,8 +3,13 @@ import {
   LESSON_RUNTIME_SOURCE_LABELS
 } from '../../author-lessons/lesson-runtime-state.js';
 
+function readRequestedLessonId(ownerLocation) {
+  return new URL(ownerLocation.href).searchParams.get('lesson')?.trim() || '';
+}
+
 async function resolveSavedDraftLessonOverride({
   ownerWindow,
+  requestedLessonId,
   shippedLessonId,
   shippedLesson,
   resolveDraftLessonOverride
@@ -12,6 +17,7 @@ async function resolveSavedDraftLessonOverride({
   if (typeof resolveDraftLessonOverride === 'function') {
     return resolveDraftLessonOverride({
       ownerWindow,
+      requestedLessonId,
       shippedLessonId,
       shippedLesson
     });
@@ -55,6 +61,41 @@ function normalizeDraftLesson(lesson) {
   };
 }
 
+function buildLessonsForSelection(registeredLessons, lesson) {
+  if (!lesson || lesson.lessonRuntimeSource !== LESSON_RUNTIME_SOURCE.PLAYABLE_DRAFT) {
+    return registeredLessons;
+  }
+
+  const existingLessonIndex = registeredLessons.findIndex(registeredLesson => registeredLesson.lessonId === lesson.lessonId);
+
+  if (existingLessonIndex >= 0) {
+    return registeredLessons.map((registeredLesson, lessonIndex) => lessonIndex === existingLessonIndex
+      ? {
+          ...registeredLesson,
+          lessonTitle: lesson.lessonTitle
+        }
+      : registeredLesson);
+  }
+
+  return [
+    {
+      lessonId: lesson.lessonId,
+      lessonTitle: lesson.lessonTitle
+    },
+    ...registeredLessons
+  ];
+}
+
+function buildLessonSelection(registeredLessons, shippedLesson, savedDraftLesson) {
+  const normalizedDraftLesson = normalizeDraftLesson(savedDraftLesson);
+  const lesson = normalizedDraftLesson || annotatePublishedLesson(shippedLesson);
+
+  return {
+    lesson,
+    lessons: buildLessonsForSelection(registeredLessons, lesson)
+  };
+}
+
 export async function selectLessonFromLocation({
   ownerLocation,
   ownerWindow = null,
@@ -66,41 +107,63 @@ export async function selectLessonFromLocation({
     findLesson,
     getDefaultLessonId
   } = lessonRegistry || await import('../../lesson-engine/register-lesson-packages/index.js');
-  const selectedLessonId = new URL(ownerLocation.href).searchParams.get('lesson');
+  const requestedLessonId = readRequestedLessonId(ownerLocation);
   const defaultLessonId = getDefaultLessonId();
-  const selectedLesson = findLesson(selectedLessonId) || findLesson(defaultLessonId);
+  const requestedRegisteredLesson = findLesson(requestedLessonId);
 
-  if (!selectedLesson) {
+  if (requestedRegisteredLesson) {
+    const shippedLesson = await requestedRegisteredLesson.loadLesson();
+    let savedDraftLesson = null;
+
+    try {
+      savedDraftLesson = await resolveSavedDraftLessonOverride({
+        ownerWindow,
+        requestedLessonId,
+        shippedLessonId: requestedRegisteredLesson.lessonId,
+        shippedLesson,
+        resolveDraftLessonOverride
+      });
+    } catch {
+      savedDraftLesson = null;
+    }
+
+    return buildLessonSelection(registeredLessons, shippedLesson, savedDraftLesson);
+  }
+
+  if (requestedLessonId) {
+    let savedCustomDraftLesson = null;
+
+    try {
+      savedCustomDraftLesson = await resolveSavedDraftLessonOverride({
+        ownerWindow,
+        requestedLessonId,
+        shippedLessonId: '',
+        shippedLesson: null,
+        resolveDraftLessonOverride
+      });
+    } catch {
+      savedCustomDraftLesson = null;
+    }
+
+    const normalizedCustomDraftLesson = normalizeDraftLesson(savedCustomDraftLesson);
+
+    if (normalizedCustomDraftLesson) {
+      return {
+        lesson: normalizedCustomDraftLesson,
+        lessons: buildLessonsForSelection(registeredLessons, normalizedCustomDraftLesson)
+      };
+    }
+  }
+
+  const defaultLesson = findLesson(defaultLessonId);
+
+  if (!defaultLesson) {
     throw new Error('No lesson package could be selected.');
   }
 
-  const shippedLesson = await selectedLesson.loadLesson();
-  let savedDraftLesson = null;
-
-  try {
-    savedDraftLesson = await resolveSavedDraftLessonOverride({
-      ownerWindow,
-      shippedLessonId: selectedLesson.lessonId,
-      shippedLesson,
-      resolveDraftLessonOverride
-    });
-  } catch {
-    savedDraftLesson = null;
-  }
-
-  const normalizedDraftLesson = normalizeDraftLesson(savedDraftLesson);
-  const lesson = normalizedDraftLesson || annotatePublishedLesson(shippedLesson);
-  const lessons = normalizedDraftLesson?.lessonRuntimeSource === LESSON_RUNTIME_SOURCE.PLAYABLE_DRAFT
-    ? registeredLessons.map(registeredLesson => registeredLesson.lessonId === selectedLesson.lessonId
-      ? {
-          ...registeredLesson,
-          lessonTitle: lesson.lessonTitle
-        }
-      : registeredLesson)
-    : registeredLessons;
-
-  return {
-    lesson,
-    lessons
-  };
+  return buildLessonSelection(
+    registeredLessons,
+    await defaultLesson.loadLesson(),
+    null
+  );
 }

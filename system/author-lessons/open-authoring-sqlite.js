@@ -784,6 +784,35 @@ function readPlayableDraftOverrideRow(database, shippedLessonId) {
   return rows[0] || null;
 }
 
+function readPlayableCustomDraftRow(database, lessonId) {
+  const rows = readRows(
+    database,
+    `SELECT draft_id, lesson_id, lesson_title, source_markdown, source_origin, shipped_lesson_id, created_at, updated_at
+     FROM lesson_drafts
+     WHERE lesson_id = ? AND shipped_lesson_id IS NULL
+     ORDER BY updated_at DESC, lesson_id ASC
+     LIMIT 1`,
+    [lessonId]
+  );
+
+  return rows[0] || null;
+}
+
+function readPlayableDraftOverrideRowForSelection(database, {
+  requestedLessonId = '',
+  shippedLessonId = ''
+}) {
+  if (normalizeString(shippedLessonId)) {
+    return readPlayableDraftOverrideRow(database, shippedLessonId);
+  }
+
+  if (normalizeString(requestedLessonId)) {
+    return readPlayableCustomDraftRow(database, requestedLessonId);
+  }
+
+  return null;
+}
+
 function buildPlayableDraftOverrideSummary(draftRow) {
   if (!draftRow) {
     return null;
@@ -1057,9 +1086,10 @@ export async function openAuthoringSqlite({
 
 export async function readPersistedPlayableDraftOverride({
   ownerWindow,
-  shippedLessonId
+  requestedLessonId = '',
+  shippedLessonId = ''
 }) {
-  if (!ownerWindow || !normalizeString(shippedLessonId)) {
+  if (!ownerWindow) {
     return null;
   }
 
@@ -1076,7 +1106,10 @@ export async function readPersistedPlayableDraftOverride({
     createSchema(database);
 
     return buildPlayableDraftOverrideSummary(
-      readPlayableDraftOverrideRow(database, shippedLessonId)
+      readPlayableDraftOverrideRowForSelection(database, {
+        requestedLessonId,
+        shippedLessonId
+      })
     );
   } finally {
     database.close();

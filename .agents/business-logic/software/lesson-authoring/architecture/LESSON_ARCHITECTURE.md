@@ -68,6 +68,7 @@ Do not let support logic blur them back into one mixed lesson CMS flow.
 - `Play`
   - compile from the latest healthy saved draft
   - fail closed to the shipped lesson package when the draft is unhealthy
+  - when the selected lesson id belongs to an unpaired custom draft, play can select that healthy saved draft directly without a shipped filesystem package
 - `Publish`
   - create an explicit recoverable snapshot and, when requested by future workflow, drive shipped output creation
 - `Export`
@@ -95,6 +96,7 @@ Filesystem source remains useful, but it is no longer the live default for autho
 
 - a new lesson can start entirely from the UI
 - no pre-existing folder or source scaffold is required to begin authoring
+- the browser `lesson` query should track the active draft context so refresh and back-to-player stay on the same lesson path
 - shipped files under `product/education/lessons/**/source/` remain valid publish/export targets
 - legacy split files remain valid import inputs during migration
 - the repo must not describe `lesson.md`, `scenes.md`, `theory.md`, or `artifacts/` as the preferred day-to-day authoring path

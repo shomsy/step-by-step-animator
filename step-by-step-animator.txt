@@ -9343,6 +9343,7 @@ Do not let support logic blur them back into one mixed lesson CMS flow.
 - `Play`
   - compile from the latest healthy saved draft
   - fail closed to the shipped lesson package when the draft is unhealthy
+  - when the selected lesson id belongs to an unpaired custom draft, play can select that healthy saved draft directly without a shipped filesystem package
 - `Publish`
   - create an explicit recoverable snapshot and, when requested by future workflow, drive shipped output creation
 - `Export`
@@ -9370,6 +9371,7 @@ Filesystem source remains useful, but it is no longer the live default for autho
 
 - a new lesson can start entirely from the UI
 - no pre-existing folder or source scaffold is required to begin authoring
+- the browser `lesson` query should track the active draft context so refresh and back-to-player stay on the same lesson path
 - shipped files under `product/education/lessons/**/source/` remain valid publish/export targets
 - legacy split files remain valid import inputs during migration
 - the repo must not describe `lesson.md`, `scenes.md`, `theory.md`, or `artifacts/` as the preferred day-to-day authoring path
@@ -9432,6 +9434,7 @@ Meaning:
 - if the draft is healthy, the lesson engine compiles it into the canonical lesson package
 - the animator engine plays only the compiled lesson package
 - if the saved draft is broken, the system fails closed to the shipped lesson package
+- if the lesson id belongs to an unpaired custom draft, the normal player can still open that healthy saved draft directly by lesson id
 
 ### 3.3 Publish
 
@@ -9554,8 +9557,10 @@ When a shipped lesson is opened in Write Mode, the system may pair it to a draft
 Rules:
 
 - the normal player prefers the latest healthy saved paired draft for the same shipped lesson
+- the normal player can also open a healthy unpaired custom draft when the browser lesson id matches that draft exactly
 - invalid paired drafts fail closed to the shipped lesson package
 - entering Write Mode with `?workspace=authoring&lesson=<shipped-lesson-id>` must open that lesson's paired draft instead of an unrelated most-recent draft
+- Write Mode must keep the browser `lesson` query aligned with the active draft context so refresh and back-to-player do not drift to a different lesson
 - paired drafts may auto-refresh from shipped source updates only while they still match the previous shipped source exactly
 - once the author edits the paired draft, the store must preserve those edits
 
@@ -10226,6 +10231,9 @@ Update rules:
 
 ## Current Ledger
 
+1. `[review][medium] 2026-03-30 02:43 CEST - Closed TODO-014 by binding Write Mode URL context to the active draft, letting the normal player boot healthy UI-only custom drafts by lesson id, and adding selector plus browser-smoke coverage for the authoring/player seam`
+   owner: codex
+   actual: 10m
 1. `[review][medium] 2026-03-30 02:20 CEST - Closed TODO-013 by tightening the remaining root wording around the UI-first lesson path and adding a browser smoke guardrail that proves Save stays store-only, Play reads the saved draft, and Publish remains the explicit snapshot step while shipped lesson files stay untouched`
    owner: codex
    actual: 20m
@@ -10769,6 +10777,9 @@ dist/
 .aider*
 /agents.md
 
+# Stakpak session files
+.stakpak/session*
+
 === .gitmodules ===
 [submodule ".agents/.rules/vendor/agent-governance"]
 	path = .agents/.rules/vendor/agent-governance
@@ -11141,7 +11152,9 @@ The browser app now exposes a dedicated authoring workspace at `?workspace=autho
 - the editor remains DSL-aware, with slash-triggered block insertion and inline `+ Insert Block` authoring
 - drafts still compile back through the same lesson engine contract before save and publish
 - the normal player prefers the latest healthy saved paired draft for the selected shipped lesson; broken saved drafts fail closed back to the shipped lesson package
+- a healthy saved custom draft with no shipped filesystem package can also be selected directly by `?lesson=<draft-lesson-id>` and played as a `Playable Draft`
 - entering `?workspace=authoring&lesson=<shipped-lesson-id>` opens that lesson's paired draft instead of whichever draft happened to be edited most recently
+- Write Mode keeps the browser `lesson` query aligned with the active draft context so refresh and back-to-player stay on the current lesson path
 - paired drafts refresh from shipped lesson source updates until the operator edits them; edited paired drafts stay preserved
 - the authoring state model is explicit: `Draft Saved`, `Unsaved Changes`, `Playable Draft`, `Broken Draft Fallback`, `Published Lesson`, and `No Draft`
 - `Save` persists draft content to SQLite only
@@ -86883,8 +86896,13 @@ import {
   LESSON_RUNTIME_SOURCE_LABELS
 } from '../../author-lessons/lesson-runtime-state.js';
 
+function readRequestedLessonId(ownerLocation) {
+  return new URL(ownerLocation.href).searchParams.get('lesson')?.trim() || '';
+}
+
 async function resolveSavedDraftLessonOverride({
   ownerWindow,
+  requestedLessonId,
   shippedLessonId,
   shippedLesson,
   resolveDraftLessonOverride
@@ -86892,6 +86910,7 @@ async function resolveSavedDraftLessonOverride({
   if (typeof resolveDraftLessonOverride === 'function') {
     return resolveDraftLessonOverride({
       ownerWindow,
+      requestedLessonId,
       shippedLessonId,
       shippedLesson
     });
@@ -86935,6 +86954,41 @@ function normalizeDraftLesson(lesson) {
   };
 }
 
+function buildLessonsForSelection(registeredLessons, lesson) {
+  if (!lesson || lesson.lessonRuntimeSource !== LESSON_RUNTIME_SOURCE.PLAYABLE_DRAFT) {
+    return registeredLessons;
+  }
+
+  const existingLessonIndex = registeredLessons.findIndex(registeredLesson => registeredLesson.lessonId === lesson.lessonId);
+
+  if (existingLessonIndex >= 0) {
+    return registeredLessons.map((registeredLesson, lessonIndex) => lessonIndex === existingLessonIndex
+      ? {
+          ...registeredLesson,
+          lessonTitle: lesson.lessonTitle
+        }
+      : registeredLesson);
+  }
+
+  return [
+    {
+      lessonId: lesson.lessonId,
+      lessonTitle: lesson.lessonTitle
+    },
+    ...registeredLessons
+  ];
+}
+
+function buildLessonSelection(registeredLessons, shippedLesson, savedDraftLesson) {
+  const normalizedDraftLesson = normalizeDraftLesson(savedDraftLesson);
+  const lesson = normalizedDraftLesson || annotatePublishedLesson(shippedLesson);
+
+  return {
+    lesson,
+    lessons: buildLessonsForSelection(registeredLessons, lesson)
+  };
+}
+
 export async function selectLessonFromLocation({
   ownerLocation,
   ownerWindow = null,
@@ -86946,43 +87000,65 @@ export async function selectLessonFromLocation({
     findLesson,
     getDefaultLessonId
   } = lessonRegistry || await import('../../lesson-engine/register-lesson-packages/index.js');
-  const selectedLessonId = new URL(ownerLocation.href).searchParams.get('lesson');
+  const requestedLessonId = readRequestedLessonId(ownerLocation);
   const defaultLessonId = getDefaultLessonId();
-  const selectedLesson = findLesson(selectedLessonId) || findLesson(defaultLessonId);
+  const requestedRegisteredLesson = findLesson(requestedLessonId);
 
-  if (!selectedLesson) {
+  if (requestedRegisteredLesson) {
+    const shippedLesson = await requestedRegisteredLesson.loadLesson();
+    let savedDraftLesson = null;
+
+    try {
+      savedDraftLesson = await resolveSavedDraftLessonOverride({
+        ownerWindow,
+        requestedLessonId,
+        shippedLessonId: requestedRegisteredLesson.lessonId,
+        shippedLesson,
+        resolveDraftLessonOverride
+      });
+    } catch {
+      savedDraftLesson = null;
+    }
+
+    return buildLessonSelection(registeredLessons, shippedLesson, savedDraftLesson);
+  }
+
+  if (requestedLessonId) {
+    let savedCustomDraftLesson = null;
+
+    try {
+      savedCustomDraftLesson = await resolveSavedDraftLessonOverride({
+        ownerWindow,
+        requestedLessonId,
+        shippedLessonId: '',
+        shippedLesson: null,
+        resolveDraftLessonOverride
+      });
+    } catch {
+      savedCustomDraftLesson = null;
+    }
+
+    const normalizedCustomDraftLesson = normalizeDraftLesson(savedCustomDraftLesson);
+
+    if (normalizedCustomDraftLesson) {
+      return {
+        lesson: normalizedCustomDraftLesson,
+        lessons: buildLessonsForSelection(registeredLessons, normalizedCustomDraftLesson)
+      };
+    }
+  }
+
+  const defaultLesson = findLesson(defaultLessonId);
+
+  if (!defaultLesson) {
     throw new Error('No lesson package could be selected.');
   }
 
-  const shippedLesson = await selectedLesson.loadLesson();
-  let savedDraftLesson = null;
-
-  try {
-    savedDraftLesson = await resolveSavedDraftLessonOverride({
-      ownerWindow,
-      shippedLessonId: selectedLesson.lessonId,
-      shippedLesson,
-      resolveDraftLessonOverride
-    });
-  } catch {
-    savedDraftLesson = null;
-  }
-
-  const normalizedDraftLesson = normalizeDraftLesson(savedDraftLesson);
-  const lesson = normalizedDraftLesson || annotatePublishedLesson(shippedLesson);
-  const lessons = normalizedDraftLesson?.lessonRuntimeSource === LESSON_RUNTIME_SOURCE.PLAYABLE_DRAFT
-    ? registeredLessons.map(registeredLesson => registeredLesson.lessonId === selectedLesson.lessonId
-      ? {
-          ...registeredLesson,
-          lessonTitle: lesson.lessonTitle
-        }
-      : registeredLesson)
-    : registeredLessons;
-
-  return {
-    lesson,
-    lessons
-  };
+  return buildLessonSelection(
+    registeredLessons,
+    await defaultLesson.loadLesson(),
+    null
+  );
 }
 
 === system/animator-engine/play-lesson/01-start-lesson/create-lesson-progress.js ===
@@ -94132,6 +94208,35 @@ function readPlayableDraftOverrideRow(database, shippedLessonId) {
   return rows[0] || null;
 }
 
+function readPlayableCustomDraftRow(database, lessonId) {
+  const rows = readRows(
+    database,
+    `SELECT draft_id, lesson_id, lesson_title, source_markdown, source_origin, shipped_lesson_id, created_at, updated_at
+     FROM lesson_drafts
+     WHERE lesson_id = ? AND shipped_lesson_id IS NULL
+     ORDER BY updated_at DESC, lesson_id ASC
+     LIMIT 1`,
+    [lessonId]
+  );
+
+  return rows[0] || null;
+}
+
+function readPlayableDraftOverrideRowForSelection(database, {
+  requestedLessonId = '',
+  shippedLessonId = ''
+}) {
+  if (normalizeString(shippedLessonId)) {
+    return readPlayableDraftOverrideRow(database, shippedLessonId);
+  }
+
+  if (normalizeString(requestedLessonId)) {
+    return readPlayableCustomDraftRow(database, requestedLessonId);
+  }
+
+  return null;
+}
+
 function buildPlayableDraftOverrideSummary(draftRow) {
   if (!draftRow) {
     return null;
@@ -94405,9 +94510,10 @@ export async function openAuthoringSqlite({
 
 export async function readPersistedPlayableDraftOverride({
   ownerWindow,
-  shippedLessonId
+  requestedLessonId = '',
+  shippedLessonId = ''
 }) {
-  if (!ownerWindow || !normalizeString(shippedLessonId)) {
+  if (!ownerWindow) {
     return null;
   }
 
@@ -94424,7 +94530,10 @@ export async function readPersistedPlayableDraftOverride({
     createSchema(database);
 
     return buildPlayableDraftOverrideSummary(
-      readPlayableDraftOverrideRow(database, shippedLessonId)
+      readPlayableDraftOverrideRowForSelection(database, {
+        requestedLessonId,
+        shippedLessonId
+      })
     );
   } finally {
     database.close();
@@ -94446,6 +94555,10 @@ function readGoalImageOverride(shippedLesson) {
     : '';
 }
 
+function normalizeLessonSelectionId(value) {
+  return String(value || '').trim();
+}
+
 function annotateLessonRuntime(lesson, lessonRuntimeSource, lessonRuntimeSourceLabel, sourceDraftId = '') {
   return {
     ...lesson,
@@ -94457,16 +94570,21 @@ function annotateLessonRuntime(lesson, lessonRuntimeSource, lessonRuntimeSourceL
 
 export async function readPlayableDraftOverride({
   ownerWindow,
+  requestedLessonId = '',
   shippedLessonId,
   shippedLesson
 }) {
-  if (!ownerWindow || !shippedLessonId || !shippedLesson) {
+  const expectedLessonId = normalizeLessonSelectionId(shippedLessonId) || normalizeLessonSelectionId(requestedLessonId);
+  const hasShippedFallback = normalizeLessonSelectionId(shippedLessonId) && shippedLesson;
+
+  if (!ownerWindow || !expectedLessonId) {
     return null;
   }
 
   try {
     const draftOverride = await readPersistedPlayableDraftOverride({
       ownerWindow,
+      requestedLessonId,
       shippedLessonId
     });
 
@@ -94477,10 +94595,14 @@ export async function readPlayableDraftOverride({
     try {
       const compiledDraftLesson = compileLessonScript({
         scriptMarkdown: draftOverride.sourceMarkdown,
-        goalImageSrc: readGoalImageOverride(shippedLesson)
+        goalImageSrc: hasShippedFallback ? readGoalImageOverride(shippedLesson) : ''
       });
 
-      if (compiledDraftLesson.lessonId !== shippedLessonId) {
+      if (compiledDraftLesson.lessonId !== expectedLessonId) {
+        if (!hasShippedFallback) {
+          return null;
+        }
+
         return annotateLessonRuntime(
           shippedLesson,
           LESSON_RUNTIME_SOURCE.BROKEN_DRAFT_FALLBACK,
@@ -94496,6 +94618,10 @@ export async function readPlayableDraftOverride({
         draftOverride.draftId
       );
     } catch {
+      if (!hasShippedFallback) {
+        return null;
+      }
+
       return annotateLessonRuntime(
         shippedLesson,
         LESSON_RUNTIME_SOURCE.BROKEN_DRAFT_FALLBACK,
@@ -94604,6 +94730,32 @@ function buildWorkspaceUrl(ownerLocation, workspaceName) {
 
 function readRequestedLessonId(ownerLocation) {
   return normalizeText(new URL(ownerLocation.href).searchParams.get('lesson'));
+}
+
+function readWorkspaceLessonLocationId(workspaceSnapshot) {
+  return normalizeText(workspaceSnapshot?.selectedDraft?.shippedLessonId)
+    || normalizeText(workspaceSnapshot?.selectedDraft?.lessonId);
+}
+
+function syncAuthoringLocation(ownerWindow, ownerLocation, workspaceSnapshot) {
+  const nextUrl = new URL(ownerLocation.href);
+  const lessonLocationId = readWorkspaceLessonLocationId(workspaceSnapshot);
+
+  nextUrl.searchParams.set('workspace', 'authoring');
+
+  if (lessonLocationId) {
+    nextUrl.searchParams.set('lesson', lessonLocationId);
+  } else {
+    nextUrl.searchParams.delete('lesson');
+  }
+
+  const nextHref = nextUrl.toString();
+
+  if (nextHref === ownerWindow.location.href) {
+    return;
+  }
+
+  ownerWindow.history?.replaceState?.(null, '', nextHref);
 }
 
 async function readInitialAuthoringWorkspace({
@@ -96290,6 +96442,7 @@ function openWorkspaceSnapshot(state, parts, workspaceSnapshot, statusMessage, t
       : state.writerView.startOffset,
     false
   );
+  syncAuthoringLocation(state.ownerWindow, state.ownerLocation, workspaceSnapshot);
 }
 
 function getActiveMenuKey(actionElement) {
@@ -96349,6 +96502,8 @@ export async function showAuthoringWorkspace({
     ownerLocation
   });
   const state = {
+    ownerLocation,
+    ownerWindow,
     workspaceSnapshot: initialDraftWorkspace,
     editorSourceMarkdown: initialDraftWorkspace.selectedDraft?.sourceMarkdown || '',
     writerView: {
@@ -96455,6 +96610,7 @@ export async function showAuthoringWorkspace({
   };
 
   refreshAnalysis(state, readDefaultWriterSelectionOffset(state.editorSourceMarkdown));
+  syncAuthoringLocation(ownerWindow, ownerLocation, initialDraftWorkspace);
   parts.editorController = createLessonScriptEditor({
     hostElement: parts.editorHost,
     initialValue: state.writerView.bodyMarkdown,
@@ -102792,6 +102948,48 @@ test('selectLessonFromLocation prefers a saved draft override for the selected l
   assert.equal(selection.lessons[1].lessonTitle, 'Beta Draft');
 });
 
+test('selectLessonFromLocation picks a healthy custom draft when the explicit query is not a shipped lesson', async () => {
+  const lessonDescriptors = [
+    {
+      lessonId: 'alpha',
+      lessonTitle: 'Alpha',
+      loadLesson: async () => ({ lessonId: 'alpha', lessonTitle: 'Alpha' })
+    },
+    {
+      lessonId: 'beta',
+      lessonTitle: 'Beta',
+      loadLesson: async () => ({ lessonId: 'beta', lessonTitle: 'Beta' })
+    }
+  ];
+
+  const selection = await selectLessonFromLocation({
+    ownerLocation: { href: 'https://example.test/?lesson=custom-lesson' },
+    ownerWindow: {},
+    lessonRegistry: {
+      registeredLessons: lessonDescriptors,
+      findLesson: lessonId => lessonDescriptors.find(lesson => lesson.lessonId === lessonId),
+      getDefaultLessonId: () => lessonDescriptors[0].lessonId
+    },
+    resolveDraftLessonOverride: async ({ requestedLessonId, shippedLessonId }) => {
+      assert.equal(requestedLessonId, 'custom-lesson');
+      assert.equal(shippedLessonId, '');
+
+      return {
+        lessonId: 'custom-lesson',
+        lessonTitle: 'Custom Lesson Draft',
+        lessonRuntimeSource: 'playable-draft',
+        lessonRuntimeSourceLabel: 'Playable Draft · SQLite · 2026-03-30 02:33 CEST'
+      };
+    }
+  });
+
+  assert.equal(selection.lesson.lessonId, 'custom-lesson');
+  assert.equal(selection.lesson.lessonTitle, 'Custom Lesson Draft');
+  assert.equal(selection.lesson.lessonRuntimeSource, 'playable-draft');
+  assert.equal(selection.lessons[0].lessonId, 'custom-lesson');
+  assert.equal(selection.lessons[0].lessonTitle, 'Custom Lesson Draft');
+});
+
 test('selectLessonFromLocation preserves a broken draft fallback runtime marker when one is returned', async () => {
   const lessonDescriptors = [
     {
@@ -103374,7 +103572,7 @@ async function savePairedDraftSourceMarkdown(page, shippedLessonId, sourceMarkdo
   });
 }
 
-async function readPlayerSelectionSnapshot(page, shippedLessonId) {
+async function readPlayerSelectionSnapshot(page, lessonId) {
   return page.evaluate(async ({ repoPath, lessonId }) => {
     const [{ selectLessonFromLocation }, { readPlayableDraftOverride }] = await Promise.all([
       import(`/@fs${repoPath}/system/animator-engine/choose-lesson/select-lesson-from-location.js`),
@@ -103393,11 +103591,15 @@ async function readPlayerSelectionSnapshot(page, shippedLessonId) {
       lessonTitle: selection.lesson?.lessonTitle || '',
       firstStepTitle: selection.lesson?.steps?.[0]?.title || '',
       runtimeSource: selection.lesson?.lessonRuntimeSource || 'published',
-      runtimeLabel: selection.lesson?.lessonRuntimeSourceLabel || 'Published Lesson · shipped package'
+      runtimeLabel: selection.lesson?.lessonRuntimeSourceLabel || 'Published Lesson · shipped package',
+      lessonOptions: selection.lessons.map(lesson => ({
+        lessonId: lesson.lessonId,
+        lessonTitle: lesson.lessonTitle
+      }))
     };
   }, {
     repoPath: repoRoot,
-    lessonId: shippedLessonId
+    lessonId
   });
 }
 
@@ -103769,6 +103971,15 @@ test('browser authoring smoke covers V2 writer body view, metadata drawer, previ
     );
 
     await waitForCondition(
+      async () => {
+        const activeUrl = new URL(page.url());
+        return activeUrl.searchParams.get('workspace') === 'authoring'
+          && activeUrl.searchParams.get('lesson') === 'authoring-smoke-lesson';
+      },
+      'the authoring URL to stay aligned with the active custom draft'
+    );
+
+    await waitForCondition(
       async () => page.$eval('#authoringPublishState', element => element.textContent?.includes('Not Published') || false),
       'the draft to remain unpublished before publish is clicked'
     );
@@ -103784,6 +103995,14 @@ test('browser authoring smoke covers V2 writer body view, metadata drawer, previ
       async () => page.$eval('#authoringPreviewFrame', frame => (frame.getAttribute('srcdoc') || '').includes('smoke-card')),
       'the preview iframe to stay populated'
     );
+
+    const customPlayerSelection = await readPlayerSelectionSnapshot(page, 'authoring-smoke-lesson');
+
+    assert.equal(customPlayerSelection.lessonId, 'authoring-smoke-lesson');
+    assert.equal(customPlayerSelection.lessonTitle, 'Authoring Smoke Lesson');
+    assert.equal(customPlayerSelection.runtimeSource, 'playable-draft');
+    assert.equal(customPlayerSelection.firstStepTitle, 'Start Here');
+    assert.equal(customPlayerSelection.lessonOptions[0]?.lessonId, 'authoring-smoke-lesson');
 
     await page.click('#authoringMetadataBtn');
     await waitForCondition(
@@ -103912,7 +104131,7 @@ test('browser authoring smoke covers V2 writer body view, metadata drawer, previ
   }
 });
 
-test('browser authoring smoke keeps very large lesson bodies intact through analysis and save', { timeout: 90000 }, async () => {
+test('browser authoring smoke plays a healthy custom draft through the normal player bootstrap', { timeout: 60000 }, async () => {
   const server = await createServer({
     configFile: path.resolve(repoRoot, 'vite.config.js'),
     clearScreen: false,
@@ -103920,6 +104139,137 @@ test('browser authoring smoke keeps very large lesson bodies intact through anal
     server: {
       host: '127.0.0.1',
       port: 4175,
+      strictPort: false
+    }
+  });
+
+  let browser;
+
+  try {
+    await server.listen();
+
+    const appUrl = server.resolvedUrls?.local?.find(url => url.startsWith('http://127.0.0.1'))
+      || server.resolvedUrls?.local?.[0];
+
+    assert.ok(appUrl, 'Vite dev server did not expose a local URL.');
+
+    browser = await puppeteer.launch({
+      args: ['--disable-setuid-sandbox', '--no-sandbox'],
+      headless: true
+    });
+
+    const page = await browser.newPage();
+    const consoleErrors = [];
+    const pageErrors = [];
+    const customLessonSeed = Date.now();
+    const customLessonId = `browser-custom-play-smoke-${customLessonSeed}`;
+    const customLessonTitle = `Browser Custom Play Smoke ${customLessonSeed}`;
+
+    page.on('console', message => {
+      if (message.type() === 'error') {
+        consoleErrors.push(message.text());
+      }
+    });
+    page.on('pageerror', error => {
+      pageErrors.push(error.message);
+    });
+    page.on('dialog', dialog => {
+      void dialog.accept();
+    });
+
+    await page.goto(`${appUrl}?workspace=authoring`, { waitUntil: 'domcontentloaded' });
+
+    await waitForCondition(
+      async () => page.$('#authoringScriptEditor').then(Boolean),
+      'the authoring workspace for custom player bootstrap coverage'
+    );
+
+    await openPopoverAndClick(page, '#authoringMoreBtn', '#authoringMoreMenu', '[data-action="new-draft"]');
+
+    await waitForCondition(
+      async () => page.$eval('#authoringLessonTitle', element => element.textContent?.includes('New Lesson') || false),
+      'the custom bootstrap draft to open'
+    );
+
+    await page.click('#authoringMetadataBtn');
+    await waitForCondition(
+      async () => page.$('#authoringMetadataDrawer:not([hidden])').then(Boolean),
+      'the metadata drawer for the custom bootstrap draft'
+    );
+
+    await setMetadataValue(page, 'lessonId', customLessonId);
+    await setMetadataValue(page, 'lessonTitle', customLessonTitle);
+    await setMetadataValue(page, 'previewTitle', `${customLessonTitle} Preview`);
+    await page.click('[data-action="apply-metadata"]');
+
+    await waitForCondition(
+      async () => page.$eval('#authoringCompileChip', element => element.textContent?.includes('Playable Draft') || false),
+      'the custom draft to stay playable after metadata apply'
+    );
+
+    await waitForCondition(
+      async () => page.$eval('#authoringSaveState', element => element.textContent?.includes('Unsaved Changes') || false),
+      'the custom draft to become dirty before player bootstrap save'
+    );
+
+    await page.keyboard.down('Control');
+    await page.keyboard.press('s');
+    await page.keyboard.up('Control');
+
+    await waitForCondition(
+      async () => page.$eval('#authoringSaveState', element => element.textContent?.includes('Draft Saved') || false),
+      'the custom draft to save before normal player bootstrap'
+    );
+
+    await waitForCondition(
+      async () => {
+        const activeUrl = new URL(page.url());
+        return activeUrl.searchParams.get('workspace') === 'authoring'
+          && activeUrl.searchParams.get('lesson') === customLessonId;
+      },
+      'the authoring URL to stay aligned with the custom lesson id'
+    );
+
+    await page.goto(`${appUrl}?lesson=${customLessonId}`, { waitUntil: 'domcontentloaded' });
+
+    await waitForCondition(
+      async () => page.$eval('#lessonHeading', (element, expectedTitle) => element.textContent?.includes(expectedTitle) || false, customLessonTitle).catch(() => false),
+      'the normal player to boot the custom draft title'
+    );
+    await waitForCondition(
+      async () => page.$eval('#lessonRuntimeState', element => element.textContent?.includes('Playable Draft') || false).catch(() => false),
+      'the normal player to show playable custom draft state'
+    );
+    await waitForCondition(
+      async () => page.$eval('#lessonPicker', (element, expectedLessonId) => {
+        if (!(element instanceof HTMLSelectElement)) {
+          return false;
+        }
+
+        return element.value === expectedLessonId
+          && Array.from(element.options).some(option => option.value === expectedLessonId);
+      }, customLessonId).catch(() => false),
+      'the lesson picker to include the custom draft id'
+    );
+
+    assert.deepEqual(pageErrors, []);
+    assert.deepEqual(consoleErrors, []);
+
+    await page.close();
+  } finally {
+    await browser?.close();
+    await server.close();
+  }
+});
+
+test('browser authoring smoke keeps very large lesson bodies intact through analysis and save', { timeout: 90000 }, async () => {
+  const server = await createServer({
+    configFile: path.resolve(repoRoot, 'vite.config.js'),
+    clearScreen: false,
+    logLevel: 'error',
+    server: {
+      host: '127.0.0.1',
+      port: 4176,
       strictPort: false
     }
   });
@@ -104047,7 +104397,7 @@ test('browser authoring smoke imports a full large lesson source without duplica
     logLevel: 'error',
     server: {
       host: '127.0.0.1',
-      port: 4176,
+      port: 4181,
       strictPort: false
     }
   });
@@ -104183,7 +104533,7 @@ test('browser authoring smoke lets the normal player prefer a healthy saved draf
     logLevel: 'error',
     server: {
       host: '127.0.0.1',
-      port: 4178,
+      port: 4177,
       strictPort: false
     }
   });
@@ -104453,7 +104803,7 @@ test('browser authoring smoke ignores an unpaired custom draft with the same les
     logLevel: 'error',
     server: {
       host: '127.0.0.1',
-      port: 4178,
+      port: 4179,
       strictPort: false
     }
   });
@@ -104558,7 +104908,7 @@ test('browser authoring smoke keeps Save store-only while Publish remains the ex
     logLevel: 'error',
     server: {
       host: '127.0.0.1',
-      port: 4178,
+      port: 4180,
       strictPort: false
     }
   });

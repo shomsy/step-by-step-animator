@@ -187,7 +187,9 @@ The browser app now exposes a dedicated authoring workspace at `?workspace=autho
 - the editor remains DSL-aware, with slash-triggered block insertion and inline `+ Insert Block` authoring
 - drafts still compile back through the same lesson engine contract before save and publish
 - the normal player prefers the latest healthy saved paired draft for the selected shipped lesson; broken saved drafts fail closed back to the shipped lesson package
+- a healthy saved custom draft with no shipped filesystem package can also be selected directly by `?lesson=<draft-lesson-id>` and played as a `Playable Draft`
 - entering `?workspace=authoring&lesson=<shipped-lesson-id>` opens that lesson's paired draft instead of whichever draft happened to be edited most recently
+- Write Mode keeps the browser `lesson` query aligned with the active draft context so refresh and back-to-player stay on the current lesson path
 - paired drafts refresh from shipped lesson source updates until the operator edits them; edited paired drafts stay preserved
 - the authoring state model is explicit: `Draft Saved`, `Unsaved Changes`, `Playable Draft`, `Broken Draft Fallback`, `Published Lesson`, and `No Draft`
 - `Save` persists draft content to SQLite only

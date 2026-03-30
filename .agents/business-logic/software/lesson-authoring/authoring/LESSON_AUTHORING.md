@@ -46,6 +46,7 @@ Meaning:
 - if the draft is healthy, the lesson engine compiles it into the canonical lesson package
 - the animator engine plays only the compiled lesson package
 - if the saved draft is broken, the system fails closed to the shipped lesson package
+- if the lesson id belongs to an unpaired custom draft, the normal player can still open that healthy saved draft directly by lesson id
 
 ### 3.3 Publish
 
@@ -168,8 +169,10 @@ When a shipped lesson is opened in Write Mode, the system may pair it to a draft
 Rules:
 
 - the normal player prefers the latest healthy saved paired draft for the same shipped lesson
+- the normal player can also open a healthy unpaired custom draft when the browser lesson id matches that draft exactly
 - invalid paired drafts fail closed to the shipped lesson package
 - entering Write Mode with `?workspace=authoring&lesson=<shipped-lesson-id>` must open that lesson's paired draft instead of an unrelated most-recent draft
+- Write Mode must keep the browser `lesson` query aligned with the active draft context so refresh and back-to-player do not drift to a different lesson
 - paired drafts may auto-refresh from shipped source updates only while they still match the previous shipped source exactly
 - once the author edits the paired draft, the store must preserve those edits
 

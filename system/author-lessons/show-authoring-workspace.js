@@ -69,6 +69,32 @@ function readRequestedLessonId(ownerLocation) {
   return normalizeText(new URL(ownerLocation.href).searchParams.get('lesson'));
 }
 
+function readWorkspaceLessonLocationId(workspaceSnapshot) {
+  return normalizeText(workspaceSnapshot?.selectedDraft?.shippedLessonId)
+    || normalizeText(workspaceSnapshot?.selectedDraft?.lessonId);
+}
+
+function syncAuthoringLocation(ownerWindow, ownerLocation, workspaceSnapshot) {
+  const nextUrl = new URL(ownerLocation.href);
+  const lessonLocationId = readWorkspaceLessonLocationId(workspaceSnapshot);
+
+  nextUrl.searchParams.set('workspace', 'authoring');
+
+  if (lessonLocationId) {
+    nextUrl.searchParams.set('lesson', lessonLocationId);
+  } else {
+    nextUrl.searchParams.delete('lesson');
+  }
+
+  const nextHref = nextUrl.toString();
+
+  if (nextHref === ownerWindow.location.href) {
+    return;
+  }
+
+  ownerWindow.history?.replaceState?.(null, '', nextHref);
+}
+
 async function readInitialAuthoringWorkspace({
   authoringStore,
   ownerLocation
@@ -1753,6 +1779,7 @@ function openWorkspaceSnapshot(state, parts, workspaceSnapshot, statusMessage, t
       : state.writerView.startOffset,
     false
   );
+  syncAuthoringLocation(state.ownerWindow, state.ownerLocation, workspaceSnapshot);
 }
 
 function getActiveMenuKey(actionElement) {
@@ -1812,6 +1839,8 @@ export async function showAuthoringWorkspace({
     ownerLocation
   });
   const state = {
+    ownerLocation,
+    ownerWindow,
     workspaceSnapshot: initialDraftWorkspace,
     editorSourceMarkdown: initialDraftWorkspace.selectedDraft?.sourceMarkdown || '',
     writerView: {
@@ -1918,6 +1947,7 @@ export async function showAuthoringWorkspace({
   };
 
   refreshAnalysis(state, readDefaultWriterSelectionOffset(state.editorSourceMarkdown));
+  syncAuthoringLocation(ownerWindow, ownerLocation, initialDraftWorkspace);
   parts.editorController = createLessonScriptEditor({
     hostElement: parts.editorHost,
     initialValue: state.writerView.bodyMarkdown,

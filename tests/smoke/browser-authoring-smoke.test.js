@@ -160,7 +160,7 @@ async function savePairedDraftSourceMarkdown(page, shippedLessonId, sourceMarkdo
   });
 }
 
-async function readPlayerSelectionSnapshot(page, shippedLessonId) {
+async function readPlayerSelectionSnapshot(page, lessonId) {
   return page.evaluate(async ({ repoPath, lessonId }) => {
     const [{ selectLessonFromLocation }, { readPlayableDraftOverride }] = await Promise.all([
       import(`/@fs${repoPath}/system/animator-engine/choose-lesson/select-lesson-from-location.js`),
@@ -179,11 +179,15 @@ async function readPlayerSelectionSnapshot(page, shippedLessonId) {
       lessonTitle: selection.lesson?.lessonTitle || '',
       firstStepTitle: selection.lesson?.steps?.[0]?.title || '',
       runtimeSource: selection.lesson?.lessonRuntimeSource || 'published',
-      runtimeLabel: selection.lesson?.lessonRuntimeSourceLabel || 'Published Lesson · shipped package'
+      runtimeLabel: selection.lesson?.lessonRuntimeSourceLabel || 'Published Lesson · shipped package',
+      lessonOptions: selection.lessons.map(lesson => ({
+        lessonId: lesson.lessonId,
+        lessonTitle: lesson.lessonTitle
+      }))
     };
   }, {
     repoPath: repoRoot,
-    lessonId: shippedLessonId
+    lessonId
   });
 }
 
@@ -555,6 +559,15 @@ test('browser authoring smoke covers V2 writer body view, metadata drawer, previ
     );
 
     await waitForCondition(
+      async () => {
+        const activeUrl = new URL(page.url());
+        return activeUrl.searchParams.get('workspace') === 'authoring'
+          && activeUrl.searchParams.get('lesson') === 'authoring-smoke-lesson';
+      },
+      'the authoring URL to stay aligned with the active custom draft'
+    );
+
+    await waitForCondition(
       async () => page.$eval('#authoringPublishState', element => element.textContent?.includes('Not Published') || false),
       'the draft to remain unpublished before publish is clicked'
     );
@@ -570,6 +583,14 @@ test('browser authoring smoke covers V2 writer body view, metadata drawer, previ
       async () => page.$eval('#authoringPreviewFrame', frame => (frame.getAttribute('srcdoc') || '').includes('smoke-card')),
       'the preview iframe to stay populated'
     );
+
+    const customPlayerSelection = await readPlayerSelectionSnapshot(page, 'authoring-smoke-lesson');
+
+    assert.equal(customPlayerSelection.lessonId, 'authoring-smoke-lesson');
+    assert.equal(customPlayerSelection.lessonTitle, 'Authoring Smoke Lesson');
+    assert.equal(customPlayerSelection.runtimeSource, 'playable-draft');
+    assert.equal(customPlayerSelection.firstStepTitle, 'Start Here');
+    assert.equal(customPlayerSelection.lessonOptions[0]?.lessonId, 'authoring-smoke-lesson');
 
     await page.click('#authoringMetadataBtn');
     await waitForCondition(
@@ -698,7 +719,7 @@ test('browser authoring smoke covers V2 writer body view, metadata drawer, previ
   }
 });
 
-test('browser authoring smoke keeps very large lesson bodies intact through analysis and save', { timeout: 90000 }, async () => {
+test('browser authoring smoke plays a healthy custom draft through the normal player bootstrap', { timeout: 60000 }, async () => {
   const server = await createServer({
     configFile: path.resolve(repoRoot, 'vite.config.js'),
     clearScreen: false,
@@ -706,6 +727,137 @@ test('browser authoring smoke keeps very large lesson bodies intact through anal
     server: {
       host: '127.0.0.1',
       port: 4175,
+      strictPort: false
+    }
+  });
+
+  let browser;
+
+  try {
+    await server.listen();
+
+    const appUrl = server.resolvedUrls?.local?.find(url => url.startsWith('http://127.0.0.1'))
+      || server.resolvedUrls?.local?.[0];
+
+    assert.ok(appUrl, 'Vite dev server did not expose a local URL.');
+
+    browser = await puppeteer.launch({
+      args: ['--disable-setuid-sandbox', '--no-sandbox'],
+      headless: true
+    });
+
+    const page = await browser.newPage();
+    const consoleErrors = [];
+    const pageErrors = [];
+    const customLessonSeed = Date.now();
+    const customLessonId = `browser-custom-play-smoke-${customLessonSeed}`;
+    const customLessonTitle = `Browser Custom Play Smoke ${customLessonSeed}`;
+
+    page.on('console', message => {
+      if (message.type() === 'error') {
+        consoleErrors.push(message.text());
+      }
+    });
+    page.on('pageerror', error => {
+      pageErrors.push(error.message);
+    });
+    page.on('dialog', dialog => {
+      void dialog.accept();
+    });
+
+    await page.goto(`${appUrl}?workspace=authoring`, { waitUntil: 'domcontentloaded' });
+
+    await waitForCondition(
+      async () => page.$('#authoringScriptEditor').then(Boolean),
+      'the authoring workspace for custom player bootstrap coverage'
+    );
+
+    await openPopoverAndClick(page, '#authoringMoreBtn', '#authoringMoreMenu', '[data-action="new-draft"]');
+
+    await waitForCondition(
+      async () => page.$eval('#authoringLessonTitle', element => element.textContent?.includes('New Lesson') || false),
+      'the custom bootstrap draft to open'
+    );
+
+    await page.click('#authoringMetadataBtn');
+    await waitForCondition(
+      async () => page.$('#authoringMetadataDrawer:not([hidden])').then(Boolean),
+      'the metadata drawer for the custom bootstrap draft'
+    );
+
+    await setMetadataValue(page, 'lessonId', customLessonId);
+    await setMetadataValue(page, 'lessonTitle', customLessonTitle);
+    await setMetadataValue(page, 'previewTitle', `${customLessonTitle} Preview`);
+    await page.click('[data-action="apply-metadata"]');
+
+    await waitForCondition(
+      async () => page.$eval('#authoringCompileChip', element => element.textContent?.includes('Playable Draft') || false),
+      'the custom draft to stay playable after metadata apply'
+    );
+
+    await waitForCondition(
+      async () => page.$eval('#authoringSaveState', element => element.textContent?.includes('Unsaved Changes') || false),
+      'the custom draft to become dirty before player bootstrap save'
+    );
+
+    await page.keyboard.down('Control');
+    await page.keyboard.press('s');
+    await page.keyboard.up('Control');
+
+    await waitForCondition(
+      async () => page.$eval('#authoringSaveState', element => element.textContent?.includes('Draft Saved') || false),
+      'the custom draft to save before normal player bootstrap'
+    );
+
+    await waitForCondition(
+      async () => {
+        const activeUrl = new URL(page.url());
+        return activeUrl.searchParams.get('workspace') === 'authoring'
+          && activeUrl.searchParams.get('lesson') === customLessonId;
+      },
+      'the authoring URL to stay aligned with the custom lesson id'
+    );
+
+    await page.goto(`${appUrl}?lesson=${customLessonId}`, { waitUntil: 'domcontentloaded' });
+
+    await waitForCondition(
+      async () => page.$eval('#lessonHeading', (element, expectedTitle) => element.textContent?.includes(expectedTitle) || false, customLessonTitle).catch(() => false),
+      'the normal player to boot the custom draft title'
+    );
+    await waitForCondition(
+      async () => page.$eval('#lessonRuntimeState', element => element.textContent?.includes('Playable Draft') || false).catch(() => false),
+      'the normal player to show playable custom draft state'
+    );
+    await waitForCondition(
+      async () => page.$eval('#lessonPicker', (element, expectedLessonId) => {
+        if (!(element instanceof HTMLSelectElement)) {
+          return false;
+        }
+
+        return element.value === expectedLessonId
+          && Array.from(element.options).some(option => option.value === expectedLessonId);
+      }, customLessonId).catch(() => false),
+      'the lesson picker to include the custom draft id'
+    );
+
+    assert.deepEqual(pageErrors, []);
+    assert.deepEqual(consoleErrors, []);
+
+    await page.close();
+  } finally {
+    await browser?.close();
+    await server.close();
+  }
+});
+
+test('browser authoring smoke keeps very large lesson bodies intact through analysis and save', { timeout: 90000 }, async () => {
+  const server = await createServer({
+    configFile: path.resolve(repoRoot, 'vite.config.js'),
+    clearScreen: false,
+    logLevel: 'error',
+    server: {
+      host: '127.0.0.1',
+      port: 4176,
       strictPort: false
     }
   });
@@ -833,7 +985,7 @@ test('browser authoring smoke imports a full large lesson source without duplica
     logLevel: 'error',
     server: {
       host: '127.0.0.1',
-      port: 4176,
+      port: 4181,
       strictPort: false
     }
   });
@@ -969,7 +1121,7 @@ test('browser authoring smoke lets the normal player prefer a healthy saved draf
     logLevel: 'error',
     server: {
       host: '127.0.0.1',
-      port: 4178,
+      port: 4177,
       strictPort: false
     }
   });
@@ -1239,7 +1391,7 @@ test('browser authoring smoke ignores an unpaired custom draft with the same les
     logLevel: 'error',
     server: {
       host: '127.0.0.1',
-      port: 4178,
+      port: 4179,
       strictPort: false
     }
   });
@@ -1344,7 +1496,7 @@ test('browser authoring smoke keeps Save store-only while Publish remains the ex
     logLevel: 'error',
     server: {
       host: '127.0.0.1',
-      port: 4178,
+      port: 4180,
       strictPort: false
     }
   });

@@ -15,6 +15,9 @@ Update rules:
 
 ## Current Ledger
 
+1. `[review][medium] 2026-03-30 02:43 CEST - Closed TODO-014 by binding Write Mode URL context to the active draft, letting the normal player boot healthy UI-only custom drafts by lesson id, and adding selector plus browser-smoke coverage for the authoring/player seam`
+   owner: codex
+   actual: 10m
 1. `[review][medium] 2026-03-30 02:20 CEST - Closed TODO-013 by tightening the remaining root wording around the UI-first lesson path and adding a browser smoke guardrail that proves Save stays store-only, Play reads the saved draft, and Publish remains the explicit snapshot step while shipped lesson files stay untouched`
    owner: codex
    actual: 20m

@@ -12,6 +12,10 @@ function readGoalImageOverride(shippedLesson) {
     : '';
 }
 
+function normalizeLessonSelectionId(value) {
+  return String(value || '').trim();
+}
+
 function annotateLessonRuntime(lesson, lessonRuntimeSource, lessonRuntimeSourceLabel, sourceDraftId = '') {
   return {
     ...lesson,
@@ -23,16 +27,21 @@ function annotateLessonRuntime(lesson, lessonRuntimeSource, lessonRuntimeSourceL
 
 export async function readPlayableDraftOverride({
   ownerWindow,
+  requestedLessonId = '',
   shippedLessonId,
   shippedLesson
 }) {
-  if (!ownerWindow || !shippedLessonId || !shippedLesson) {
+  const expectedLessonId = normalizeLessonSelectionId(shippedLessonId) || normalizeLessonSelectionId(requestedLessonId);
+  const hasShippedFallback = normalizeLessonSelectionId(shippedLessonId) && shippedLesson;
+
+  if (!ownerWindow || !expectedLessonId) {
     return null;
   }
 
   try {
     const draftOverride = await readPersistedPlayableDraftOverride({
       ownerWindow,
+      requestedLessonId,
       shippedLessonId
     });
 
@@ -43,10 +52,14 @@ export async function readPlayableDraftOverride({
     try {
       const compiledDraftLesson = compileLessonScript({
         scriptMarkdown: draftOverride.sourceMarkdown,
-        goalImageSrc: readGoalImageOverride(shippedLesson)
+        goalImageSrc: hasShippedFallback ? readGoalImageOverride(shippedLesson) : ''
       });
 
-      if (compiledDraftLesson.lessonId !== shippedLessonId) {
+      if (compiledDraftLesson.lessonId !== expectedLessonId) {
+        if (!hasShippedFallback) {
+          return null;
+        }
+
         return annotateLessonRuntime(
           shippedLesson,
           LESSON_RUNTIME_SOURCE.BROKEN_DRAFT_FALLBACK,
@@ -62,6 +75,10 @@ export async function readPlayableDraftOverride({
         draftOverride.draftId
       );
     } catch {
+      if (!hasShippedFallback) {
+        return null;
+      }
+
       return annotateLessonRuntime(
         shippedLesson,
         LESSON_RUNTIME_SOURCE.BROKEN_DRAFT_FALLBACK,

@@ -92,6 +92,48 @@ test('selectLessonFromLocation prefers a saved draft override for the selected l
   assert.equal(selection.lessons[1].lessonTitle, 'Beta Draft');
 });
 
+test('selectLessonFromLocation picks a healthy custom draft when the explicit query is not a shipped lesson', async () => {
+  const lessonDescriptors = [
+    {
+      lessonId: 'alpha',
+      lessonTitle: 'Alpha',
+      loadLesson: async () => ({ lessonId: 'alpha', lessonTitle: 'Alpha' })
+    },
+    {
+      lessonId: 'beta',
+      lessonTitle: 'Beta',
+      loadLesson: async () => ({ lessonId: 'beta', lessonTitle: 'Beta' })
+    }
+  ];
+
+  const selection = await selectLessonFromLocation({
+    ownerLocation: { href: 'https://example.test/?lesson=custom-lesson' },
+    ownerWindow: {},
+    lessonRegistry: {
+      registeredLessons: lessonDescriptors,
+      findLesson: lessonId => lessonDescriptors.find(lesson => lesson.lessonId === lessonId),
+      getDefaultLessonId: () => lessonDescriptors[0].lessonId
+    },
+    resolveDraftLessonOverride: async ({ requestedLessonId, shippedLessonId }) => {
+      assert.equal(requestedLessonId, 'custom-lesson');
+      assert.equal(shippedLessonId, '');
+
+      return {
+        lessonId: 'custom-lesson',
+        lessonTitle: 'Custom Lesson Draft',
+        lessonRuntimeSource: 'playable-draft',
+        lessonRuntimeSourceLabel: 'Playable Draft · SQLite · 2026-03-30 02:33 CEST'
+      };
+    }
+  });
+
+  assert.equal(selection.lesson.lessonId, 'custom-lesson');
+  assert.equal(selection.lesson.lessonTitle, 'Custom Lesson Draft');
+  assert.equal(selection.lesson.lessonRuntimeSource, 'playable-draft');
+  assert.equal(selection.lessons[0].lessonId, 'custom-lesson');
+  assert.equal(selection.lessons[0].lessonTitle, 'Custom Lesson Draft');
+});
+
 test('selectLessonFromLocation preserves a broken draft fallback runtime marker when one is returned', async () => {
   const lessonDescriptors = [
     {
