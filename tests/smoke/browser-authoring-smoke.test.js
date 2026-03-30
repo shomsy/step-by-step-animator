@@ -1,5 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
+import fs from 'node:fs/promises';
 import path from 'node:path';
 import { setTimeout as delay } from 'node:timers/promises';
 import { fileURLToPath } from 'node:url';
@@ -1325,6 +1326,117 @@ test('browser authoring smoke ignores an unpaired custom draft with the same les
     assert.equal(selection.firstStepTitle, shippedStepTitle);
     assert.equal(selection.runtimeSource, 'published');
     assert.match(selection.runtimeLabel, /Published Lesson/);
+
+    assert.deepEqual(pageErrors, []);
+    assert.deepEqual(consoleErrors, []);
+
+    await page.close();
+  } finally {
+    await browser?.close();
+    await server.close();
+  }
+});
+
+test('browser authoring smoke keeps Save store-only while Publish remains the explicit snapshot step', { timeout: 90000 }, async () => {
+  const server = await createServer({
+    configFile: path.resolve(repoRoot, 'vite.config.js'),
+    clearScreen: false,
+    logLevel: 'error',
+    server: {
+      host: '127.0.0.1',
+      port: 4178,
+      strictPort: false
+    }
+  });
+
+  let browser;
+
+  try {
+    await server.listen();
+
+    const appUrl = server.resolvedUrls?.local?.find(url => url.startsWith('http://127.0.0.1'))
+      || server.resolvedUrls?.local?.[0];
+
+    assert.ok(appUrl, 'Vite dev server did not expose a local URL.');
+
+    browser = await puppeteer.launch({
+      args: ['--disable-setuid-sandbox', '--no-sandbox'],
+      headless: true
+    });
+
+    const page = await browser.newPage();
+    const consoleErrors = [];
+    const pageErrors = [];
+    const lessonId = '09-human-first-script-demo';
+    const shippedLessonFilePath = path.resolve(
+      repoRoot,
+      'product/education/lessons/09-human-first-script-demo/source/lesson.script.md'
+    );
+    const originalShippedSource = await fs.readFile(shippedLessonFilePath, 'utf8');
+    const savedDraftStepTitle = 'Store Only Saved Draft Step';
+
+    page.on('console', message => {
+      if (message.type() === 'error') {
+        consoleErrors.push(message.text());
+      }
+    });
+    page.on('pageerror', error => {
+      pageErrors.push(error.message);
+    });
+
+    await page.goto(`${appUrl}?workspace=authoring&lesson=${lessonId}`, { waitUntil: 'domcontentloaded' });
+
+    await waitForCondition(
+      async () => page.$('#authoringScriptEditor').then(Boolean),
+      'the authoring workspace for explicit save/publish guardrails'
+    );
+    await waitForCondition(
+      async () => page.$eval('#authoringScriptEditor', element => {
+        if (!(element instanceof HTMLElement) || !element.authoringEditor) {
+          throw new Error('Expected the CodeMirror authoring editor host.');
+        }
+
+        return element.authoringEditor.getValue().includes('title: Start: Empty App Shell');
+      }).catch(() => false),
+      'the paired 09 draft body before guardrail assertions'
+    );
+
+    const pairedDraftSource = await readPairedDraftSourceMarkdown(page, lessonId);
+    const storeOnlyDraftSource = pairedDraftSource.replace(
+      'title: Start: Empty App Shell',
+      `title: ${savedDraftStepTitle}`
+    );
+    await replaceEditorSelectionText(page, storeOnlyDraftSource);
+    await waitForCondition(
+      async () => page.$eval('#authoringSaveState', element => element.textContent?.includes('Unsaved Changes') || false).catch(() => false),
+      'the draft to become dirty before save'
+    );
+
+    await page.click('#authoringSaveDraftBtn');
+    await waitForCondition(
+      async () => page.$eval('#authoringSaveState', element => element.textContent?.includes('Draft Saved') || false).catch(() => false),
+      'the draft to save into the authoring store'
+    );
+
+    const playerSelectionAfterSave = await readPlayerSelectionSnapshot(page, lessonId);
+    const shippedSourceAfterSave = await fs.readFile(shippedLessonFilePath, 'utf8');
+    const editorSnapshotAfterSave = await readEditorCursorSnapshot(page);
+
+    assert.match(editorSnapshotAfterSave.value, /Store Only Saved Draft Step/);
+    assert.equal(
+      await page.$eval('#authoringPublishState', element => element.textContent?.trim() || ''),
+      'Not Published'
+    );
+    assert.equal(playerSelectionAfterSave.runtimeSource, 'playable-draft');
+    assert.equal(playerSelectionAfterSave.firstStepTitle, savedDraftStepTitle);
+    assert.equal(shippedSourceAfterSave, originalShippedSource);
+    assert.doesNotMatch(shippedSourceAfterSave, /Store Only Saved Draft Step/);
+
+    await page.click('#authoringPublishBtn');
+    await waitForCondition(
+      async () => page.$eval('#authoringPublishState', element => element.textContent?.includes('Published Lesson') || false).catch(() => false),
+      'the publish state to show an explicit published snapshot'
+    );
 
     assert.deepEqual(pageErrors, []);
     assert.deepEqual(consoleErrors, []);

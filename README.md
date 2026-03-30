@@ -22,9 +22,9 @@ The live repo is organized around these boundaries:
 
 - `product/` is the product surface
   - `product/app/` is the canonical browser shell and Vite root
-  - `product/education/` holds shipped lesson sources plus publish/export and migration compatibility material
+  - `product/education/` holds shipped lesson sources plus publish/export and migration compatibility material; it is not the live draft-authoring path
 - `system/` is the runtime boundary
-  - `system/author-lessons/` owns Write Mode and the browser-backed authoring store
+  - `system/author-lessons/` owns Write Mode and the browser-backed authoring store; this is the live day-to-day authoring path
   - `system/lesson-engine/` compiles lesson drafts or shipped lesson source into the canonical lesson package and writes derived docs to `system/lesson-engine/output/`
   - `system/animator-engine/` plays compiled lesson packages
 - `system/foundation/` contains shared frontmatter and markdown primitives

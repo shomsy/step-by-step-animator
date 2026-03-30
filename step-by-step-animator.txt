@@ -9327,6 +9327,15 @@ flowchart TD
 - `system/animator-engine/` owns playback of the compiled lesson package
 - `product/education/` holds shipped lesson materialization and migration compatibility inputs
 
+These seams must stay separate and banal:
+
+- `authoring store`
+- `compile bridge`
+- `playback state`
+- `publish/export`
+
+Do not let support logic blur them back into one mixed lesson CMS flow.
+
 ## 4. Save, Play, Publish, Export
 
 - `Save`
@@ -10217,6 +10226,9 @@ Update rules:
 
 ## Current Ledger
 
+1. `[review][medium] 2026-03-30 02:20 CEST - Closed TODO-013 by tightening the remaining root wording around the UI-first lesson path and adding a browser smoke guardrail that proves Save stays store-only, Play reads the saved draft, and Publish remains the explicit snapshot step while shipped lesson files stay untouched`
+   owner: codex
+   actual: 20m
 1. `[doc][medium] 2026-03-30 01:57 CEST - Closed TODO-012 by removing the repo-local lesson authoring split-brain across README, AGENTS, and local lesson architecture/authoring docs so Write Mode, the authoring store, Save / Play / Publish / Export, and migration posture now use one explicit contract`
    owner: codex
    actual: 25m
@@ -10964,9 +10976,9 @@ The live repo is organized around these boundaries:
 
 - `product/` is the product surface
   - `product/app/` is the canonical browser shell and Vite root
-  - `product/education/` holds shipped lesson sources plus publish/export and migration compatibility material
+  - `product/education/` holds shipped lesson sources plus publish/export and migration compatibility material; it is not the live draft-authoring path
 - `system/` is the runtime boundary
-  - `system/author-lessons/` owns Write Mode and the browser-backed authoring store
+  - `system/author-lessons/` owns Write Mode and the browser-backed authoring store; this is the live day-to-day authoring path
   - `system/lesson-engine/` compiles lesson drafts or shipped lesson source into the canonical lesson package and writes derived docs to `system/lesson-engine/output/`
   - `system/animator-engine/` plays compiled lesson packages
 - `system/foundation/` contains shared frontmatter and markdown primitives
@@ -103202,6 +103214,7 @@ test('browser app smoke covers boot, navigation, lesson switch, script-lesson lo
 === tests/smoke/browser-authoring-smoke.test.js ===
 import test from 'node:test';
 import assert from 'node:assert/strict';
+import fs from 'node:fs/promises';
 import path from 'node:path';
 import { setTimeout as delay } from 'node:timers/promises';
 import { fileURLToPath } from 'node:url';
@@ -104527,6 +104540,117 @@ test('browser authoring smoke ignores an unpaired custom draft with the same les
     assert.equal(selection.firstStepTitle, shippedStepTitle);
     assert.equal(selection.runtimeSource, 'published');
     assert.match(selection.runtimeLabel, /Published Lesson/);
+
+    assert.deepEqual(pageErrors, []);
+    assert.deepEqual(consoleErrors, []);
+
+    await page.close();
+  } finally {
+    await browser?.close();
+    await server.close();
+  }
+});
+
+test('browser authoring smoke keeps Save store-only while Publish remains the explicit snapshot step', { timeout: 90000 }, async () => {
+  const server = await createServer({
+    configFile: path.resolve(repoRoot, 'vite.config.js'),
+    clearScreen: false,
+    logLevel: 'error',
+    server: {
+      host: '127.0.0.1',
+      port: 4178,
+      strictPort: false
+    }
+  });
+
+  let browser;
+
+  try {
+    await server.listen();
+
+    const appUrl = server.resolvedUrls?.local?.find(url => url.startsWith('http://127.0.0.1'))
+      || server.resolvedUrls?.local?.[0];
+
+    assert.ok(appUrl, 'Vite dev server did not expose a local URL.');
+
+    browser = await puppeteer.launch({
+      args: ['--disable-setuid-sandbox', '--no-sandbox'],
+      headless: true
+    });
+
+    const page = await browser.newPage();
+    const consoleErrors = [];
+    const pageErrors = [];
+    const lessonId = '09-human-first-script-demo';
+    const shippedLessonFilePath = path.resolve(
+      repoRoot,
+      'product/education/lessons/09-human-first-script-demo/source/lesson.script.md'
+    );
+    const originalShippedSource = await fs.readFile(shippedLessonFilePath, 'utf8');
+    const savedDraftStepTitle = 'Store Only Saved Draft Step';
+
+    page.on('console', message => {
+      if (message.type() === 'error') {
+        consoleErrors.push(message.text());
+      }
+    });
+    page.on('pageerror', error => {
+      pageErrors.push(error.message);
+    });
+
+    await page.goto(`${appUrl}?workspace=authoring&lesson=${lessonId}`, { waitUntil: 'domcontentloaded' });
+
+    await waitForCondition(
+      async () => page.$('#authoringScriptEditor').then(Boolean),
+      'the authoring workspace for explicit save/publish guardrails'
+    );
+    await waitForCondition(
+      async () => page.$eval('#authoringScriptEditor', element => {
+        if (!(element instanceof HTMLElement) || !element.authoringEditor) {
+          throw new Error('Expected the CodeMirror authoring editor host.');
+        }
+
+        return element.authoringEditor.getValue().includes('title: Start: Empty App Shell');
+      }).catch(() => false),
+      'the paired 09 draft body before guardrail assertions'
+    );
+
+    const pairedDraftSource = await readPairedDraftSourceMarkdown(page, lessonId);
+    const storeOnlyDraftSource = pairedDraftSource.replace(
+      'title: Start: Empty App Shell',
+      `title: ${savedDraftStepTitle}`
+    );
+    await replaceEditorSelectionText(page, storeOnlyDraftSource);
+    await waitForCondition(
+      async () => page.$eval('#authoringSaveState', element => element.textContent?.includes('Unsaved Changes') || false).catch(() => false),
+      'the draft to become dirty before save'
+    );
+
+    await page.click('#authoringSaveDraftBtn');
+    await waitForCondition(
+      async () => page.$eval('#authoringSaveState', element => element.textContent?.includes('Draft Saved') || false).catch(() => false),
+      'the draft to save into the authoring store'
+    );
+
+    const playerSelectionAfterSave = await readPlayerSelectionSnapshot(page, lessonId);
+    const shippedSourceAfterSave = await fs.readFile(shippedLessonFilePath, 'utf8');
+    const editorSnapshotAfterSave = await readEditorCursorSnapshot(page);
+
+    assert.match(editorSnapshotAfterSave.value, /Store Only Saved Draft Step/);
+    assert.equal(
+      await page.$eval('#authoringPublishState', element => element.textContent?.trim() || ''),
+      'Not Published'
+    );
+    assert.equal(playerSelectionAfterSave.runtimeSource, 'playable-draft');
+    assert.equal(playerSelectionAfterSave.firstStepTitle, savedDraftStepTitle);
+    assert.equal(shippedSourceAfterSave, originalShippedSource);
+    assert.doesNotMatch(shippedSourceAfterSave, /Store Only Saved Draft Step/);
+
+    await page.click('#authoringPublishBtn');
+    await waitForCondition(
+      async () => page.$eval('#authoringPublishState', element => element.textContent?.includes('Published Lesson') || false).catch(() => false),
+      'the publish state to show an explicit published snapshot'
+    );
 
     assert.deepEqual(pageErrors, []);
     assert.deepEqual(consoleErrors, []);

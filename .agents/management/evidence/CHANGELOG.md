@@ -15,6 +15,9 @@ Update rules:
 
 ## Current Ledger
 
+1. `[review][medium] 2026-03-30 02:20 CEST - Closed TODO-013 by tightening the remaining root wording around the UI-first lesson path and adding a browser smoke guardrail that proves Save stays store-only, Play reads the saved draft, and Publish remains the explicit snapshot step while shipped lesson files stay untouched`
+   owner: codex
+   actual: 20m
 1. `[doc][medium] 2026-03-30 01:57 CEST - Closed TODO-012 by removing the repo-local lesson authoring split-brain across README, AGENTS, and local lesson architecture/authoring docs so Write Mode, the authoring store, Save / Play / Publish / Export, and migration posture now use one explicit contract`
    owner: codex
    actual: 25m

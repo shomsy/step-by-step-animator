@@ -52,6 +52,15 @@ flowchart TD
 - `system/animator-engine/` owns playback of the compiled lesson package
 - `product/education/` holds shipped lesson materialization and migration compatibility inputs
 
+These seams must stay separate and banal:
+
+- `authoring store`
+- `compile bridge`
+- `playback state`
+- `publish/export`
+
+Do not let support logic blur them back into one mixed lesson CMS flow.
+
 ## 4. Save, Play, Publish, Export
 
 - `Save`
