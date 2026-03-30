@@ -15,6 +15,9 @@ Update rules:
 
 ## Current Ledger
 
+1. `[bug][medium] 2026-03-30 03:38 CEST - Closed TODO-016 by fixing real browser paste replacement in Write Mode so full lesson sources and large multi-step lesson bodies replace the starter scaffold correctly, then proving save and reload through the actual paste event path`
+   owner: codex
+   actual: 30m
 1. `[feature][medium] 2026-03-30 03:23 CEST - Closed TODO-015 by adding shared human-readable Write Mode diagnostics, reusing the same normalized validation data in the right inspector and inline editor linting, and proving the new guidance path with contract plus browser-smoke coverage`
    owner: codex
    actual: 30m

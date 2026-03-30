@@ -104,6 +104,40 @@ async function replaceEditorSelectionText(page, nextText) {
   }, nextText);
 }
 
+async function dispatchEditorPasteText(page, nextText, { replaceAll = false } = {}) {
+  await page.$eval('#authoringScriptEditor', (element, { text, shouldReplaceAll }) => {
+    if (!(element instanceof HTMLElement) || !element.authoringEditor) {
+      throw new Error('Expected the CodeMirror authoring editor host.');
+    }
+
+    const editor = element.authoringEditor;
+    const content = element.querySelector('.cm-content');
+
+    if (!(content instanceof HTMLElement)) {
+      throw new Error('Expected the CodeMirror content surface.');
+    }
+
+    editor.focus();
+
+    if (shouldReplaceAll) {
+      const currentValue = editor.getValue();
+      editor.setSelectionRange(0, currentValue.length);
+    }
+
+    const clipboardData = new DataTransfer();
+
+    clipboardData.setData('text/plain', text);
+    content.dispatchEvent(new ClipboardEvent('paste', {
+      clipboardData,
+      bubbles: true,
+      cancelable: true
+    }));
+  }, {
+    text: nextText,
+    shouldReplaceAll: replaceAll
+  });
+}
+
 async function readPairedDraftSourceMarkdown(page, shippedLessonId) {
   return page.evaluate(async ({ repoPath, lessonId }) => {
     const [{ openAuthoringSqlite }, { readShippedLessonScripts }] = await Promise.all([
@@ -874,7 +908,7 @@ test('browser authoring smoke plays a healthy custom draft through the normal pl
   }
 });
 
-test('browser authoring smoke keeps very large lesson bodies intact through analysis and save', { timeout: 90000 }, async () => {
+test('browser authoring smoke keeps very large lesson bodies intact through the real paste event and save', { timeout: 90000 }, async () => {
   const server = await createServer({
     configFile: path.resolve(repoRoot, 'vite.config.js'),
     clearScreen: false,
@@ -934,16 +968,26 @@ test('browser authoring smoke keeps very large lesson bodies intact through anal
     const largeLessonBody = buildLargeLessonBody();
     const expectedLastStepId = 'bulk-step-140';
 
-    await replaceEditorSelectionText(page, largeLessonBody);
+    await dispatchEditorPasteText(page, largeLessonBody);
 
     await waitForCondition(
-      async () => page.evaluate(expectedLength => {
+      async () => page.evaluate(expectedBody => {
         const editor = document.querySelector('#authoringScriptEditor');
         return editor instanceof HTMLElement
           && editor.authoringEditor
-          && editor.authoringEditor.getValue().length === expectedLength;
-      }, largeLessonBody.length),
+          && editor.authoringEditor.getValue().trimEnd() === expectedBody.trimEnd();
+      }, largeLessonBody),
       'the large lesson body to remain fully present in the editor'
+    );
+
+    await waitForCondition(
+      async () => page.evaluate(() => {
+        const editor = document.querySelector('#authoringScriptEditor');
+        return editor instanceof HTMLElement
+          && editor.authoringEditor
+          && !editor.authoringEditor.getValue().includes('# Step: start-here');
+      }),
+      'the starter body to be replaced instead of appended after paste'
     );
 
     await waitForCondition(
@@ -978,12 +1022,12 @@ test('browser authoring smoke keeps very large lesson bodies intact through anal
     await page.reload({ waitUntil: 'domcontentloaded' });
 
     await waitForCondition(
-      async () => page.evaluate(expectedLength => {
+      async () => page.evaluate(expectedBody => {
         const editor = document.querySelector('#authoringScriptEditor');
         return editor instanceof HTMLElement
           && editor.authoringEditor
-          && editor.authoringEditor.getValue().length === expectedLength;
-      }, largeLessonBody.length),
+          && editor.authoringEditor.getValue().trimEnd() === expectedBody.trimEnd();
+      }, largeLessonBody),
       'the reloaded large lesson body to remain fully present'
     );
 
@@ -1002,7 +1046,7 @@ test('browser authoring smoke keeps very large lesson bodies intact through anal
   }
 });
 
-test('browser authoring smoke imports a full large lesson source without duplicating hidden frontmatter', { timeout: 90000 }, async () => {
+test('browser authoring smoke imports a full large lesson source through the real paste event without duplicating hidden frontmatter', { timeout: 90000 }, async () => {
   const server = await createServer({
     configFile: path.resolve(repoRoot, 'vite.config.js'),
     clearScreen: false,
@@ -1060,7 +1104,7 @@ test('browser authoring smoke imports a full large lesson source without duplica
     );
 
     const largeLessonSource = buildLargeLessonSource();
-    await replaceEditorSelectionText(page, largeLessonSource);
+    await dispatchEditorPasteText(page, largeLessonSource);
 
     await waitForCondition(
       async () => page.$eval('#authoringLessonTitle', element => element.textContent?.includes('Imported Large Lesson') || false),
@@ -1100,6 +1144,16 @@ test('browser authoring smoke imports a full large lesson source without duplica
           && !value.includes('lessonId: imported-large-lesson');
       }),
       'the editor body to show the imported lesson body without frontmatter duplication'
+    );
+
+    await waitForCondition(
+      async () => page.evaluate(() => {
+        const editor = document.querySelector('#authoringScriptEditor');
+        return editor instanceof HTMLElement
+          && editor.authoringEditor
+          && !editor.authoringEditor.getValue().includes('# Step: start-here');
+      }),
+      'the full source import to replace the starter body instead of appending after it'
     );
 
     await page.keyboard.down('Control');

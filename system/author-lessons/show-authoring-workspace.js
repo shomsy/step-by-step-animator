@@ -22,6 +22,7 @@ import { readAuthoringDiagnostics } from './read-authoring-diagnostics.js';
 let metadataProseEditorFactoryPromise = null;
 
 const ANALYSIS_DEBOUNCE_MS = 120;
+const BULK_LESSON_PASTE_STEP_THRESHOLD = 2;
 const METADATA_STATUS_OPTIONS = ['draft', 'active', 'broken', 'deprecated'];
 const PREVIEW_TYPE_OPTIONS = ['dom', 'terminal', 'markdown', 'diagram', 'none'];
 
@@ -289,6 +290,52 @@ function readFullLessonSourceFromPaste(pastedText) {
   } catch {
     return '';
   }
+}
+
+function readLessonBodyFromPaste(pastedText) {
+  const bodyMarkdown = normalizeMultilineText(pastedText).trim();
+  const stepHeadingMatches = bodyMarkdown.match(/^# Step:\s+/gm) || [];
+  const sceneHeadingMatches = bodyMarkdown.match(/^## Scene:\s+/gm) || [];
+
+  if (!bodyMarkdown.startsWith('# Step:')) {
+    return '';
+  }
+
+  if (!stepHeadingMatches.length || !sceneHeadingMatches.length) {
+    return '';
+  }
+
+  return bodyMarkdown;
+}
+
+function isFreshStarterDraft(state) {
+  const selectedDraft = state.workspaceSnapshot?.selectedDraft;
+  const parsedLesson = state.analysis?.parsedLesson;
+  const firstStep = parsedLesson?.steps?.[0];
+  const firstScene = firstStep?.scenes?.[0];
+  const lessonId = normalizeText(parsedLesson?.attributes?.lessonId || selectedDraft?.lessonId);
+
+  return Boolean(selectedDraft)
+    && selectedDraft.sourceOrigin === 'custom'
+    && /^new-lesson-\d+$/.test(lessonId)
+    && parsedLesson?.steps?.length === 1
+    && firstStep?.stepId === 'start-here'
+    && firstScene?.sceneId === 'start-here-scene';
+}
+
+function shouldReplaceWriterBodyOnPaste(state, visibleBodyMarkdown, selectionStart, selectionEnd, pastedBodyMarkdown) {
+  const fullBodySelected = selectionStart === 0 && selectionEnd === visibleBodyMarkdown.length;
+  const stepHeadingMatches = pastedBodyMarkdown.match(/^# Step:\s+/gm) || [];
+
+  if (fullBodySelected) {
+    return true;
+  }
+
+  if (isFreshStarterDraft(state) && stepHeadingMatches.length >= 1) {
+    return true;
+  }
+
+  return stepHeadingMatches.length >= BULK_LESSON_PASTE_STEP_THRESHOLD && visibleBodyMarkdown.trim() === '';
 }
 
 function readVisibleEditorOffset(state, sourceOffset) {
@@ -1538,6 +1585,20 @@ function importFullLessonSourceIntoEditor(state, parts, sourceMarkdown) {
   });
 }
 
+function importLessonBodyIntoEditor(state, parts, bodyMarkdown) {
+  const nextBodyMarkdown = normalizeMultilineText(bodyMarkdown).trim();
+  const nextSourceMarkdown = `${state.writerView.hiddenPrefixMarkdown}${nextBodyMarkdown}`;
+  const selectionOffset = readDefaultWriterSelectionOffset(nextSourceMarkdown);
+
+  applyEditorSourceChange(state, parts, {
+    nextValue: nextSourceMarkdown,
+    selectionStart: selectionOffset,
+    selectionEnd: selectionOffset,
+    statusMessage: 'Lesson body imported into Write Mode.',
+    statusTone: 'success'
+  });
+}
+
 function insertSnippetIntoEditor(state, parts, {
   actionName,
   insertionStart,
@@ -1843,17 +1904,28 @@ export async function showAuthoringWorkspace({
     onPasteText({ text, selectionStart, selectionEnd }) {
       const importedSource = readFullLessonSourceFromPaste(text);
       const visibleBodyMarkdown = parts.editorController.getValue();
-      const fullBodySelected = selectionStart === 0 && selectionEnd === visibleBodyMarkdown.length;
+      const importedBody = readLessonBodyFromPaste(text);
 
-      if (!importedSource || !fullBodySelected) {
-        return false;
+      if (importedSource) {
+        clearDeferredAnalysis();
+        state.analysisPending = false;
+        importFullLessonSourceIntoEditor(state, parts, importedSource);
+        renderWorkspace(state, parts);
+        return true;
       }
 
-      clearDeferredAnalysis();
-      state.analysisPending = false;
-      importFullLessonSourceIntoEditor(state, parts, importedSource);
-      renderWorkspace(state, parts);
-      return true;
+      if (
+        importedBody
+        && shouldReplaceWriterBodyOnPaste(state, visibleBodyMarkdown, selectionStart, selectionEnd, importedBody)
+      ) {
+        clearDeferredAnalysis();
+        state.analysisPending = false;
+        importLessonBodyIntoEditor(state, parts, importedBody);
+        renderWorkspace(state, parts);
+        return true;
+      }
+
+      return false;
     },
     onCursorChange() {
       syncCursorState();

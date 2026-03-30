@@ -10231,6 +10231,9 @@ Update rules:
 
 ## Current Ledger
 
+1. `[bug][medium] 2026-03-30 03:38 CEST - Closed TODO-016 by fixing real browser paste replacement in Write Mode so full lesson sources and large multi-step lesson bodies replace the starter scaffold correctly, then proving save and reload through the actual paste event path`
+   owner: codex
+   actual: 30m
 1. `[feature][medium] 2026-03-30 03:23 CEST - Closed TODO-015 by adding shared human-readable Write Mode diagnostics, reusing the same normalized validation data in the right inspector and inline editor linting, and proving the new guidance path with contract plus browser-smoke coverage`
    owner: codex
    actual: 30m
@@ -10467,6 +10470,7 @@ The active implementation queue lives in `.agents/management/TODO.md`.
 The evidence ledger lives in `.agents/management/evidence/CHANGELOG.md`.
 
 - 2026-03-30 03:23 CEST - PLAN-009 completed: added shared human-readable authoring diagnostics so Write Mode keeps one validation truth across the right inspector and inline editor lint markers, with plain-language guidance and exact location jumps.
+- 2026-03-30 03:38 CEST - PLAN-010 completed: made real browser paste deterministic in Write Mode so full lesson sources and large multi-step lesson bodies replace the starter scaffold correctly, then proved the behavior through the actual `paste` event path with save and reload coverage.
 - 2026-03-29 20:20 CEST - PLAN-006 completed: shipped a read-only player draft-override seam so the normal player prefers the latest healthy saved paired draft, fails closed to the shipped lesson when the saved draft is broken, and keeps the lesson picker deterministic.
 - 2026-03-30 01:15 CEST - PLAN-008 completed: tightened the UI-backed authoring contract with a shared runtime-state module, explicit Save/Play/Publish labels, a browser restore-version recovery proof, and updated authoring docs so the draft/play/publish contract stays explicit.
 - 2026-03-30 01:04 CEST - PLAN-007 completed: shipped the UI-backed lesson authoring bridge so Write Mode owns draft creation, save/reopen, playability state, published snapshot visibility, and fail-closed fallback semantics without requiring filesystem source scaffolds during authoring.
@@ -95391,6 +95395,7 @@ import { readAuthoringDiagnostics } from './read-authoring-diagnostics.js';
 let metadataProseEditorFactoryPromise = null;
 
 const ANALYSIS_DEBOUNCE_MS = 120;
+const BULK_LESSON_PASTE_STEP_THRESHOLD = 2;
 const METADATA_STATUS_OPTIONS = ['draft', 'active', 'broken', 'deprecated'];
 const PREVIEW_TYPE_OPTIONS = ['dom', 'terminal', 'markdown', 'diagram', 'none'];
 
@@ -95658,6 +95663,52 @@ function readFullLessonSourceFromPaste(pastedText) {
   } catch {
     return '';
   }
+}
+
+function readLessonBodyFromPaste(pastedText) {
+  const bodyMarkdown = normalizeMultilineText(pastedText).trim();
+  const stepHeadingMatches = bodyMarkdown.match(/^# Step:\s+/gm) || [];
+  const sceneHeadingMatches = bodyMarkdown.match(/^## Scene:\s+/gm) || [];
+
+  if (!bodyMarkdown.startsWith('# Step:')) {
+    return '';
+  }
+
+  if (!stepHeadingMatches.length || !sceneHeadingMatches.length) {
+    return '';
+  }
+
+  return bodyMarkdown;
+}
+
+function isFreshStarterDraft(state) {
+  const selectedDraft = state.workspaceSnapshot?.selectedDraft;
+  const parsedLesson = state.analysis?.parsedLesson;
+  const firstStep = parsedLesson?.steps?.[0];
+  const firstScene = firstStep?.scenes?.[0];
+  const lessonId = normalizeText(parsedLesson?.attributes?.lessonId || selectedDraft?.lessonId);
+
+  return Boolean(selectedDraft)
+    && selectedDraft.sourceOrigin === 'custom'
+    && /^new-lesson-\d+$/.test(lessonId)
+    && parsedLesson?.steps?.length === 1
+    && firstStep?.stepId === 'start-here'
+    && firstScene?.sceneId === 'start-here-scene';
+}
+
+function shouldReplaceWriterBodyOnPaste(state, visibleBodyMarkdown, selectionStart, selectionEnd, pastedBodyMarkdown) {
+  const fullBodySelected = selectionStart === 0 && selectionEnd === visibleBodyMarkdown.length;
+  const stepHeadingMatches = pastedBodyMarkdown.match(/^# Step:\s+/gm) || [];
+
+  if (fullBodySelected) {
+    return true;
+  }
+
+  if (isFreshStarterDraft(state) && stepHeadingMatches.length >= 1) {
+    return true;
+  }
+
+  return stepHeadingMatches.length >= BULK_LESSON_PASTE_STEP_THRESHOLD && visibleBodyMarkdown.trim() === '';
 }
 
 function readVisibleEditorOffset(state, sourceOffset) {
@@ -96907,6 +96958,20 @@ function importFullLessonSourceIntoEditor(state, parts, sourceMarkdown) {
   });
 }
 
+function importLessonBodyIntoEditor(state, parts, bodyMarkdown) {
+  const nextBodyMarkdown = normalizeMultilineText(bodyMarkdown).trim();
+  const nextSourceMarkdown = `${state.writerView.hiddenPrefixMarkdown}${nextBodyMarkdown}`;
+  const selectionOffset = readDefaultWriterSelectionOffset(nextSourceMarkdown);
+
+  applyEditorSourceChange(state, parts, {
+    nextValue: nextSourceMarkdown,
+    selectionStart: selectionOffset,
+    selectionEnd: selectionOffset,
+    statusMessage: 'Lesson body imported into Write Mode.',
+    statusTone: 'success'
+  });
+}
+
 function insertSnippetIntoEditor(state, parts, {
   actionName,
   insertionStart,
@@ -97212,17 +97277,28 @@ export async function showAuthoringWorkspace({
     onPasteText({ text, selectionStart, selectionEnd }) {
       const importedSource = readFullLessonSourceFromPaste(text);
       const visibleBodyMarkdown = parts.editorController.getValue();
-      const fullBodySelected = selectionStart === 0 && selectionEnd === visibleBodyMarkdown.length;
+      const importedBody = readLessonBodyFromPaste(text);
 
-      if (!importedSource || !fullBodySelected) {
-        return false;
+      if (importedSource) {
+        clearDeferredAnalysis();
+        state.analysisPending = false;
+        importFullLessonSourceIntoEditor(state, parts, importedSource);
+        renderWorkspace(state, parts);
+        return true;
       }
 
-      clearDeferredAnalysis();
-      state.analysisPending = false;
-      importFullLessonSourceIntoEditor(state, parts, importedSource);
-      renderWorkspace(state, parts);
-      return true;
+      if (
+        importedBody
+        && shouldReplaceWriterBodyOnPaste(state, visibleBodyMarkdown, selectionStart, selectionEnd, importedBody)
+      ) {
+        clearDeferredAnalysis();
+        state.analysisPending = false;
+        importLessonBodyIntoEditor(state, parts, importedBody);
+        renderWorkspace(state, parts);
+        return true;
+      }
+
+      return false;
     },
     onCursorChange() {
       syncCursorState();
@@ -104191,6 +104267,40 @@ async function replaceEditorSelectionText(page, nextText) {
   }, nextText);
 }
 
+async function dispatchEditorPasteText(page, nextText, { replaceAll = false } = {}) {
+  await page.$eval('#authoringScriptEditor', (element, { text, shouldReplaceAll }) => {
+    if (!(element instanceof HTMLElement) || !element.authoringEditor) {
+      throw new Error('Expected the CodeMirror authoring editor host.');
+    }
+
+    const editor = element.authoringEditor;
+    const content = element.querySelector('.cm-content');
+
+    if (!(content instanceof HTMLElement)) {
+      throw new Error('Expected the CodeMirror content surface.');
+    }
+
+    editor.focus();
+
+    if (shouldReplaceAll) {
+      const currentValue = editor.getValue();
+      editor.setSelectionRange(0, currentValue.length);
+    }
+
+    const clipboardData = new DataTransfer();
+
+    clipboardData.setData('text/plain', text);
+    content.dispatchEvent(new ClipboardEvent('paste', {
+      clipboardData,
+      bubbles: true,
+      cancelable: true
+    }));
+  }, {
+    text: nextText,
+    shouldReplaceAll: replaceAll
+  });
+}
+
 async function readPairedDraftSourceMarkdown(page, shippedLessonId) {
   return page.evaluate(async ({ repoPath, lessonId }) => {
     const [{ openAuthoringSqlite }, { readShippedLessonScripts }] = await Promise.all([
@@ -104961,7 +105071,7 @@ test('browser authoring smoke plays a healthy custom draft through the normal pl
   }
 });
 
-test('browser authoring smoke keeps very large lesson bodies intact through analysis and save', { timeout: 90000 }, async () => {
+test('browser authoring smoke keeps very large lesson bodies intact through the real paste event and save', { timeout: 90000 }, async () => {
   const server = await createServer({
     configFile: path.resolve(repoRoot, 'vite.config.js'),
     clearScreen: false,
@@ -105021,16 +105131,26 @@ test('browser authoring smoke keeps very large lesson bodies intact through anal
     const largeLessonBody = buildLargeLessonBody();
     const expectedLastStepId = 'bulk-step-140';
 
-    await replaceEditorSelectionText(page, largeLessonBody);
+    await dispatchEditorPasteText(page, largeLessonBody);
 
     await waitForCondition(
-      async () => page.evaluate(expectedLength => {
+      async () => page.evaluate(expectedBody => {
         const editor = document.querySelector('#authoringScriptEditor');
         return editor instanceof HTMLElement
           && editor.authoringEditor
-          && editor.authoringEditor.getValue().length === expectedLength;
-      }, largeLessonBody.length),
+          && editor.authoringEditor.getValue().trimEnd() === expectedBody.trimEnd();
+      }, largeLessonBody),
       'the large lesson body to remain fully present in the editor'
+    );
+
+    await waitForCondition(
+      async () => page.evaluate(() => {
+        const editor = document.querySelector('#authoringScriptEditor');
+        return editor instanceof HTMLElement
+          && editor.authoringEditor
+          && !editor.authoringEditor.getValue().includes('# Step: start-here');
+      }),
+      'the starter body to be replaced instead of appended after paste'
     );
 
     await waitForCondition(
@@ -105065,12 +105185,12 @@ test('browser authoring smoke keeps very large lesson bodies intact through anal
     await page.reload({ waitUntil: 'domcontentloaded' });
 
     await waitForCondition(
-      async () => page.evaluate(expectedLength => {
+      async () => page.evaluate(expectedBody => {
         const editor = document.querySelector('#authoringScriptEditor');
         return editor instanceof HTMLElement
           && editor.authoringEditor
-          && editor.authoringEditor.getValue().length === expectedLength;
-      }, largeLessonBody.length),
+          && editor.authoringEditor.getValue().trimEnd() === expectedBody.trimEnd();
+      }, largeLessonBody),
       'the reloaded large lesson body to remain fully present'
     );
 
@@ -105089,7 +105209,7 @@ test('browser authoring smoke keeps very large lesson bodies intact through anal
   }
 });
 
-test('browser authoring smoke imports a full large lesson source without duplicating hidden frontmatter', { timeout: 90000 }, async () => {
+test('browser authoring smoke imports a full large lesson source through the real paste event without duplicating hidden frontmatter', { timeout: 90000 }, async () => {
   const server = await createServer({
     configFile: path.resolve(repoRoot, 'vite.config.js'),
     clearScreen: false,
@@ -105147,7 +105267,7 @@ test('browser authoring smoke imports a full large lesson source without duplica
     );
 
     const largeLessonSource = buildLargeLessonSource();
-    await replaceEditorSelectionText(page, largeLessonSource);
+    await dispatchEditorPasteText(page, largeLessonSource);
 
     await waitForCondition(
       async () => page.$eval('#authoringLessonTitle', element => element.textContent?.includes('Imported Large Lesson') || false),
@@ -105187,6 +105307,16 @@ test('browser authoring smoke imports a full large lesson source without duplica
           && !value.includes('lessonId: imported-large-lesson');
       }),
       'the editor body to show the imported lesson body without frontmatter duplication'
+    );
+
+    await waitForCondition(
+      async () => page.evaluate(() => {
+        const editor = document.querySelector('#authoringScriptEditor');
+        return editor instanceof HTMLElement
+          && editor.authoringEditor
+          && !editor.authoringEditor.getValue().includes('# Step: start-here');
+      }),
+      'the full source import to replace the starter body instead of appending after it'
     );
 
     await page.keyboard.down('Control');
