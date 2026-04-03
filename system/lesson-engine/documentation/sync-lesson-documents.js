@@ -16,13 +16,15 @@ function collectSourceLessonFolders() {
     return [];
   }
 
-  return fs.readdirSync(educationLessonsRoot, { withFileTypes: true })
-    .filter(entry => entry.isDirectory())
-    .map(entry => path.join(educationLessonsRoot, entry.name, 'source'))
-    .filter(sourceFolder => (
-      fs.existsSync(path.join(sourceFolder, 'lesson.md'))
-      || fs.existsSync(path.join(sourceFolder, 'lesson.script.md'))
-    ));
+  return fs
+    .readdirSync(educationLessonsRoot, { withFileTypes: true })
+    .filter((entry) => entry.isDirectory())
+    .map((entry) => path.join(educationLessonsRoot, entry.name, 'source'))
+    .filter(
+      (sourceFolder) =>
+        fs.existsSync(path.join(sourceFolder, 'lesson.md')) ||
+        fs.existsSync(path.join(sourceFolder, 'lesson.script.md'))
+    );
 }
 
 function removeObsoleteGeneratedFiles(outputFolder, currentFileNames) {
@@ -31,10 +33,14 @@ function removeObsoleteGeneratedFiles(outputFolder, currentFileNames) {
   }
 
   fs.readdirSync(outputFolder, { withFileTypes: true })
-    .filter(entry => entry.isFile() && entry.name.endsWith('.md') && !currentFileNames.has(entry.name))
-    .forEach(entry => {
+    .filter(
+      (entry) => entry.isFile() && entry.name.endsWith('.md') && !currentFileNames.has(entry.name)
+    )
+    .forEach((entry) => {
       fs.unlinkSync(path.join(outputFolder, entry.name));
-      console.log(`Removed obsolete: ${path.relative(process.cwd(), path.join(outputFolder, entry.name))}`);
+      console.log(
+        `Removed obsolete: ${path.relative(process.cwd(), path.join(outputFolder, entry.name))}`
+      );
     });
 }
 
@@ -43,17 +49,17 @@ function buildLessonDocument({ lessonFolder, compiledLesson }) {
   const lessonIntro = compiledLesson.lessonIntro || '';
   const goal = {
     title: compiledLesson.goalTitle,
-    imageCaption: compiledLesson.goalImageCaption
+    imageCaption: compiledLesson.goalImageCaption,
   };
   const homework = {
     enabled: Array.isArray(compiledLesson.homeworkItems) && compiledLesson.homeworkItems.length > 0,
-    items: compiledLesson.homeworkItems || []
+    items: compiledLesson.homeworkItems || [],
   };
 
   const parts = [
     '<!-- Generated from the source-only lesson package. -->',
     `# ${lessonTitle}`,
-    lessonIntro
+    lessonIntro,
   ].filter(Boolean);
 
   if (goal.title || goal.imageCaption) {
@@ -77,7 +83,7 @@ function buildLessonDocument({ lessonFolder, compiledLesson }) {
   const homeworkItems = Array.isArray(homework.items) ? homework.items : [];
   if (homework.enabled && homeworkItems.length) {
     parts.push('## Homework');
-    homeworkItems.forEach(item => {
+    homeworkItems.forEach((item) => {
       parts.push(`- ${item}`);
     });
   }
@@ -95,7 +101,7 @@ function writeLessonDocument(sourceFolder) {
     outputFilePath,
     buildLessonDocument({
       lessonFolder,
-      compiledLesson
+      compiledLesson,
     }),
     'utf8'
   );
@@ -105,12 +111,12 @@ function writeLessonDocument(sourceFolder) {
 
 ensureDir(lessonDocumentsOutputRoot);
 
-const currentFileNames = new Set(
-  collectSourceLessonFolders().map(writeLessonDocument)
-);
+const currentFileNames = new Set(collectSourceLessonFolders().map(writeLessonDocument));
 
 removeObsoleteGeneratedFiles(lessonDocumentsOutputRoot, currentFileNames);
 
-currentFileNames.forEach(fileName => {
-  console.log(`Generated: ${path.relative(process.cwd(), path.join(lessonDocumentsOutputRoot, fileName))}`);
+currentFileNames.forEach((fileName) => {
+  console.log(
+    `Generated: ${path.relative(process.cwd(), path.join(lessonDocumentsOutputRoot, fileName))}`
+  );
 });

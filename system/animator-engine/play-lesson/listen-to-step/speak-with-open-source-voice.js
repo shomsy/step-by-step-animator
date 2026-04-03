@@ -8,19 +8,25 @@ function readOpenSourceVoiceProfile(narrationLanguagePreference) {
     return {
       voiceId: OPEN_SOURCE_SERBIAN_VOICE_ID,
       shortLabel: 'Open-source Piper · srpski fallback',
-      statusLabel: 'Open-source Piper koristi srpski fallback jer hrvatski model još nije dostupan.'
+      statusLabel:
+        'Open-source Piper koristi srpski fallback jer hrvatski model još nije dostupan.',
     };
   }
 
   return {
     voiceId: OPEN_SOURCE_SERBIAN_VOICE_ID,
     shortLabel: 'Open-source Piper · srpski medium',
-    statusLabel: 'Open-source Piper koristi srpski model.'
+    statusLabel: 'Open-source Piper koristi srpski model.',
   };
 }
 
 function formatDownloadPercent(progress) {
-  if (!progress || typeof progress.loaded !== 'number' || typeof progress.total !== 'number' || progress.total <= 0) {
+  if (
+    !progress ||
+    typeof progress.loaded !== 'number' ||
+    typeof progress.total !== 'number' ||
+    progress.total <= 0
+  ) {
     return null;
   }
 
@@ -49,7 +55,7 @@ function createAudioNarrationController({ ownerWindow, audioElement, audioUrl, p
   let hasFinished = false;
   let resolveFinished = null;
 
-  const whenFinished = new Promise(resolve => {
+  const whenFinished = new Promise((resolve) => {
     resolveFinished = resolve;
   });
 
@@ -86,7 +92,7 @@ function createAudioNarrationController({ ownerWindow, audioElement, audioUrl, p
       audioElement.pause();
       audioElement.currentTime = 0;
       finishNarration();
-    }
+    },
   };
 }
 
@@ -106,7 +112,10 @@ export async function readOpenSourceVoiceAvailability(narrationLanguagePreferenc
   return storedVoices.includes(voiceId);
 }
 
-export async function prepareOpenSourceVoice({ narrationLanguagePreference = 'sr', onStatusChange } = {}) {
+export async function prepareOpenSourceVoice({
+  narrationLanguagePreference = 'sr',
+  onStatusChange,
+} = {}) {
   const piperTts = await readPiperTtsModule();
   const { voiceId, statusLabel } = readOpenSourceVoiceProfile(narrationLanguagePreference);
 
@@ -117,7 +126,7 @@ export async function prepareOpenSourceVoice({ narrationLanguagePreference = 'sr
 
   onStatusChange?.(`${statusLabel} ${OPEN_SOURCE_PROVIDER_LABEL} priprema model…`);
 
-  await piperTts.download(voiceId, progress => {
+  await piperTts.download(voiceId, (progress) => {
     onStatusChange?.(composeOpenSourceStatus(progress));
   });
 
@@ -129,19 +138,24 @@ export async function speakWithOpenSourceVoice({
   text,
   speechRate,
   onStatusChange,
-  narrationLanguagePreference = 'sr'
+  narrationLanguagePreference = 'sr',
 }) {
   const piperTts = await readPiperTtsModule();
-  const { voiceId, shortLabel, statusLabel } = readOpenSourceVoiceProfile(narrationLanguagePreference);
+  const { voiceId, shortLabel, statusLabel } = readOpenSourceVoiceProfile(
+    narrationLanguagePreference
+  );
 
   onStatusChange?.(`${statusLabel} ${OPEN_SOURCE_PROVIDER_LABEL} priprema glas…`);
 
-  const audioBlob = await piperTts.predict({
-    text,
-    voiceId
-  }, progress => {
-    onStatusChange?.(composeOpenSourceStatus(progress));
-  });
+  const audioBlob = await piperTts.predict(
+    {
+      text,
+      voiceId,
+    },
+    (progress) => {
+      onStatusChange?.(composeOpenSourceStatus(progress));
+    }
+  );
 
   const audioUrl = ownerWindow.URL.createObjectURL(audioBlob);
   const audioElement = new ownerWindow.Audio(audioUrl);
@@ -152,7 +166,7 @@ export async function speakWithOpenSourceVoice({
     ownerWindow,
     audioElement,
     audioUrl,
-    providerLabel: shortLabel
+    providerLabel: shortLabel,
   });
 
   try {

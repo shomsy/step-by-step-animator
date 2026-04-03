@@ -40,7 +40,7 @@ function normalizeSceneStep(step) {
   assertKebabCase(stepId, 'Step ID');
 
   const focusHtmlNeedles = Array.isArray(step.focusHtmlNeedles)
-    ? step.focusHtmlNeedles.map(needle => normalizeString(needle)).filter(Boolean)
+    ? step.focusHtmlNeedles.map((needle) => normalizeString(needle)).filter(Boolean)
     : [];
 
   return {
@@ -50,7 +50,7 @@ function normalizeSceneStep(step) {
     intent,
     tag: normalizeString(step.tag),
     proTip: normalizeString(step.proTip),
-    focusHtmlNeedles
+    focusHtmlNeedles,
   };
 }
 
@@ -58,16 +58,16 @@ const SCENE_FIELD_NAMES = new Set(['narration', 'focus', 'code', 'preview', 'the
 const PREVIEW_ACTIONS = new Set(['apply-state', 'none']);
 
 function parseSceneFieldFragment(fieldName, fieldLines, stepId, sceneId) {
-  const fragment = fieldLines.length
-    ? `${fieldName}:\n${fieldLines.join('\n')}`
-    : `${fieldName}:`;
+  const fragment = fieldLines.length ? `${fieldName}:\n${fieldLines.join('\n')}` : `${fieldName}:`;
 
   let parsedValue;
 
   try {
     parsedValue = YAML.parse(fragment);
   } catch (error) {
-    throw new Error(`Failed to parse "${fieldName}" block in scene "${sceneId}" of step "${stepId}": ${error.message}`);
+    throw new Error(
+      `Failed to parse "${fieldName}" block in scene "${sceneId}" of step "${stepId}": ${error.message}`
+    );
   }
 
   return parsedValue?.[fieldName];
@@ -75,7 +75,10 @@ function parseSceneFieldFragment(fieldName, fieldLines, stepId, sceneId) {
 
 function normalizeSceneNarration(fieldValue, stepId, sceneId) {
   const narration = Array.isArray(fieldValue)
-    ? fieldValue.map(line => normalizeString(line)).filter(Boolean).join('\n')
+    ? fieldValue
+        .map((line) => normalizeString(line))
+        .filter(Boolean)
+        .join('\n')
     : normalizeString(fieldValue);
 
   if (!narration) {
@@ -91,7 +94,9 @@ function normalizeSceneFieldObject(fieldName, fieldValue, stepId, sceneId) {
   }
 
   if (!fieldValue || typeof fieldValue !== 'object' || Array.isArray(fieldValue)) {
-    throw new Error(`Scene "${sceneId}" in step "${stepId}" must define a valid "${fieldName}" block.`);
+    throw new Error(
+      `Scene "${sceneId}" in step "${stepId}" must define a valid "${fieldName}" block.`
+    );
   }
 
   return fieldValue;
@@ -111,14 +116,14 @@ function normalizeSceneBlock({ sceneId, lines }, stepId) {
 
     collectedFields.push({
       fieldName: currentFieldName,
-      fieldLines: currentFieldLines
+      fieldLines: currentFieldLines,
     });
 
     currentFieldName = '';
     currentFieldLines = [];
   }
 
-  lines.forEach(line => {
+  lines.forEach((line) => {
     const topLevelFieldMatch = line.match(/^([a-z][\w-]*):\s*(.*)$/i);
 
     if (topLevelFieldMatch && SCENE_FIELD_NAMES.has(topLevelFieldMatch[1])) {
@@ -130,7 +135,9 @@ function normalizeSceneBlock({ sceneId, lines }, stepId) {
 
     if (!currentFieldName) {
       if (normalizeString(line)) {
-        throw new Error(`Scene "${sceneId}" in step "${stepId}" must start with a known field such as narration.`);
+        throw new Error(
+          `Scene "${sceneId}" in step "${stepId}" must start with a known field such as narration.`
+        );
       }
 
       return;
@@ -146,7 +153,9 @@ function normalizeSceneBlock({ sceneId, lines }, stepId) {
 
   collectedFields.forEach(({ fieldName, fieldLines }) => {
     if (seenFields.has(fieldName)) {
-      throw new Error(`Scene "${sceneId}" in step "${stepId}" defines "${fieldName}" more than once.`);
+      throw new Error(
+        `Scene "${sceneId}" in step "${stepId}" defines "${fieldName}" more than once.`
+      );
     }
 
     seenFields.add(fieldName);
@@ -171,7 +180,9 @@ function normalizeSceneBlock({ sceneId, lines }, stepId) {
   }
 
   if (!scene.focus && !scene.code && !scene.preview && !scene.theory) {
-    throw new Error(`Scene "${sceneId}" in step "${stepId}" must define focus, code, preview, or theory.`);
+    throw new Error(
+      `Scene "${sceneId}" in step "${stepId}" must define focus, code, preview, or theory.`
+    );
   }
 
   if (scene.focus && !normalizeString(scene.focus.artifactId)) {
@@ -193,7 +204,9 @@ function normalizeSceneBlock({ sceneId, lines }, stepId) {
     scene.preview.target = normalizeString(scene.preview.target);
 
     if (previewAction !== 'none' && !scene.preview.target) {
-      throw new Error(`Scene "${sceneId}" in step "${stepId}" must define preview.target when preview.action is "${previewAction}".`);
+      throw new Error(
+        `Scene "${sceneId}" in step "${stepId}" must define preview.target when preview.action is "${previewAction}".`
+      );
     }
   }
 
@@ -218,10 +231,13 @@ function readSectionHeadings(body) {
       return;
     }
 
-    const parsedScene = normalizeSceneBlock({
-      sceneId: currentScene.sceneId,
-      lines: currentSceneLines
-    }, currentStepId);
+    const parsedScene = normalizeSceneBlock(
+      {
+        sceneId: currentScene.sceneId,
+        lines: currentSceneLines,
+      },
+      currentStepId
+    );
 
     scenesByStep.get(currentStepId).push(parsedScene);
     currentScene = null;
@@ -258,12 +274,12 @@ function readSectionHeadings(body) {
       flushCurrentScene();
       currentScene = {
         sceneId: normalizeString(sceneMatch[1]),
-        lineNumber: index + 1
+        lineNumber: index + 1,
       };
       currentSceneLines = [];
       sceneHeadings.push({
         stepId: currentStepId,
-        sceneId: currentScene.sceneId
+        sceneId: currentScene.sceneId,
       });
       return;
     }
@@ -290,7 +306,7 @@ function readSectionHeadings(body) {
   return {
     stepHeadings,
     sceneHeadings,
-    scenesByStep
+    scenesByStep,
   };
 }
 
@@ -316,7 +332,7 @@ export function readScenesContract(markdown) {
 
   const stepIds = new Set();
 
-  steps.forEach(step => {
+  steps.forEach((step) => {
     if (stepIds.has(step.stepId)) {
       throw new Error(`scenes.md declares step "${step.stepId}" more than once in frontmatter.`);
     }
@@ -342,7 +358,7 @@ export function readScenesContract(markdown) {
     }
 
     const sceneIds = new Set();
-    const normalizedScenes = stepScenes.map(scene => {
+    const normalizedScenes = stepScenes.map((scene) => {
       if (sceneIds.has(scene.sceneId)) {
         throw new Error(`Step "${step.stepId}" defines scene "${scene.sceneId}" more than once.`);
       }
@@ -360,6 +376,6 @@ export function readScenesContract(markdown) {
     steps,
     body,
     stepHeadings,
-    sceneHeadings
+    sceneHeadings,
   };
 }

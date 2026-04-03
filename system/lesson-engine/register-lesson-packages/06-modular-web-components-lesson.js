@@ -4,5 +4,5 @@ import { compileRegisteredLessonScript } from './compile-registered-lesson-scrip
 
 export const ModularWebComponentsLesson = compileRegisteredLessonScript({
   scriptMarkdown,
-  goalImageSrc: goalImage
+  goalImageSrc: goalImage,
 });

@@ -3,7 +3,7 @@ export function showStepTimeline({
   steps,
   currentStepNumber,
   savedStepNumbers,
-  goToStepNumber
+  goToStepNumber,
 }) {
   lessonParts.stepTimeline.innerHTML = '';
 

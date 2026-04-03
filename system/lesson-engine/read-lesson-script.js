@@ -4,7 +4,7 @@ import {
   assertKebabCase,
   assertOneOf,
   isPlainObject,
-  normalizeString
+  normalizeString,
 } from './build-compiled-lesson.js';
 
 const SCENE_SECTION_NAMES = new Set(['narration', 'preview', 'theory']);
@@ -42,8 +42,8 @@ function readInlineScalarValue(value) {
   const normalizedValue = normalizeString(value);
 
   if (
-    (normalizedValue.startsWith('"') && normalizedValue.endsWith('"'))
-    || (normalizedValue.startsWith('\'') && normalizedValue.endsWith('\''))
+    (normalizedValue.startsWith('"') && normalizedValue.endsWith('"')) ||
+    (normalizedValue.startsWith("'") && normalizedValue.endsWith("'"))
   ) {
     return normalizedValue.slice(1, -1);
   }
@@ -53,7 +53,7 @@ function readInlineScalarValue(value) {
 
 function readNarrationSection(lines, stepId, sceneId) {
   const narration = trimBlankEdges(lines)
-    .map(line => line.trimEnd())
+    .map((line) => line.trimEnd())
     .join('\n')
     .trim();
 
@@ -70,12 +70,14 @@ function readCodeFence(lines, stepId, sceneId, artifactId) {
   const closingFence = trimmedLines.at(-1)?.trim();
 
   if (!openingFence || closingFence !== '```') {
-    throw new Error(`Scene "${sceneId}" in step "${stepId}" must wrap "Show Code: ${artifactId}" in a fenced code block.`);
+    throw new Error(
+      `Scene "${sceneId}" in step "${stepId}" must wrap "Show Code: ${artifactId}" in a fenced code block.`
+    );
   }
 
   return {
     fenceLanguage: normalizeString(openingFence[1]),
-    codeText: trimmedLines.slice(1, -1).join('\n')
+    codeText: trimmedLines.slice(1, -1).join('\n'),
   };
 }
 
@@ -90,12 +92,14 @@ function normalizePreviewSection(previewValue, stepId, sceneId) {
   assertOneOf(action, new Set(['apply-state', 'none']), `Scene "${sceneId}" preview.action`);
 
   if (action !== 'none' && !target) {
-    throw new Error(`Scene "${sceneId}" in step "${stepId}" must define preview.target when preview.action is "${action}".`);
+    throw new Error(
+      `Scene "${sceneId}" in step "${stepId}" must define preview.target when preview.action is "${action}".`
+    );
   }
 
   return {
     action,
-    ...(target ? { target } : {})
+    ...(target ? { target } : {}),
   };
 }
 
@@ -121,11 +125,11 @@ function normalizeStepMetadata(stepId, metadataLines) {
     intent: '',
     tag: '',
     proTip: '',
-    focusHtmlNeedles: []
+    focusHtmlNeedles: [],
   };
   let currentKey = '';
 
-  lines.forEach(line => {
+  lines.forEach((line) => {
     const fieldMatch = line.match(/^([a-zA-Z][\w-]*):\s*(.*)$/);
 
     if (fieldMatch) {
@@ -186,7 +190,7 @@ function normalizeStepMetadata(stepId, metadataLines) {
   }
 
   const focusHtmlNeedles = Array.isArray(stepValue.focusHtmlNeedles)
-    ? stepValue.focusHtmlNeedles.map(needle => normalizeString(needle)).filter(Boolean)
+    ? stepValue.focusHtmlNeedles.map((needle) => normalizeString(needle)).filter(Boolean)
     : [];
 
   return {
@@ -196,7 +200,7 @@ function normalizeStepMetadata(stepId, metadataLines) {
     intent,
     tag: normalizeString(stepValue.tag),
     proTip: normalizeString(stepValue.proTip),
-    focusHtmlNeedles: stepValue.focusHtmlNeedles
+    focusHtmlNeedles,
   };
 }
 
@@ -206,18 +210,20 @@ function normalizeSceneSectionHeading(rawHeading, stepId, sceneId) {
   if (showCodeMatch) {
     return {
       type: 'show-code',
-      artifactId: normalizeString(showCodeMatch[1])
+      artifactId: normalizeString(showCodeMatch[1]),
     };
   }
 
   const normalizedHeading = normalizeString(rawHeading).toLowerCase();
 
   if (!SCENE_SECTION_NAMES.has(normalizedHeading)) {
-    throw new Error(`Scene "${sceneId}" in step "${stepId}" uses unsupported section "${rawHeading}".`);
+    throw new Error(
+      `Scene "${sceneId}" in step "${stepId}" uses unsupported section "${rawHeading}".`
+    );
   }
 
   return {
-    type: normalizedHeading
+    type: normalizedHeading,
   };
 }
 
@@ -231,14 +237,15 @@ function normalizeScene(stepId, rawScene, artifactLanguageById, previewType) {
 
   assertKebabCase(sceneId, 'Scene ID');
 
-  rawScene.sections.forEach(section => {
+  rawScene.sections.forEach((section) => {
     const heading = normalizeSceneSectionHeading(section.heading, stepId, sceneId);
-    const sectionKey = heading.type === 'show-code'
-      ? `show-code:${heading.artifactId}`
-      : heading.type;
+    const sectionKey =
+      heading.type === 'show-code' ? `show-code:${heading.artifactId}` : heading.type;
 
     if (seenSectionTypes.has(sectionKey)) {
-      throw new Error(`Scene "${sceneId}" in step "${stepId}" defines "${section.heading}" more than once.`);
+      throw new Error(
+        `Scene "${sceneId}" in step "${stepId}" defines "${section.heading}" more than once.`
+      );
     }
 
     seenSectionTypes.add(sectionKey);
@@ -249,23 +256,35 @@ function normalizeScene(stepId, rawScene, artifactLanguageById, previewType) {
     }
 
     if (heading.type === 'preview') {
-      preview = normalizePreviewSection(parseYamlFragment(`preview in scene "${sceneId}"`, section.lines), stepId, sceneId);
+      preview = normalizePreviewSection(
+        parseYamlFragment(`preview in scene "${sceneId}"`, section.lines),
+        stepId,
+        sceneId
+      );
       return;
     }
 
     if (heading.type === 'theory') {
-      theory = normalizeTheorySection(parseYamlFragment(`theory in scene "${sceneId}"`, section.lines), stepId, sceneId);
+      theory = normalizeTheorySection(
+        parseYamlFragment(`theory in scene "${sceneId}"`, section.lines),
+        stepId,
+        sceneId
+      );
       return;
     }
 
     if (!heading.artifactId) {
-      throw new Error(`Scene "${sceneId}" in step "${stepId}" must name the artifact in "Show Code: <artifactId>".`);
+      throw new Error(
+        `Scene "${sceneId}" in step "${stepId}" must name the artifact in "Show Code: <artifactId>".`
+      );
     }
 
     const artifactLanguage = artifactLanguageById[heading.artifactId];
 
     if (!artifactLanguage) {
-      throw new Error(`Scene "${sceneId}" in step "${stepId}" references unknown artifact "${heading.artifactId}".`);
+      throw new Error(
+        `Scene "${sceneId}" in step "${stepId}" references unknown artifact "${heading.artifactId}".`
+      );
     }
 
     const codeFence = readCodeFence(section.lines, stepId, sceneId, heading.artifactId);
@@ -277,18 +296,21 @@ function normalizeScene(stepId, rawScene, artifactLanguageById, previewType) {
       yaml: new Set(['yaml', 'yml']),
       md: new Set(['md', 'markdown']),
       sql: new Set(['sql']),
-      php: new Set(['php'])
+      php: new Set(['php']),
     };
-    const allowedFenceLanguages = languageAliasesByArtifactLanguage[artifactLanguage] || new Set([artifactLanguage]);
+    const allowedFenceLanguages =
+      languageAliasesByArtifactLanguage[artifactLanguage] || new Set([artifactLanguage]);
 
     if (normalizedFenceLanguage && !allowedFenceLanguages.has(normalizedFenceLanguage)) {
-      throw new Error(`Scene "${sceneId}" in step "${stepId}" must use a ${artifactLanguage} code fence for artifact "${heading.artifactId}".`);
+      throw new Error(
+        `Scene "${sceneId}" in step "${stepId}" must use a ${artifactLanguage} code fence for artifact "${heading.artifactId}".`
+      );
     }
 
     showCodeBlocks.push({
       artifactId: heading.artifactId,
       codeText: codeFence.codeText,
-      fenceLanguage: normalizedFenceLanguage || artifactLanguage
+      fenceLanguage: normalizedFenceLanguage || artifactLanguage,
     });
   });
 
@@ -297,17 +319,21 @@ function normalizeScene(stepId, rawScene, artifactLanguageById, previewType) {
   }
 
   if (!showCodeBlocks.length) {
-    throw new Error(`Scene "${sceneId}" in step "${stepId}" must define at least one "Show Code" section.`);
+    throw new Error(
+      `Scene "${sceneId}" in step "${stepId}" must define at least one "Show Code" section.`
+    );
   }
 
   return {
     sceneId,
     narration,
     showCodeBlocks,
-    preview: preview || (previewType === 'none'
-      ? { action: 'none' }
-      : { action: 'apply-state', target: previewType }),
-    ...(theory ? { theory } : {})
+    preview:
+      preview ||
+      (previewType === 'none'
+        ? { action: 'none' }
+        : { action: 'apply-state', target: previewType }),
+    ...(theory ? { theory } : {}),
   };
 }
 
@@ -337,7 +363,10 @@ export function readLessonScript(markdown) {
   }
 
   const artifactLanguageById = Object.fromEntries(
-    artifacts.map(artifact => [normalizeString(artifact.artifactId), normalizeString(artifact.language)])
+    artifacts.map((artifact) => [
+      normalizeString(artifact.artifactId),
+      normalizeString(artifact.language),
+    ])
   );
 
   const lines = String(body || '').split('\n');
@@ -357,7 +386,7 @@ export function readLessonScript(markdown) {
 
     currentSceneSections.push({
       heading: currentSceneSectionHeading,
-      lines: currentSceneSectionLines
+      lines: currentSceneSectionLines,
     });
     currentSceneSectionHeading = '';
     currentSceneSectionLines = [];
@@ -371,7 +400,7 @@ export function readLessonScript(markdown) {
     flushSceneSection();
     currentScenes.push({
       sceneId: currentSceneId,
-      sections: currentSceneSections
+      sections: currentSceneSections,
     });
     currentSceneId = '';
     currentSceneSections = [];
@@ -390,11 +419,18 @@ export function readLessonScript(markdown) {
 
     const normalizedStep = normalizeStepMetadata(currentStepId, currentStepMetadataLines);
     const sceneIds = new Set();
-    normalizedStep.scenes = currentScenes.map(scene => {
-      const normalizedScene = normalizeScene(currentStepId, scene, artifactLanguageById, previewType);
+    normalizedStep.scenes = currentScenes.map((scene) => {
+      const normalizedScene = normalizeScene(
+        currentStepId,
+        scene,
+        artifactLanguageById,
+        previewType
+      );
 
       if (sceneIds.has(normalizedScene.sceneId)) {
-        throw new Error(`Step "${currentStepId}" defines scene "${normalizedScene.sceneId}" more than once.`);
+        throw new Error(
+          `Step "${currentStepId}" defines scene "${normalizedScene.sceneId}" more than once.`
+        );
       }
 
       sceneIds.add(normalizedScene.sceneId);
@@ -407,7 +443,7 @@ export function readLessonScript(markdown) {
     currentScenes = [];
   }
 
-  lines.forEach(line => {
+  lines.forEach((line) => {
     const stepMatch = line.match(/^# Step:\s*(.+)$/);
 
     if (stepMatch) {
@@ -443,7 +479,9 @@ export function readLessonScript(markdown) {
 
     if (sectionMatch) {
       if (!currentSceneId) {
-        throw new Error(`Step "${currentStepId}" contains a scene section before any scene heading.`);
+        throw new Error(
+          `Step "${currentStepId}" contains a scene section before any scene heading.`
+        );
       }
 
       flushSceneSection();
@@ -466,7 +504,9 @@ export function readLessonScript(markdown) {
 
     if (!currentSceneSectionHeading) {
       if (normalizeString(line)) {
-        throw new Error(`Scene "${currentSceneId}" in step "${currentStepId}" must start with a "Narration" or "Show Code" section.`);
+        throw new Error(
+          `Scene "${currentSceneId}" in step "${currentStepId}" must start with a "Narration" or "Show Code" section.`
+        );
       }
 
       return;
@@ -486,6 +526,6 @@ export function readLessonScript(markdown) {
     lessonId,
     attributes,
     body,
-    steps
+    steps,
   };
 }

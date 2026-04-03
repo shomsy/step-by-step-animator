@@ -9,14 +9,17 @@ function normalizeTimelineBlock(timelineBlock) {
     throw new Error('Each timeline block must define a non-empty target slot.');
   }
 
-  if (!Array.isArray(timelineBlock.lines) || timelineBlock.lines.some(line => typeof line !== 'string')) {
+  if (
+    !Array.isArray(timelineBlock.lines) ||
+    timelineBlock.lines.some((line) => typeof line !== 'string')
+  ) {
     throw new Error('Each timeline block must define a lines array of strings.');
   }
 
   return {
     from: timelineBlock.from,
     target: timelineBlock.target.trim(),
-    lines: timelineBlock.lines
+    lines: timelineBlock.lines,
   };
 }
 

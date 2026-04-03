@@ -11,9 +11,11 @@ function readStepBoundary(stepReference, stepNumberById) {
 }
 
 function appendVisibleRuleBlock(lines, ruleBlock, stepNumber, stepNumberById) {
-  const activeEntries = ruleBlock.entries.filter(entry =>
-    stepNumber >= readStepBoundary(entry.from, stepNumberById) &&
-    (entry.untilBefore === undefined || stepNumber < readStepBoundary(entry.untilBefore, stepNumberById))
+  const activeEntries = ruleBlock.entries.filter(
+    (entry) =>
+      stepNumber >= readStepBoundary(entry.from, stepNumberById) &&
+      (entry.untilBefore === undefined ||
+        stepNumber < readStepBoundary(entry.untilBefore, stepNumberById))
   );
 
   if (!activeEntries.length && stepNumber < readStepBoundary(ruleBlock.showFrom, stepNumberById)) {
@@ -25,12 +27,12 @@ function appendVisibleRuleBlock(lines, ruleBlock, stepNumber, stepNumberById) {
   }
 
   if (Array.isArray(ruleBlock.header)) {
-    ruleBlock.header.forEach(headerLine => lines.push(headerLine));
+    ruleBlock.header.forEach((headerLine) => lines.push(headerLine));
   } else {
     lines.push(ruleBlock.header);
   }
 
-  activeEntries.forEach(entry => {
+  activeEntries.forEach((entry) => {
     lines.push(`  ${entry.line}`);
   });
 
@@ -40,7 +42,7 @@ function appendVisibleRuleBlock(lines, ruleBlock, stepNumber, stepNumberById) {
 export function buildLinesFromRuleBlocks({ ruleBlocks, stepNumberById, stepNumber }) {
   const lines = [];
 
-  ruleBlocks.forEach(ruleBlock => {
+  ruleBlocks.forEach((ruleBlock) => {
     appendVisibleRuleBlock(lines, ruleBlock, stepNumber, stepNumberById);
   });
 

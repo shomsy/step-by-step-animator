@@ -58,7 +58,10 @@ export function findLessonParts(ownerDocument) {
     stepSpeechBadge: readRequiredElement(ownerDocument, 'stepSpeechBadge'),
     stepSpeechLanguageSelect: readRequiredElement(ownerDocument, 'stepSpeechLanguageSelect'),
     stepSpeechSourceSelect: readRequiredElement(ownerDocument, 'stepSpeechSourceSelect'),
-    stepSpeechBrowserVoiceSelect: readRequiredElement(ownerDocument, 'stepSpeechBrowserVoiceSelect'),
+    stepSpeechBrowserVoiceSelect: readRequiredElement(
+      ownerDocument,
+      'stepSpeechBrowserVoiceSelect'
+    ),
     stepSpeechSpeedSlider: readRequiredElement(ownerDocument, 'stepSpeechSpeedSlider'),
     stepSpeechSpeedValue: readRequiredElement(ownerDocument, 'stepSpeechSpeedValue'),
     stepSpeechStatus: readRequiredElement(ownerDocument, 'stepSpeechStatus'),
@@ -94,6 +97,6 @@ export function findLessonParts(ownerDocument) {
     shadowCssFileLabel: readRequiredElement(ownerDocument, 'shadowCssFileLabel'),
     ideFileList: readRequiredElement(ownerDocument, 'ideFileList'),
     currentStepBadge: readRequiredElement(ownerDocument, 'liveStepBadge'),
-    lessonPanelButtons: [...ownerDocument.querySelectorAll('.tab-btn')]
+    lessonPanelButtons: [...ownerDocument.querySelectorAll('.tab-btn')],
   };
 }

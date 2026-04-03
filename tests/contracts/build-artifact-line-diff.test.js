@@ -11,12 +11,17 @@ test('buildArtifactLineDiff keeps unchanged lines and marks inserted additions',
   assert.equal(diff.addedCount, 1);
   assert.equal(diff.removedCount, 0);
   assert.deepEqual(
-    diff.entries.map(entry => [entry.kind, entry.lineText, entry.previousLineNumber, entry.currentLineNumber]),
+    diff.entries.map((entry) => [
+      entry.kind,
+      entry.lineText,
+      entry.previousLineNumber,
+      entry.currentLineNumber,
+    ]),
     [
       ['unchanged', '<div>', 1, 1],
       ['unchanged', '  <p>Old</p>', 2, 2],
       ['added', '  <span>New</span>', null, 3],
-      ['unchanged', '</div>', 3, 4]
+      ['unchanged', '</div>', 3, 4],
     ]
   );
 });
@@ -30,13 +35,18 @@ test('buildArtifactLineDiff marks replaced lines as removed and added with stabl
   assert.equal(diff.addedCount, 1);
   assert.equal(diff.removedCount, 1);
   assert.deepEqual(
-    diff.entries.map(entry => [entry.kind, entry.lineText, entry.previousLineNumber, entry.currentLineNumber]),
+    diff.entries.map((entry) => [
+      entry.kind,
+      entry.lineText,
+      entry.previousLineNumber,
+      entry.currentLineNumber,
+    ]),
     [
       ['unchanged', '<div>', 1, 1],
       ['removed', '  <p>Before</p>', 2, null],
       ['added', '  <section>After</section>', null, 2],
       ['unchanged', '  <small>Keep</small>', 3, 3],
-      ['unchanged', '</div>', 4, 4]
+      ['unchanged', '</div>', 4, 4],
     ]
   );
 });

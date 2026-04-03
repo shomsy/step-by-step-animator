@@ -11,12 +11,14 @@ export function readStepNarrationPreferences() {
       narrationLanguagePreference: parsedValue.narrationLanguagePreference === 'hr' ? 'hr' : 'sr',
       shouldAutoNarrateStep: parsedValue.shouldAutoNarrateStep === true,
       speechRate: typeof parsedValue.speechRate === 'number' ? parsedValue.speechRate : 1,
-      browserVoiceUriPreference: typeof parsedValue.browserVoiceUriPreference === 'string'
-        ? parsedValue.browserVoiceUriPreference
-        : '',
-      voiceSourcePreference: typeof parsedValue.voiceSourcePreference === 'string'
-        ? parsedValue.voiceSourcePreference
-        : 'auto'
+      browserVoiceUriPreference:
+        typeof parsedValue.browserVoiceUriPreference === 'string'
+          ? parsedValue.browserVoiceUriPreference
+          : '',
+      voiceSourcePreference:
+        typeof parsedValue.voiceSourcePreference === 'string'
+          ? parsedValue.voiceSourcePreference
+          : 'auto',
     };
   } catch {
     return {
@@ -24,7 +26,7 @@ export function readStepNarrationPreferences() {
       shouldAutoNarrateStep: false,
       speechRate: 1,
       browserVoiceUriPreference: '',
-      voiceSourcePreference: 'auto'
+      voiceSourcePreference: 'auto',
     };
   }
 }

@@ -4,6 +4,7 @@ import { readLessonScript } from '../lesson-engine/read-lesson-script.js';
 import { buildLessonScriptMarkdown } from '../lesson-engine/build-lesson-script-markdown.js';
 import { normalizeString } from '../lesson-engine/build-compiled-lesson.js';
 import { openAuthoringLessonBackup } from './open-authoring-lesson-backup.js';
+import { syncRepoLessonScript } from './sync-repo-lesson-script.js';
 
 const STORAGE_KEY = 'step-by-step-animator.authoring.sqlite.v1';
 const PERSISTENCE_DATABASE_NAME = 'step-by-step-animator-authoring';
@@ -25,7 +26,7 @@ function createOpaqueId(prefix) {
 function encodeDatabaseBytes(bytes) {
   let binary = '';
 
-  bytes.forEach(byte => {
+  bytes.forEach((byte) => {
     binary += String.fromCharCode(byte);
   });
 
@@ -235,20 +236,20 @@ function buildEmptyLessonScript(existingLessonIds) {
           artifactId: 'html',
           language: 'html',
           label: 'index.html',
-          isPrimary: true
+          isPrimary: true,
         },
         {
           artifactId: 'css',
           language: 'css',
           label: 'style.css',
-          isPrimary: false
-        }
+          isPrimary: false,
+        },
       ],
       preview: {
         type: 'dom',
         title: 'Draft lesson preview',
-        address: `browser://${lessonId}-preview`
-      }
+        address: `browser://${lessonId}-preview`,
+      },
     },
     steps: [
       {
@@ -268,19 +269,19 @@ function buildEmptyLessonScript(existingLessonIds) {
                 artifactId: 'html',
                 language: 'html',
                 fenceLanguage: 'html',
-                codeText: '<div class="lesson-shell"></div>'
+                codeText: '<div class="lesson-shell"></div>',
               },
               {
                 artifactId: 'css',
                 language: 'css',
                 fenceLanguage: 'css',
-                codeText: '.lesson-shell {\n}'
-              }
-            ]
-          }
-        ]
-      }
-    ]
+                codeText: '.lesson-shell {\n}',
+              },
+            ],
+          },
+        ],
+      },
+    ],
   });
 }
 
@@ -289,7 +290,7 @@ function createSqlRuntime() {
     sharedSqlRuntimePromise = initSqlJs({
       locateFile() {
         return sqlWasmUrl;
-      }
+      },
     });
   }
 
@@ -325,12 +326,12 @@ async function readPersistedDatabaseState(ownerWindow) {
   try {
     return {
       storedBytes: await readPersistedDatabaseBytes(ownerWindow),
-      readErrorMessage: ''
+      readErrorMessage: '',
     };
   } catch (error) {
     return {
       storedBytes: null,
-      readErrorMessage: error.message || 'Failed to read the authoring SQLite snapshot.'
+      readErrorMessage: error.message || 'Failed to read the authoring SQLite snapshot.',
     };
   }
 }
@@ -339,19 +340,19 @@ function openPersistedDatabase(SQL, storedBytes) {
   if (!storedBytes) {
     return {
       database: new SQL.Database(),
-      openErrorMessage: ''
+      openErrorMessage: '',
     };
   }
 
   try {
     return {
       database: new SQL.Database(storedBytes),
-      openErrorMessage: ''
+      openErrorMessage: '',
     };
   } catch (error) {
     return {
       database: new SQL.Database(),
-      openErrorMessage: error.message || 'Failed to open the authoring SQLite snapshot.'
+      openErrorMessage: error.message || 'Failed to open the authoring SQLite snapshot.',
     };
   }
 }
@@ -389,25 +390,27 @@ async function persistDatabase(database, ownerWindow) {
 
 function readExistingDraftIds(database) {
   return new Set(
-    readRows(database, 'SELECT lesson_id FROM lesson_drafts').map(row => row.lesson_id)
+    readRows(database, 'SELECT lesson_id FROM lesson_drafts').map((row) => row.lesson_id)
   );
 }
 
 function summarizeLessonContract(contract) {
   return {
     lessonId: contract.attributes.lessonId,
-    lessonTitle: contract.attributes.lessonTitle
+    lessonTitle: contract.attributes.lessonTitle,
   };
 }
 
 function readShippedLessonRow(database, lessonId) {
-  return readRows(
-    database,
-    `SELECT lesson_id, lesson_title, source_markdown, imported_at
+  return (
+    readRows(
+      database,
+      `SELECT lesson_id, lesson_title, source_markdown, imported_at
      FROM shipped_lessons
      WHERE lesson_id = ?`,
-    [lessonId]
-  )[0] || null;
+      [lessonId]
+    )[0] || null
+  );
 }
 
 function readPairedDraftRows(database, shippedLessonId) {
@@ -457,22 +460,20 @@ function tryReadLessonContract(sourceMarkdown) {
   try {
     return {
       contract: readLessonScript(sourceMarkdown),
-      parseErrorMessage: ''
+      parseErrorMessage: '',
     };
   } catch (error) {
     return {
       contract: null,
-      parseErrorMessage: error.message
+      parseErrorMessage: error.message,
     };
   }
 }
 
 function ensureDraftLessonIdIsAvailable(database, lessonId, currentDraftId) {
-  const rows = readRows(
-    database,
-    'SELECT draft_id FROM lesson_drafts WHERE lesson_id = ?',
-    [lessonId]
-  );
+  const rows = readRows(database, 'SELECT draft_id FROM lesson_drafts WHERE lesson_id = ?', [
+    lessonId,
+  ]);
 
   if (!rows.length) {
     return;
@@ -500,7 +501,7 @@ function replaceDraftStructure(database, draftId, contract) {
         artifact.artifactId,
         artifact.language,
         artifact.label || '',
-        artifact.isPrimary ? 1 : 0
+        artifact.isPrimary ? 1 : 0,
       ]
     );
   });
@@ -519,7 +520,7 @@ function replaceDraftStructure(database, draftId, contract) {
         step.intent,
         step.tag || '',
         step.proTip || '',
-        JSON.stringify(step.focusHtmlNeedles || [])
+        JSON.stringify(step.focusHtmlNeedles || []),
       ]
     );
 
@@ -536,7 +537,7 @@ function replaceDraftStructure(database, draftId, contract) {
           scene.narration,
           scene.preview?.action || '',
           scene.preview?.target || '',
-          scene.theory?.anchor || ''
+          scene.theory?.anchor || '',
         ]
       );
 
@@ -552,7 +553,7 @@ function replaceDraftStructure(database, draftId, contract) {
             blockIndex,
             showCodeBlock.artifactId,
             showCodeBlock.fenceLanguage || showCodeBlock.language || '',
-            showCodeBlock.codeText
+            showCodeBlock.codeText,
           ]
         );
       });
@@ -567,14 +568,17 @@ function clearDraftStructure(database, draftId) {
   runStatement(database, 'DELETE FROM scene_show_code_blocks WHERE draft_id = ?', [draftId]);
 }
 
-function upsertDraftFromMarkdown(database, {
-  draftId,
-  sourceMarkdown,
-  sourceOrigin,
-  shippedLessonId = null,
-  createdAt = readTimestamp(),
-  updatedAt = readTimestamp()
-}) {
+function upsertDraftFromMarkdown(
+  database,
+  {
+    draftId,
+    sourceMarkdown,
+    sourceOrigin,
+    shippedLessonId = null,
+    createdAt = readTimestamp(),
+    updatedAt = readTimestamp(),
+  }
+) {
   const parsedLesson = tryReadLessonContract(sourceMarkdown);
 
   if (!parsedLesson.contract) {
@@ -585,11 +589,9 @@ function upsertDraftFromMarkdown(database, {
 
   ensureDraftLessonIdIsAvailable(database, summary.lessonId, draftId);
 
-  const existingRows = readRows(
-    database,
-    'SELECT draft_id FROM lesson_drafts WHERE draft_id = ?',
-    [draftId]
-  );
+  const existingRows = readRows(database, 'SELECT draft_id FROM lesson_drafts WHERE draft_id = ?', [
+    draftId,
+  ]);
 
   if (existingRows.length) {
     runStatement(
@@ -604,7 +606,7 @@ function upsertDraftFromMarkdown(database, {
         sourceOrigin,
         shippedLessonId,
         updatedAt,
-        draftId
+        draftId,
       ]
     );
   } else {
@@ -620,7 +622,7 @@ function upsertDraftFromMarkdown(database, {
         sourceOrigin,
         shippedLessonId,
         createdAt,
-        updatedAt
+        updatedAt,
       ]
     );
   }
@@ -630,20 +632,19 @@ function upsertDraftFromMarkdown(database, {
   return {
     draftId,
     lessonId: summary.lessonId,
-    lessonTitle: summary.lessonTitle
+    lessonTitle: summary.lessonTitle,
   };
 }
 
-function refreshUntouchedPairedDrafts(database, {
-  shippedLessonId,
-  previousSourceMarkdown,
-  nextSourceMarkdown
-}) {
+function refreshUntouchedPairedDrafts(
+  database,
+  { shippedLessonId, previousSourceMarkdown, nextSourceMarkdown }
+) {
   if (!normalizeString(shippedLessonId) || previousSourceMarkdown === nextSourceMarkdown) {
     return;
   }
 
-  readPairedDraftRows(database, shippedLessonId).forEach(draftRow => {
+  readPairedDraftRows(database, shippedLessonId).forEach((draftRow) => {
     if (draftRow.source_origin !== 'paired-shipped') {
       return;
     }
@@ -657,13 +658,13 @@ function refreshUntouchedPairedDrafts(database, {
       sourceMarkdown: nextSourceMarkdown,
       sourceOrigin: draftRow.source_origin,
       shippedLessonId,
-      createdAt: draftRow.created_at
+      createdAt: draftRow.created_at,
     });
   });
 }
 
 function seedShippedLessons(database, shippedLessons) {
-  shippedLessons.forEach(shippedLesson => {
+  shippedLessons.forEach((shippedLesson) => {
     const existingRow = readShippedLessonRow(database, shippedLesson.lessonId);
 
     if (existingRow) {
@@ -676,13 +677,13 @@ function seedShippedLessons(database, shippedLessons) {
           shippedLesson.lessonTitle,
           shippedLesson.sourceMarkdown,
           readTimestamp(),
-          shippedLesson.lessonId
+          shippedLesson.lessonId,
         ]
       );
       refreshUntouchedPairedDrafts(database, {
         shippedLessonId: shippedLesson.lessonId,
         previousSourceMarkdown: existingRow.source_markdown,
-        nextSourceMarkdown: shippedLesson.sourceMarkdown
+        nextSourceMarkdown: shippedLesson.sourceMarkdown,
       });
       return;
     }
@@ -695,7 +696,7 @@ function seedShippedLessons(database, shippedLessons) {
         shippedLesson.lessonId,
         shippedLesson.lessonTitle,
         shippedLesson.sourceMarkdown,
-        readTimestamp()
+        readTimestamp(),
       ]
     );
   });
@@ -707,7 +708,7 @@ function ensurePairedDrafts(database) {
     'SELECT lesson_id, source_markdown FROM shipped_lessons ORDER BY lesson_id ASC'
   );
 
-  shippedLessons.forEach(shippedLesson => {
+  shippedLessons.forEach((shippedLesson) => {
     const existingRows = readRows(
       database,
       'SELECT draft_id FROM lesson_drafts WHERE shipped_lesson_id = ?',
@@ -722,7 +723,7 @@ function ensurePairedDrafts(database) {
       draftId: createOpaqueId('paired-draft'),
       sourceMarkdown: shippedLesson.source_markdown,
       sourceOrigin: 'paired-shipped',
-      shippedLessonId: shippedLesson.lesson_id
+      shippedLessonId: shippedLesson.lesson_id,
     });
   });
 }
@@ -746,7 +747,7 @@ function ensureDraftForShippedLesson(database, shippedLessonId) {
     draftId,
     sourceMarkdown: shippedRow.source_markdown,
     sourceOrigin: 'paired-shipped',
-    shippedLessonId
+    shippedLessonId,
   });
 
   return draftId;
@@ -758,13 +759,13 @@ function readDraftSummaries(database) {
     `SELECT draft_id, lesson_id, lesson_title, source_origin, shipped_lesson_id, updated_at
      FROM lesson_drafts
      ORDER BY updated_at DESC, lesson_id ASC`
-  ).map(row => ({
+  ).map((row) => ({
     draftId: row.draft_id,
     lessonId: row.lesson_id,
     lessonTitle: row.lesson_title,
     sourceOrigin: row.source_origin,
     shippedLessonId: row.shipped_lesson_id || '',
-    updatedAt: row.updated_at
+    updatedAt: row.updated_at,
   }));
 }
 
@@ -774,10 +775,10 @@ function readShippedSummaries(database) {
     `SELECT lesson_id, lesson_title, imported_at
      FROM shipped_lessons
      ORDER BY lesson_id ASC`
-  ).map(row => ({
+  ).map((row) => ({
     lessonId: row.lesson_id,
     lessonTitle: row.lesson_title,
-    importedAt: row.imported_at
+    importedAt: row.imported_at,
   }));
 }
 
@@ -789,10 +790,10 @@ function readVersionSummaries(database, draftId) {
      WHERE draft_id = ?
      ORDER BY created_at DESC`,
     [draftId]
-  ).map(row => ({
+  ).map((row) => ({
     versionId: row.version_id,
     versionKind: row.version_kind,
-    createdAt: row.created_at
+    createdAt: row.created_at,
   }));
 }
 
@@ -817,51 +818,54 @@ function readDraftRowByDraftId(database, draftId) {
     return null;
   }
 
-  return readRows(
-    database,
-    `SELECT draft_id, lesson_id, lesson_title, source_markdown, source_origin, shipped_lesson_id, created_at, updated_at
+  return (
+    readRows(
+      database,
+      `SELECT draft_id, lesson_id, lesson_title, source_markdown, source_origin, shipped_lesson_id, created_at, updated_at
      FROM lesson_drafts
      WHERE draft_id = ?
      LIMIT 1`,
-    [draftId]
-  )[0] || null;
+      [draftId]
+    )[0] || null
+  );
 }
 
-function readDraftRestoreConflictRow(database, {
-  lessonId = '',
-  shippedLessonId = ''
-}) {
+function readDraftRestoreConflictRow(database, { lessonId = '', shippedLessonId = '' }) {
   if (normalizeString(shippedLessonId)) {
-    return readRows(
-      database,
-      `SELECT draft_id, lesson_id, lesson_title, source_markdown, source_origin, shipped_lesson_id, created_at, updated_at
+    return (
+      readRows(
+        database,
+        `SELECT draft_id, lesson_id, lesson_title, source_markdown, source_origin, shipped_lesson_id, created_at, updated_at
        FROM lesson_drafts
        WHERE shipped_lesson_id = ?
        ORDER BY updated_at DESC, lesson_id ASC
        LIMIT 1`,
-      [shippedLessonId]
-    )[0] || null;
+        [shippedLessonId]
+      )[0] || null
+    );
   }
 
   if (!normalizeString(lessonId)) {
     return null;
   }
 
-  return readRows(
-    database,
-    `SELECT draft_id, lesson_id, lesson_title, source_markdown, source_origin, shipped_lesson_id, created_at, updated_at
+  return (
+    readRows(
+      database,
+      `SELECT draft_id, lesson_id, lesson_title, source_markdown, source_origin, shipped_lesson_id, created_at, updated_at
      FROM lesson_drafts
      WHERE lesson_id = ? AND shipped_lesson_id IS NULL
      ORDER BY updated_at DESC, lesson_id ASC
      LIMIT 1`,
-    [lessonId]
-  )[0] || null;
+      [lessonId]
+    )[0] || null
+  );
 }
 
 function restoreDraftBackups(database, draftBackups) {
   let restoredDraftCount = 0;
 
-  draftBackups.forEach(draftBackup => {
+  draftBackups.forEach((draftBackup) => {
     if (!draftBackup?.draftId || !normalizeString(draftBackup.sourceMarkdown)) {
       return;
     }
@@ -881,10 +885,18 @@ function restoreDraftBackups(database, draftBackups) {
     }
 
     const restoredDraftId = targetDraftRow?.draft_id || draftBackup.draftId;
-    const restoredCreatedAt = targetDraftRow?.created_at || draftBackup.createdAt || draftBackup.updatedAt || readTimestamp();
+    const restoredCreatedAt =
+      targetDraftRow?.created_at ||
+      draftBackup.createdAt ||
+      draftBackup.updatedAt ||
+      readTimestamp();
     const restoredUpdatedAt = draftBackup.updatedAt || draftBackup.createdAt || readTimestamp();
-    const restoredSourceOrigin = draftBackup.sourceOrigin || targetDraftRow?.source_origin || (draftBackup.shippedLessonId ? 'paired-shipped' : 'custom');
-    const restoredShippedLessonId = draftBackup.shippedLessonId || targetDraftRow?.shipped_lesson_id || null;
+    const restoredSourceOrigin =
+      draftBackup.sourceOrigin ||
+      targetDraftRow?.source_origin ||
+      (draftBackup.shippedLessonId ? 'paired-shipped' : 'custom');
+    const restoredShippedLessonId =
+      draftBackup.shippedLessonId || targetDraftRow?.shipped_lesson_id || null;
     const parsedDraftBackup = tryReadLessonContract(draftBackup.sourceMarkdown);
 
     if (parsedDraftBackup.contract) {
@@ -894,14 +906,16 @@ function restoreDraftBackups(database, draftBackups) {
         sourceOrigin: restoredSourceOrigin,
         shippedLessonId: restoredShippedLessonId,
         createdAt: restoredCreatedAt,
-        updatedAt: restoredUpdatedAt
+        updatedAt: restoredUpdatedAt,
       });
       restoredDraftCount += 1;
       return;
     }
 
-    const restoredLessonId = normalizeString(draftBackup.lessonId) || targetDraftRow?.lesson_id || '';
-    const restoredLessonTitle = normalizeString(draftBackup.lessonTitle) || targetDraftRow?.lesson_title || restoredLessonId;
+    const restoredLessonId =
+      normalizeString(draftBackup.lessonId) || targetDraftRow?.lesson_id || '';
+    const restoredLessonTitle =
+      normalizeString(draftBackup.lessonTitle) || targetDraftRow?.lesson_title || restoredLessonId;
 
     if (!restoredLessonId || !restoredLessonTitle) {
       return;
@@ -922,7 +936,7 @@ function restoreDraftBackups(database, draftBackups) {
           restoredSourceOrigin,
           restoredShippedLessonId,
           restoredUpdatedAt,
-          restoredDraftId
+          restoredDraftId,
         ]
       );
     } else {
@@ -938,7 +952,7 @@ function restoreDraftBackups(database, draftBackups) {
           restoredSourceOrigin,
           restoredShippedLessonId,
           restoredCreatedAt,
-          restoredUpdatedAt
+          restoredUpdatedAt,
         ]
       );
     }
@@ -953,7 +967,7 @@ function restoreDraftBackups(database, draftBackups) {
 function buildStoreRecoveryState({
   readErrorMessage = '',
   openErrorMessage = '',
-  restoredDraftCount = 0
+  restoredDraftCount = 0,
 }) {
   const draftLabel = restoredDraftCount === 1 ? 'draft' : 'drafts';
 
@@ -961,26 +975,27 @@ function buildStoreRecoveryState({
     if (restoredDraftCount > 0) {
       return {
         storeRecoveryNotice: `SQLite snapshot could not be opened. Restored ${restoredDraftCount} ${draftLabel} from lesson.script.md backups.`,
-        storeRecoveryTone: 'warning'
+        storeRecoveryTone: 'warning',
       };
     }
 
     return {
-      storeRecoveryNotice: 'SQLite snapshot could not be opened and no lesson.script.md backups were available.',
-      storeRecoveryTone: 'danger'
+      storeRecoveryNotice:
+        'SQLite snapshot could not be opened and no lesson.script.md backups were available.',
+      storeRecoveryTone: 'danger',
     };
   }
 
   if (restoredDraftCount > 0) {
     return {
       storeRecoveryNotice: `SQLite snapshot was missing. Restored ${restoredDraftCount} ${draftLabel} from lesson.script.md backups.`,
-      storeRecoveryTone: 'warning'
+      storeRecoveryTone: 'warning',
     };
   }
 
   return {
     storeRecoveryNotice: '',
-    storeRecoveryTone: 'success'
+    storeRecoveryTone: 'success',
   };
 }
 
@@ -1012,10 +1027,10 @@ function readPlayableCustomDraftRow(database, lessonId) {
   return rows[0] || null;
 }
 
-function readPlayableDraftOverrideRowForSelection(database, {
-  requestedLessonId = '',
-  shippedLessonId = ''
-}) {
+function readPlayableDraftOverrideRowForSelection(
+  database,
+  { requestedLessonId = '', shippedLessonId = '' }
+) {
   if (normalizeString(shippedLessonId)) {
     return readPlayableDraftOverrideRow(database, shippedLessonId);
   }
@@ -1040,14 +1055,15 @@ function buildPlayableDraftOverrideSummary(draftRow) {
     sourceOrigin: draftRow.source_origin,
     createdAt: draftRow.created_at,
     updatedAt: draftRow.updated_at,
-    sourceMarkdown: draftRow.source_markdown
+    sourceMarkdown: draftRow.source_markdown,
   };
 }
 
-function buildWorkspaceSnapshot(database, draftId = '', {
-  storeRecoveryNotice = '',
-  storeRecoveryTone = 'success'
-} = {}) {
+function buildWorkspaceSnapshot(
+  database,
+  draftId = '',
+  { storeRecoveryNotice = '', storeRecoveryTone = 'success' } = {}
+) {
   return {
     shippedLessons: readShippedSummaries(database),
     drafts: readDraftSummaries(database),
@@ -1069,10 +1085,10 @@ function buildWorkspaceSnapshot(database, draftId = '', {
             sourceMarkdown: draftRow.source_markdown,
             contract: parsedLesson.contract,
             parseErrorMessage: parsedLesson.parseErrorMessage,
-            versions: readVersionSummaries(database, draftId)
+            versions: readVersionSummaries(database, draftId),
           };
         })()
-      : null
+      : null,
   };
 }
 
@@ -1096,23 +1112,29 @@ function createDuplicateLessonScript(database, sourceMarkdown) {
       lessonTitle: `${baseLessonTitle} Copy${sequence > 1 ? ` ${sequence}` : ''}`,
       preview: {
         ...(contract.attributes.preview || {}),
-        address: `browser://${lessonId}-preview`
-      }
+        address: `browser://${lessonId}-preview`,
+      },
     },
-    steps: contract.steps
+    steps: contract.steps,
   });
 }
 
-export async function openAuthoringSqlite({
-  ownerWindow,
-  shippedLessons
-}) {
+export async function openAuthoringSqlite({ ownerWindow, shippedLessons }) {
+  const repoBackedShippedLessonIds = new Set(
+    (Array.isArray(shippedLessons) ? shippedLessons : [])
+      .filter((shippedLesson) => shippedLesson?.repoSyncEnabled === true)
+      .map((shippedLesson) => normalizeString(shippedLesson.lessonId))
+      .filter(Boolean)
+  );
   const SQL = await createSqlRuntime();
   const authoringLessonBackup = await openAuthoringLessonBackup({
-    ownerWindow
+    ownerWindow,
   });
   const persistedDatabaseState = await readPersistedDatabaseState(ownerWindow);
-  const { database, openErrorMessage } = openPersistedDatabase(SQL, persistedDatabaseState.storedBytes);
+  const { database, openErrorMessage } = openPersistedDatabase(
+    SQL,
+    persistedDatabaseState.storedBytes
+  );
   let draftBackups = [];
 
   try {
@@ -1132,7 +1154,7 @@ export async function openAuthoringSqlite({
   const storeRecoveryState = buildStoreRecoveryState({
     readErrorMessage: persistedDatabaseState.readErrorMessage,
     openErrorMessage,
-    restoredDraftCount
+    restoredDraftCount,
   });
 
   async function persist(work) {
@@ -1153,8 +1175,7 @@ export async function openAuthoringSqlite({
     const shippedLessonRow = readShippedLessonRow(database, selectedDraft.shippedLessonId);
 
     return Boolean(
-      shippedLessonRow
-      && shippedLessonRow.source_markdown === selectedDraft.sourceMarkdown
+      shippedLessonRow && shippedLessonRow.source_markdown === selectedDraft.sourceMarkdown
     );
   }
 
@@ -1163,7 +1184,7 @@ export async function openAuthoringSqlite({
       return {
         status: 'unavailable',
         backupFileName: 'lesson.script.md',
-        backupLocation: ''
+        backupLocation: '',
       };
     }
 
@@ -1177,14 +1198,14 @@ export async function openAuthoringSqlite({
         shippedLessonId: workspaceSnapshot.selectedDraft.shippedLessonId,
         createdAt: workspaceSnapshot.selectedDraft.createdAt,
         updatedAt: workspaceSnapshot.selectedDraft.updatedAt,
-        tracksShippedSource: readTracksShippedSource(workspaceSnapshot.selectedDraft)
+        tracksShippedSource: readTracksShippedSource(workspaceSnapshot.selectedDraft),
       });
     } catch (error) {
       return {
         status: 'failed',
         backupFileName: 'lesson.script.md',
         backupLocation: '',
-        errorMessage: error.message || 'Failed to write the lesson.script.md backup.'
+        errorMessage: error.message || 'Failed to write the lesson.script.md backup.',
       };
     }
   }
@@ -1197,9 +1218,61 @@ export async function openAuthoringSqlite({
         status: 'failed',
         backupFileName: 'lesson.script.md',
         backupLocation: '',
-        errorMessage: error.message || 'Failed to remove the lesson.script.md backup.'
+        errorMessage: error.message || 'Failed to remove the lesson.script.md backup.',
       };
     }
+  }
+
+  async function syncSelectedRepoLessonScript(workspaceSnapshot) {
+    if (!workspaceSnapshot?.selectedDraft?.sourceMarkdown) {
+      return {
+        status: 'unavailable',
+        reason: 'missing-draft',
+        filePath: '',
+        relativeFilePath: '',
+      };
+    }
+
+    if (!normalizeString(workspaceSnapshot.selectedDraft.shippedLessonId)) {
+      return {
+        status: 'unavailable',
+        reason: 'unpaired-draft',
+        filePath: '',
+        relativeFilePath: '',
+      };
+    }
+
+    if (!repoBackedShippedLessonIds.has(workspaceSnapshot.selectedDraft.shippedLessonId)) {
+      return {
+        status: 'unavailable',
+        reason: 'repo-materialization-unavailable',
+        filePath: '',
+        relativeFilePath: '',
+      };
+    }
+
+    return syncRepoLessonScript({
+      ownerWindow,
+      lessonId: workspaceSnapshot.selectedDraft.lessonId,
+      shippedLessonId: workspaceSnapshot.selectedDraft.shippedLessonId,
+      sourceMarkdown: workspaceSnapshot.selectedDraft.sourceMarkdown,
+    });
+  }
+
+  async function syncSavedShippedDraftToRepo(shippedLessonId) {
+    const nextWorkspaceSnapshot = await persist(() => {
+      const draftId = ensureDraftForShippedLesson(database, shippedLessonId);
+      return readWorkspaceSnapshotWithRecovery(draftId);
+    });
+    const backupStatus = await writeSelectedDraftBackup(nextWorkspaceSnapshot);
+    const repoLessonScriptStatus = await syncSelectedRepoLessonScript(nextWorkspaceSnapshot);
+
+    return {
+      lessonId: shippedLessonId,
+      draftId: nextWorkspaceSnapshot.selectedDraft?.draftId || '',
+      backupStatus,
+      repoLessonScriptStatus,
+    };
   }
 
   return {
@@ -1244,6 +1317,37 @@ export async function openAuthoringSqlite({
         return readWorkspaceSnapshotWithRecovery(draftId);
       });
     },
+    async resetPairedDraftToShippedSource(draftId) {
+      const nextWorkspaceSnapshot = await persist(() => {
+        const existingDraft = readDraftSourceMarkdown(database, draftId);
+        const shippedLessonId = normalizeString(existingDraft.shipped_lesson_id);
+
+        if (!shippedLessonId) {
+          throw new Error('Only paired drafts can be reset from the shipped lesson source.');
+        }
+
+        const shippedLessonRow = readShippedLessonRow(database, shippedLessonId);
+
+        if (!shippedLessonRow) {
+          throw new Error(`Shipped lesson "${shippedLessonId}" was not found.`);
+        }
+
+        upsertDraftFromMarkdown(database, {
+          draftId,
+          sourceMarkdown: shippedLessonRow.source_markdown,
+          sourceOrigin: 'paired-shipped',
+          shippedLessonId,
+          createdAt: existingDraft.created_at,
+        });
+
+        return readWorkspaceSnapshotWithRecovery(draftId);
+      });
+
+      nextWorkspaceSnapshot.backupStatus = await writeSelectedDraftBackup(nextWorkspaceSnapshot);
+      nextWorkspaceSnapshot.repoLessonScriptStatus =
+        await syncSelectedRepoLessonScript(nextWorkspaceSnapshot);
+      return nextWorkspaceSnapshot;
+    },
     async createLessonDraft() {
       const nextWorkspaceSnapshot = await persist(() => {
         const sourceMarkdown = buildEmptyLessonScript(readExistingDraftIds(database));
@@ -1252,7 +1356,7 @@ export async function openAuthoringSqlite({
         upsertDraftFromMarkdown(database, {
           draftId,
           sourceMarkdown,
-          sourceOrigin: 'custom'
+          sourceOrigin: 'custom',
         });
 
         return readWorkspaceSnapshotWithRecovery(draftId);
@@ -1264,12 +1368,13 @@ export async function openAuthoringSqlite({
     async saveLessonDraft({ draftId, sourceMarkdown, lessonAttributes, steps }) {
       const nextWorkspaceSnapshot = await persist(() => {
         const existingDraft = readDraftSourceMarkdown(database, draftId);
-        const nextSourceMarkdown = typeof sourceMarkdown === 'string'
-          ? sourceMarkdown
-          : buildLessonScriptMarkdown({
-            lessonAttributes,
-            steps
-          });
+        const nextSourceMarkdown =
+          typeof sourceMarkdown === 'string'
+            ? sourceMarkdown
+            : buildLessonScriptMarkdown({
+                lessonAttributes,
+                steps,
+              });
         const parsedLesson = tryReadLessonContract(nextSourceMarkdown);
         const savedAt = readTimestamp();
 
@@ -1290,7 +1395,7 @@ export async function openAuthoringSqlite({
               existingDraft.source_origin,
               existingDraft.shipped_lesson_id || null,
               savedAt,
-              draftId
+              draftId,
             ]
           );
           replaceDraftStructure(database, draftId, parsedLesson.contract);
@@ -1300,11 +1405,7 @@ export async function openAuthoringSqlite({
             `UPDATE lesson_drafts
              SET source_markdown = ?, updated_at = ?
              WHERE draft_id = ?`,
-            [
-              nextSourceMarkdown,
-              savedAt,
-              draftId
-            ]
+            [nextSourceMarkdown, savedAt, draftId]
           );
           clearDraftStructure(database, draftId);
         }
@@ -1313,18 +1414,23 @@ export async function openAuthoringSqlite({
       });
 
       nextWorkspaceSnapshot.backupStatus = await writeSelectedDraftBackup(nextWorkspaceSnapshot);
+      nextWorkspaceSnapshot.repoLessonScriptStatus =
+        await syncSelectedRepoLessonScript(nextWorkspaceSnapshot);
       return nextWorkspaceSnapshot;
     },
     async duplicateLessonDraft(draftId) {
       const nextWorkspaceSnapshot = await persist(() => {
         const existingDraft = readDraftSourceMarkdown(database, draftId);
-        const duplicatedMarkdown = createDuplicateLessonScript(database, existingDraft.source_markdown);
+        const duplicatedMarkdown = createDuplicateLessonScript(
+          database,
+          existingDraft.source_markdown
+        );
         const duplicatedDraftId = createOpaqueId('draft');
 
         upsertDraftFromMarkdown(database, {
           draftId: duplicatedDraftId,
           sourceMarkdown: duplicatedMarkdown,
-          sourceOrigin: 'duplicate'
+          sourceOrigin: 'duplicate',
         });
 
         return readWorkspaceSnapshotWithRecovery(duplicatedDraftId);
@@ -1338,7 +1444,9 @@ export async function openAuthoringSqlite({
       const backupStatus = await removeDraftBackup(existingDraft.draft_id);
 
       if (backupStatus.status === 'failed') {
-        throw new Error(backupStatus.errorMessage || 'Failed to remove the lesson.script.md backup.');
+        throw new Error(
+          backupStatus.errorMessage || 'Failed to remove the lesson.script.md backup.'
+        );
       }
 
       const nextWorkspaceSnapshot = await persist(() => {
@@ -1365,7 +1473,7 @@ export async function openAuthoringSqlite({
             draftId,
             'publish',
             existingDraft.source_markdown,
-            readTimestamp()
+            readTimestamp(),
           ]
         );
 
@@ -1392,22 +1500,37 @@ export async function openAuthoringSqlite({
           sourceMarkdown: versionRows[0].source_markdown,
           sourceOrigin: existingDraft.source_origin,
           shippedLessonId: existingDraft.shipped_lesson_id || null,
-          createdAt: existingDraft.created_at
+          createdAt: existingDraft.created_at,
         });
 
         return readWorkspaceSnapshotWithRecovery(draftId);
       });
 
       nextWorkspaceSnapshot.backupStatus = await writeSelectedDraftBackup(nextWorkspaceSnapshot);
+      nextWorkspaceSnapshot.repoLessonScriptStatus =
+        await syncSelectedRepoLessonScript(nextWorkspaceSnapshot);
       return nextWorkspaceSnapshot;
-    }
+    },
+    async syncSavedShippedDraftsToRepo(selectedDraftId = '') {
+      const activeDraftId = normalizeString(selectedDraftId);
+      const syncReport = [];
+
+      for (const shippedLesson of readShippedSummaries(database)) {
+        syncReport.push(await syncSavedShippedDraftToRepo(shippedLesson.lessonId));
+      }
+
+      return {
+        workspaceSnapshot: readWorkspaceSnapshotWithRecovery(activeDraftId),
+        syncReport,
+      };
+    },
   };
 }
 
 export async function readPersistedPlayableDraftOverride({
   ownerWindow,
   requestedLessonId = '',
-  shippedLessonId = ''
+  shippedLessonId = '',
 }) {
   if (!ownerWindow) {
     return null;
@@ -1420,7 +1543,10 @@ export async function readPersistedPlayableDraftOverride({
   }
 
   const SQL = await createSqlRuntime();
-  const { database, openErrorMessage } = openPersistedDatabase(SQL, persistedDatabaseState.storedBytes);
+  const { database, openErrorMessage } = openPersistedDatabase(
+    SQL,
+    persistedDatabaseState.storedBytes
+  );
 
   if (openErrorMessage) {
     database.close();
@@ -1433,7 +1559,7 @@ export async function readPersistedPlayableDraftOverride({
     return buildPlayableDraftOverrideSummary(
       readPlayableDraftOverrideRowForSelection(database, {
         requestedLessonId,
-        shippedLessonId
+        shippedLessonId,
       })
     );
   } finally {

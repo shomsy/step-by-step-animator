@@ -9,7 +9,7 @@ if (existsSync(rulesMarkerPath)) {
 }
 
 const result = spawnSync('git', ['submodule', 'update', '--init', '--recursive'], {
-  stdio: 'inherit'
+  stdio: 'inherit',
 });
 
 if (result.error) {

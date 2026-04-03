@@ -1,7 +1,7 @@
 import { escapeInlineText } from '../escape-inline-text.js';
 import {
   readLessonRuntimeLabel,
-  readLessonRuntimeTone
+  readLessonRuntimeTone,
 } from '../../../author-lessons/lesson-runtime-state.js';
 
 function hideLessonGoal(lessonParts) {
@@ -33,7 +33,7 @@ function showLessonGoal({ lessonParts, lesson }) {
   lessonParts.goalHomework.hidden = false;
   lessonParts.goalHomeworkTitle.textContent = lesson.homeworkTitle || 'Domaći zadatak';
   lessonParts.goalHomeworkList.innerHTML = homeworkItems
-    .map(item => `<li>${escapeInlineText(item)}</li>`)
+    .map((item) => `<li>${escapeInlineText(item)}</li>`)
     .join('');
 }
 
@@ -41,7 +41,8 @@ export function showLessonShell({ ownerDocument, lessonParts, lesson }) {
   const hasJavaScriptFile = typeof lesson.buildJsAtStep === 'function';
   const hasTemplateJsFile = typeof lesson.buildTemplateJsAtStep === 'function';
   const hasShadowCssFile = typeof lesson.buildShadowCssAtStep === 'function';
-  const paneCount = 2 + (hasJavaScriptFile ? 1 : 0) + (hasTemplateJsFile ? 1 : 0) + (hasShadowCssFile ? 1 : 0);
+  const paneCount =
+    2 + (hasJavaScriptFile ? 1 : 0) + (hasTemplateJsFile ? 1 : 0) + (hasShadowCssFile ? 1 : 0);
   const isIdeMode = !!lesson.ideMode;
 
   lessonParts.lessonHeading.textContent = lesson.lessonTitle;
@@ -66,7 +67,7 @@ export function showLessonShell({ ownerDocument, lessonParts, lesson }) {
   if (isIdeMode) {
     const files = [
       { id: 'htmlPane', name: lesson.htmlFileName, type: 'html' },
-      { id: 'cssPane', name: lesson.cssFileName, type: 'css' }
+      { id: 'cssPane', name: lesson.cssFileName, type: 'css' },
     ];
 
     if (hasJavaScriptFile) {
@@ -74,20 +75,32 @@ export function showLessonShell({ ownerDocument, lessonParts, lesson }) {
     }
 
     if (hasTemplateJsFile) {
-      files.push({ id: 'templateJsPane', name: lesson.templateJsFileName || 'component.html.js', type: 'js' });
+      files.push({
+        id: 'templateJsPane',
+        name: lesson.templateJsFileName || 'component.html.js',
+        type: 'js',
+      });
     }
 
     if (hasShadowCssFile) {
-      files.push({ id: 'shadowCssPane', name: lesson.shadowCssFileName || 'shadow-dom-style.css', type: 'css' });
+      files.push({
+        id: 'shadowCssPane',
+        name: lesson.shadowCssFileName || 'shadow-dom-style.css',
+        type: 'css',
+      });
     }
 
-    lessonParts.ideFileList.innerHTML = files.map((file, index) => `
+    lessonParts.ideFileList.innerHTML = files
+      .map(
+        (file, index) => `
       <div class="ide-file-item${index === 0 ? ' active' : ''}" data-pane-id="${file.id}">
         <svg class="ide-file-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M13 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"/><polyline points="13 2 13 9 20 9"/></svg>
         <span class="ide-file-name">${escapeInlineText(file.name)}</span>
         <div class="ide-file-dot"></div>
       </div>
-    `).join('');
+    `
+      )
+      .join('');
 
     lessonParts.htmlPane.classList.add('active');
     lessonParts.cssPane.classList.remove('active');
@@ -126,19 +139,28 @@ export function showLessonShell({ ownerDocument, lessonParts, lesson }) {
     lessonParts.shadowCssCodePane.innerHTML = '';
   }
 
-  lessonParts.livePreviewFrame.title = lesson.previewTitle || lesson.lessonTitle || 'Lesson preview';
+  lessonParts.livePreviewFrame.title =
+    lesson.previewTitle || lesson.lessonTitle || 'Lesson preview';
   showLessonGoal({ lessonParts, lesson });
   ownerDocument.title = `Step By Step Animator · ${lesson.lessonTitle}`;
 
-  lessonParts.ideFileList.onclick = e => {
+  lessonParts.ideFileList.onclick = (e) => {
     const item = e.target.closest('.ide-file-item');
     if (!item) {
       return;
     }
 
     const paneId = item.dataset.paneId;
-    lessonParts.ideFileList.querySelectorAll('.ide-file-item').forEach(el => el.classList.toggle('active', el === item));
-    [lessonParts.htmlPane, lessonParts.cssPane, lessonParts.jsPane, lessonParts.templateJsPane, lessonParts.shadowCssPane].forEach(pane => {
+    lessonParts.ideFileList
+      .querySelectorAll('.ide-file-item')
+      .forEach((el) => el.classList.toggle('active', el === item));
+    [
+      lessonParts.htmlPane,
+      lessonParts.cssPane,
+      lessonParts.jsPane,
+      lessonParts.templateJsPane,
+      lessonParts.shadowCssPane,
+    ].forEach((pane) => {
       if (pane) {
         pane.classList.toggle('active', pane.id === paneId);
       }

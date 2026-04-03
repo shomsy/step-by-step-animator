@@ -5,14 +5,14 @@ import {
   describeBrowserVoice,
   readBrowserVoiceChoices,
   readPreferredBrowserVoice,
-  speakWithBrowserVoice
+  speakWithBrowserVoice,
 } from './speak-with-browser-voice.js';
 import {
   prepareOpenSourceVoice,
   readOpenSourceVoiceAvailability,
   readOpenSourceVoiceLabel,
   readOpenSourceVoiceStatusLabel,
-  speakWithOpenSourceVoice
+  speakWithOpenSourceVoice,
 } from './speak-with-open-source-voice.js';
 import { writeStepNarrationPreferences } from './write-step-narration-preferences.js';
 
@@ -47,7 +47,7 @@ function showPrepareStepSpeechButton({
   lessonParts,
   isPreparingOpenSourceVoice,
   isOpenSourceVoiceReady,
-  shouldUseBrowserFallback
+  shouldUseBrowserFallback,
 }) {
   if (isPreparingOpenSourceVoice) {
     lessonParts.prepareStepSpeechButton.textContent = 'Preuzimam Piper…';
@@ -71,7 +71,7 @@ function showStepSpeechControls({
   lessonParts,
   activeNarration,
   isStartingNarration,
-  isPreparingOpenSourceVoice
+  isPreparingOpenSourceVoice,
 }) {
   const hasActiveNarration = Boolean(activeNarration);
   const isNarrationPaused = hasActiveNarration && activeNarration.isPaused();
@@ -82,8 +82,10 @@ function showStepSpeechControls({
     speakButtonLabel.textContent = speakLabel;
   }
 
-  lessonParts.speakStepButton.disabled = isStartingNarration || isPreparingOpenSourceVoice || (hasActiveNarration && !isNarrationPaused);
-  lessonParts.pauseStepSpeechButton.disabled = isStartingNarration || isPreparingOpenSourceVoice || !hasActiveNarration || isNarrationPaused;
+  lessonParts.speakStepButton.disabled =
+    isStartingNarration || isPreparingOpenSourceVoice || (hasActiveNarration && !isNarrationPaused);
+  lessonParts.pauseStepSpeechButton.disabled =
+    isStartingNarration || isPreparingOpenSourceVoice || !hasActiveNarration || isNarrationPaused;
   lessonParts.stopStepSpeechButton.disabled = !isStartingNarration && !hasActiveNarration;
 }
 
@@ -92,7 +94,7 @@ function showBrowserVoiceChoices({
   browserVoiceChoices,
   browserVoiceUriPreference,
   voiceSourcePreference,
-  narrationLanguagePreference
+  narrationLanguagePreference,
 }) {
   const browserVoiceSelect = lessonParts.stepSpeechBrowserVoiceSelect;
   const optionValues = new Set(['']);
@@ -101,10 +103,10 @@ function showBrowserVoiceChoices({
       value: '',
       label: browserVoiceChoices.length
         ? 'Automatski izbor sistemskog glasa'
-        : `Nema lokalnog ${readNarrationLanguageLabel(narrationLanguagePreference)} glasa u browseru`
+        : `Nema lokalnog ${readNarrationLanguageLabel(narrationLanguagePreference)} glasa u browseru`,
     },
     ...browserVoiceChoices
-      .filter(voiceChoice => {
+      .filter((voiceChoice) => {
         if (!voiceChoice?.voiceURI || optionValues.has(voiceChoice.voiceURI)) {
           return false;
         }
@@ -112,14 +114,14 @@ function showBrowserVoiceChoices({
         optionValues.add(voiceChoice.voiceURI);
         return true;
       })
-      .map(voiceChoice => ({
+      .map((voiceChoice) => ({
         value: voiceChoice.voiceURI,
-        label: voiceChoice.label
-      }))
+        label: voiceChoice.label,
+      })),
   ];
 
   browserVoiceSelect.replaceChildren(
-    ...optionDefinitions.map(optionDefinition => {
+    ...optionDefinitions.map((optionDefinition) => {
       const optionElement = lessonParts.ownerDocument.createElement('option');
       optionElement.value = optionDefinition.value;
       optionElement.textContent = optionDefinition.label;
@@ -130,7 +132,8 @@ function showBrowserVoiceChoices({
   browserVoiceSelect.value = optionValues.has(browserVoiceUriPreference)
     ? browserVoiceUriPreference
     : '';
-  browserVoiceSelect.disabled = voiceSourcePreference === 'open-source' || browserVoiceChoices.length === 0;
+  browserVoiceSelect.disabled =
+    voiceSourcePreference === 'open-source' || browserVoiceChoices.length === 0;
 }
 
 function showVoiceStatusSummary({
@@ -140,7 +143,7 @@ function showVoiceStatusSummary({
   preferredBrowserVoice,
   browserVoiceChoices,
   isOpenSourceVoiceReady,
-  shouldUseBrowserFallback
+  shouldUseBrowserFallback,
 }) {
   if (voiceSourcePreference === 'browser') {
     showStepSpeechStatus(
@@ -201,7 +204,7 @@ function showVoiceBadge({
   preferredBrowserVoice,
   isPreparingOpenSourceVoice,
   isOpenSourceVoiceReady,
-  shouldUseBrowserFallback
+  shouldUseBrowserFallback,
 }) {
   if (isPreparingOpenSourceVoice) {
     showStepSpeechBadge(lessonParts, 'Piper download', 'preparing');
@@ -216,7 +219,11 @@ function showVoiceBadge({
   if (voiceSourcePreference === 'open-source') {
     showStepSpeechBadge(
       lessonParts,
-      isOpenSourceVoiceReady ? 'Piper ready' : narrationLanguagePreference === 'hr' ? 'Piper sr→hr' : 'Piper',
+      isOpenSourceVoiceReady
+        ? 'Piper ready'
+        : narrationLanguagePreference === 'hr'
+          ? 'Piper sr→hr'
+          : 'Piper',
       isOpenSourceVoiceReady ? 'ready' : 'idle'
     );
     return;
@@ -289,11 +296,11 @@ export function presentStepNarration({ lessonParts, ownerWindow }) {
       preferredBrowserVoice,
       browserVoiceChoices,
       isOpenSourceVoiceReady,
-      shouldUseBrowserFallback
+      shouldUseBrowserFallback,
     });
   });
 
-  lessonParts.autoSpeakStepToggle.addEventListener('change', async event => {
+  lessonParts.autoSpeakStepToggle.addEventListener('change', async (event) => {
     shouldAutoNarrateStep = event.target.checked;
     writeCurrentPreferences();
 
@@ -305,7 +312,7 @@ export function presentStepNarration({ lessonParts, ownerWindow }) {
     await speakCurrentStep();
   });
 
-  lessonParts.stepSpeechLanguageSelect.addEventListener('change', async event => {
+  lessonParts.stepSpeechLanguageSelect.addEventListener('change', async (event) => {
     narrationLanguagePreference = NARRATION_LANGUAGE_PREFERENCES.has(event.target.value)
       ? event.target.value
       : 'sr';
@@ -315,13 +322,14 @@ export function presentStepNarration({ lessonParts, ownerWindow }) {
     writeCurrentPreferences();
   });
 
-  lessonParts.stepSpeechSourceSelect.addEventListener('change', event => {
+  lessonParts.stepSpeechSourceSelect.addEventListener('change', (event) => {
     const requestedVoiceSourcePreference = VOICE_SOURCE_PREFERENCES.has(event.target.value)
       ? event.target.value
       : 'auto';
-    const nextVoiceSourcePreference = requestedVoiceSourcePreference === 'browser' && !preferredBrowserVoice
-      ? 'open-source'
-      : requestedVoiceSourcePreference;
+    const nextVoiceSourcePreference =
+      requestedVoiceSourcePreference === 'browser' && !preferredBrowserVoice
+        ? 'open-source'
+        : requestedVoiceSourcePreference;
 
     voiceSourcePreference = nextVoiceSourcePreference;
 
@@ -334,7 +342,7 @@ export function presentStepNarration({ lessonParts, ownerWindow }) {
       browserVoiceChoices,
       browserVoiceUriPreference,
       voiceSourcePreference,
-      narrationLanguagePreference
+      narrationLanguagePreference,
     });
     showVoiceBadge({
       lessonParts,
@@ -343,7 +351,7 @@ export function presentStepNarration({ lessonParts, ownerWindow }) {
       preferredBrowserVoice,
       isPreparingOpenSourceVoice,
       isOpenSourceVoiceReady,
-      shouldUseBrowserFallback
+      shouldUseBrowserFallback,
     });
     showVoiceStatusSummary({
       lessonParts,
@@ -352,12 +360,12 @@ export function presentStepNarration({ lessonParts, ownerWindow }) {
       preferredBrowserVoice,
       browserVoiceChoices,
       isOpenSourceVoiceReady,
-      shouldUseBrowserFallback
+      shouldUseBrowserFallback,
     });
     writeCurrentPreferences();
   });
 
-  lessonParts.stepSpeechBrowserVoiceSelect.addEventListener('change', async event => {
+  lessonParts.stepSpeechBrowserVoiceSelect.addEventListener('change', async (event) => {
     browserVoiceUriPreference = event.target.value;
 
     try {
@@ -377,7 +385,7 @@ export function presentStepNarration({ lessonParts, ownerWindow }) {
       preferredBrowserVoice,
       isPreparingOpenSourceVoice,
       isOpenSourceVoiceReady,
-      shouldUseBrowserFallback
+      shouldUseBrowserFallback,
     });
     showVoiceStatusSummary({
       lessonParts,
@@ -386,12 +394,12 @@ export function presentStepNarration({ lessonParts, ownerWindow }) {
       preferredBrowserVoice,
       browserVoiceChoices,
       isOpenSourceVoiceReady,
-      shouldUseBrowserFallback
+      shouldUseBrowserFallback,
     });
     writeCurrentPreferences();
   });
 
-  lessonParts.stepSpeechSpeedSlider.addEventListener('input', event => {
+  lessonParts.stepSpeechSpeedSlider.addEventListener('input', (event) => {
     speechRate = clampSpeechRate(parseFloat(event.target.value));
     lessonParts.stepSpeechSpeedSlider.value = String(speechRate);
     showStepSpeechRate(lessonParts, speechRate);
@@ -399,12 +407,18 @@ export function presentStepNarration({ lessonParts, ownerWindow }) {
 
     if (activeNarration?.supportsLiveRateChange) {
       activeNarration.setRate(speechRate);
-      showStepSpeechStatus(lessonParts, `${activeNarration.providerLabel} je ubrzan na ${speechRate.toFixed(2)}x.`);
+      showStepSpeechStatus(
+        lessonParts,
+        `${activeNarration.providerLabel} je ubrzan na ${speechRate.toFixed(2)}x.`
+      );
       return;
     }
 
     if (activeNarration && !activeNarration.supportsLiveRateChange) {
-      showStepSpeechStatus(lessonParts, `Nova brzina glasa važi od sledećeg čitanja · ${speechRate.toFixed(2)}x.`);
+      showStepSpeechStatus(
+        lessonParts,
+        `Nova brzina glasa važi od sledećeg čitanja · ${speechRate.toFixed(2)}x.`
+      );
     }
   });
 
@@ -413,15 +427,18 @@ export function presentStepNarration({ lessonParts, ownerWindow }) {
 
     shouldAutoNarrateStep = preferences.shouldAutoNarrateStep === true;
     speechRate = clampSpeechRate(preferences.speechRate);
-    narrationLanguagePreference = NARRATION_LANGUAGE_PREFERENCES.has(preferences.narrationLanguagePreference)
+    narrationLanguagePreference = NARRATION_LANGUAGE_PREFERENCES.has(
+      preferences.narrationLanguagePreference
+    )
       ? preferences.narrationLanguagePreference
       : 'sr';
     voiceSourcePreference = VOICE_SOURCE_PREFERENCES.has(preferences.voiceSourcePreference)
       ? preferences.voiceSourcePreference
       : 'auto';
-    browserVoiceUriPreference = typeof preferences.browserVoiceUriPreference === 'string'
-      ? preferences.browserVoiceUriPreference
-      : '';
+    browserVoiceUriPreference =
+      typeof preferences.browserVoiceUriPreference === 'string'
+        ? preferences.browserVoiceUriPreference
+        : '';
 
     lessonParts.autoSpeakStepToggle.checked = shouldAutoNarrateStep;
     lessonParts.stepSpeechSpeedSlider.value = String(speechRate);
@@ -433,20 +450,20 @@ export function presentStepNarration({ lessonParts, ownerWindow }) {
       lessonParts,
       isPreparingOpenSourceVoice,
       isOpenSourceVoiceReady,
-      shouldUseBrowserFallback
+      shouldUseBrowserFallback,
     });
     showStepSpeechControls({
       lessonParts,
       activeNarration,
       isStartingNarration,
-      isPreparingOpenSourceVoice
+      isPreparingOpenSourceVoice,
     });
     showBrowserVoiceChoices({
       lessonParts,
       browserVoiceChoices,
       browserVoiceUriPreference,
       voiceSourcePreference,
-      narrationLanguagePreference
+      narrationLanguagePreference,
     });
     showVoiceBadge({
       lessonParts,
@@ -455,7 +472,7 @@ export function presentStepNarration({ lessonParts, ownerWindow }) {
       preferredBrowserVoice,
       isPreparingOpenSourceVoice,
       isOpenSourceVoiceReady,
-      shouldUseBrowserFallback
+      shouldUseBrowserFallback,
     });
     showVoiceStatusSummary({
       lessonParts,
@@ -464,7 +481,7 @@ export function presentStepNarration({ lessonParts, ownerWindow }) {
       preferredBrowserVoice,
       browserVoiceChoices,
       isOpenSourceVoiceReady,
-      shouldUseBrowserFallback
+      shouldUseBrowserFallback,
     });
 
     void refreshVoiceAvailability();
@@ -476,7 +493,7 @@ export function presentStepNarration({ lessonParts, ownerWindow }) {
       shouldAutoNarrateStep,
       speechRate,
       voiceSourcePreference,
-      browserVoiceUriPreference
+      browserVoiceUriPreference,
     });
   }
 
@@ -484,7 +501,7 @@ export function presentStepNarration({ lessonParts, ownerWindow }) {
     const narrationText = composeStepNarrationText({
       step: currentStep,
       currentStepNumber,
-      totalSteps
+      totalSteps,
     });
 
     if (!narrationText) {
@@ -501,13 +518,13 @@ export function presentStepNarration({ lessonParts, ownerWindow }) {
       lessonParts,
       activeNarration,
       isStartingNarration,
-      isPreparingOpenSourceVoice
+      isPreparingOpenSourceVoice,
     });
 
     try {
       const narration = await readNarrationController({
         narrationRequestId,
-        narrationText
+        narrationText,
       });
 
       if (narrationRequestId !== activeNarrationRequestId) {
@@ -521,7 +538,7 @@ export function presentStepNarration({ lessonParts, ownerWindow }) {
         lessonParts,
         activeNarration,
         isStartingNarration,
-        isPreparingOpenSourceVoice
+        isPreparingOpenSourceVoice,
       });
 
       narration.whenFinished.then(() => {
@@ -535,7 +552,7 @@ export function presentStepNarration({ lessonParts, ownerWindow }) {
           lessonParts,
           activeNarration,
           isStartingNarration: false,
-          isPreparingOpenSourceVoice
+          isPreparingOpenSourceVoice,
         });
       });
     } catch (error) {
@@ -550,13 +567,13 @@ export function presentStepNarration({ lessonParts, ownerWindow }) {
         lessonParts,
         activeNarration,
         isStartingNarration,
-        isPreparingOpenSourceVoice
+        isPreparingOpenSourceVoice,
       });
     }
   }
 
   async function readNarrationController({ narrationRequestId, narrationText }) {
-    const showNarrationStatus = statusText => {
+    const showNarrationStatus = (statusText) => {
       if (narrationRequestId !== activeNarrationRequestId) {
         return;
       }
@@ -575,7 +592,7 @@ export function presentStepNarration({ lessonParts, ownerWindow }) {
       prepareOpenSourceVoice: prepareCurrentOpenSourceVoice,
       speakWithOpenSourceVoice,
       speakWithBrowserVoice,
-      onStatusChange: showNarrationStatus
+      onStatusChange: showNarrationStatus,
     });
 
     if (typeof narrationOutcome.nextOpenSourceVoiceReady === 'boolean') {
@@ -593,13 +610,13 @@ export function presentStepNarration({ lessonParts, ownerWindow }) {
       preferredBrowserVoice,
       isPreparingOpenSourceVoice,
       isOpenSourceVoiceReady,
-      shouldUseBrowserFallback
+      shouldUseBrowserFallback,
     });
     showPrepareStepSpeechButton({
       lessonParts,
       isPreparingOpenSourceVoice,
       isOpenSourceVoiceReady,
-      shouldUseBrowserFallback
+      shouldUseBrowserFallback,
     });
 
     return narrationOutcome.controller;
@@ -616,7 +633,7 @@ export function presentStepNarration({ lessonParts, ownerWindow }) {
       lessonParts,
       activeNarration,
       isStartingNarration,
-      isPreparingOpenSourceVoice
+      isPreparingOpenSourceVoice,
     });
   }
 
@@ -631,7 +648,7 @@ export function presentStepNarration({ lessonParts, ownerWindow }) {
       lessonParts,
       activeNarration,
       isStartingNarration,
-      isPreparingOpenSourceVoice
+      isPreparingOpenSourceVoice,
     });
   }
 
@@ -654,11 +671,15 @@ export function presentStepNarration({ lessonParts, ownerWindow }) {
       lessonParts,
       activeNarration,
       isStartingNarration,
-      isPreparingOpenSourceVoice
+      isPreparingOpenSourceVoice,
     });
   }
 
-  function showCurrentStepNarration({ step, currentStepNumber: nextStepNumber, totalSteps: nextTotalSteps }) {
+  function showCurrentStepNarration({
+    step,
+    currentStepNumber: nextStepNumber,
+    totalSteps: nextTotalSteps,
+  }) {
     const didStepChange = nextStepNumber !== lastShownStepNumber;
 
     currentStep = step;
@@ -684,7 +705,7 @@ export function presentStepNarration({ lessonParts, ownerWindow }) {
       preferredBrowserVoice,
       browserVoiceChoices,
       isOpenSourceVoiceReady,
-      shouldUseBrowserFallback
+      shouldUseBrowserFallback,
     });
   }
 
@@ -721,7 +742,7 @@ export function presentStepNarration({ lessonParts, ownerWindow }) {
       browserVoiceChoices,
       browserVoiceUriPreference,
       voiceSourcePreference,
-      narrationLanguagePreference
+      narrationLanguagePreference,
     });
     showVoiceBadge({
       lessonParts,
@@ -730,13 +751,13 @@ export function presentStepNarration({ lessonParts, ownerWindow }) {
       preferredBrowserVoice,
       isPreparingOpenSourceVoice,
       isOpenSourceVoiceReady,
-      shouldUseBrowserFallback
+      shouldUseBrowserFallback,
     });
     showPrepareStepSpeechButton({
       lessonParts,
       isPreparingOpenSourceVoice,
       isOpenSourceVoiceReady,
-      shouldUseBrowserFallback
+      shouldUseBrowserFallback,
     });
     showVoiceStatusSummary({
       lessonParts,
@@ -745,7 +766,7 @@ export function presentStepNarration({ lessonParts, ownerWindow }) {
       preferredBrowserVoice,
       browserVoiceChoices,
       isOpenSourceVoiceReady,
-      shouldUseBrowserFallback
+      shouldUseBrowserFallback,
     });
   }
 
@@ -772,32 +793,32 @@ export function presentStepNarration({ lessonParts, ownerWindow }) {
       preferredBrowserVoice,
       isPreparingOpenSourceVoice,
       isOpenSourceVoiceReady,
-      shouldUseBrowserFallback
+      shouldUseBrowserFallback,
     });
     showPrepareStepSpeechButton({
       lessonParts,
       isPreparingOpenSourceVoice,
       isOpenSourceVoiceReady,
-      shouldUseBrowserFallback
+      shouldUseBrowserFallback,
     });
     showStepSpeechControls({
       lessonParts,
       activeNarration,
       isStartingNarration,
-      isPreparingOpenSourceVoice
+      isPreparingOpenSourceVoice,
     });
 
     openSourceVoicePreparationPromise = prepareOpenSourceVoice({
       narrationLanguagePreference,
       onStatusChange(statusText) {
         showStepSpeechStatus(lessonParts, statusText);
-      }
+      },
     })
       .then(() => {
         isOpenSourceVoiceReady = true;
         shouldUseBrowserFallback = false;
       })
-      .catch(error => {
+      .catch((error) => {
         isOpenSourceVoiceReady = false;
         throw error;
       })
@@ -811,19 +832,19 @@ export function presentStepNarration({ lessonParts, ownerWindow }) {
           preferredBrowserVoice,
           isPreparingOpenSourceVoice,
           isOpenSourceVoiceReady,
-          shouldUseBrowserFallback
+          shouldUseBrowserFallback,
         });
         showPrepareStepSpeechButton({
           lessonParts,
           isPreparingOpenSourceVoice,
           isOpenSourceVoiceReady,
-          shouldUseBrowserFallback
+          shouldUseBrowserFallback,
         });
         showStepSpeechControls({
           lessonParts,
           activeNarration,
           isStartingNarration,
-          isPreparingOpenSourceVoice
+          isPreparingOpenSourceVoice,
         });
       });
 
@@ -833,6 +854,6 @@ export function presentStepNarration({ lessonParts, ownerWindow }) {
   return {
     initializeStepNarration,
     showCurrentStepNarration,
-    stopCurrentStepNarration
+    stopCurrentStepNarration,
   };
 }

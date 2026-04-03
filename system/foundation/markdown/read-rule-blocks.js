@@ -1,10 +1,9 @@
 import { readFencedJsonValue } from './read-fenced-json-value.js';
 
 function isValidHeader(header) {
-  return typeof header === 'string' || (
-    Array.isArray(header) &&
-    header.length > 0 &&
-    header.every(line => typeof line === 'string')
+  return (
+    typeof header === 'string' ||
+    (Array.isArray(header) && header.length > 0 && header.every((line) => typeof line === 'string'))
   );
 }
 
@@ -14,7 +13,9 @@ function normalizeRuleBlock(ruleBlock) {
   }
 
   if (!isValidHeader(ruleBlock.header)) {
-    throw new Error('Each CSS rule block must define a string header or an array of string header lines.');
+    throw new Error(
+      'Each CSS rule block must define a string header or an array of string header lines.'
+    );
   }
 
   if (!Array.isArray(ruleBlock.entries)) {
@@ -24,7 +25,7 @@ function normalizeRuleBlock(ruleBlock) {
   return {
     header: ruleBlock.header,
     showFrom: ruleBlock.showFrom,
-    entries: ruleBlock.entries.map(entry => {
+    entries: ruleBlock.entries.map((entry) => {
       if (!entry || typeof entry !== 'object' || typeof entry.line !== 'string') {
         throw new Error('Each CSS rule entry must be an object with a string line.');
       }
@@ -32,9 +33,9 @@ function normalizeRuleBlock(ruleBlock) {
       return {
         from: entry.from,
         untilBefore: entry.untilBefore,
-        line: entry.line
+        line: entry.line,
       };
-    })
+    }),
   };
 }
 

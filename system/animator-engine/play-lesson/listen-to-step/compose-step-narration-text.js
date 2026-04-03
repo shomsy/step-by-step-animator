@@ -8,7 +8,7 @@ export function composeStepNarrationText({ step, currentStepNumber, totalSteps }
   const fragments = [
     `Korak ${currentStepNumber + 1} od ${totalSteps}.`,
     readNarrationValue(step?.title),
-    stepDescriptionText
+    stepDescriptionText,
   ];
 
   const proTipText = readNarrationValue(step?.proTip);
@@ -17,9 +17,5 @@ export function composeStepNarrationText({ step, currentStepNumber, totalSteps }
     fragments.push(`Pro tip. ${proTipText}`);
   }
 
-  return fragments
-    .filter(Boolean)
-    .join(' ')
-    .replace(/\s+/g, ' ')
-    .trim();
+  return fragments.filter(Boolean).join(' ').replace(/\s+/g, ' ').trim();
 }

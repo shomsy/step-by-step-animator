@@ -5,7 +5,9 @@ ADR-lite decision log for non-trivial choices.
 ## Entry Format
 
 - `id`:
-- `date`:
+- `recorded_at`:
+- `decision_at`:
+- `updated_at`:
 - `status`: proposed | accepted | superseded
 - `context`:
 - `decision`:
@@ -14,4 +16,4 @@ ADR-lite decision log for non-trivial choices.
 
 ## Decisions
 
-No decision records yet in this canonical file.
+No decisions recorded yet.

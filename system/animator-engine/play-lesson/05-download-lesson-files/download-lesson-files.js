@@ -19,15 +19,16 @@ export function downloadLessonFiles({ lesson, ownerDocument, ownerWindow }) {
   const finalStep = lesson.steps.length - 1;
   const htmlCode = lesson.buildHtmlAtStep(finalStep).join('\n');
   const cssCode = lesson.buildCssAtStep(finalStep).join('\n');
-  const jsCode = typeof lesson.buildJsAtStep === 'function'
-    ? lesson.buildJsAtStep(finalStep).join('\n')
-    : '';
-  const templateJsCode = typeof lesson.buildTemplateJsAtStep === 'function'
-    ? lesson.buildTemplateJsAtStep(finalStep).join('\n')
-    : '';
-  const shadowCssCode = typeof lesson.buildShadowCssAtStep === 'function'
-    ? lesson.buildShadowCssAtStep(finalStep).join('\n')
-    : '';
+  const jsCode =
+    typeof lesson.buildJsAtStep === 'function' ? lesson.buildJsAtStep(finalStep).join('\n') : '';
+  const templateJsCode =
+    typeof lesson.buildTemplateJsAtStep === 'function'
+      ? lesson.buildTemplateJsAtStep(finalStep).join('\n')
+      : '';
+  const shadowCssCode =
+    typeof lesson.buildShadowCssAtStep === 'function'
+      ? lesson.buildShadowCssAtStep(finalStep).join('\n')
+      : '';
 
   let delay = 0;
 
@@ -36,7 +37,7 @@ export function downloadLessonFiles({ lesson, ownerDocument, ownerWindow }) {
     ownerWindow,
     fileName: lesson.htmlFileName,
     mimeType: 'text/html',
-    fileContent: htmlCode
+    fileContent: htmlCode,
   });
   delay += 500;
 
@@ -46,7 +47,7 @@ export function downloadLessonFiles({ lesson, ownerDocument, ownerWindow }) {
       ownerWindow,
       fileName: lesson.cssFileName,
       mimeType: 'text/css',
-      fileContent: cssCode
+      fileContent: cssCode,
     });
   }, delay);
 
@@ -58,7 +59,7 @@ export function downloadLessonFiles({ lesson, ownerDocument, ownerWindow }) {
         ownerWindow,
         fileName: lesson.jsFileName || 'component.js',
         mimeType: 'text/javascript',
-        fileContent: jsCode
+        fileContent: jsCode,
       });
     }, delay);
   }
@@ -71,7 +72,7 @@ export function downloadLessonFiles({ lesson, ownerDocument, ownerWindow }) {
         ownerWindow,
         fileName: lesson.templateJsFileName || 'component.html.js',
         mimeType: 'text/javascript',
-        fileContent: templateJsCode
+        fileContent: templateJsCode,
       });
     }, delay);
   }
@@ -84,7 +85,7 @@ export function downloadLessonFiles({ lesson, ownerDocument, ownerWindow }) {
         ownerWindow,
         fileName: lesson.shadowCssFileName || 'shadow-dom-style.css',
         mimeType: 'text/css',
-        fileContent: shadowCssCode
+        fileContent: shadowCssCode,
       });
     }, delay);
   }

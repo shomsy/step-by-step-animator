@@ -3,11 +3,11 @@ export function presentLessonPicker({
   lessons,
   currentLessonId,
   ownerLocation,
-  ownerWindow
+  ownerWindow,
 }) {
   lessonPicker.innerHTML = '';
 
-  lessons.forEach(lesson => {
+  lessons.forEach((lesson) => {
     const option = ownerWindow.document.createElement('option');
 
     option.value = lesson.lessonId;

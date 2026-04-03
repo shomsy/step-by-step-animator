@@ -90,7 +90,7 @@ npm run dev
 Then open the app in your browser:
 
 - `http://localhost:5173/`
-- `http://localhost:5173/?workspace=authoring`
+- `http://localhost:5173/content/lesson`
 
 Vite is rooted at `product/app/`, so the canonical shell is served from the server root.
 
@@ -159,10 +159,10 @@ That document is the canonical lesson composition guide. Architecture docs and m
 - the canonical authored document shape is still `lesson.script.md`
 - during normal authoring that document lives in the browser-backed authoring store, not in a required filesystem scaffold
 - a new lesson can start from the UI without pre-existing folders or source files
-- `Save` persists the draft to the authoring store and mirrors the same `lesson.script.md` source into a browser backup when that boundary is available
+- `Save` persists the draft to the authoring store, mirrors the same `lesson.script.md` source into a browser backup when that boundary is available, and for healthy paired shipped drafts keeps the paired repo `lesson.script.md` materialization in sync
 - `Play` compiles from the latest healthy saved draft
 - `Publish` stores a recoverable authoring snapshot
-- `Export` materializes a `lesson.script.md` file
+- `Export` materializes a `lesson.script.md` file when you explicitly want filesystem output for custom or unpaired drafts
 
 Shipped lesson files live under:
 
@@ -180,14 +180,17 @@ When a lesson is materialized to the repository, the shipped shape is:
 
 ## Authoring Workspace
 
-The browser app now exposes a dedicated authoring workspace at `?workspace=authoring`.
+The browser app now exposes a dedicated authoring workspace at `/content/lesson`.
 
 - Write Mode is the default authoring surface
+- entering `/content/lesson` opens a full-width lesson collection view with search, lesson cards, and direct edit entry instead of implicitly dropping into whichever paired draft happened to sort first
 - the authoring store is the draft source of truth for in-progress lessons
 - shipped lesson source is loaded as importable or pairable input, not as the required starting point for new authoring
 - editable drafts live in browser-side SQLite persistence backed by IndexedDB, with an exact `lesson.script.md` mirror stored in browser-owned backup files for recovery
 - authors can create, open, update, duplicate, delete, publish snapshots, and export `lesson.script.md`
 - Write Mode opens on the first real `# Step:` block instead of the raw frontmatter contract
+- `/content/lesson` acts like a CMS index: list all lessons, filter them fast, click a lesson card to open the editor, or start a new custom draft without hunting through `More`
+- once a lesson is open, the left rail remains as a compact secondary browser for fast switching
 - metadata stays in the `Metadata` drawer while the main editor focuses on the lesson body
 - the workspace is split into `Outline | Editor | Inspector`, with live preview, compile state, validation, snapshots, and step-level artifact diff kept in the right column
 - `CodeMirror` owns the canonical `lesson.script.md` editing surface in the center panel
@@ -197,15 +200,18 @@ The browser app now exposes a dedicated authoring workspace at `?workspace=autho
 - drafts still compile back through the same lesson engine contract before save and publish
 - the normal player prefers the latest healthy saved paired draft for the selected shipped lesson; if the SQLite snapshot is missing it can recover from the mirrored `lesson.script.md` backup, and broken saved drafts still fail closed back to the shipped lesson package
 - a healthy saved custom draft with no shipped filesystem package can also be selected directly by `?lesson=<draft-lesson-id>` and played as a `Playable Draft`
-- entering `?workspace=authoring&lesson=<shipped-lesson-id>` opens that lesson's paired draft instead of whichever draft happened to be edited most recently
-- Write Mode keeps the browser `lesson` query aligned with the active draft context so refresh and back-to-player stay on the current lesson path
+- entering `/content/lesson/<shipped-lesson-id>` opens that lesson's paired draft instead of whichever draft happened to be edited most recently
+- Write Mode keeps the browser location aligned with `/content/lesson` or `/content/lesson/<lesson-id>` so refresh and back-to-player stay on the current lesson path
 - paired drafts refresh from shipped lesson source updates until the operator edits them; edited paired drafts stay preserved
 - the authoring state model is explicit: `Draft Saved`, `Unsaved Changes`, `Playable Draft`, `Broken Draft Fallback`, `Published Lesson`, and `No Draft`
-- `Save` persists draft content to SQLite and mirrors the exact `lesson.script.md` into a browser backup so the draft can be restored if the SQLite snapshot disappears
+- `Save` persists draft content to SQLite, mirrors the exact `lesson.script.md` into a browser backup so the draft can be restored if the SQLite snapshot disappears, and when the saved draft is healthy plus paired to a shipped lesson path it also updates the paired repo `product/education/lessons/<lesson-slug>/source/lesson.script.md`
+- `More -> Sync paired repo files` walks every shipped lesson in the current browser store, ensures the paired draft exists, refreshes the browser backup, and syncs the paired repo `lesson.script.md` without needing fake content edits
+- `More -> Reset paired draft` overwrites the current paired SQLite draft with the current shipped lesson source, refreshes the browser backup, and leaves the repo file unchanged when it already matches shipped content
 - `Play` uses the latest healthy saved draft, falls back to the mirrored `lesson.script.md` backup when the SQLite snapshot is unavailable, and still fails closed to the shipped lesson package when the draft content is unhealthy
 - `Publish` stores a recoverable version snapshot in SQLite and marks the lesson as a `Published Lesson` inside the authoring lifecycle
-- `Export` downloads the current `lesson.script.md`; filesystem materialization is optional for day-to-day authoring and required only when you explicitly want publish/export artifacts
+- `Export` downloads the current `lesson.script.md`; filesystem materialization for custom or unpaired drafts stays optional for day-to-day authoring and required only when you explicitly want publish/export artifacts
 - a restored version snapshot should return the draft to a recoverable saved state instead of acting like a second source of truth
+- legacy `?workspace=authoring` links still resolve as a compatibility fallback, but they are no longer the canonical operator path
 
 ## Notes
 

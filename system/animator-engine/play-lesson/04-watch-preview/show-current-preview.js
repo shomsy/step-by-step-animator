@@ -3,10 +3,7 @@ function escapeRegExp(text) {
 }
 
 function escapeTemplateLiteralText(text) {
-  return String(text)
-    .replace(/\\/g, '\\\\')
-    .replace(/`/g, '\\`')
-    .replace(/\$\{/g, '\\${');
+  return String(text).replace(/\\/g, '\\\\').replace(/`/g, '\\`').replace(/\$\{/g, '\\${');
 }
 
 function escapeClosingHtmlTag(text, tagName) {
@@ -84,22 +81,24 @@ function composePreviewJavaScript(lesson, currentStepNumber) {
     lesson,
     currentStepNumber,
     jsMarkup,
-    shadowCssMarkup
+    shadowCssMarkup,
   });
 
   return jsMarkup;
 }
 
 export function composeLivePreviewDocument(lesson, currentStepNumber) {
-  const htmlMarkup = typeof lesson.buildHtmlAtStep === 'function'
-    ? lesson.buildHtmlAtStep(currentStepNumber).join('\n')
-    : '';
-  const cssMarkup = typeof lesson.buildCssAtStep === 'function'
-    ? lesson.buildCssAtStep(currentStepNumber).join('\n')
-    : '';
+  const htmlMarkup =
+    typeof lesson.buildHtmlAtStep === 'function'
+      ? lesson.buildHtmlAtStep(currentStepNumber).join('\n')
+      : '';
+  const cssMarkup =
+    typeof lesson.buildCssAtStep === 'function'
+      ? lesson.buildCssAtStep(currentStepNumber).join('\n')
+      : '';
   const jsMarkup = composePreviewJavaScript(lesson, currentStepNumber);
   const cssBlock = cssMarkup ? `<style>${escapeClosingHtmlTag(cssMarkup, 'style')}</style>` : '';
-  const jsBlock = jsMarkup ? `<script>${escapeClosingHtmlTag(jsMarkup, 'script')}<\/script>` : '';
+  const jsBlock = jsMarkup ? `<script>${escapeClosingHtmlTag(jsMarkup, 'script')}</script>` : '';
 
   return `<!DOCTYPE html>
 <html lang="${lesson.documentLanguage || 'sr'}">
@@ -115,11 +114,7 @@ ${htmlMarkup}
 </html>`;
 }
 
-export function showCurrentPreview({
-  lessonParts,
-  lesson,
-  currentStepNumber
-}) {
+export function showCurrentPreview({ lessonParts, lesson, currentStepNumber }) {
   const livePreviewDocument = composeLivePreviewDocument(lesson, currentStepNumber);
 
   if (lessonParts.livePreviewFrame.srcdoc === livePreviewDocument) {

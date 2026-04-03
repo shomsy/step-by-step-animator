@@ -8,10 +8,11 @@ const repoRoot = path.resolve(path.dirname(currentFilePath), '..');
 const lessonsRoot = path.join(repoRoot, 'product/education/lessons');
 
 function readLessonSourceRoots() {
-  return fs.readdirSync(lessonsRoot, { withFileTypes: true })
-    .filter(entry => entry.isDirectory())
-    .map(entry => path.join(lessonsRoot, entry.name, 'source'))
-    .filter(sourceRoot => fs.existsSync(sourceRoot))
+  return fs
+    .readdirSync(lessonsRoot, { withFileTypes: true })
+    .filter((entry) => entry.isDirectory())
+    .map((entry) => path.join(lessonsRoot, entry.name, 'source'))
+    .filter((sourceRoot) => fs.existsSync(sourceRoot))
     .sort();
 }
 
@@ -31,7 +32,7 @@ function removeLegacySplitSource(sourceRoot) {
   if (fs.existsSync(artifactsRoot)) {
     fs.rmSync(artifactsRoot, {
       recursive: true,
-      force: true
+      force: true,
     });
   }
 }

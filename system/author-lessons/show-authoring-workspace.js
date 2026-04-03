@@ -4,18 +4,24 @@ import { buildLessonScriptMarkdown } from '../lesson-engine/build-lesson-script-
 import { composeLivePreviewDocument } from '../animator-engine/play-lesson/04-watch-preview/show-current-preview.js';
 import { openAuthoringSqlite } from './open-authoring-sqlite.js';
 import { readShippedLessonScripts } from './read-shipped-lesson-scripts.js';
+import {
+  buildAuthoringLessonCollectionUrl,
+  buildAuthoringLessonEditorUrl,
+  buildPlayerLessonUrl,
+  readAuthoringLocationState,
+} from './authoring-location.js';
 import { readLessonScript } from '../lesson-engine/read-lesson-script.js';
 import { parseFrontmatter } from '../foundation/frontmatter/parse-frontmatter.js';
 import {
   readAuthoringCompileState,
   readAuthoringPublishState,
-  readAuthoringSaveState
+  readAuthoringSaveState,
 } from './lesson-runtime-state.js';
 import {
   buildInsertMenuItems,
   buildInsertSnippet,
   readEditorContextFromScan,
-  scanLessonScriptSource
+  scanLessonScriptSource,
 } from './lesson-script-workbench.js';
 import { createLessonScriptEditor } from './create-lesson-script-editor.js';
 import { readAuthoringDiagnostics } from './read-authoring-diagnostics.js';
@@ -46,8 +52,8 @@ function normalizeMultilineText(value) {
 async function loadMetadataProseEditorFactory() {
   if (!metadataProseEditorFactoryPromise) {
     metadataProseEditorFactoryPromise = import('./create-metadata-prose-editor.js')
-      .then(module => module.createMetadataProseEditor)
-      .catch(error => {
+      .then((module) => module.createMetadataProseEditor)
+      .catch((error) => {
         metadataProseEditorFactoryPromise = null;
         throw error;
       });
@@ -56,40 +62,22 @@ async function loadMetadataProseEditorFactory() {
   return metadataProseEditorFactoryPromise;
 }
 
-function buildWorkspaceUrl(ownerLocation, workspaceName) {
-  const nextUrl = new URL(ownerLocation.href);
-
-  if (workspaceName) {
-    nextUrl.searchParams.set('workspace', workspaceName);
-  } else {
-    nextUrl.searchParams.delete('workspace');
-  }
-
-  return nextUrl.toString();
-}
-
 function readRequestedLessonId(ownerLocation) {
-  return normalizeText(new URL(ownerLocation.href).searchParams.get('lesson'));
+  return readAuthoringLocationState(ownerLocation).requestedLessonId;
 }
 
 function readWorkspaceLessonLocationId(workspaceSnapshot) {
-  return normalizeText(workspaceSnapshot?.selectedDraft?.shippedLessonId)
-    || normalizeText(workspaceSnapshot?.selectedDraft?.lessonId);
+  return (
+    normalizeText(workspaceSnapshot?.selectedDraft?.shippedLessonId) ||
+    normalizeText(workspaceSnapshot?.selectedDraft?.lessonId)
+  );
 }
 
 function syncAuthoringLocation(ownerWindow, ownerLocation, workspaceSnapshot) {
-  const nextUrl = new URL(ownerLocation.href);
   const lessonLocationId = readWorkspaceLessonLocationId(workspaceSnapshot);
-
-  nextUrl.searchParams.set('workspace', 'authoring');
-
-  if (lessonLocationId) {
-    nextUrl.searchParams.set('lesson', lessonLocationId);
-  } else {
-    nextUrl.searchParams.delete('lesson');
-  }
-
-  const nextHref = nextUrl.toString();
+  const nextHref = lessonLocationId
+    ? buildAuthoringLessonEditorUrl(ownerLocation, lessonLocationId)
+    : buildAuthoringLessonCollectionUrl(ownerLocation);
 
   if (nextHref === ownerWindow.location.href) {
     return;
@@ -98,10 +86,7 @@ function syncAuthoringLocation(ownerWindow, ownerLocation, workspaceSnapshot) {
   ownerWindow.history?.replaceState?.(null, '', nextHref);
 }
 
-async function readInitialAuthoringWorkspace({
-  authoringStore,
-  ownerLocation
-}) {
+async function readInitialAuthoringWorkspace({ authoringStore, ownerLocation }) {
   const requestedLessonId = readRequestedLessonId(ownerLocation);
 
   if (requestedLessonId) {
@@ -112,17 +97,12 @@ async function readInitialAuthoringWorkspace({
     }
   }
 
-  const initialWorkspace = authoringStore.readWorkspaceSnapshot();
-  const firstDraftId = initialWorkspace.drafts[0]?.draftId || '';
-
-  return firstDraftId
-    ? authoringStore.readWorkspaceSnapshot(firstDraftId)
-    : initialWorkspace;
+  return authoringStore.readWorkspaceSnapshot();
 }
 
 function downloadScriptMarkdown(ownerWindow, lessonId, sourceMarkdown) {
   const blob = new Blob([sourceMarkdown], {
-    type: 'text/markdown;charset=utf-8'
+    type: 'text/markdown;charset=utf-8',
   });
   const downloadUrl = ownerWindow.URL.createObjectURL(blob);
   const downloadAnchor = ownerWindow.document.createElement('a');
@@ -143,14 +123,18 @@ function readArtifactDeclarations(parsedLesson) {
 }
 
 function readPrimaryArtifactId(parsedLesson) {
-  return readArtifactDeclarations(parsedLesson).find(artifact => artifact.isPrimary)?.artifactId
-    || readArtifactDeclarations(parsedLesson)[0]?.artifactId
-    || '';
+  return (
+    readArtifactDeclarations(parsedLesson).find((artifact) => artifact.isPrimary)?.artifactId ||
+    readArtifactDeclarations(parsedLesson)[0]?.artifactId ||
+    ''
+  );
 }
 
 function readArtifactFileName(artifact) {
-  return normalizeText(artifact?.label)
-    || `${normalizeText(artifact?.artifactId) || 'artifact'}.${normalizeText(artifact?.language) || 'txt'}`;
+  return (
+    normalizeText(artifact?.label) ||
+    `${normalizeText(artifact?.artifactId) || 'artifact'}.${normalizeText(artifact?.language) || 'txt'}`
+  );
 }
 
 function splitCodeText(codeText) {
@@ -167,11 +151,21 @@ function buildHeaderTitle(state) {
   const parsedLesson = state.analysis?.parsedLesson;
   const frontmatterAttributes = state.analysis?.frontmatterAttributes || {};
   const selectedDraft = state.workspaceSnapshot.selectedDraft;
-  const lessonTitle = parsedLesson?.attributes?.lessonTitle
-    || normalizeText(frontmatterAttributes.lessonTitle)
-    || normalizeText(frontmatterAttributes.lessonId)
-    || selectedDraft?.lessonTitle
-    || 'No draft selected';
+  if (
+    !parsedLesson &&
+    !selectedDraft &&
+    !normalizeText(frontmatterAttributes.lessonTitle) &&
+    !normalizeText(frontmatterAttributes.lessonId)
+  ) {
+    return 'Lesson Library';
+  }
+
+  const lessonTitle =
+    parsedLesson?.attributes?.lessonTitle ||
+    normalizeText(frontmatterAttributes.lessonTitle) ||
+    normalizeText(frontmatterAttributes.lessonId) ||
+    selectedDraft?.lessonTitle ||
+    'No draft selected';
   const order = parsedLesson?.attributes?.order;
 
   if (Number.isInteger(order) && order > 0) {
@@ -185,12 +179,18 @@ function buildHeaderMeta(state) {
   const parsedLesson = state.analysis?.parsedLesson;
   const selectedDraft = state.workspaceSnapshot.selectedDraft;
   const steps = Array.isArray(parsedLesson?.steps) ? parsedLesson.steps : [];
-  const sceneCount = steps.reduce((count, step) => count + (Array.isArray(step.scenes) ? step.scenes.length : 0), 0);
+  const sceneCount = steps.reduce(
+    (count, step) => count + (Array.isArray(step.scenes) ? step.scenes.length : 0),
+    0
+  );
   const outlinedSteps = state.analysis?.editorContext?.steps || [];
-  const outlinedSceneCount = outlinedSteps.reduce((count, step) => count + (Array.isArray(step.scenes) ? step.scenes.length : 0), 0);
+  const outlinedSceneCount = outlinedSteps.reduce(
+    (count, step) => count + (Array.isArray(step.scenes) ? step.scenes.length : 0),
+    0
+  );
 
   if (!selectedDraft) {
-    return 'Open or create a draft to start writing.';
+    return 'Browse the lesson catalog, filter it fast, and open the editor only when you choose a lesson.';
   }
 
   if (steps.length) {
@@ -257,7 +257,7 @@ function buildWriterView(sourceMarkdown, editorContext) {
     bodyMarkdown: String(sourceMarkdown || '').slice(startOffset),
     startOffset,
     startLineIndex,
-    startLineNumber: startLineIndex + 1
+    startLineNumber: startLineIndex + 1,
   };
 }
 
@@ -316,15 +316,23 @@ function isFreshStarterDraft(state) {
   const firstScene = firstStep?.scenes?.[0];
   const lessonId = normalizeText(parsedLesson?.attributes?.lessonId || selectedDraft?.lessonId);
 
-  return Boolean(selectedDraft)
-    && selectedDraft.sourceOrigin === 'custom'
-    && /^new-lesson-\d+$/.test(lessonId)
-    && parsedLesson?.steps?.length === 1
-    && firstStep?.stepId === 'start-here'
-    && firstScene?.sceneId === 'start-here-scene';
+  return (
+    Boolean(selectedDraft) &&
+    selectedDraft.sourceOrigin === 'custom' &&
+    /^new-lesson-\d+$/.test(lessonId) &&
+    parsedLesson?.steps?.length === 1 &&
+    firstStep?.stepId === 'start-here' &&
+    firstScene?.sceneId === 'start-here-scene'
+  );
 }
 
-function shouldReplaceWriterBodyOnPaste(state, visibleBodyMarkdown, selectionStart, selectionEnd, pastedBodyMarkdown) {
+function shouldReplaceWriterBodyOnPaste(
+  state,
+  visibleBodyMarkdown,
+  selectionStart,
+  selectionEnd,
+  pastedBodyMarkdown
+) {
   const fullBodySelected = selectionStart === 0 && selectionEnd === visibleBodyMarkdown.length;
   const stepHeadingMatches = pastedBodyMarkdown.match(/^# Step:\s+/gm) || [];
 
@@ -336,7 +344,10 @@ function shouldReplaceWriterBodyOnPaste(state, visibleBodyMarkdown, selectionSta
     return true;
   }
 
-  return stepHeadingMatches.length >= BULK_LESSON_PASTE_STEP_THRESHOLD && visibleBodyMarkdown.trim() === '';
+  return (
+    stepHeadingMatches.length >= BULK_LESSON_PASTE_STEP_THRESHOLD &&
+    visibleBodyMarkdown.trim() === ''
+  );
 }
 
 function readVisibleEditorOffset(state, sourceOffset) {
@@ -348,7 +359,10 @@ function readSourceEditorOffset(state, visibleOffset) {
 }
 
 function readVisibleLineNumber(state, sourceLineNumber) {
-  return Math.max(1, Number(sourceLineNumber || 1) - ((state.writerView?.startLineNumber || 1) - 1));
+  return Math.max(
+    1,
+    Number(sourceLineNumber || 1) - ((state.writerView?.startLineNumber || 1) - 1)
+  );
 }
 
 function buildContextLabel(context) {
@@ -423,13 +437,13 @@ function buildStatusMessage(state) {
     return state.dirty ? 'Draft has unsaved changes.' : 'Draft is in sync with SQLite.';
   }
 
-  return 'Open or create a draft to start writing.';
+  return 'Choose a lesson from the catalog to open the editor, or create a new draft.';
 }
 
 function readValidationItems(state) {
   return readAuthoringDiagnostics({
     analysisPending: state.analysisPending,
-    analysis: state.analysis
+    analysis: state.analysis,
   });
 }
 
@@ -446,14 +460,13 @@ function buildValidationLocationNote(state, item) {
 function readEditorValidationDiagnostics(state) {
   const visibleStartLineNumber = state.writerView?.startLineNumber || 1;
 
-  return readValidationItems(state).map(item => ({
-    lineNumber: item.lineNumber < visibleStartLineNumber
-      ? 1
-      : readVisibleLineNumber(state, item.lineNumber),
+  return readValidationItems(state).map((item) => ({
+    lineNumber:
+      item.lineNumber < visibleStartLineNumber ? 1 : readVisibleLineNumber(state, item.lineNumber),
     label: item.label,
     contextLabel: item.contextLabel,
     message: item.humanMessage,
-    severity: item.tone === 'warning' ? 'warning' : 'error'
+    severity: item.tone === 'warning' ? 'warning' : 'error',
   }));
 }
 
@@ -463,7 +476,7 @@ function readPreviewTargetContext(parsedLesson, context) {
   if (!steps.length) {
     return {
       stepIndex: -1,
-      sceneIndex: -1
+      sceneIndex: -1,
     };
   }
 
@@ -473,26 +486,26 @@ function readPreviewTargetContext(parsedLesson, context) {
     if (context.sceneIndex >= 0 && scenes[context.sceneIndex]) {
       return {
         stepIndex: context.stepIndex,
-        sceneIndex: context.sceneIndex
+        sceneIndex: context.sceneIndex,
       };
     }
 
     return {
       stepIndex: context.stepIndex,
-      sceneIndex: Math.max(0, scenes.length - 1)
+      sceneIndex: Math.max(0, scenes.length - 1),
     };
   }
 
   return {
     stepIndex: 0,
-    sceneIndex: 0
+    sceneIndex: 0,
   };
 }
 
 function buildPreviewArtifactLinesByTarget(parsedLesson, artifactDeclarations, target) {
   const steps = Array.isArray(parsedLesson?.steps) ? parsedLesson.steps : [];
   const linesByArtifactId = Object.fromEntries(
-    artifactDeclarations.map(artifact => [artifact.artifactId, []])
+    artifactDeclarations.map((artifact) => [artifact.artifactId, []])
   );
 
   if (target.stepIndex < 0 || !steps[target.stepIndex]) {
@@ -502,14 +515,15 @@ function buildPreviewArtifactLinesByTarget(parsedLesson, artifactDeclarations, t
   for (let stepIndex = 0; stepIndex <= target.stepIndex; stepIndex += 1) {
     const step = steps[stepIndex];
     const scenes = Array.isArray(step.scenes) ? step.scenes : [];
-    const lastSceneIndex = stepIndex === target.stepIndex
-      ? Math.min(target.sceneIndex, Math.max(0, scenes.length - 1))
-      : scenes.length - 1;
+    const lastSceneIndex =
+      stepIndex === target.stepIndex
+        ? Math.min(target.sceneIndex, Math.max(0, scenes.length - 1))
+        : scenes.length - 1;
 
     for (let sceneIndex = 0; sceneIndex <= lastSceneIndex; sceneIndex += 1) {
       const scene = scenes[sceneIndex];
 
-      scene.showCodeBlocks.forEach(showCodeBlock => {
+      scene.showCodeBlocks.forEach((showCodeBlock) => {
         linesByArtifactId[showCodeBlock.artifactId] = splitCodeText(showCodeBlock.codeText);
       });
     }
@@ -528,7 +542,7 @@ function readPreviousPreviewTargetContext(parsedLesson, target) {
   if (target.sceneIndex > 0) {
     return {
       stepIndex: target.stepIndex,
-      sceneIndex: target.sceneIndex - 1
+      sceneIndex: target.sceneIndex - 1,
     };
   }
 
@@ -541,7 +555,7 @@ function readPreviousPreviewTargetContext(parsedLesson, target) {
 
   return {
     stepIndex: target.stepIndex - 1,
-    sceneIndex: Math.max(0, previousScenes.length - 1)
+    sceneIndex: Math.max(0, previousScenes.length - 1),
   };
 }
 
@@ -567,7 +581,11 @@ function buildParsedPreviewModel(parsedLesson, context) {
 
   const target = readPreviewTargetContext(parsedLesson, context);
   const previousTarget = readPreviousPreviewTargetContext(parsedLesson, target);
-  const linesByArtifactId = buildPreviewArtifactLinesByTarget(parsedLesson, artifactDeclarations, target);
+  const linesByArtifactId = buildPreviewArtifactLinesByTarget(
+    parsedLesson,
+    artifactDeclarations,
+    target
+  );
   const activeStep = steps[target.stepIndex];
   const activeScene = activeStep?.scenes?.[target.sceneIndex] || null;
 
@@ -581,8 +599,8 @@ function buildParsedPreviewModel(parsedLesson, context) {
     artifactLinesById: linesByArtifactId,
     previousArtifactLinesById: previousTarget
       ? buildPreviewArtifactLinesByTarget(parsedLesson, artifactDeclarations, previousTarget)
-      : Object.fromEntries(artifactDeclarations.map(artifact => [artifact.artifactId, []])),
-    diffBasisLabel: buildPreviewDiffBasisLabel(target, previousTarget)
+      : Object.fromEntries(artifactDeclarations.map((artifact) => [artifact.artifactId, []])),
+    diffBasisLabel: buildPreviewDiffBasisLabel(target, previousTarget),
   };
 }
 
@@ -592,12 +610,15 @@ function buildPreviewLessonRuntime(previewModel) {
   }
 
   const artifactFileNames = Object.fromEntries(
-    previewModel.artifactDeclarations.map(artifact => [artifact.artifactId, readArtifactFileName(artifact)])
+    previewModel.artifactDeclarations.map((artifact) => [
+      artifact.artifactId,
+      readArtifactFileName(artifact),
+    ])
   );
   const previewLesson = {
     documentLanguage: 'sr',
     templateJsFileName: artifactFileNames['template-js'] || 'template.js',
-    shadowCssFileName: artifactFileNames['shadow-css'] || 'shadow-dom-style.css'
+    shadowCssFileName: artifactFileNames['shadow-css'] || 'shadow-dom-style.css',
   };
 
   if (Object.hasOwn(previewModel.artifactLinesById, 'html')) {
@@ -637,14 +658,14 @@ function readPreviewModel(state) {
   if (state.previewModel) {
     return {
       ...state.previewModel,
-      isStale: false
+      isStale: false,
     };
   }
 
   if (state.lastHealthyPreviewModel) {
     return {
       ...state.lastHealthyPreviewModel,
-      isStale: true
+      isStale: true,
     };
   }
 
@@ -652,7 +673,8 @@ function readPreviewModel(state) {
 }
 
 function readSelectedArtifactId(state, previewModel) {
-  const availableArtifactIds = previewModel?.artifactDeclarations?.map(artifact => artifact.artifactId) || [];
+  const availableArtifactIds =
+    previewModel?.artifactDeclarations?.map((artifact) => artifact.artifactId) || [];
   const contextArtifactId = state.analysis?.editorContext?.context?.artifactId;
 
   if (contextArtifactId && availableArtifactIds.includes(contextArtifactId)) {
@@ -724,7 +746,7 @@ function buildOutlineMarkup(state) {
   const context = state.analysis?.editorContext?.context;
 
   if (!state.workspaceSnapshot.selectedDraft) {
-    return '<div class="authoring-empty">Create or open a draft to see the outline.</div>';
+    return '<div class="authoring-empty">Choose a lesson from the browser or create a new draft to see the outline.</div>';
   }
 
   if (!outlineSteps.length) {
@@ -733,12 +755,14 @@ function buildOutlineMarkup(state) {
 
   return `
     <div class="authoring-outline-root">
-      ${outlineSteps.map((step, stepIndex) => {
-        const stepSelected = context?.stepIndex === stepIndex;
-        const sceneMarkup = step.scenes.map((scene, sceneIndex) => {
-          const sceneSelected = stepSelected && context?.sceneIndex === sceneIndex;
+      ${outlineSteps
+        .map((step, stepIndex) => {
+          const stepSelected = context?.stepIndex === stepIndex;
+          const sceneMarkup = step.scenes
+            .map((scene, sceneIndex) => {
+              const sceneSelected = stepSelected && context?.sceneIndex === sceneIndex;
 
-          return `
+              return `
             <button
               type="button"
               class="authoring-outline-scene${sceneSelected ? ' is-active' : ''}"
@@ -752,9 +776,10 @@ function buildOutlineMarkup(state) {
               <strong>${escapeHtml(scene.title || scene.sceneId)}</strong>
             </button>
           `;
-        }).join('');
+            })
+            .join('');
 
-        return `
+          return `
           <div class="authoring-outline-step-group">
             <button
               type="button"
@@ -772,7 +797,8 @@ function buildOutlineMarkup(state) {
             </div>
           </div>
         `;
-      }).join('')}
+        })
+        .join('')}
     </div>
   `;
 }
@@ -871,7 +897,9 @@ function buildValidationMarkup(state) {
         <strong>${validationItems.length} issue${validationItems.length === 1 ? '' : 's'}</strong>
         <p>${escapeHtml(buildContextLabel(context))}</p>
       </div>
-      ${validationItems.map(item => `
+      ${validationItems
+        .map(
+          (item) => `
         <button
           type="button"
           class="authoring-validation-item"
@@ -884,7 +912,9 @@ function buildValidationMarkup(state) {
           <p>${escapeHtml(item.humanMessage)}</p>
           <small>${escapeHtml(buildValidationLocationNote(state, item))}</small>
         </button>
-      `).join('')}
+      `
+        )
+        .join('')}
     </div>
   `;
 }
@@ -894,7 +924,9 @@ function buildSnapshotTabsMarkup(previewModel, selectedArtifactId) {
     return '<div class="authoring-empty">No snapshot yet.</div>';
   }
 
-  return previewModel.artifactDeclarations.map(artifact => `
+  return previewModel.artifactDeclarations
+    .map(
+      (artifact) => `
     <button
       type="button"
       class="authoring-artifact-chip${artifact.artifactId === selectedArtifactId ? ' is-active' : ''}"
@@ -902,7 +934,9 @@ function buildSnapshotTabsMarkup(previewModel, selectedArtifactId) {
     >
       ${escapeHtml(artifact.artifactId)}
     </button>
-  `).join('');
+  `
+    )
+    .join('');
 }
 
 function buildArtifactDiffSummaryMarkup(previewModel, selectedArtifactId) {
@@ -944,13 +978,17 @@ function buildArtifactDiffMarkup(previewModel, selectedArtifactId) {
 
   return `
     <div class="authoring-diff-lines">
-      ${diff.entries.map(entry => `
+      ${diff.entries
+        .map(
+          (entry) => `
         <div class="authoring-diff-line is-${entry.kind}${entry.isEmptyLine ? ' is-empty' : ''}" data-change-kind="${entry.kind}">
           <span class="authoring-diff-marker" aria-hidden="true">${entry.kind === 'added' ? '+' : entry.kind === 'removed' ? '-' : '·'}</span>
           <span class="authoring-diff-number">${String(entry.currentLineNumber ?? entry.previousLineNumber ?? '').padStart(2, '0')}</span>
           <span class="authoring-diff-line-code">${entry.isEmptyLine ? '&nbsp;' : escapeHtml(entry.lineText)}</span>
         </div>
-      `).join('')}
+      `
+        )
+        .join('')}
     </div>
   `;
 }
@@ -959,7 +997,7 @@ function buildInsertMenuMarkup(state) {
   const context = state.analysis?.editorContext?.context || {
     kind: 'root',
     stepIndex: -1,
-    sceneIndex: -1
+    sceneIndex: -1,
   };
   const menuItems = buildInsertMenuItems(context);
 
@@ -970,18 +1008,227 @@ function buildInsertMenuMarkup(state) {
       <small class="authoring-popover-note">Use <code>/</code> on an empty line or <code>Ctrl/Cmd + K</code>.</small>
     </div>
     <div class="authoring-popover-list">
-      ${menuItems.map(item => `
+      ${menuItems
+        .map(
+          (item) => `
         <button type="button" class="authoring-popover-item" data-action="${item.action}">
           <strong>${escapeHtml(item.label)}</strong>
           <small>${escapeHtml(item.hint)}</small>
         </button>
-      `).join('')}
+      `
+        )
+        .join('')}
     </div>
   `;
 }
 
+function normalizeLessonBrowserQuery(value) {
+  return normalizeText(value).toLowerCase();
+}
+
+function lessonBrowserItemMatchesQuery(query, ...values) {
+  if (!query) {
+    return true;
+  }
+
+  return values.some((value) => normalizeLessonBrowserQuery(value).includes(query));
+}
+
+function readVisibleLessonBrowserCollections(state) {
+  const lessonBrowserQuery = normalizeLessonBrowserQuery(state.lessonBrowserQuery);
+  const customDrafts = state.workspaceSnapshot.drafts.filter(
+    (draft) => !normalizeText(draft.shippedLessonId)
+  );
+  const filteredCustomDrafts = customDrafts.filter((draft) =>
+    lessonBrowserItemMatchesQuery(
+      lessonBrowserQuery,
+      draft.lessonTitle,
+      draft.lessonId,
+      draft.sourceOrigin
+    )
+  );
+  const filteredShippedLessons = state.workspaceSnapshot.shippedLessons.filter((shippedLesson) =>
+    lessonBrowserItemMatchesQuery(
+      lessonBrowserQuery,
+      shippedLesson.lessonTitle,
+      shippedLesson.lessonId
+    )
+  );
+
+  return {
+    customDrafts,
+    filteredCustomDrafts,
+    filteredShippedLessons,
+    totalShippedLessons: state.workspaceSnapshot.shippedLessons.length,
+  };
+}
+
+function buildLessonBrowserMarkup(state) {
+  const selectedDraft = state.workspaceSnapshot.selectedDraft;
+  const { customDrafts, filteredCustomDrafts, filteredShippedLessons, totalShippedLessons } =
+    readVisibleLessonBrowserCollections(state);
+  const lessonBrowserSummary = normalizeText(state.lessonBrowserQuery)
+    ? `Filtered to ${filteredShippedLessons.length + filteredCustomDrafts.length} results.`
+    : `${totalShippedLessons} shipped lessons · ${customDrafts.length} custom drafts.`;
+
+  return `
+    <div class="authoring-library-summary">${escapeHtml(lessonBrowserSummary)}</div>
+
+    <div class="authoring-library-section">
+      <div class="authoring-library-section-head">
+        <strong>Existing lessons</strong>
+        <span>${totalShippedLessons}</span>
+      </div>
+      <div class="authoring-library-list">
+        ${
+          filteredShippedLessons.length
+            ? filteredShippedLessons
+                .map(
+                  (shippedLesson) => `
+            <button
+              type="button"
+              class="authoring-popover-item authoring-library-item${selectedDraft?.shippedLessonId === shippedLesson.lessonId ? ' is-active' : ''}"
+              data-action="open-shipped:${shippedLesson.lessonId}"
+              data-browser-kind="shipped"
+              data-browser-lesson-id="${escapeHtml(shippedLesson.lessonId)}"
+            >
+              <strong>${escapeHtml(shippedLesson.lessonTitle)}</strong>
+              <small>${escapeHtml(shippedLesson.lessonId)} · opens the paired draft</small>
+            </button>
+          `
+                )
+                .join('')
+            : '<div class="authoring-empty">No shipped lessons matched this filter.</div>'
+        }
+      </div>
+    </div>
+
+    <div class="authoring-library-section">
+      <div class="authoring-library-section-head">
+        <strong>Custom drafts</strong>
+        <span>${customDrafts.length}</span>
+      </div>
+      <div class="authoring-library-list">
+        ${
+          filteredCustomDrafts.length
+            ? filteredCustomDrafts
+                .map(
+                  (draft) => `
+            <button
+              type="button"
+              class="authoring-popover-item authoring-library-item${selectedDraft?.draftId === draft.draftId ? ' is-active' : ''}"
+              data-action="open-draft:${draft.draftId}"
+              data-browser-kind="draft"
+              data-browser-draft-id="${escapeHtml(draft.draftId)}"
+              data-browser-lesson-id="${escapeHtml(draft.lessonId)}"
+            >
+              <strong>${escapeHtml(draft.lessonTitle)}</strong>
+              <small>${escapeHtml(draft.lessonId)} · ${escapeHtml(draft.sourceOrigin)}</small>
+            </button>
+          `
+                )
+                .join('')
+            : '<div class="authoring-empty">No custom drafts yet. Create a new lesson to start writing.</div>'
+        }
+      </div>
+    </div>
+  `;
+}
+
+function readLessonCollectionBadgeText(lessonId, kind) {
+  const normalizedLessonId = normalizeText(lessonId);
+  const orderedLessonMatch = normalizedLessonId.match(/^(\d{2})-/);
+
+  if (orderedLessonMatch) {
+    return orderedLessonMatch[1];
+  }
+
+  return kind === 'draft' ? 'NEW' : 'CMS';
+}
+
+function buildLessonCollectionCard({
+  kind,
+  lessonId,
+  lessonTitle,
+  supportingText,
+  actionValue,
+  accentLabel,
+  kickerLabel,
+}) {
+  return `
+    <button
+      type="button"
+      class="authoring-collection-card"
+      data-action="${escapeHtml(actionValue)}"
+      data-collection-kind="${escapeHtml(kind)}"
+      data-collection-lesson-id="${escapeHtml(lessonId)}"
+    >
+      <div class="authoring-collection-card-head">
+        <span class="authoring-collection-card-badge">${escapeHtml(readLessonCollectionBadgeText(lessonId, kind))}</span>
+        <span class="authoring-collection-card-kind">${escapeHtml(kickerLabel)}</span>
+      </div>
+      <strong>${escapeHtml(lessonTitle)}</strong>
+      <p>${escapeHtml(lessonId)}</p>
+      <div class="authoring-collection-card-meta">
+        <span>${escapeHtml(supportingText)}</span>
+        <span>${escapeHtml(accentLabel)}</span>
+      </div>
+    </button>
+  `;
+}
+
+function readLessonCollectionViewModel(state) {
+  const { customDrafts, filteredCustomDrafts, filteredShippedLessons, totalShippedLessons } =
+    readVisibleLessonBrowserCollections(state);
+  const lessonBrowserQuery = normalizeLessonBrowserQuery(state.lessonBrowserQuery);
+  const visibleLessonCount = filteredShippedLessons.length + filteredCustomDrafts.length;
+  const lessonResultsSummary = lessonBrowserQuery
+    ? `${visibleLessonCount} lessons match "${lessonBrowserQuery}".`
+    : `Open one of ${totalShippedLessons} shipped lessons or continue one of ${customDrafts.length} custom drafts.`;
+
+  return {
+    visibleLessonCount,
+    totalShippedLessons,
+    totalCustomDrafts: customDrafts.length,
+    lessonResultsSummary,
+    visibleShippedCount: filteredShippedLessons.length,
+    visibleDraftCount: filteredCustomDrafts.length,
+    shippedGridMarkup: filteredShippedLessons.length
+      ? filteredShippedLessons
+          .map((shippedLesson) =>
+            buildLessonCollectionCard({
+              kind: 'shipped',
+              lessonId: shippedLesson.lessonId,
+              lessonTitle: shippedLesson.lessonTitle,
+              supportingText: 'Opens the paired draft in the editor',
+              actionValue: `open-shipped:${shippedLesson.lessonId}`,
+              accentLabel: 'Edit shipped lesson',
+              kickerLabel: 'Shipped',
+            })
+          )
+          .join('')
+      : '<div class="authoring-collection-empty">No shipped lessons matched this search.</div>',
+    draftGridMarkup: filteredCustomDrafts.length
+      ? filteredCustomDrafts
+          .map((draft) =>
+            buildLessonCollectionCard({
+              kind: 'draft',
+              lessonId: draft.lessonId,
+              lessonTitle: draft.lessonTitle,
+              supportingText: draft.sourceOrigin,
+              actionValue: `open-draft:${draft.draftId}`,
+              accentLabel: 'Resume draft',
+              kickerLabel: 'Draft',
+            })
+          )
+          .join('')
+      : '<div class="authoring-collection-empty">No custom drafts matched this search. Create a new lesson to start writing.</div>',
+  };
+}
+
 function buildMoreMenuMarkup(state) {
   const selectedDraft = state.workspaceSnapshot.selectedDraft;
+  const pairedDraftSelected = Boolean(selectedDraft?.shippedLessonId);
 
   return `
     <div class="authoring-popover-section">
@@ -990,6 +1237,8 @@ function buildMoreMenuMarkup(state) {
         <button type="button" class="authoring-popover-item" data-action="new-draft">New draft</button>
         <button type="button" class="authoring-popover-item" data-action="duplicate-draft" ${selectedDraft ? '' : 'disabled'}>Duplicate</button>
         <button type="button" class="authoring-popover-item" data-action="export-draft" ${selectedDraft ? '' : 'disabled'}>Export markdown</button>
+        <button type="button" class="authoring-popover-item" data-action="sync-saved-shipped-drafts-to-repo">Sync paired repo files</button>
+        <button type="button" class="authoring-popover-item" data-action="reset-paired-draft-to-shipped-source" ${pairedDraftSelected ? '' : 'disabled'}>Reset paired draft</button>
         <button type="button" class="authoring-popover-item" data-action="delete-draft" ${selectedDraft ? '' : 'disabled'}>Delete draft</button>
         <button type="button" class="authoring-popover-item" data-action="back-to-player">Back to player</button>
       </div>
@@ -998,7 +1247,9 @@ function buildMoreMenuMarkup(state) {
     <div class="authoring-popover-section">
       <span class="authoring-popover-section-label">Drafts</span>
       <div class="authoring-popover-list">
-        ${state.workspaceSnapshot.drafts.map(draft => `
+        ${state.workspaceSnapshot.drafts
+          .map(
+            (draft) => `
           <button
             type="button"
             class="authoring-popover-item${selectedDraft?.draftId === draft.draftId ? ' is-active' : ''}"
@@ -1007,21 +1258,28 @@ function buildMoreMenuMarkup(state) {
             <strong>${escapeHtml(draft.lessonTitle)}</strong>
             <small>${escapeHtml(draft.lessonId)} · ${escapeHtml(draft.sourceOrigin)}</small>
           </button>
-        `).join('')}
+        `
+          )
+          .join('')}
       </div>
     </div>
 
     <div class="authoring-popover-section">
       <span class="authoring-popover-section-label">Snapshots</span>
       <div class="authoring-popover-list">
-        ${selectedDraft?.versions?.length
-          ? selectedDraft.versions.map(version => `
+        ${
+          selectedDraft?.versions?.length
+            ? selectedDraft.versions
+                .map(
+                  (version) => `
             <button type="button" class="authoring-popover-item" data-action="restore-version:${version.versionId}">
               <strong>${escapeHtml(version.versionKind)}</strong>
               <small>${escapeHtml(version.createdAt)}</small>
             </button>
-          `).join('')
-          : '<div class="authoring-empty">No published snapshots yet.</div>'
+          `
+                )
+                .join('')
+            : '<div class="authoring-empty">No published snapshots yet.</div>'
         }
       </div>
     </div>
@@ -1029,12 +1287,16 @@ function buildMoreMenuMarkup(state) {
     <div class="authoring-popover-section">
       <span class="authoring-popover-section-label">Shipped lessons</span>
       <div class="authoring-popover-list">
-        ${state.workspaceSnapshot.shippedLessons.map(shippedLesson => `
+        ${state.workspaceSnapshot.shippedLessons
+          .map(
+            (shippedLesson) => `
           <button type="button" class="authoring-popover-item" data-action="open-shipped:${shippedLesson.lessonId}">
             <strong>${escapeHtml(shippedLesson.lessonTitle)}</strong>
             <small>${escapeHtml(shippedLesson.lessonId)}</small>
           </button>
-        `).join('')}
+        `
+          )
+          .join('')}
       </div>
     </div>
   `;
@@ -1086,7 +1348,7 @@ function readMetadataFormFromParsedLesson(parsedLesson) {
     goalTitle: normalizeText(goal.title),
     goalImageSrc: normalizeText(goal.imageSrc),
     goalImageAlt: normalizeText(goal.imageAlt),
-    goalImageCaption: normalizeText(goal.imageCaption)
+    goalImageCaption: normalizeText(goal.imageCaption),
   };
 }
 
@@ -1103,14 +1365,14 @@ function buildMetadataAttributesFromForm(parsedLesson, metadataForm) {
       ...(parsedLesson.attributes.preview || {}),
       type: normalizeText(metadataForm.previewType) || 'dom',
       title: normalizeText(metadataForm.previewTitle),
-      address: normalizeText(metadataForm.previewAddress)
-    }
+      address: normalizeText(metadataForm.previewAddress),
+    },
   };
   const goal = {
     title: normalizeText(metadataForm.goalTitle),
     imageSrc: normalizeText(metadataForm.goalImageSrc),
     imageAlt: normalizeText(metadataForm.goalImageAlt),
-    imageCaption: normalizeText(metadataForm.goalImageCaption)
+    imageCaption: normalizeText(metadataForm.goalImageCaption),
   };
   const hasGoalValues = Object.values(goal).some(Boolean);
 
@@ -1124,9 +1386,13 @@ function buildMetadataAttributesFromForm(parsedLesson, metadataForm) {
 }
 
 function buildOptionMarkup(options, selectedValue) {
-  return options.map(option => `
+  return options
+    .map(
+      (option) => `
     <option value="${option}" ${option === selectedValue ? 'selected' : ''}>${escapeHtml(option)}</option>
-  `).join('');
+  `
+    )
+    .join('');
 }
 
 function buildMetadataDrawerMarkup(state) {
@@ -1240,15 +1506,16 @@ function buildMetadataDrawerMarkup(state) {
 
 function createWorkspaceParts(ownerDocument) {
   ownerDocument.body.innerHTML = `
-    <div class="authoring-app">
+    <div class="authoring-app" id="authoringAppRoot">
       <header class="authoring-topbar">
         <div class="authoring-brand">
           <span class="authoring-kicker">Write mode</span>
-          <h1 id="authoringLessonTitle">Step By Step Animator</h1>
-          <p id="authoringLessonMeta">Open or create a draft to start writing.</p>
+          <h1 id="authoringLessonTitle">Lesson Library</h1>
+          <p id="authoringLessonMeta">Browse the lesson catalog, filter it fast, and open the editor only when you choose a lesson.</p>
         </div>
 
       <div class="authoring-topbar-actions">
+          <button type="button" id="authoringCreateDraftBtn" data-action="new-draft">New lesson</button>
           <span class="authoring-chip" id="authoringSaveState" data-tone="muted">Draft Saved</span>
           <span class="authoring-chip" id="authoringCompileChip" data-tone="muted">Draft Not Ready</span>
           <span class="authoring-chip" id="authoringPublishState" data-tone="muted">Not Published</span>
@@ -1266,8 +1533,90 @@ function createWorkspaceParts(ownerDocument) {
       <div class="authoring-status" id="authoringStatus" data-tone="muted"></div>
 
       <main class="authoring-shell">
-        <section class="authoring-frame">
+        <section class="authoring-collection-view" id="authoringCollectionView" hidden>
+          <section class="authoring-collection-hero">
+            <div class="authoring-collection-copy">
+              <span class="authoring-pane-label">Content / lessons</span>
+              <h2>Choose a lesson to edit</h2>
+              <p>/content/lesson is the CMS index. Pick a shipped lesson to open its paired draft, or start a brand new lesson without dropping into an empty editor first.</p>
+            </div>
+            <div class="authoring-collection-actions">
+              <label class="authoring-collection-search-shell" for="authoringCollectionSearch">
+                <span>Search lessons</span>
+                <input
+                  type="search"
+                  id="authoringCollectionSearch"
+                  class="authoring-collection-search"
+                  placeholder="Find by title or lesson id"
+                  aria-label="Search lesson collection"
+                />
+              </label>
+              <button type="button" id="authoringCollectionCreateDraftBtn" data-action="new-draft">New lesson</button>
+            </div>
+          </section>
+
+          <section class="authoring-collection-summary">
+            <div class="authoring-collection-stat">
+              <strong id="authoringCollectionVisibleCount">0</strong>
+              <span>Visible now</span>
+            </div>
+            <div class="authoring-collection-stat">
+              <strong id="authoringCollectionShippedTotal">0</strong>
+              <span>Shipped lessons</span>
+            </div>
+            <div class="authoring-collection-stat">
+              <strong id="authoringCollectionDraftTotal">0</strong>
+              <span>Custom drafts</span>
+            </div>
+            <p class="authoring-collection-summary-copy" id="authoringCollectionSummaryCopy"></p>
+          </section>
+
+          <section class="authoring-collection-section">
+            <div class="authoring-collection-section-head">
+              <div>
+                <span class="authoring-pane-label">Existing lessons</span>
+                <h3>Open an existing lesson</h3>
+              </div>
+              <span id="authoringCollectionShippedVisibleCount">0 visible</span>
+            </div>
+            <div class="authoring-collection-grid" id="authoringCollectionShippedGrid"></div>
+          </section>
+
+          <section class="authoring-collection-section">
+            <div class="authoring-collection-section-head">
+              <div>
+                <span class="authoring-pane-label">Custom drafts</span>
+                <h3>Continue your own drafts</h3>
+              </div>
+              <span id="authoringCollectionDraftVisibleCount">0 visible</span>
+            </div>
+            <div class="authoring-collection-grid" id="authoringCollectionDraftGrid"></div>
+          </section>
+        </section>
+
+        <section class="authoring-frame" id="authoringEditorFrame">
           <aside class="authoring-outline-pane">
+            <section class="authoring-library-card">
+              <div class="authoring-pane-head">
+                <div>
+                  <span class="authoring-pane-label">Lesson browser</span>
+                  <h2>Open or create</h2>
+                </div>
+                <span class="authoring-pane-note">CMS-style lesson access</span>
+              </div>
+              <div class="authoring-library-toolbar">
+                <input
+                  type="search"
+                  id="authoringLessonBrowserSearch"
+                  class="authoring-library-search"
+                  placeholder="Search lessons or drafts"
+                  aria-label="Search lessons or drafts"
+                />
+                <button type="button" class="authoring-inline-action" data-action="new-draft">+ New lesson</button>
+              </div>
+              <div id="authoringLessonBrowser"></div>
+            </section>
+
             <div class="authoring-pane-head">
               <div>
                 <span class="authoring-pane-label">Outline</span>
@@ -1369,8 +1718,26 @@ function createWorkspaceParts(ownerDocument) {
   `;
 
   return {
+    appRoot: ownerDocument.getElementById('authoringAppRoot'),
     lessonTitle: ownerDocument.getElementById('authoringLessonTitle'),
     lessonMeta: ownerDocument.getElementById('authoringLessonMeta'),
+    collectionView: ownerDocument.getElementById('authoringCollectionView'),
+    collectionSearch: ownerDocument.getElementById('authoringCollectionSearch'),
+    collectionVisibleCount: ownerDocument.getElementById('authoringCollectionVisibleCount'),
+    collectionShippedTotal: ownerDocument.getElementById('authoringCollectionShippedTotal'),
+    collectionDraftTotal: ownerDocument.getElementById('authoringCollectionDraftTotal'),
+    collectionSummaryCopy: ownerDocument.getElementById('authoringCollectionSummaryCopy'),
+    collectionShippedVisibleCount: ownerDocument.getElementById(
+      'authoringCollectionShippedVisibleCount'
+    ),
+    collectionDraftVisibleCount: ownerDocument.getElementById(
+      'authoringCollectionDraftVisibleCount'
+    ),
+    collectionShippedGrid: ownerDocument.getElementById('authoringCollectionShippedGrid'),
+    collectionDraftGrid: ownerDocument.getElementById('authoringCollectionDraftGrid'),
+    frame: ownerDocument.getElementById('authoringEditorFrame'),
+    lessonBrowser: ownerDocument.getElementById('authoringLessonBrowser'),
+    lessonBrowserSearch: ownerDocument.getElementById('authoringLessonBrowserSearch'),
     saveState: ownerDocument.getElementById('authoringSaveState'),
     compileChip: ownerDocument.getElementById('authoringCompileChip'),
     publishState: ownerDocument.getElementById('authoringPublishState'),
@@ -1384,7 +1751,9 @@ function createWorkspaceParts(ownerDocument) {
     outline: ownerDocument.getElementById('authoringOutline'),
     addStepButton: ownerDocument.getElementById('authoringAddStepBtn'),
     addSceneButton: ownerDocument.getElementById('authoringAddSceneBtn'),
-    editorPane: ownerDocument.getElementById('authoringScriptEditor').closest('.authoring-editor-pane'),
+    editorPane: ownerDocument
+      .getElementById('authoringScriptEditor')
+      .closest('.authoring-editor-pane'),
     editorHost: ownerDocument.getElementById('authoringScriptEditor'),
     cursorInfo: ownerDocument.getElementById('authoringCursorInfo'),
     dirtyBadge: ownerDocument.getElementById('authoringDirtyBadge'),
@@ -1403,7 +1772,7 @@ function createWorkspaceParts(ownerDocument) {
     diffSummary: ownerDocument.getElementById('authoringDiffSummary'),
     diffCode: ownerDocument.getElementById('authoringDiffCode'),
     metadataDrawer: ownerDocument.getElementById('authoringMetadataDrawer'),
-    metadataProseEditors: {}
+    metadataProseEditors: {},
   };
 }
 
@@ -1411,7 +1780,7 @@ function renderMetadataDrawer(state, parts) {
   const renderKey = `${state.metadataDrawerOpen}:${state.metadataFormVersion}:${Boolean(state.analysis?.parsedLesson)}`;
 
   if (!state.metadataDrawerOpen) {
-    Object.values(parts.metadataProseEditors).forEach(editor => {
+    Object.values(parts.metadataProseEditors).forEach((editor) => {
       editor?.destroy();
     });
     parts.metadataProseEditors = {};
@@ -1420,7 +1789,7 @@ function renderMetadataDrawer(state, parts) {
   }
 
   if (parts.metadataDrawer.dataset.renderKey !== renderKey) {
-    Object.values(parts.metadataProseEditors).forEach(editor => {
+    Object.values(parts.metadataProseEditors).forEach((editor) => {
       editor?.destroy();
     });
     parts.metadataProseEditors = {};
@@ -1431,10 +1800,10 @@ function renderMetadataDrawer(state, parts) {
   if (!state.metadataProseEditorFactory && !state.metadataProseEditorLoading) {
     state.metadataProseEditorLoading = true;
     void loadMetadataProseEditorFactory()
-      .then(factory => {
+      .then((factory) => {
         state.metadataProseEditorFactory = factory;
       })
-      .catch(error => {
+      .catch((error) => {
         state.statusMessage = `Failed to load BlockNote metadata editor: ${error.message}`;
         state.statusMessageTone = 'danger';
       })
@@ -1445,8 +1814,10 @@ function renderMetadataDrawer(state, parts) {
   }
 
   if (state.metadataProseEditorFactory && !Object.keys(parts.metadataProseEditors).length) {
-    ['lessonIntro', 'goalImageCaption'].forEach(fieldName => {
-      const hostElement = parts.metadataDrawer.querySelector(`[data-metadata-prose="${fieldName}"]`);
+    ['lessonIntro', 'goalImageCaption'].forEach((fieldName) => {
+      const hostElement = parts.metadataDrawer.querySelector(
+        `[data-metadata-prose="${fieldName}"]`
+      );
 
       if (!hostElement) {
         return;
@@ -1459,7 +1830,7 @@ function renderMetadataDrawer(state, parts) {
           if (state.metadataForm) {
             state.metadataForm[fieldName] = nextMarkdown;
           }
-        }
+        },
       });
     });
   }
@@ -1469,18 +1840,19 @@ function renderMetadataDrawer(state, parts) {
 
 function renderWorkspace(state, parts) {
   const selectedDraft = state.workspaceSnapshot.selectedDraft;
+  const collectionViewVisible = !selectedDraft;
   const context = state.analysis?.editorContext?.context || {
     kind: 'root',
     lineNumber: 1,
     stepIndex: -1,
-    sceneIndex: -1
+    sceneIndex: -1,
   };
   const previewModel = readPreviewModel(state);
   const selectedArtifactId = readSelectedArtifactId(state, previewModel);
   const previewDocument = buildPreviewDocument(previewModel);
   const saveState = readAuthoringSaveState({
     hasDraft: Boolean(selectedDraft),
-    dirty: state.dirty
+    dirty: state.dirty,
   });
   const compileState = readAuthoringCompileState({
     hasDraft: Boolean(selectedDraft),
@@ -1488,12 +1860,13 @@ function renderWorkspace(state, parts) {
     parseErrorMessage: state.analysis?.parseErrorMessage,
     compileErrorMessage: state.analysis?.compileErrorMessage,
     compiledLesson: state.analysis?.compiledLesson,
-    hasShippedFallback: Boolean(selectedDraft?.shippedLessonId)
+    hasShippedFallback: Boolean(selectedDraft?.shippedLessonId),
   });
   const publishState = readAuthoringPublishState({
     hasDraft: Boolean(selectedDraft),
-    versionCount: selectedDraft?.versions?.length || 0
+    versionCount: selectedDraft?.versions?.length || 0,
   });
+  const collectionViewModel = readLessonCollectionViewModel(state);
 
   state.currentArtifactId = selectedArtifactId;
   parts.lessonTitle.textContent = buildHeaderTitle(state);
@@ -1506,6 +1879,24 @@ function renderWorkspace(state, parts) {
   parts.publishState.dataset.tone = publishState.tone;
   parts.status.textContent = buildStatusMessage(state);
   parts.status.dataset.tone = buildStatusMessageTone(state);
+  parts.appRoot.dataset.workspaceView = collectionViewVisible ? 'collection' : 'editor';
+  parts.collectionView.hidden = !collectionViewVisible;
+  parts.frame.hidden = collectionViewVisible;
+  if (parts.collectionSearch.value !== state.lessonBrowserQuery) {
+    parts.collectionSearch.value = state.lessonBrowserQuery;
+  }
+  parts.collectionVisibleCount.textContent = String(collectionViewModel.visibleLessonCount);
+  parts.collectionShippedTotal.textContent = String(collectionViewModel.totalShippedLessons);
+  parts.collectionDraftTotal.textContent = String(collectionViewModel.totalCustomDrafts);
+  parts.collectionSummaryCopy.textContent = collectionViewModel.lessonResultsSummary;
+  parts.collectionShippedVisibleCount.textContent = `${collectionViewModel.visibleShippedCount} visible`;
+  parts.collectionDraftVisibleCount.textContent = `${collectionViewModel.visibleDraftCount} visible`;
+  parts.collectionShippedGrid.innerHTML = collectionViewModel.shippedGridMarkup;
+  parts.collectionDraftGrid.innerHTML = collectionViewModel.draftGridMarkup;
+  if (parts.lessonBrowserSearch.value !== state.lessonBrowserQuery) {
+    parts.lessonBrowserSearch.value = state.lessonBrowserQuery;
+  }
+  parts.lessonBrowser.innerHTML = buildLessonBrowserMarkup(state);
   parts.outline.innerHTML = buildOutlineMarkup(state);
   parts.compileStatus.innerHTML = buildCompileStatusMarkup(state);
   parts.validation.innerHTML = buildValidationMarkup(state);
@@ -1536,11 +1927,16 @@ function renderWorkspace(state, parts) {
   }
 
   parts.editorController.setEditable(Boolean(selectedDraft));
-  parts.editorController.setPlaceholderText(selectedDraft
-    ? 'Write the lesson flow here.'
-    : 'Create or open a draft to start writing.');
+  parts.editorController.setPlaceholderText(
+    selectedDraft
+      ? 'Write the lesson flow here.'
+      : 'Choose a lesson from the browser or create a new draft to start writing.'
+  );
   parts.saveDraftButton.disabled = !selectedDraft || !state.dirty;
-  parts.publishButton.disabled = !selectedDraft || state.analysisPending || Boolean(state.analysis?.parseErrorMessage || state.analysis?.compileErrorMessage);
+  parts.publishButton.disabled =
+    !selectedDraft ||
+    state.analysisPending ||
+    Boolean(state.analysis?.parseErrorMessage || state.analysis?.compileErrorMessage);
   parts.previewButton.disabled = !selectedDraft;
   parts.metadataButton.disabled = !selectedDraft;
   parts.insertButton.disabled = !selectedDraft;
@@ -1550,7 +1946,7 @@ function renderWorkspace(state, parts) {
   parts.previewFrame.srcdoc = previewDocument;
   parts.lessonTitle.ownerDocument.title = selectedDraft
     ? `${buildHeaderTitle(state)} · Step By Step Animator`
-    : 'Step By Step Animator';
+    : 'Lesson Library · Step By Step Animator';
 }
 
 function refreshAnalysis(state, cursorOffset) {
@@ -1577,7 +1973,7 @@ function refreshAnalysis(state, cursorOffset) {
   if (parsedLesson) {
     try {
       compiledLesson = compileLessonScript({
-        scriptMarkdown: sourceMarkdown
+        scriptMarkdown: sourceMarkdown,
       });
     } catch (error) {
       compileErrorMessage = error.message;
@@ -1595,7 +1991,7 @@ function refreshAnalysis(state, cursorOffset) {
     compiledLesson,
     compileErrorMessage,
     editorScan,
-    editorContext
+    editorContext,
   };
   state.writerView = writerView;
   state.previewModel = parsedLesson
@@ -1611,7 +2007,12 @@ function refreshAnalysis(state, cursorOffset) {
   } else {
     const fallbackArtifactId = readPrimaryArtifactId(parsedLesson);
 
-    if (!state.currentArtifactId || !readArtifactDeclarations(parsedLesson).some(artifact => artifact.artifactId === state.currentArtifactId)) {
+    if (
+      !state.currentArtifactId ||
+      !readArtifactDeclarations(parsedLesson).some(
+        (artifact) => artifact.artifactId === state.currentArtifactId
+      )
+    ) {
       state.currentArtifactId = fallbackArtifactId;
     }
   }
@@ -1619,13 +2020,14 @@ function refreshAnalysis(state, cursorOffset) {
 
 function refreshEditorContext(state, cursorOffset) {
   const parsedLesson = state.analysis?.parsedLesson || null;
-  const editorScan = state.analysis?.editorScan || scanLessonScriptSource(state.editorSourceMarkdown, parsedLesson);
+  const editorScan =
+    state.analysis?.editorScan || scanLessonScriptSource(state.editorSourceMarkdown, parsedLesson);
   const editorContext = readEditorContextFromScan(editorScan, cursorOffset);
 
   state.analysis = {
     ...state.analysis,
     editorScan,
-    editorContext
+    editorContext,
   };
   state.writerView = buildWriterView(state.editorSourceMarkdown, editorContext);
   state.previewModel = parsedLesson
@@ -1641,7 +2043,12 @@ function refreshEditorContext(state, cursorOffset) {
   } else {
     const fallbackArtifactId = readPrimaryArtifactId(parsedLesson);
 
-    if (!state.currentArtifactId || !readArtifactDeclarations(parsedLesson).some(artifact => artifact.artifactId === state.currentArtifactId)) {
+    if (
+      !state.currentArtifactId ||
+      !readArtifactDeclarations(parsedLesson).some(
+        (artifact) => artifact.artifactId === state.currentArtifactId
+      )
+    ) {
       state.currentArtifactId = fallbackArtifactId;
     }
   }
@@ -1655,7 +2062,13 @@ function maybeConfirmNavigation(state, ownerWindow) {
   return ownerWindow.confirm('This draft has unsaved changes. Continue and lose them?');
 }
 
-function applyVisibleEditorSelection(state, parts, selectionStart, selectionEnd = selectionStart, focusEditor = true) {
+function applyVisibleEditorSelection(
+  state,
+  parts,
+  selectionStart,
+  selectionEnd = selectionStart,
+  focusEditor = true
+) {
   const visibleSelectionStart = readVisibleEditorOffset(state, selectionStart);
   const visibleSelectionEnd = readVisibleEditorOffset(state, selectionEnd);
 
@@ -1684,33 +2097,38 @@ function buildInsertedSource({
   currentValue,
   snippet,
   insertionStart,
-  insertionEnd = insertionStart
+  insertionEnd = insertionStart,
 }) {
   const prefix = insertionStart > 0 && currentValue[insertionStart - 1] !== '\n' ? '\n' : '';
-  const suffix = insertionEnd < currentValue.length && currentValue[insertionEnd] !== '\n' ? '\n' : '';
+  const suffix =
+    insertionEnd < currentValue.length && currentValue[insertionEnd] !== '\n' ? '\n' : '';
   const nextValue = [
     currentValue.slice(0, insertionStart),
     prefix,
     snippet.text,
     suffix,
-    currentValue.slice(insertionEnd)
+    currentValue.slice(insertionEnd),
   ].join('');
 
   return {
     value: nextValue,
     selectionStart: insertionStart + prefix.length + snippet.selectionStart,
-    selectionEnd: insertionStart + prefix.length + snippet.selectionEnd
+    selectionEnd: insertionStart + prefix.length + snippet.selectionEnd,
   };
 }
 
-function applyEditorSourceChange(state, parts, {
-  nextValue,
-  selectionStart,
-  selectionEnd = selectionStart,
-  statusMessage = 'Draft has unsaved changes.',
-  statusTone = 'warning',
-  focusEditor = true
-}) {
+function applyEditorSourceChange(
+  state,
+  parts,
+  {
+    nextValue,
+    selectionStart,
+    selectionEnd = selectionStart,
+    statusMessage = 'Draft has unsaved changes.',
+    statusTone = 'warning',
+    focusEditor = true,
+  }
+) {
   state.editorSourceMarkdown = nextValue;
   state.dirty = true;
   state.statusMessage = statusMessage;
@@ -1729,7 +2147,7 @@ function importFullLessonSourceIntoEditor(state, parts, sourceMarkdown) {
     selectionStart: selectionOffset,
     selectionEnd: selectionOffset,
     statusMessage: 'Full lesson source imported into Write Mode.',
-    statusTone: 'success'
+    statusTone: 'success',
   });
 }
 
@@ -1743,28 +2161,27 @@ function importLessonBodyIntoEditor(state, parts, bodyMarkdown) {
     selectionStart: selectionOffset,
     selectionEnd: selectionOffset,
     statusMessage: 'Lesson body imported into Write Mode.',
-    statusTone: 'success'
+    statusTone: 'success',
   });
 }
 
-function insertSnippetIntoEditor(state, parts, {
-  actionName,
-  insertionStart,
-  insertionEnd = insertionStart,
-  scan = state.analysis.editorContext
-}) {
+function insertSnippetIntoEditor(
+  state,
+  parts,
+  { actionName, insertionStart, insertionEnd = insertionStart, scan = state.analysis.editorContext }
+) {
   const snippet = buildInsertSnippet(actionName, state.analysis.parsedLesson, scan);
   const insertedSource = buildInsertedSource({
     currentValue: state.editorSourceMarkdown,
     snippet,
     insertionStart,
-    insertionEnd
+    insertionEnd,
   });
 
   applyEditorSourceChange(state, parts, {
     nextValue: insertedSource.value,
     selectionStart: insertedSource.selectionStart,
-    selectionEnd: insertedSource.selectionEnd
+    selectionEnd: insertedSource.selectionEnd,
   });
 }
 
@@ -1814,8 +2231,8 @@ function readMetadataEditorContextScan(editorContext, stepIndex) {
       sceneIndex: -1,
       artifactId: '',
       sectionType: '',
-      insideCodeFence: false
-    }
+      insideCodeFence: false,
+    },
   };
 }
 
@@ -1830,51 +2247,101 @@ function closeAuthoringOverlays(state) {
 }
 
 function readWorkspaceActionStatus(baseStatusMessage, workspaceSnapshot, baseTone = 'success') {
-  const statusMessage = normalizeText(baseStatusMessage) || 'Draft updated.';
+  let statusMessage = normalizeText(baseStatusMessage) || 'Draft updated.';
+  let statusMessageTone = baseTone;
   const backupStatus = workspaceSnapshot?.backupStatus;
+  const repoLessonScriptStatus = workspaceSnapshot?.repoLessonScriptStatus;
 
-  if (!backupStatus) {
-    return {
-      statusMessage,
-      statusMessageTone: baseTone
-    };
+  if (backupStatus?.status === 'written') {
+    statusMessage = `${statusMessage} lesson.script.md backup written.`;
+  } else if (backupStatus?.status === 'removed') {
+    statusMessage = `${statusMessage} lesson.script.md backup removed.`;
+  } else if (backupStatus?.status === 'unavailable') {
+    statusMessage = `${statusMessage} lesson.script.md backup unavailable in this browser.`;
+    statusMessageTone = 'warning';
+  } else if (backupStatus?.status === 'failed') {
+    statusMessage = `${statusMessage} lesson.script.md backup failed: ${normalizeText(backupStatus.errorMessage) || 'Unknown backup write error.'}`;
+    statusMessageTone = 'warning';
   }
 
-  if (backupStatus.status === 'written') {
-    return {
-      statusMessage: `${statusMessage} lesson.script.md backup written.`,
-      statusMessageTone: baseTone
-    };
-  }
-
-  if (backupStatus.status === 'removed') {
-    return {
-      statusMessage: `${statusMessage} lesson.script.md backup removed.`,
-      statusMessageTone: baseTone
-    };
-  }
-
-  if (backupStatus.status === 'unavailable') {
-    return {
-      statusMessage: `${statusMessage} lesson.script.md backup unavailable in this browser.`,
-      statusMessageTone: 'warning'
-    };
-  }
-
-  if (backupStatus.status === 'failed') {
-    return {
-      statusMessage: `${statusMessage} lesson.script.md backup failed: ${normalizeText(backupStatus.errorMessage) || 'Unknown backup write error.'}`,
-      statusMessageTone: 'warning'
-    };
+  if (repoLessonScriptStatus?.status === 'created') {
+    statusMessage = `${statusMessage} Repo lesson.script.md created at ${repoLessonScriptStatus.relativeFilePath || 'product/education/lessons/.../source/lesson.script.md'}.`;
+  } else if (repoLessonScriptStatus?.status === 'updated') {
+    statusMessage = `${statusMessage} Repo lesson.script.md updated at ${repoLessonScriptStatus.relativeFilePath || 'product/education/lessons/.../source/lesson.script.md'}.`;
+  } else if (repoLessonScriptStatus?.status === 'unchanged') {
+    statusMessage = `${statusMessage} Repo lesson.script.md already matched the saved draft.`;
+  } else if (repoLessonScriptStatus?.status === 'unavailable') {
+    if (repoLessonScriptStatus.reason === 'unpaired-draft') {
+      statusMessage = `${statusMessage} Repo lesson.script.md sync skipped because this draft is not paired to a shipped lesson path.`;
+    } else if (repoLessonScriptStatus.reason === 'repo-materialization-unavailable') {
+      statusMessage = `${statusMessage} Repo lesson.script.md sync skipped because this paired lesson is not backed by a repo materialization path in this environment.`;
+    } else {
+      statusMessage = `${statusMessage} Repo lesson.script.md sync unavailable in this environment.`;
+      statusMessageTone = 'warning';
+    }
+  } else if (repoLessonScriptStatus?.status === 'unhealthy') {
+    statusMessage = `${statusMessage} Repo lesson.script.md not updated because the saved draft is not healthy: ${normalizeText(repoLessonScriptStatus.errorMessage) || 'Unknown lesson health error.'}`;
+    statusMessageTone = 'warning';
+  } else if (repoLessonScriptStatus?.status === 'conflict') {
+    statusMessage = `${statusMessage} Repo lesson.script.md not updated: ${normalizeText(repoLessonScriptStatus.errorMessage) || 'Saved draft lessonId does not match the shipped lesson path.'}`;
+    statusMessageTone = 'warning';
+  } else if (repoLessonScriptStatus?.status === 'failed') {
+    statusMessage = `${statusMessage} Repo lesson.script.md sync failed: ${normalizeText(repoLessonScriptStatus.errorMessage) || 'Unknown repo sync error.'}`;
+    statusMessageTone = 'warning';
   }
 
   return {
     statusMessage,
-    statusMessageTone: baseTone
+    statusMessageTone,
   };
 }
 
-function openWorkspaceSnapshot(state, parts, workspaceSnapshot, statusMessage, tone = 'success', selectionOffset = null) {
+function readSavedShippedDraftRepoSyncActionStatus(syncReport) {
+  const report = Array.isArray(syncReport) ? syncReport : [];
+
+  if (!report.length) {
+    return {
+      statusMessage: 'No shipped lessons were available for repo sync.',
+      statusMessageTone: 'warning',
+    };
+  }
+
+  const repoStatusCounts = report.reduce((counts, reportItem) => {
+    const status = normalizeText(reportItem?.repoLessonScriptStatus?.status) || 'unknown';
+    counts[status] = (counts[status] || 0) + 1;
+    return counts;
+  }, {});
+  const warningCount =
+    (repoStatusCounts.unhealthy || 0) +
+    (repoStatusCounts.conflict || 0) +
+    (repoStatusCounts.failed || 0) +
+    (repoStatusCounts.unavailable || 0) +
+    (repoStatusCounts.unknown || 0);
+  const messageParts = [
+    `Shipped repo sync checked ${report.length} lessons.`,
+    `Repo lesson.script.md: ${repoStatusCounts.created || 0} created, ${repoStatusCounts.updated || 0} updated, ${repoStatusCounts.unchanged || 0} unchanged.`,
+  ];
+
+  if (warningCount > 0) {
+    messageParts.push(
+      `Attention: ${repoStatusCounts.unhealthy || 0} unhealthy, ${repoStatusCounts.conflict || 0} conflict, ${repoStatusCounts.failed || 0} failed, ${repoStatusCounts.unavailable || 0} unavailable.`
+    );
+  }
+
+  return {
+    statusMessage: messageParts.join(' '),
+    statusMessageTone: warningCount > 0 ? 'warning' : 'success',
+  };
+}
+
+function openWorkspaceSnapshot(
+  state,
+  parts,
+  workspaceSnapshot,
+  statusMessage,
+  tone = 'success',
+  selectionOffset = null
+) {
   state.workspaceSnapshot = workspaceSnapshot;
   state.editorSourceMarkdown = workspaceSnapshot.selectedDraft?.sourceMarkdown || '';
   state.analysisPending = false;
@@ -1897,12 +2364,8 @@ function openWorkspaceSnapshot(state, parts, workspaceSnapshot, statusMessage, t
   applyVisibleEditorSelection(
     state,
     parts,
-    Number.isInteger(selectionOffset)
-      ? selectionOffset
-      : state.writerView.startOffset,
-    Number.isInteger(selectionOffset)
-      ? selectionOffset
-      : state.writerView.startOffset,
+    Number.isInteger(selectionOffset) ? selectionOffset : state.writerView.startOffset,
+    Number.isInteger(selectionOffset) ? selectionOffset : state.writerView.startOffset,
     false
   );
   syncAuthoringLocation(state.ownerWindow, state.ownerLocation, workspaceSnapshot);
@@ -1914,7 +2377,7 @@ function getActiveMenuKey(actionElement) {
 
   return {
     actionName,
-    parts
+    parts,
   };
 }
 
@@ -1933,54 +2396,63 @@ function applyMetadataFormToScript(state, parts) {
   }
 
   const nextSourceMarkdown = buildLessonScriptMarkdown({
-    lessonAttributes: buildMetadataAttributesFromForm(state.analysis.parsedLesson, state.metadataForm),
-    steps: state.analysis.parsedLesson.steps
+    lessonAttributes: buildMetadataAttributesFromForm(
+      state.analysis.parsedLesson,
+      state.metadataForm
+    ),
+    steps: state.analysis.parsedLesson.steps,
   });
-  const selectionOffset = readSelectionOffsetForContext(nextSourceMarkdown, state.analysis.editorContext);
+  const selectionOffset = readSelectionOffsetForContext(
+    nextSourceMarkdown,
+    state.analysis.editorContext
+  );
 
   applyEditorSourceChange(state, parts, {
     nextValue: nextSourceMarkdown,
     selectionStart: selectionOffset,
     selectionEnd: selectionOffset,
     statusMessage: 'Metadata changes applied to the lesson script.',
-    focusEditor: false
+    focusEditor: false,
   });
 
   state.metadataForm = readMetadataFormFromParsedLesson(state.analysis?.parsedLesson);
   state.metadataFormVersion += 1;
 }
 
-export async function showAuthoringWorkspace({
-  ownerDocument,
-  ownerLocation,
-  ownerWindow
-}) {
+export async function showAuthoringWorkspace({ ownerDocument, ownerLocation, ownerWindow }) {
   const shippedLessons = await readShippedLessonScripts();
   const authoringStore = await openAuthoringSqlite({
     ownerWindow,
-    shippedLessons
+    shippedLessons,
   });
   const initialDraftWorkspace = await readInitialAuthoringWorkspace({
     authoringStore,
-    ownerLocation
+    ownerLocation,
   });
   const state = {
     ownerLocation,
     ownerWindow,
     workspaceSnapshot: initialDraftWorkspace,
+    lessonBrowserQuery: '',
     editorSourceMarkdown: initialDraftWorkspace.selectedDraft?.sourceMarkdown || '',
     writerView: {
       hiddenPrefixMarkdown: '',
       bodyMarkdown: initialDraftWorkspace.selectedDraft?.sourceMarkdown || '',
       startOffset: 0,
       startLineIndex: 0,
-      startLineNumber: 1
+      startLineNumber: 1,
     },
     dirty: false,
-    statusMessage: initialDraftWorkspace.storeRecoveryNotice || 'SQLite workspace loaded.',
+    statusMessage:
+      initialDraftWorkspace.storeRecoveryNotice ||
+      (initialDraftWorkspace.selectedDraft
+        ? 'SQLite workspace loaded.'
+        : 'Lesson library ready. Open an existing lesson or create a new draft.'),
     statusMessageTone: initialDraftWorkspace.storeRecoveryNotice
-      ? (initialDraftWorkspace.storeRecoveryTone || 'warning')
-      : 'success',
+      ? initialDraftWorkspace.storeRecoveryTone || 'warning'
+      : initialDraftWorkspace.selectedDraft
+        ? 'success'
+        : 'muted',
     currentArtifactId: '',
     insertMenuOpen: false,
     moreMenuOpen: false,
@@ -2007,7 +2479,7 @@ export async function showAuthoringWorkspace({
         steps: [],
         contextByLine: [],
         existingStepIds: new Set(),
-        existingSceneIdsByStep: []
+        existingSceneIdsByStep: [],
       },
       editorContext: {
         context: {
@@ -2018,13 +2490,13 @@ export async function showAuthoringWorkspace({
           sceneIndex: -1,
           sectionType: '',
           artifactId: '',
-          insideCodeFence: false
+          insideCodeFence: false,
         },
         steps: [],
-        lineStarts: []
-      }
+        lineStarts: [],
+      },
     },
-    onDeferredMetadataSurfaceReady: null
+    onDeferredMetadataSurfaceReady: null,
   };
 
   function clearDeferredAnalysis() {
@@ -2068,6 +2540,14 @@ export async function showAuthoringWorkspace({
   }
 
   const parts = createWorkspaceParts(ownerDocument);
+  parts.lessonBrowserSearch.addEventListener('input', (event) => {
+    state.lessonBrowserQuery = normalizeLessonBrowserQuery(event.target.value);
+    renderWorkspace(state, parts);
+  });
+  parts.collectionSearch.addEventListener('input', (event) => {
+    state.lessonBrowserQuery = normalizeLessonBrowserQuery(event.target.value);
+    renderWorkspace(state, parts);
+  });
   state.onDeferredMetadataSurfaceReady = () => {
     if (state.metadataDrawerOpen) {
       renderWorkspace(state, parts);
@@ -2081,16 +2561,18 @@ export async function showAuthoringWorkspace({
     initialValue: state.writerView.bodyMarkdown,
     placeholderText: state.workspaceSnapshot.selectedDraft
       ? 'Write the lesson flow here.'
-      : 'Create or open a draft to start writing.',
+      : 'Choose a lesson from the browser or create a new draft to start writing.',
     readSlashMenuEligibility() {
-      return Boolean(state.workspaceSnapshot.selectedDraft)
-        && state.analysis?.editorContext?.context?.kind !== 'show-code';
+      return (
+        Boolean(state.workspaceSnapshot.selectedDraft) &&
+        state.analysis?.editorContext?.context?.kind !== 'show-code'
+      );
     },
     onChange({ value, selectionStart }) {
       state.editorSourceMarkdown = `${state.writerView.hiddenPrefixMarkdown}${value}`;
       state.writerView = {
         ...state.writerView,
-        bodyMarkdown: value
+        bodyMarkdown: value,
       };
       state.dirty = true;
       scheduleDeferredAnalysis(readSourceEditorOffset(state, selectionStart));
@@ -2110,8 +2592,14 @@ export async function showAuthoringWorkspace({
       }
 
       if (
-        importedBody
-        && shouldReplaceWriterBodyOnPaste(state, visibleBodyMarkdown, selectionStart, selectionEnd, importedBody)
+        importedBody &&
+        shouldReplaceWriterBodyOnPaste(
+          state,
+          visibleBodyMarkdown,
+          selectionStart,
+          selectionEnd,
+          importedBody
+        )
       ) {
         clearDeferredAnalysis();
         state.analysisPending = false;
@@ -2140,19 +2628,24 @@ export async function showAuthoringWorkspace({
         closeAuthoringOverlays(state);
         renderWorkspace(state, parts);
       }
-    }
+    },
   });
 
-  async function safelyRunWorkspaceAction(workspaceAction, successMessage, readSelectionOffset = null) {
+  async function safelyRunWorkspaceAction(
+    workspaceAction,
+    successMessage,
+    readSelectionOffset = null
+  ) {
     try {
       const result = await workspaceAction();
 
       if (result?.workspaceSnapshot) {
         clearDeferredAnalysis();
         state.analysisPending = false;
-        const selectionOffset = typeof readSelectionOffset === 'function'
-          ? readSelectionOffset(result.workspaceSnapshot)
-          : null;
+        const selectionOffset =
+          typeof readSelectionOffset === 'function'
+            ? readSelectionOffset(result.workspaceSnapshot)
+            : null;
         const workspaceActionStatus = readWorkspaceActionStatus(
           result.statusMessage || successMessage || 'Draft updated.',
           result.workspaceSnapshot,
@@ -2185,36 +2678,56 @@ export async function showAuthoringWorkspace({
       return;
     }
 
-    const selectionOffset = readSourceEditorOffset(state, parts.editorController.getSelectionStart());
+    const selectionOffset = readSourceEditorOffset(
+      state,
+      parts.editorController.getSelectionStart()
+    );
 
-    await safelyRunWorkspaceAction(async () => {
-      const nextWorkspaceSnapshot = await authoringStore.saveLessonDraft({
-        draftId: state.workspaceSnapshot.selectedDraft.draftId,
-        sourceMarkdown: state.editorSourceMarkdown
-      });
+    await safelyRunWorkspaceAction(
+      async () => {
+        const nextWorkspaceSnapshot = await authoringStore.saveLessonDraft({
+          draftId: state.workspaceSnapshot.selectedDraft.draftId,
+          sourceMarkdown: state.editorSourceMarkdown,
+        });
 
-      return {
-        workspaceSnapshot: nextWorkspaceSnapshot
-      };
-    }, 'Draft saved into SQLite.', () => selectionOffset);
+        return {
+          workspaceSnapshot: nextWorkspaceSnapshot,
+        };
+      },
+      'Draft saved into SQLite.',
+      () => selectionOffset
+    );
   }
 
   async function publishCurrentDraft() {
     flushDeferredAnalysis();
 
-    if (!state.workspaceSnapshot.selectedDraft || state.analysis?.parseErrorMessage || state.analysis?.compileErrorMessage) {
+    if (
+      !state.workspaceSnapshot.selectedDraft ||
+      state.analysis?.parseErrorMessage ||
+      state.analysis?.compileErrorMessage
+    ) {
       return;
     }
 
-    const selectionOffset = readSourceEditorOffset(state, parts.editorController.getSelectionStart());
+    const selectionOffset = readSourceEditorOffset(
+      state,
+      parts.editorController.getSelectionStart()
+    );
 
-    await safelyRunWorkspaceAction(async () => {
-      const nextWorkspaceSnapshot = await authoringStore.publishLessonDraft(state.workspaceSnapshot.selectedDraft.draftId);
+    await safelyRunWorkspaceAction(
+      async () => {
+        const nextWorkspaceSnapshot = await authoringStore.publishLessonDraft(
+          state.workspaceSnapshot.selectedDraft.draftId
+        );
 
-      return {
-        workspaceSnapshot: nextWorkspaceSnapshot
-      };
-    }, 'Published snapshot stored in SQLite.', () => selectionOffset);
+        return {
+          workspaceSnapshot: nextWorkspaceSnapshot,
+        };
+      },
+      'Published snapshot stored in SQLite.',
+      () => selectionOffset
+    );
   }
 
   function syncCursorState() {
@@ -2231,7 +2744,10 @@ export async function showAuthoringWorkspace({
 
   parts.previewButton.addEventListener('click', () => {
     flushDeferredAnalysis();
-    refreshAnalysis(state, readSourceEditorOffset(state, parts.editorController.getSelectionStart()));
+    refreshAnalysis(
+      state,
+      readSourceEditorOffset(state, parts.editorController.getSelectionStart())
+    );
     state.statusMessage = 'Preview refreshed from the active writing context.';
     state.statusMessageTone = 'success';
     renderWorkspace(state, parts);
@@ -2271,13 +2787,14 @@ export async function showAuthoringWorkspace({
 
     flushDeferredAnalysis();
     const activeStepIndex = state.analysis.editorContext.context.stepIndex;
-    const insertionStart = activeStepIndex >= 0
-      ? readInsertOffsetAfterStep(state, activeStepIndex)
-      : state.editorSourceMarkdown.length;
+    const insertionStart =
+      activeStepIndex >= 0
+        ? readInsertOffsetAfterStep(state, activeStepIndex)
+        : state.editorSourceMarkdown.length;
 
     insertSnippetIntoEditor(state, parts, {
       actionName: 'insert-step',
-      insertionStart
+      insertionStart,
     });
     renderWorkspace(state, parts);
   });
@@ -2293,7 +2810,7 @@ export async function showAuthoringWorkspace({
     insertSnippetIntoEditor(state, parts, {
       actionName: 'insert-scene',
       insertionStart: readInsertOffsetAfterStep(state, activeStepIndex),
-      scan: readMetadataEditorContextScan(state.analysis.editorContext, activeStepIndex)
+      scan: readMetadataEditorContextScan(state.analysis.editorContext, activeStepIndex),
     });
     renderWorkspace(state, parts);
   });
@@ -2311,7 +2828,7 @@ export async function showAuthoringWorkspace({
   parts.metadataDrawer.addEventListener('input', syncMetadataFieldFromEvent);
   parts.metadataDrawer.addEventListener('change', syncMetadataFieldFromEvent);
 
-  ownerDocument.body.addEventListener('click', async event => {
+  ownerDocument.body.addEventListener('click', async (event) => {
     const actionElement = event.target.closest('[data-action]');
     const popoverShell = event.target.closest('.authoring-popover-shell');
     const metadataDrawer = event.target.closest('.authoring-drawer');
@@ -2334,7 +2851,10 @@ export async function showAuthoringWorkspace({
     if (actionName === 'jump-to-source-line') {
       flushDeferredAnalysis();
       focusEditorAtSourceLine(state, parts, Number(actionParts[0]));
-      refreshEditorContext(state, readSourceEditorOffset(state, parts.editorController.getSelectionStart()));
+      refreshEditorContext(
+        state,
+        readSourceEditorOffset(state, parts.editorController.getSelectionStart())
+      );
       renderWorkspace(state, parts);
       return;
     }
@@ -2357,11 +2877,11 @@ export async function showAuthoringWorkspace({
       await safelyRunWorkspaceAction(async () => {
         const nextWorkspaceSnapshot = await authoringStore.restoreLessonDraftVersion({
           draftId: state.workspaceSnapshot.selectedDraft.draftId,
-          versionId: actionParts[0]
+          versionId: actionParts[0],
         });
 
         return {
-          workspaceSnapshot: nextWorkspaceSnapshot
+          workspaceSnapshot: nextWorkspaceSnapshot,
         };
       }, 'Published snapshot restored into the draft.');
       return;
@@ -2411,7 +2931,10 @@ export async function showAuthoringWorkspace({
       clearDeferredAnalysis();
       state.analysisPending = false;
       const newDraftWorkspaceSnapshot = await authoringStore.createLessonDraft();
-      const newDraftStatus = readWorkspaceActionStatus('New draft created.', newDraftWorkspaceSnapshot);
+      const newDraftStatus = readWorkspaceActionStatus(
+        'New draft created.',
+        newDraftWorkspaceSnapshot
+      );
 
       openWorkspaceSnapshot(
         state,
@@ -2424,6 +2947,51 @@ export async function showAuthoringWorkspace({
       return;
     }
 
+    if (actionName === 'sync-saved-shipped-drafts-to-repo') {
+      if (state.dirty) {
+        state.statusMessage =
+          'Save the current draft first. Bulk repo sync only uses saved draft state.';
+        state.statusMessageTone = 'warning';
+        renderWorkspace(state, parts);
+        return;
+      }
+
+      await safelyRunWorkspaceAction(async () => {
+        const syncResult = await authoringStore.syncSavedShippedDraftsToRepo(
+          state.workspaceSnapshot.selectedDraft?.draftId || ''
+        );
+        const syncStatus = readSavedShippedDraftRepoSyncActionStatus(syncResult.syncReport);
+
+        return {
+          workspaceSnapshot: syncResult.workspaceSnapshot,
+          statusMessage: syncStatus.statusMessage,
+          statusMessageTone: syncStatus.statusMessageTone,
+        };
+      });
+      return;
+    }
+
+    if (actionName === 'reset-paired-draft-to-shipped-source') {
+      if (!state.workspaceSnapshot.selectedDraft?.shippedLessonId) {
+        return;
+      }
+
+      if (!maybeConfirmNavigation(state, ownerWindow)) {
+        return;
+      }
+
+      await safelyRunWorkspaceAction(async () => {
+        const nextWorkspaceSnapshot = await authoringStore.resetPairedDraftToShippedSource(
+          state.workspaceSnapshot.selectedDraft.draftId
+        );
+
+        return {
+          workspaceSnapshot: nextWorkspaceSnapshot,
+        };
+      }, 'Paired draft reset from the shipped lesson source.');
+      return;
+    }
+
     if (actionName === 'duplicate-draft') {
       if (!state.workspaceSnapshot.selectedDraft) {
         return;
@@ -2431,8 +2999,13 @@ export async function showAuthoringWorkspace({
 
       clearDeferredAnalysis();
       state.analysisPending = false;
-      const duplicatedWorkspaceSnapshot = await authoringStore.duplicateLessonDraft(state.workspaceSnapshot.selectedDraft.draftId);
-      const duplicatedDraftStatus = readWorkspaceActionStatus('Draft duplicated.', duplicatedWorkspaceSnapshot);
+      const duplicatedWorkspaceSnapshot = await authoringStore.duplicateLessonDraft(
+        state.workspaceSnapshot.selectedDraft.draftId
+      );
+      const duplicatedDraftStatus = readWorkspaceActionStatus(
+        'Draft duplicated.',
+        duplicatedWorkspaceSnapshot
+      );
 
       openWorkspaceSnapshot(
         state,
@@ -2454,14 +3027,21 @@ export async function showAuthoringWorkspace({
         return;
       }
 
-      if (!ownerWindow.confirm(`Delete draft "${state.workspaceSnapshot.selectedDraft.lessonTitle}"?`)) {
+      if (
+        !ownerWindow.confirm(`Delete draft "${state.workspaceSnapshot.selectedDraft.lessonTitle}"?`)
+      ) {
         return;
       }
 
       clearDeferredAnalysis();
       state.analysisPending = false;
-      const deletedWorkspaceSnapshot = await authoringStore.deleteLessonDraft(state.workspaceSnapshot.selectedDraft.draftId);
-      const deletedDraftStatus = readWorkspaceActionStatus('Draft deleted.', deletedWorkspaceSnapshot);
+      const deletedWorkspaceSnapshot = await authoringStore.deleteLessonDraft(
+        state.workspaceSnapshot.selectedDraft.draftId
+      );
+      const deletedDraftStatus = readWorkspaceActionStatus(
+        'Draft deleted.',
+        deletedWorkspaceSnapshot
+      );
 
       openWorkspaceSnapshot(
         state,
@@ -2486,7 +3066,8 @@ export async function showAuthoringWorkspace({
 
       downloadScriptMarkdown(
         ownerWindow,
-        state.analysis?.parsedLesson?.attributes?.lessonId || state.workspaceSnapshot.selectedDraft.lessonId,
+        state.analysis?.parsedLesson?.attributes?.lessonId ||
+          state.workspaceSnapshot.selectedDraft.lessonId,
         state.editorSourceMarkdown
       );
       state.statusMessage = 'Draft exported as lesson.script.md.';
@@ -2500,7 +3081,10 @@ export async function showAuthoringWorkspace({
         return;
       }
 
-      ownerWindow.location.href = buildWorkspaceUrl(ownerLocation, '');
+      ownerWindow.location.href = buildPlayerLessonUrl(
+        ownerLocation,
+        readWorkspaceLessonLocationId(state.workspaceSnapshot)
+      );
       return;
     }
 
@@ -2532,29 +3116,28 @@ export async function showAuthoringWorkspace({
       return;
     }
 
-    if (actionName === 'insert-step'
-      || actionName === 'insert-scene'
-      || actionName === 'insert-step-summary'
-      || actionName === 'insert-intent'
-      || actionName === 'insert-narration'
-      || actionName.startsWith('insert-show-code')
-      || actionName === 'insert-theory-link'
-      || actionName === 'insert-preview-action') {
+    if (
+      actionName === 'insert-step' ||
+      actionName === 'insert-scene' ||
+      actionName === 'insert-step-summary' ||
+      actionName === 'insert-intent' ||
+      actionName === 'insert-narration' ||
+      actionName.startsWith('insert-show-code') ||
+      actionName === 'insert-theory-link' ||
+      actionName === 'insert-preview-action'
+    ) {
       flushDeferredAnalysis();
       insertSnippetIntoEditor(state, parts, {
         actionName: actionElement.dataset.action,
         insertionStart: readSourceEditorOffset(state, parts.editorController.getSelectionStart()),
-        insertionEnd: readSourceEditorOffset(
-          state,
-          parts.editorController.getSelectionEnd()
-        )
+        insertionEnd: readSourceEditorOffset(state, parts.editorController.getSelectionEnd()),
       });
       state.insertMenuOpen = false;
       renderWorkspace(state, parts);
     }
   });
 
-  ownerDocument.addEventListener('keydown', async event => {
+  ownerDocument.addEventListener('keydown', async (event) => {
     const isSaveShortcut = (event.metaKey || event.ctrlKey) && event.key.toLowerCase() === 's';
 
     if (isSaveShortcut) {
@@ -2563,13 +3146,16 @@ export async function showAuthoringWorkspace({
       return;
     }
 
-    if (event.key === 'Escape' && (state.insertMenuOpen || state.moreMenuOpen || state.metadataDrawerOpen)) {
+    if (
+      event.key === 'Escape' &&
+      (state.insertMenuOpen || state.moreMenuOpen || state.metadataDrawerOpen)
+    ) {
       closeAuthoringOverlays(state);
       renderWorkspace(state, parts);
     }
   });
 
-  ownerWindow.addEventListener('beforeunload', event => {
+  ownerWindow.addEventListener('beforeunload', (event) => {
     if (!state.dirty) {
       return;
     }

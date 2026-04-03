@@ -3,14 +3,14 @@ import {
   EditorState,
   RangeSetBuilder,
   StateEffect,
-  StateField
+  StateField,
 } from '@codemirror/state';
 import { markdown } from '@codemirror/lang-markdown';
 import {
   Decoration,
   EditorView,
   ViewPlugin,
-  placeholder as placeholderExtension
+  placeholder as placeholderExtension,
 } from '@codemirror/view';
 import { minimalSetup } from 'codemirror';
 
@@ -42,15 +42,30 @@ function decorateHeadingLine(builder, lineFrom, lineText, prefix, valueClassName
   const value = lineText.slice(prefix.length);
 
   addMark(builder, lineFrom, lineFrom + prefix.length, 'authoring-token-heading');
-  addMark(builder, lineFrom + prefix.length, lineFrom + prefix.length + value.length, valueClassName);
+  addMark(
+    builder,
+    lineFrom + prefix.length,
+    lineFrom + prefix.length + value.length,
+    valueClassName
+  );
 }
 
 function decorateSectionLine(builder, lineFrom, lineText) {
   const showCodeMatch = lineText.match(/^### Show Code:\s*(.+)$/);
 
   if (showCodeMatch) {
-    addMark(builder, lineFrom, lineFrom + '### Show Code: '.length, 'authoring-token-section-label');
-    addMark(builder, lineFrom + '### Show Code: '.length, lineFrom + lineText.length, 'authoring-token-artifact');
+    addMark(
+      builder,
+      lineFrom,
+      lineFrom + '### Show Code: '.length,
+      'authoring-token-section-label'
+    );
+    addMark(
+      builder,
+      lineFrom + '### Show Code: '.length,
+      lineFrom + lineText.length,
+      'authoring-token-artifact'
+    );
     return;
   }
 
@@ -123,9 +138,13 @@ function buildDslDecorations(state) {
     const lineText = line.text;
     const trimmedLine = lineText.trim();
 
-    builder.add(line.from, line.from, Decoration.line({
-      class: readLineClassName(lineText, insideCodeFence)
-    }));
+    builder.add(
+      line.from,
+      line.from,
+      Decoration.line({
+        class: readLineClassName(lineText, insideCodeFence),
+      })
+    );
 
     if (/^# Step:\s*/.test(lineText)) {
       decorateHeadingLine(builder, line.from, lineText, '# Step: ', 'authoring-token-step');
@@ -149,19 +168,22 @@ function buildDslDecorations(state) {
   return builder.finish();
 }
 
-const dslDecorationPlugin = ViewPlugin.fromClass(class {
-  constructor(view) {
-    this.decorations = buildDslDecorations(view.state);
-  }
-
-  update(update) {
-    if (update.docChanged) {
-      this.decorations = buildDslDecorations(update.state);
+const dslDecorationPlugin = ViewPlugin.fromClass(
+  class {
+    constructor(view) {
+      this.decorations = buildDslDecorations(view.state);
     }
+
+    update(update) {
+      if (update.docChanged) {
+        this.decorations = buildDslDecorations(update.state);
+      }
+    }
+  },
+  {
+    decorations: (plugin) => plugin.decorations,
   }
-}, {
-  decorations: plugin => plugin.decorations
-});
+);
 
 function clampEditorLineNumber(doc, lineNumber) {
   const normalizedLineNumber = Number(lineNumber) || 1;
@@ -170,29 +192,24 @@ function clampEditorLineNumber(doc, lineNumber) {
 }
 
 function readDiagnosticSeverity(diagnostics) {
-  return diagnostics.some(diagnostic => diagnostic.severity === 'warning')
-    ? 'warning'
-    : 'error';
+  return diagnostics.some((diagnostic) => diagnostic.severity === 'warning') ? 'warning' : 'error';
 }
 
 function buildDiagnosticTooltipLabel(diagnostic) {
-  const contextLabel = typeof diagnostic.contextLabel === 'string'
-    ? diagnostic.contextLabel.trim()
-    : '';
+  const contextLabel =
+    typeof diagnostic.contextLabel === 'string' ? diagnostic.contextLabel.trim() : '';
 
-  return contextLabel
-    ? `${diagnostic.label} · ${contextLabel}`
-    : diagnostic.label;
+  return contextLabel ? `${diagnostic.label} · ${contextLabel}` : diagnostic.label;
 }
 
 function readDiagnosticsByLine(doc, diagnostics) {
   const diagnosticsByLine = new Map();
 
-  (Array.isArray(diagnostics) ? diagnostics : []).forEach(diagnostic => {
+  (Array.isArray(diagnostics) ? diagnostics : []).forEach((diagnostic) => {
     const lineNumber = clampEditorLineNumber(doc, diagnostic.lineNumber);
     const nextDiagnostic = {
       ...diagnostic,
-      lineNumber
+      lineNumber,
     };
     const lineDiagnostics = diagnosticsByLine.get(lineNumber) || [];
 
@@ -211,21 +228,29 @@ function buildAuthoringDiagnosticDecorations(doc, diagnostics) {
     const line = doc.line(lineNumber);
     const severity = readDiagnosticSeverity(lineDiagnostics);
     const tooltipText = lineDiagnostics
-      .map(diagnostic => `${buildDiagnosticTooltipLabel(diagnostic)}\n${diagnostic.message}`)
+      .map((diagnostic) => `${buildDiagnosticTooltipLabel(diagnostic)}\n${diagnostic.message}`)
       .join('\n\n');
 
-    builder.add(line.from, line.from, Decoration.line({
-      class: `authoring-script-line has-diagnostic is-diagnostic-${severity}`
-    }));
+    builder.add(
+      line.from,
+      line.from,
+      Decoration.line({
+        class: `authoring-script-line has-diagnostic is-diagnostic-${severity}`,
+      })
+    );
 
     if (line.from < line.to) {
-      builder.add(line.from, line.to, Decoration.mark({
-        class: `authoring-diagnostic-mark is-${severity}`,
-        attributes: {
-          title: tooltipText,
-          'aria-label': tooltipText
-        }
-      }));
+      builder.add(
+        line.from,
+        line.to,
+        Decoration.mark({
+          class: `authoring-diagnostic-mark is-${severity}`,
+          attributes: {
+            title: tooltipText,
+            'aria-label': tooltipText,
+          },
+        })
+      );
     }
   });
 
@@ -234,16 +259,16 @@ function buildAuthoringDiagnosticDecorations(doc, diagnostics) {
 
 function readAuthoringDiagnosticState(doc, diagnostics) {
   const normalizedDiagnostics = Array.isArray(diagnostics)
-    ? diagnostics.map(diagnostic => ({
+    ? diagnostics.map((diagnostic) => ({
         severity: 'error',
         ...diagnostic,
-        lineNumber: clampEditorLineNumber(doc, diagnostic.lineNumber)
+        lineNumber: clampEditorLineNumber(doc, diagnostic.lineNumber),
       }))
     : [];
 
   return {
     items: normalizedDiagnostics,
-    decorations: buildAuthoringDiagnosticDecorations(doc, normalizedDiagnostics)
+    decorations: buildAuthoringDiagnosticDecorations(doc, normalizedDiagnostics),
   };
 }
 
@@ -257,7 +282,7 @@ const authoringDiagnosticsField = StateField.define({
     let nextDiagnostics = value.items;
     let diagnosticsUpdated = false;
 
-    transaction.effects.forEach(effect => {
+    transaction.effects.forEach((effect) => {
       if (effect.is(setAuthoringDiagnosticsEffect)) {
         nextDiagnostics = effect.value;
         diagnosticsUpdated = true;
@@ -270,60 +295,64 @@ const authoringDiagnosticsField = StateField.define({
 
     return readAuthoringDiagnosticState(transaction.state.doc, nextDiagnostics);
   },
-  provide: field => EditorView.decorations.from(field, diagnosticState => diagnosticState.decorations)
+  provide: (field) =>
+    EditorView.decorations.from(field, (diagnosticState) => diagnosticState.decorations),
 });
 
-const authoringEditorTheme = EditorView.theme({
-  '&': {
-    height: '100%',
-    color: 'var(--authoring-ink)',
-    background: 'transparent',
-    fontFamily: 'inherit',
-    fontSize: '1rem'
+const authoringEditorTheme = EditorView.theme(
+  {
+    '&': {
+      height: '100%',
+      color: 'var(--authoring-ink)',
+      background: 'transparent',
+      fontFamily: 'inherit',
+      fontSize: '1rem',
+    },
+    '.cm-scroller': {
+      minHeight: '700px',
+      overflow: 'auto',
+      padding: '18px 20px 28px',
+    },
+    '.cm-content': {
+      minHeight: '100%',
+      padding: 0,
+      caretColor: 'var(--authoring-ink)',
+      tabSize: '2',
+      lineHeight: '1.75',
+    },
+    '.cm-line': {
+      padding: '0 8px',
+      margin: '0 -8px',
+      borderRadius: '10px',
+    },
+    '.cm-focused': {
+      outline: 'none',
+    },
+    '.cm-cursor, .cm-dropCursor': {
+      borderLeftColor: 'var(--authoring-ink)',
+    },
+    '.cm-selectionBackground, &.cm-focused .cm-selectionBackground, ::selection': {
+      backgroundColor: 'rgba(255, 255, 255, 0.18) !important',
+    },
+    '.cm-activeLine': {
+      backgroundColor: 'rgba(255, 255, 255, 0.06)',
+    },
+    '.cm-panels': {
+      background: 'transparent',
+      color: 'var(--authoring-ink)',
+    },
+    '.cm-tooltip': {
+      borderRadius: '14px',
+      border: '1px solid rgba(255, 145, 127, 0.38)',
+      background: 'rgba(14, 12, 12, 0.96)',
+      boxShadow: '0 18px 40px rgba(0, 0, 0, 0.42)',
+      color: 'var(--authoring-ink)',
+    },
   },
-  '.cm-scroller': {
-    minHeight: '700px',
-    overflow: 'auto',
-    padding: '18px 20px 28px'
-  },
-  '.cm-content': {
-    minHeight: '100%',
-    padding: 0,
-    caretColor: 'var(--authoring-ink)',
-    tabSize: '2',
-    lineHeight: '1.75'
-  },
-  '.cm-line': {
-    padding: '0 8px',
-    margin: '0 -8px',
-    borderRadius: '10px'
-  },
-  '.cm-focused': {
-    outline: 'none'
-  },
-  '.cm-cursor, .cm-dropCursor': {
-    borderLeftColor: 'var(--authoring-ink)'
-  },
-  '.cm-selectionBackground, &.cm-focused .cm-selectionBackground, ::selection': {
-    backgroundColor: 'rgba(255, 255, 255, 0.18) !important'
-  },
-  '.cm-activeLine': {
-    backgroundColor: 'rgba(255, 255, 255, 0.06)'
-  },
-  '.cm-panels': {
-    background: 'transparent',
-    color: 'var(--authoring-ink)'
-  },
-  '.cm-tooltip': {
-    borderRadius: '14px',
-    border: '1px solid rgba(255, 145, 127, 0.38)',
-    background: 'rgba(14, 12, 12, 0.96)',
-    boxShadow: '0 18px 40px rgba(0, 0, 0, 0.42)',
-    color: 'var(--authoring-ink)'
+  {
+    dark: true,
   }
-}, {
-  dark: true
-});
+);
 
 export function createLessonScriptEditor({
   hostElement,
@@ -334,7 +363,7 @@ export function createLessonScriptEditor({
   onCursorChange = () => {},
   onPasteText = () => false,
   onInsertMenuRequest = () => {},
-  onEscapeRequest = () => {}
+  onEscapeRequest = () => {},
 }) {
   const editableCompartment = new Compartment();
   const placeholderCompartment = new Compartment();
@@ -353,19 +382,22 @@ export function createLessonScriptEditor({
       authoringDiagnosticsField,
       editableCompartment.of(EditorView.editable.of(true)),
       placeholderCompartment.of(placeholderExtension(placeholderText)),
-      EditorView.updateListener.of(update => {
+      EditorView.updateListener.of((update) => {
         if (update.docChanged && !isApplyingExternalValue) {
           onChange({
             value: update.state.doc.toString(),
             selectionStart: update.state.selection.main.from,
-            selectionEnd: update.state.selection.main.to
+            selectionEnd: update.state.selection.main.to,
           });
         }
 
-        if (!isApplyingExternalValue && (update.docChanged || update.selectionSet || update.focusChanged)) {
+        if (
+          !isApplyingExternalValue &&
+          (update.docChanged || update.selectionSet || update.focusChanged)
+        ) {
           onCursorChange({
             selectionStart: update.state.selection.main.from,
-            selectionEnd: update.state.selection.main.to
+            selectionEnd: update.state.selection.main.to,
           });
         }
       }),
@@ -374,17 +406,18 @@ export function createLessonScriptEditor({
           const isCommandK = (event.metaKey || event.ctrlKey) && event.key.toLowerCase() === 'k';
           const line = view.state.doc.lineAt(view.state.selection.main.from);
           const cursorColumn = view.state.selection.main.from - line.from;
-          const slashTriggerEligible = event.key === '/'
-            && !event.metaKey
-            && !event.ctrlKey
-            && !event.altKey
-            && line.text.slice(0, Math.max(0, cursorColumn)).trim() === ''
-            && readSlashMenuEligibility();
+          const slashTriggerEligible =
+            event.key === '/' &&
+            !event.metaKey &&
+            !event.ctrlKey &&
+            !event.altKey &&
+            line.text.slice(0, Math.max(0, cursorColumn)).trim() === '' &&
+            readSlashMenuEligibility();
 
           if (isCommandK || slashTriggerEligible) {
             event.preventDefault();
             onInsertMenuRequest({
-              reason: isCommandK ? 'command-k' : 'slash'
+              reason: isCommandK ? 'command-k' : 'slash',
             });
             return true;
           }
@@ -398,7 +431,7 @@ export function createLessonScriptEditor({
         contextmenu(event) {
           event.preventDefault();
           onInsertMenuRequest({
-            reason: 'contextmenu'
+            reason: 'contextmenu',
           });
           return true;
         },
@@ -415,39 +448,43 @@ export function createLessonScriptEditor({
           }
 
           return false;
-        }
-      })
-    ]
+        },
+      }),
+    ],
   });
   const view = new EditorView({
     state,
-    parent: hostElement
+    parent: hostElement,
   });
 
   hostElement.dataset.editorOwner = 'CodeMirror';
 
   function dispatchSelection(selectionStart, selectionEnd = selectionStart, scrollIntoView = true) {
     const effects = scrollIntoView
-      ? [EditorView.scrollIntoView(selectionStart, {
-        y: 'center'
-      })]
+      ? [
+          EditorView.scrollIntoView(selectionStart, {
+            y: 'center',
+          }),
+        ]
       : [];
 
     view.dispatch({
       selection: {
         anchor: selectionStart,
-        head: selectionEnd
+        head: selectionEnd,
       },
-      effects
+      effects,
     });
   }
 
   function handlePastedText(text) {
-    return Boolean(onPasteText({
-      text,
-      selectionStart: view.state.selection.main.from,
-      selectionEnd: view.state.selection.main.to
-    }));
+    return Boolean(
+      onPasteText({
+        text,
+        selectionStart: view.state.selection.main.from,
+        selectionEnd: view.state.selection.main.to,
+      })
+    );
   }
 
   const controller = {
@@ -475,8 +512,8 @@ export function createLessonScriptEditor({
         changes: {
           from: 0,
           to: view.state.doc.length,
-          insert: nextValue
-        }
+          insert: nextValue,
+        },
       });
       isApplyingExternalValue = false;
     },
@@ -489,10 +526,7 @@ export function createLessonScriptEditor({
     setSelectionRange(selectionStart, selectionEnd = selectionStart, scrollIntoView = true) {
       dispatchSelection(selectionStart, selectionEnd, scrollIntoView);
     },
-    replaceSelectionText(insertText, {
-      selectInsertedText = false,
-      scrollIntoView = true
-    } = {}) {
+    replaceSelectionText(insertText, { selectInsertedText = false, scrollIntoView = true } = {}) {
       const selection = view.state.selection.main;
       const text = String(insertText || '');
       const selectionStart = selection.from;
@@ -505,13 +539,13 @@ export function createLessonScriptEditor({
         changes: {
           from: selection.from,
           to: selection.to,
-          insert: text
+          insert: text,
         },
         selection: {
           anchor: selectInsertedText ? selectionStart : selectionEnd,
-          head: selectionEnd
+          head: selectionEnd,
         },
-        effects
+        effects,
       });
     },
     pasteText(text) {
@@ -534,7 +568,7 @@ export function createLessonScriptEditor({
 
       currentEditable = isEditable;
       view.dispatch({
-        effects: editableCompartment.reconfigure(EditorView.editable.of(isEditable))
+        effects: editableCompartment.reconfigure(EditorView.editable.of(isEditable)),
       });
       hostElement.dataset.editorEditable = String(Boolean(isEditable));
     },
@@ -545,17 +579,17 @@ export function createLessonScriptEditor({
 
       currentPlaceholderText = text;
       view.dispatch({
-        effects: placeholderCompartment.reconfigure(placeholderExtension(text || ''))
+        effects: placeholderCompartment.reconfigure(placeholderExtension(text || '')),
       });
     },
     setDiagnostics(diagnostics) {
       const nextDiagnostics = Array.isArray(diagnostics)
-        ? diagnostics.map(diagnostic => ({
+        ? diagnostics.map((diagnostic) => ({
             lineNumber: diagnostic.lineNumber,
             label: String(diagnostic.label || 'Validation'),
             contextLabel: String(diagnostic.contextLabel || ''),
             message: String(diagnostic.message || ''),
-            severity: String(diagnostic.severity || 'error')
+            severity: String(diagnostic.severity || 'error'),
           }))
         : [];
       const nextSignature = JSON.stringify(nextDiagnostics);
@@ -566,14 +600,14 @@ export function createLessonScriptEditor({
 
       currentDiagnosticsSignature = nextSignature;
       view.dispatch({
-        effects: setAuthoringDiagnosticsEffect.of(nextDiagnostics)
+        effects: setAuthoringDiagnosticsEffect.of(nextDiagnostics),
       });
     },
     getDiagnostics() {
-      return view.state.field(authoringDiagnosticsField).items.map(diagnostic => ({
-        ...diagnostic
+      return view.state.field(authoringDiagnosticsField).items.map((diagnostic) => ({
+        ...diagnostic,
       }));
-    }
+    },
   };
 
   // Expose deterministic editor controls on the host node for browser smoke automation.

@@ -8,10 +8,16 @@ function isFocusedHtmlLine(lineText, focusHtmlNeedles) {
     return false;
   }
 
-  return focusHtmlNeedles.some(needle => lineText.includes(needle));
+  return focusHtmlNeedles.some((needle) => lineText.includes(needle));
 }
 
-function showCodePane(container, buildLinesAtStep, currentStepNumber, paneType = 'html', focusHtmlNeedles = []) {
+function showCodePane(
+  container,
+  buildLinesAtStep,
+  currentStepNumber,
+  paneType = 'html',
+  focusHtmlNeedles = []
+) {
   if (typeof buildLinesAtStep !== 'function') {
     container.innerHTML = '';
     return false;
@@ -25,44 +31,50 @@ function showCodePane(container, buildLinesAtStep, currentStepNumber, paneType =
   const renderedLines = diff.entries;
   const hasChangedLines = diff.hasChanges;
 
-  container.innerHTML = renderedLines.map(entry => {
-    lineNumber += 1;
-    const lineMarkup = entry.isEmptyLine ? '&nbsp;' : escapeCodeText(entry.lineText);
-    const lineKind = paneType === 'css' ? describeCssLineRole(entry.lineText) : 'plain';
-    const isAddedLine = entry.kind === 'added';
-    const isRemovedLine = entry.kind === 'removed';
-    const shouldStaggerReveal = (paneType === 'css' || paneType === 'js') && isAddedLine && !entry.isEmptyLine;
-    const inlineStyle = shouldStaggerReveal ? ` style="--reveal-order:${revealOrder};"` : '';
-    const isFocusedTarget = paneType === 'html' && !isRemovedLine && isFocusedHtmlLine(entry.lineText, focusHtmlNeedles);
-    const displayLineNumber = entry.currentLineNumber ?? entry.previousLineNumber ?? lineNumber;
-    const diffMarker = isAddedLine ? '+' : isRemovedLine ? '-' : '·';
+  container.innerHTML = renderedLines
+    .map((entry) => {
+      lineNumber += 1;
+      const lineMarkup = entry.isEmptyLine ? '&nbsp;' : escapeCodeText(entry.lineText);
+      const lineKind = paneType === 'css' ? describeCssLineRole(entry.lineText) : 'plain';
+      const isAddedLine = entry.kind === 'added';
+      const isRemovedLine = entry.kind === 'removed';
+      const shouldStaggerReveal =
+        (paneType === 'css' || paneType === 'js') && isAddedLine && !entry.isEmptyLine;
+      const inlineStyle = shouldStaggerReveal ? ` style="--reveal-order:${revealOrder};"` : '';
+      const isFocusedTarget =
+        paneType === 'html' &&
+        !isRemovedLine &&
+        isFocusedHtmlLine(entry.lineText, focusHtmlNeedles);
+      const displayLineNumber = entry.currentLineNumber ?? entry.previousLineNumber ?? lineNumber;
+      const diffMarker = isAddedLine ? '+' : isRemovedLine ? '-' : '·';
 
-    if (shouldStaggerReveal) {
-      revealOrder += 1;
-    }
+      if (shouldStaggerReveal) {
+        revealOrder += 1;
+      }
 
-    return `
+      return `
       <div class="live-line is-${entry.kind}${entry.isEmptyLine ? ' is-empty' : ''}${isFocusedTarget ? ' is-focus-target' : ''}${paneType === 'css' ? ` is-css-${lineKind}` : ''}" data-pane="${paneType}" data-change-kind="${entry.kind}"${entry.kind !== 'unchanged' ? ' data-changed="true"' : ''}${isAddedLine ? ' data-added="true"' : ''}${inlineStyle}>
         <span class="live-line-marker" aria-hidden="true">${diffMarker}</span>
         <span class="live-line-number">${String(displayLineNumber).padStart(2, '0')}</span>
         <span class="live-line-code">${lineMarkup}</span>
       </div>
     `;
-  }).join('');
+    })
+    .join('');
 
   return hasChangedLines;
 }
 
 const TAG_TO_PANE = {
-  'html': 'htmlPane',
-  'css': 'cssPane',
-  'js': 'jsPane',
+  html: 'htmlPane',
+  css: 'cssPane',
+  js: 'jsPane',
   'js-style': 'jsPane',
   'template-js': 'templateJsPane',
   'shadow-css': 'shadowCssPane',
-  'teaching': 'htmlPane',
-  'summary': 'htmlPane',
-  'success': 'htmlPane'
+  teaching: 'htmlPane',
+  summary: 'htmlPane',
+  success: 'htmlPane',
 };
 
 function switchActiveIdePane(lessonParts, paneId) {
@@ -71,18 +83,18 @@ function switchActiveIdePane(lessonParts, paneId) {
     lessonParts.cssPane,
     lessonParts.jsPane,
     lessonParts.templateJsPane,
-    lessonParts.shadowCssPane
+    lessonParts.shadowCssPane,
   ];
 
   const ideFileItems = lessonParts.ideFileList.querySelectorAll('.ide-file-item');
 
-  allPanes.forEach(pane => {
+  allPanes.forEach((pane) => {
     if (pane) {
       pane.classList.toggle('active', pane.id === paneId);
     }
   });
 
-  ideFileItems.forEach(item => {
+  ideFileItems.forEach((item) => {
     item.classList.toggle('active', item.dataset.paneId === paneId);
   });
 }
@@ -95,7 +107,7 @@ export function showGrowingCode({
   buildCssAtStep,
   buildJsAtStep,
   buildTemplateJsAtStep,
-  buildShadowCssAtStep
+  buildShadowCssAtStep,
 }) {
   // IDE Mode: switch active pane FIRST, before rendering code
   const isIdeMode = lessonParts.liveEditorPanel.classList.contains('has-ide-mode');
@@ -110,16 +122,32 @@ export function showGrowingCode({
   const focusHtmlNeedles = Array.isArray(step.focusHtmlNeedles) ? step.focusHtmlNeedles : [];
 
   const changes = {
-    htmlPane: showCodePane(lessonParts.htmlCodePane, buildHtmlAtStep, currentStepNumber, 'html', focusHtmlNeedles),
+    htmlPane: showCodePane(
+      lessonParts.htmlCodePane,
+      buildHtmlAtStep,
+      currentStepNumber,
+      'html',
+      focusHtmlNeedles
+    ),
     cssPane: showCodePane(lessonParts.cssCodePane, buildCssAtStep, currentStepNumber, 'css'),
     jsPane: showCodePane(lessonParts.jsCodePane, buildJsAtStep, currentStepNumber, 'js'),
-    templateJsPane: showCodePane(lessonParts.templateJsCodePane, buildTemplateJsAtStep, currentStepNumber, 'js'),
-    shadowCssPane: showCodePane(lessonParts.shadowCssCodePane, buildShadowCssAtStep, currentStepNumber, 'css')
+    templateJsPane: showCodePane(
+      lessonParts.templateJsCodePane,
+      buildTemplateJsAtStep,
+      currentStepNumber,
+      'js'
+    ),
+    shadowCssPane: showCodePane(
+      lessonParts.shadowCssCodePane,
+      buildShadowCssAtStep,
+      currentStepNumber,
+      'css'
+    ),
   };
 
   // Sync sidebar change dots
   const ideFileItems = lessonParts.ideFileList.querySelectorAll('.ide-file-item');
-  ideFileItems.forEach(item => {
+  ideFileItems.forEach((item) => {
     const paneId = item.dataset.paneId;
     item.classList.toggle('has-changes', !!changes[paneId]);
   });

@@ -7,16 +7,19 @@ export function writeStepNarrationPreferences({
   shouldAutoNarrateStep,
   speechRate,
   voiceSourcePreference,
-  browserVoiceUriPreference
+  browserVoiceUriPreference,
 }) {
   try {
-    localStorage.setItem(composeStepNarrationStorageKey(), JSON.stringify({
-      narrationLanguagePreference,
-      shouldAutoNarrateStep,
-      speechRate,
-      voiceSourcePreference,
-      browserVoiceUriPreference
-    }));
+    localStorage.setItem(
+      composeStepNarrationStorageKey(),
+      JSON.stringify({
+        narrationLanguagePreference,
+        shouldAutoNarrateStep,
+        speechRate,
+        voiceSourcePreference,
+        browserVoiceUriPreference,
+      })
+    );
   } catch {
     // Ignore storage write failures so narration stays usable in restrictive browsers.
   }

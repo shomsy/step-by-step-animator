@@ -1,7 +1,7 @@
 function isTypingSurface(target) {
-  return target instanceof HTMLElement && (
-    target.matches('input, textarea, select') ||
-    target.isContentEditable
+  return (
+    target instanceof HTMLElement &&
+    (target.matches('input, textarea, select') || target.isContentEditable)
   );
 }
 
@@ -13,9 +13,9 @@ export function listenForLessonKeys({
   togglePlayback,
   toggleSavedStep,
   openStepFinder,
-  closeStepFinder
+  closeStepFinder,
 }) {
-  ownerDocument.addEventListener('keydown', event => {
+  ownerDocument.addEventListener('keydown', (event) => {
     const typing = isTypingSurface(ownerDocument.activeElement);
 
     if (!typing && !hasOpenLessonDialog() && event.key === 'ArrowRight') {
@@ -31,7 +31,13 @@ export function listenForLessonKeys({
       togglePlayback();
     }
 
-    if (!typing && !hasOpenLessonDialog() && event.key === 'b' && !event.ctrlKey && !event.metaKey) {
+    if (
+      !typing &&
+      !hasOpenLessonDialog() &&
+      event.key === 'b' &&
+      !event.ctrlKey &&
+      !event.metaKey
+    ) {
       toggleSavedStep();
     }
 

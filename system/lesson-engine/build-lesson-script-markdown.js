@@ -3,7 +3,7 @@ import { normalizeString } from './build-compiled-lesson.js';
 
 function stringifyYamlBlock(value) {
   return YAML.stringify(value, {
-    lineWidth: 0
+    lineWidth: 0,
   }).trimEnd();
 }
 
@@ -16,20 +16,22 @@ function buildDefaultPreview(previewType) {
 
   return {
     action: 'apply-state',
-    target: normalizedPreviewType
+    target: normalizedPreviewType,
   };
 }
 
 function isSamePreview(left, right) {
-  return normalizeString(left?.action) === normalizeString(right?.action)
-    && normalizeString(left?.target) === normalizeString(right?.target);
+  return (
+    normalizeString(left?.action) === normalizeString(right?.action) &&
+    normalizeString(left?.target) === normalizeString(right?.target)
+  );
 }
 
 function buildStepMetadata(step) {
   const metadata = {
     title: step.title,
     summary: step.summary,
-    intent: step.intent
+    intent: step.intent,
   };
 
   if (normalizeString(step.tag)) {
@@ -52,10 +54,7 @@ function buildPreviewSection(scene, defaultPreview) {
     return '';
   }
 
-  return [
-    '### Preview',
-    stringifyYamlBlock(scene.preview)
-  ].join('\n');
+  return ['### Preview', stringifyYamlBlock(scene.preview)].join('\n');
 }
 
 function buildTheorySection(scene) {
@@ -63,10 +62,7 @@ function buildTheorySection(scene) {
     return '';
   }
 
-  return [
-    '### Theory',
-    stringifyYamlBlock(scene.theory)
-  ].join('\n');
+  return ['### Theory', stringifyYamlBlock(scene.theory)].join('\n');
 }
 
 function buildCodeSection(showCodeBlock) {
@@ -74,7 +70,7 @@ function buildCodeSection(showCodeBlock) {
     `### Show Code: ${showCodeBlock.artifactId}`,
     `\`\`\`${showCodeBlock.fenceLanguage || showCodeBlock.language}`,
     ...String(showCodeBlock.codeText || '').split('\n'),
-    '```'
+    '```',
   ].join('\n');
 }
 
@@ -90,7 +86,7 @@ function buildSceneMarkdown(scene, defaultPreview) {
     ...(previewSection ? ['', previewSection] : []),
     ...(theorySection ? ['', theorySection] : []),
     '',
-    scene.showCodeBlocks.map(buildCodeSection).join('\n\n')
+    scene.showCodeBlocks.map(buildCodeSection).join('\n\n'),
   ].join('\n');
 }
 
@@ -99,7 +95,7 @@ function buildStepMarkdown(step, defaultPreview) {
     `# Step: ${step.stepId}`,
     buildStepMetadata(step),
     '',
-    step.scenes.map(scene => buildSceneMarkdown(scene, defaultPreview)).join('\n\n')
+    step.scenes.map((scene) => buildSceneMarkdown(scene, defaultPreview)).join('\n\n'),
   ].join('\n');
 }
 
@@ -110,7 +106,7 @@ export function buildLessonScriptMarkdown({ lessonAttributes, steps }) {
     '---',
     stringifyYamlBlock(lessonAttributes),
     '---',
-    steps.map(step => buildStepMarkdown(step, defaultPreview)).join('\n\n'),
-    ''
+    steps.map((step) => buildStepMarkdown(step, defaultPreview)).join('\n\n'),
+    '',
   ].join('\n');
 }

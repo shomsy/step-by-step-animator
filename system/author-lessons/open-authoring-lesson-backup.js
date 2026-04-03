@@ -21,7 +21,7 @@ function buildUnavailableBackupStatus() {
   return {
     status: 'unavailable',
     backupFileName: BACKUP_MARKDOWN_FILE_NAME,
-    backupLocation: ''
+    backupLocation: '',
   };
 }
 
@@ -29,7 +29,7 @@ function buildWrittenBackupStatus(draftId) {
   return {
     status: 'written',
     backupFileName: BACKUP_MARKDOWN_FILE_NAME,
-    backupLocation: buildBackupLocation(draftId)
+    backupLocation: buildBackupLocation(draftId),
   };
 }
 
@@ -37,7 +37,7 @@ function buildRemovedBackupStatus() {
   return {
     status: 'removed',
     backupFileName: BACKUP_MARKDOWN_FILE_NAME,
-    backupLocation: ''
+    backupLocation: '',
   };
 }
 
@@ -50,7 +50,7 @@ function sanitizeBackupMetadata(rawMetadata) {
     sourceOrigin: normalizeText(rawMetadata?.sourceOrigin) || 'custom',
     createdAt: normalizeText(rawMetadata?.createdAt),
     updatedAt: normalizeText(rawMetadata?.updatedAt),
-    tracksShippedSource: rawMetadata?.tracksShippedSource === true
+    tracksShippedSource: rawMetadata?.tracksShippedSource === true,
   };
 }
 
@@ -82,17 +82,14 @@ async function readDirectoryEntries(directoryHandle) {
   for await (const [name, handle] of directoryHandle.entries()) {
     entries.push({
       name,
-      handle
+      handle,
     });
   }
 
   return entries;
 }
 
-function readSelectionMatch(backupRecord, {
-  requestedLessonId = '',
-  shippedLessonId = ''
-}) {
+function readSelectionMatch(backupRecord, { requestedLessonId = '', shippedLessonId = '' }) {
   const normalizedRequestedLessonId = normalizeText(requestedLessonId);
   const normalizedShippedLessonId = normalizeText(shippedLessonId);
 
@@ -123,13 +120,11 @@ function buildDraftBackupRecord(metadata, sourceMarkdown) {
     tracksShippedSource: metadata.tracksShippedSource,
     sourceMarkdown,
     backupFileName: BACKUP_MARKDOWN_FILE_NAME,
-    backupLocation: buildBackupLocation(metadata.draftId)
+    backupLocation: buildBackupLocation(metadata.draftId),
   };
 }
 
-async function openBackupRootDirectory(ownerWindow, {
-  create = false
-} = {}) {
+async function openBackupRootDirectory(ownerWindow, { create = false } = {}) {
   const storageDirectoryFactory = ownerWindow?.navigator?.storage?.getDirectory;
 
   if (typeof storageDirectoryFactory !== 'function') {
@@ -140,11 +135,11 @@ async function openBackupRootDirectory(ownerWindow, {
 
   try {
     const authoringRoot = await storageRoot.getDirectoryHandle(BACKUP_ROOT_DIRECTORY_NAME, {
-      create
+      create,
     });
 
     return authoringRoot.getDirectoryHandle(BACKUP_VERSION_DIRECTORY_NAME, {
-      create
+      create,
     });
   } catch (error) {
     if (!create && error?.name === 'NotFoundError') {
@@ -171,26 +166,24 @@ function createUnavailableAuthoringLessonBackup() {
     },
     async readLatestDraftBackup() {
       return null;
-    }
+    },
   };
 }
 
-export async function openAuthoringLessonBackup({
-  ownerWindow
-}) {
+export async function openAuthoringLessonBackup({ ownerWindow }) {
   if (!ownerWindow?.navigator?.storage?.getDirectory) {
     return createUnavailableAuthoringLessonBackup();
   }
 
   async function readBackupRootDirectory() {
     return openBackupRootDirectory(ownerWindow, {
-      create: false
+      create: false,
     });
   }
 
   async function createBackupRootDirectory() {
     return openBackupRootDirectory(ownerWindow, {
-      create: true
+      create: true,
     });
   }
 
@@ -212,7 +205,9 @@ export async function openAuthoringLessonBackup({
       try {
         const metadataFileHandle = await entry.handle.getFileHandle(BACKUP_METADATA_FILE_NAME);
         const markdownFileHandle = await entry.handle.getFileHandle(BACKUP_MARKDOWN_FILE_NAME);
-        const metadata = sanitizeBackupMetadata(JSON.parse(await readHandleText(metadataFileHandle)));
+        const metadata = sanitizeBackupMetadata(
+          JSON.parse(await readHandleText(metadataFileHandle))
+        );
         const sourceMarkdown = await readHandleText(markdownFileHandle);
 
         if (!metadata.draftId || !normalizeText(sourceMarkdown)) {
@@ -226,7 +221,8 @@ export async function openAuthoringLessonBackup({
     }
 
     return draftBackups.sort((left, right) => {
-      const updatedDifference = readBackupOrderValue(right.updatedAt) - readBackupOrderValue(left.updatedAt);
+      const updatedDifference =
+        readBackupOrderValue(right.updatedAt) - readBackupOrderValue(left.updatedAt);
 
       if (updatedDifference !== 0) {
         return updatedDifference;
@@ -249,7 +245,7 @@ export async function openAuthoringLessonBackup({
       shippedLessonId = '',
       createdAt = '',
       updatedAt = '',
-      tracksShippedSource = false
+      tracksShippedSource = false,
     }) {
       const normalizedDraftId = normalizeText(draftId);
 
@@ -259,26 +255,33 @@ export async function openAuthoringLessonBackup({
 
       const backupRootDirectory = await createBackupRootDirectory();
       const draftDirectory = await backupRootDirectory.getDirectoryHandle(normalizedDraftId, {
-        create: true
+        create: true,
       });
       const markdownFileHandle = await draftDirectory.getFileHandle(BACKUP_MARKDOWN_FILE_NAME, {
-        create: true
+        create: true,
       });
       const metadataFileHandle = await draftDirectory.getFileHandle(BACKUP_METADATA_FILE_NAME, {
-        create: true
+        create: true,
       });
 
       await writeHandleText(markdownFileHandle, sourceMarkdown);
-      await writeHandleText(metadataFileHandle, JSON.stringify({
-        draftId: normalizedDraftId,
-        lessonId: normalizeText(lessonId),
-        lessonTitle: normalizeText(lessonTitle),
-        shippedLessonId: normalizeText(shippedLessonId),
-        sourceOrigin: normalizeText(sourceOrigin) || 'custom',
-        createdAt: normalizeText(createdAt),
-        updatedAt: normalizeText(updatedAt),
-        tracksShippedSource: tracksShippedSource === true
-      }, null, 2));
+      await writeHandleText(
+        metadataFileHandle,
+        JSON.stringify(
+          {
+            draftId: normalizedDraftId,
+            lessonId: normalizeText(lessonId),
+            lessonTitle: normalizeText(lessonTitle),
+            shippedLessonId: normalizeText(shippedLessonId),
+            sourceOrigin: normalizeText(sourceOrigin) || 'custom',
+            createdAt: normalizeText(createdAt),
+            updatedAt: normalizeText(updatedAt),
+            tracksShippedSource: tracksShippedSource === true,
+          },
+          null,
+          2
+        )
+      );
 
       return buildWrittenBackupStatus(normalizedDraftId);
     },
@@ -297,7 +300,7 @@ export async function openAuthoringLessonBackup({
 
       try {
         await backupRootDirectory.removeEntry(normalizedDraftId, {
-          recursive: true
+          recursive: true,
         });
       } catch (error) {
         if (error?.name !== 'NotFoundError') {
@@ -311,26 +314,28 @@ export async function openAuthoringLessonBackup({
     async readLatestDraftBackup(selection) {
       const draftBackups = await readDraftBackups();
 
-      return draftBackups.find(backupRecord => readSelectionMatch(backupRecord, selection)) || null;
-    }
+      return (
+        draftBackups.find((backupRecord) => readSelectionMatch(backupRecord, selection)) || null
+      );
+    },
   };
 }
 
 export async function readPersistedPlayableDraftBackup({
   ownerWindow,
   requestedLessonId = '',
-  shippedLessonId = ''
+  shippedLessonId = '',
 }) {
   if (!ownerWindow) {
     return null;
   }
 
   const lessonBackup = await openAuthoringLessonBackup({
-    ownerWindow
+    ownerWindow,
   });
 
   return lessonBackup.readLatestDraftBackup({
     requestedLessonId,
-    shippedLessonId
+    shippedLessonId,
   });
 }

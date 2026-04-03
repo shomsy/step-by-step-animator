@@ -21,9 +21,9 @@ function readTheoryMarkdown(sourceRoot, theoryFile) {
 
 function readArtifactMarkdownById(sourceRoot, artifacts) {
   return Object.fromEntries(
-    (artifacts || []).map(artifact => [
+    (artifacts || []).map((artifact) => [
       artifact.artifactId,
-      readText(path.join(sourceRoot, artifact.file))
+      readText(path.join(sourceRoot, artifact.file)),
     ])
   );
 }
@@ -42,8 +42,8 @@ export function compileSourceLesson({ sourceRoot }) {
         goalImageSrc: attributes.goal?.imageSrc || '',
         theoryMarkdown: attributes.theory?.enabled
           ? readTheoryMarkdown(sourceRoot, attributes.theory.file)
-          : ''
-      })
+          : '',
+      }),
     };
   }
 
@@ -62,7 +62,7 @@ export function compileSourceLesson({ sourceRoot }) {
       goalImageSrc: attributes.goal?.imageSrc || '',
       theoryMarkdown: attributes.theory?.enabled
         ? readTheoryMarkdown(sourceRoot, attributes.theory.file)
-        : ''
-    })
+        : '',
+    }),
   };
 }

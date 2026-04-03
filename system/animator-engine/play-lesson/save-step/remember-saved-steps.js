@@ -7,14 +7,14 @@ export function rememberSavedSteps({
   lessonParts,
   steps,
   goToStepNumber,
-  showCurrentLesson
+  showCurrentLesson,
 }) {
-  let savedStepNumbers = readSavedStepNumbers({
+  const savedStepNumbers = readSavedStepNumbers({
     lessonId,
-    totalSteps: steps.length
+    totalSteps: steps.length,
   });
 
-  lessonParts.savedStepList.addEventListener('click', event => {
+  lessonParts.savedStepList.addEventListener('click', (event) => {
     const removeButton = event.target.closest('[data-remove-step-number]');
 
     if (removeButton) {
@@ -41,7 +41,7 @@ export function rememberSavedSteps({
 
     writeSavedStepNumbers({
       lessonId,
-      savedStepNumbers
+      savedStepNumbers,
     });
     showCurrentLesson();
   }
@@ -51,7 +51,7 @@ export function rememberSavedSteps({
       lessonParts,
       savedStepNumbers,
       currentStepNumber,
-      steps
+      steps,
     });
   }
 
@@ -62,6 +62,6 @@ export function rememberSavedSteps({
   return {
     listSavedStepNumbers,
     showSavedStepList: showSavedStepListForCurrentStep,
-    toggleSavedStepNumber
+    toggleSavedStepNumber,
   };
 }

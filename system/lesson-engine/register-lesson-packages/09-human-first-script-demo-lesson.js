@@ -2,5 +2,5 @@ import scriptMarkdown from '../../../product/education/lessons/09-human-first-sc
 import { compileRegisteredLessonScript } from './compile-registered-lesson-script.js';
 
 export const HumanFirstScriptDemoLesson = compileRegisteredLessonScript({
-  scriptMarkdown
+  scriptMarkdown,
 });

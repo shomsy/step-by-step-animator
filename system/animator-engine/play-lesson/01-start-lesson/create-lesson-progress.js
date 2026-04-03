@@ -3,6 +3,6 @@ export function createLessonProgress() {
     currentStepNumber: 0,
     playbackTimer: null,
     activePanel: 'steps',
-    playbackSpeedMultiplier: 1
+    playbackSpeedMultiplier: 1,
   };
 }

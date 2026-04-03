@@ -29,6 +29,6 @@ export function parseFrontmatter(markdown) {
 
   return {
     attributes,
-    body: source.slice(match[0].length).trim()
+    body: source.slice(match[0].length).trim(),
   };
 }

@@ -1,5 +1,7 @@
 export function scrollToAddedLine(container) {
-  const addedLine = container.querySelector('[data-changed="true"]') || container.querySelector('[data-added="true"]');
+  const addedLine =
+    container.querySelector('[data-changed="true"]') ||
+    container.querySelector('[data-added="true"]');
 
   if (!addedLine) {
     return;

@@ -1,6 +1,9 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { readEditorContextFromScan, scanLessonScriptSource } from '../../system/author-lessons/lesson-script-workbench.js';
+import {
+  readEditorContextFromScan,
+  scanLessonScriptSource,
+} from '../../system/author-lessons/lesson-script-workbench.js';
 import { readAuthoringDiagnostics } from '../../system/author-lessons/read-authoring-diagnostics.js';
 
 function buildLessonSource(lines) {
@@ -22,7 +25,7 @@ function buildLessonSource(lines) {
     '  title: Preview',
     '  address: browser://lint-smoke',
     '---',
-    ...lines
+    ...lines,
   ].join('\n');
 }
 
@@ -41,14 +44,14 @@ test('readAuthoringDiagnostics translates metadata validation into metadata draw
     '### Show Code: html',
     '```html',
     '<div>Hello</div>',
-    '```'
+    '```',
   ]);
   const editorScan = scanLessonScriptSource(sourceMarkdown, null);
   const diagnostics = readAuthoringDiagnostics({
     analysis: {
       editorContext: readEditorContextFromScan(editorScan, 0),
-      parseErrorMessage: 'lesson.script.md must define preview.type.'
-    }
+      parseErrorMessage: 'lesson.script.md must define preview.type.',
+    },
   });
 
   assert.equal(diagnostics.length, 1);
@@ -74,15 +77,16 @@ test('readAuthoringDiagnostics points broken show-code fences to the failing sec
     '',
     '### Show Code: html',
     '```html',
-    '<div>Hello</div>'
+    '<div>Hello</div>',
   ]);
   const showCodeOffset = sourceMarkdown.indexOf('### Show Code: html');
   const editorScan = scanLessonScriptSource(sourceMarkdown, null);
   const diagnostics = readAuthoringDiagnostics({
     analysis: {
       editorContext: readEditorContextFromScan(editorScan, showCodeOffset),
-      parseErrorMessage: 'Scene "intro-scene" in step "intro-step" must wrap "Show Code: html" in a fenced code block.'
-    }
+      parseErrorMessage:
+        'Scene "intro-scene" in step "intro-step" must wrap "Show Code: html" in a fenced code block.',
+    },
   });
 
   assert.equal(diagnostics.length, 1);

@@ -13,7 +13,7 @@ function createLessonParts() {
     progressText: { textContent: '' },
     timeEstimate: { textContent: '' },
     previousButton: { disabled: false },
-    nextButton: { disabled: false }
+    nextButton: { disabled: false },
   };
 }
 
@@ -26,10 +26,10 @@ test('showCurrentStep escapes tag text before writing markup', () => {
       title: 'Step title',
       desc: 'Step description',
       tag: '<img src=x onerror=alert(1)>',
-      proTip: 'Pro tip'
+      proTip: 'Pro tip',
     },
     currentStepNumber: 0,
-    totalSteps: 2
+    totalSteps: 2,
   });
 
   assert.equal(lessonParts.tagText.hidden, false);

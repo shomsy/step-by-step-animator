@@ -5,14 +5,14 @@ function readLineOffsets(sourceMarkdown) {
   const lineStarts = [];
   let offset = 0;
 
-  lines.forEach(line => {
+  lines.forEach((line) => {
     lineStarts.push(offset);
     offset += line.length + 1;
   });
 
   return {
     lines,
-    lineStarts
+    lineStarts,
   };
 }
 
@@ -60,8 +60,8 @@ export function readEditorContextFromScan(scan, cursorOffset) {
       sceneIndex: -1,
       sectionType: '',
       artifactId: '',
-      insideCodeFence: false
-    }
+      insideCodeFence: false,
+    },
   };
 }
 
@@ -79,13 +79,13 @@ function createOutlineNodeMap(parsedLesson) {
   if (!parsedLesson) {
     return {
       stepTitles: [],
-      sceneTitlesByStep: []
+      sceneTitlesByStep: [],
     };
   }
 
   return {
-    stepTitles: parsedLesson.steps.map(step => step.title),
-    sceneTitlesByStep: parsedLesson.steps.map(step => step.scenes.map(scene => scene.sceneId))
+    stepTitles: parsedLesson.steps.map((step) => step.title),
+    sceneTitlesByStep: parsedLesson.steps.map((step) => step.scenes.map((scene) => scene.sceneId)),
   };
 }
 
@@ -124,7 +124,7 @@ export function scanLessonScriptSource(sourceMarkdown, parsedLesson = null) {
         sceneIndex: -1,
         sectionType: '',
         artifactId: '',
-        insideCodeFence: false
+        insideCodeFence: false,
       });
       return;
     }
@@ -147,7 +147,7 @@ export function scanLessonScriptSource(sourceMarkdown, parsedLesson = null) {
         lineIndex,
         lineNumber: lineIndex + 1,
         startOffset: lineStarts[lineIndex],
-        scenes: []
+        scenes: [],
       });
     } else if (sceneMatch) {
       currentSceneIndex += 1;
@@ -168,7 +168,7 @@ export function scanLessonScriptSource(sourceMarkdown, parsedLesson = null) {
           lineIndex,
           lineNumber: lineIndex + 1,
           startOffset: lineStarts[lineIndex],
-          sections: []
+          sections: [],
         });
       }
     } else if (sectionMatch) {
@@ -192,7 +192,7 @@ export function scanLessonScriptSource(sourceMarkdown, parsedLesson = null) {
           heading: sectionHeading,
           lineIndex,
           lineNumber: lineIndex + 1,
-          startOffset: lineStarts[lineIndex]
+          startOffset: lineStarts[lineIndex],
         });
       }
     } else if (/^```/.test(trimmedLine) && currentSectionType === 'show-code') {
@@ -200,20 +200,21 @@ export function scanLessonScriptSource(sourceMarkdown, parsedLesson = null) {
     }
 
     contextByLine.push({
-      kind: currentStepIndex < 0
-        ? 'root'
-        : currentSceneIndex < 0
-          ? 'step'
-          : currentSectionType === 'show-code' || insideCodeFence
-            ? 'show-code'
-            : 'scene',
+      kind:
+        currentStepIndex < 0
+          ? 'root'
+          : currentSceneIndex < 0
+            ? 'step'
+            : currentSectionType === 'show-code' || insideCodeFence
+              ? 'show-code'
+              : 'scene',
       lineIndex,
       lineNumber: lineIndex + 1,
       stepIndex: currentStepIndex,
       sceneIndex: currentSceneIndex,
       sectionType: currentSectionType,
       artifactId: currentArtifactId,
-      insideCodeFence
+      insideCodeFence,
     });
   });
 
@@ -222,8 +223,9 @@ export function scanLessonScriptSource(sourceMarkdown, parsedLesson = null) {
     title: labels.stepTitles[stepIndex] || stepNode.title || stepNode.stepId,
     scenes: stepNode.scenes.map((sceneNode, sceneIndex) => ({
       ...sceneNode,
-      title: labels.sceneTitlesByStep[stepIndex]?.[sceneIndex] || sceneNode.title || sceneNode.sceneId
-    }))
+      title:
+        labels.sceneTitlesByStep[stepIndex]?.[sceneIndex] || sceneNode.title || sceneNode.sceneId,
+    })),
   }));
 
   return {
@@ -233,7 +235,7 @@ export function scanLessonScriptSource(sourceMarkdown, parsedLesson = null) {
     steps: outlinedSteps,
     contextByLine,
     existingStepIds,
-    existingSceneIdsByStep
+    existingSceneIdsByStep,
   };
 }
 
@@ -261,7 +263,8 @@ function readDefaultPreviewTarget(parsedLesson) {
 
 function readFenceLanguageForArtifact(parsedLesson, artifactId) {
   const declaredLanguage = normalizeString(
-    parsedLesson?.attributes?.artifacts?.find(artifact => artifact.artifactId === artifactId)?.language
+    parsedLesson?.attributes?.artifacts?.find((artifact) => artifact.artifactId === artifactId)
+      ?.language
   );
 
   if (declaredLanguage === 'html' || declaredLanguage === 'css') {
@@ -289,28 +292,66 @@ function readFenceLanguageForArtifact(parsedLesson, artifactId) {
 
 export function buildInsertMenuItems(context) {
   if (context.kind === 'root') {
-    return [
-      { action: 'insert-step', label: 'Insert Step', hint: 'Insert a new step block.' }
-    ];
+    return [{ action: 'insert-step', label: 'Insert Step', hint: 'Insert a new step block.' }];
   }
 
   if (context.kind === 'step') {
     return [
-      { action: 'insert-scene', label: 'Insert Scene', hint: 'Insert a scene block under the current step.' },
-      { action: 'insert-step-summary', label: 'Insert Step Summary', hint: 'Insert the step summary field.' },
-      { action: 'insert-intent', label: 'Insert Intent', hint: 'Insert the step intent field.' }
+      {
+        action: 'insert-scene',
+        label: 'Insert Scene',
+        hint: 'Insert a scene block under the current step.',
+      },
+      {
+        action: 'insert-step-summary',
+        label: 'Insert Step Summary',
+        hint: 'Insert the step summary field.',
+      },
+      { action: 'insert-intent', label: 'Insert Intent', hint: 'Insert the step intent field.' },
     ];
   }
 
   return [
-    { action: 'insert-narration', label: 'Insert Narration', hint: 'Insert the narration section.' },
-    { action: 'insert-show-code:html', label: 'Insert Show Code → HTML', hint: 'Insert an HTML code block.' },
-    { action: 'insert-show-code:css', label: 'Insert Show Code → CSS', hint: 'Insert a CSS code block.' },
-    { action: 'insert-show-code:js', label: 'Insert Show Code → JS', hint: 'Insert a JS code block.' },
-    { action: 'insert-show-code:template-js', label: 'Insert Show Code → Template JS', hint: 'Insert a template JS code block.' },
-    { action: 'insert-show-code:shadow-css', label: 'Insert Show Code → Shadow CSS', hint: 'Insert a shadow CSS code block.' },
-    { action: 'insert-theory-link', label: 'Insert Theory Link', hint: 'Insert the theory section.' },
-    { action: 'insert-preview-action', label: 'Insert Preview Action', hint: 'Insert the preview section.' }
+    {
+      action: 'insert-narration',
+      label: 'Insert Narration',
+      hint: 'Insert the narration section.',
+    },
+    {
+      action: 'insert-show-code:html',
+      label: 'Insert Show Code → HTML',
+      hint: 'Insert an HTML code block.',
+    },
+    {
+      action: 'insert-show-code:css',
+      label: 'Insert Show Code → CSS',
+      hint: 'Insert a CSS code block.',
+    },
+    {
+      action: 'insert-show-code:js',
+      label: 'Insert Show Code → JS',
+      hint: 'Insert a JS code block.',
+    },
+    {
+      action: 'insert-show-code:template-js',
+      label: 'Insert Show Code → Template JS',
+      hint: 'Insert a template JS code block.',
+    },
+    {
+      action: 'insert-show-code:shadow-css',
+      label: 'Insert Show Code → Shadow CSS',
+      hint: 'Insert a shadow CSS code block.',
+    },
+    {
+      action: 'insert-theory-link',
+      label: 'Insert Theory Link',
+      hint: 'Insert the theory section.',
+    },
+    {
+      action: 'insert-preview-action',
+      label: 'Insert Preview Action',
+      hint: 'Insert the preview section.',
+    },
   ];
 }
 
@@ -318,14 +359,16 @@ function createSnippet(text, selectionStart, selectionEnd = selectionStart) {
   return {
     text,
     selectionStart,
-    selectionEnd
+    selectionEnd,
   };
 }
 
 export function buildInsertSnippet(actionName, parsedLesson, scan) {
   const existingStepIds = scan.existingStepIds;
   const existingSceneIds = scan.existingSceneIdsByStep[scan.context.stepIndex] || [];
-  const primaryArtifact = parsedLesson?.attributes?.artifacts?.find(artifact => artifact.isPrimary) || parsedLesson?.attributes?.artifacts?.[0];
+  const primaryArtifact =
+    parsedLesson?.attributes?.artifacts?.find((artifact) => artifact.isPrimary) ||
+    parsedLesson?.attributes?.artifacts?.[0];
   const previewTarget = readDefaultPreviewTarget(parsedLesson);
 
   if (actionName === 'insert-step') {
@@ -335,7 +378,7 @@ export function buildInsertSnippet(actionName, parsedLesson, scan) {
       'title: New Step',
       'summary: Explain what changes in this step.',
       'intent: State why this step exists.',
-      ''
+      '',
     ].join('\n');
 
     return createSnippet(snippet, '# Step: '.length, `# Step: ${stepId}`.length);
@@ -343,38 +386,25 @@ export function buildInsertSnippet(actionName, parsedLesson, scan) {
 
   if (actionName === 'insert-scene') {
     const sceneId = suggestUniqueId('new-scene', new Set(existingSceneIds));
-    const snippet = [
-      `## Scene: ${sceneId}`,
-      ''
-    ].join('\n');
+    const snippet = [`## Scene: ${sceneId}`, ''].join('\n');
 
     return createSnippet(snippet, '## Scene: '.length, `## Scene: ${sceneId}`.length);
   }
 
   if (actionName === 'insert-step-summary') {
-    const snippet = [
-      'summary: Explain what changes in this step.',
-      ''
-    ].join('\n');
+    const snippet = ['summary: Explain what changes in this step.', ''].join('\n');
 
     return createSnippet(snippet, 'summary: '.length, snippet.indexOf('\n'));
   }
 
   if (actionName === 'insert-intent') {
-    const snippet = [
-      'intent: State why this step exists.',
-      ''
-    ].join('\n');
+    const snippet = ['intent: State why this step exists.', ''].join('\n');
 
     return createSnippet(snippet, 'intent: '.length, snippet.indexOf('\n'));
   }
 
   if (actionName === 'insert-narration') {
-    const snippet = [
-      '### Narration',
-      '',
-      ''
-    ].join('\n');
+    const snippet = ['### Narration', '', ''].join('\n');
 
     return createSnippet(snippet, snippet.indexOf('\n') + 1, snippet.indexOf('\n') + 1);
   }
@@ -382,34 +412,31 @@ export function buildInsertSnippet(actionName, parsedLesson, scan) {
   if (actionName.startsWith('insert-show-code:')) {
     const artifactId = actionName.split(':')[1];
     const fenceLanguage = readFenceLanguageForArtifact(parsedLesson, artifactId);
-    const snippet = [
-      `### Show Code: ${artifactId}`,
-      `\`\`\`${fenceLanguage}`,
-      '',
-      '```',
-      ''
-    ].join('\n');
+    const snippet = [`### Show Code: ${artifactId}`, `\`\`\`${fenceLanguage}`, '', '```', ''].join(
+      '\n'
+    );
 
-    return createSnippet(snippet, `### Show Code: ${artifactId}\n\`\`\`${fenceLanguage}\n`.length, `### Show Code: ${artifactId}\n\`\`\`${fenceLanguage}\n`.length);
+    return createSnippet(
+      snippet,
+      `### Show Code: ${artifactId}\n\`\`\`${fenceLanguage}\n`.length,
+      `### Show Code: ${artifactId}\n\`\`\`${fenceLanguage}\n`.length
+    );
   }
 
   if (actionName === 'insert-theory-link') {
-    const snippet = [
-      '### Theory',
-      'anchor: theory-anchor',
-      ''
-    ].join('\n');
+    const snippet = ['### Theory', 'anchor: theory-anchor', ''].join('\n');
 
-    return createSnippet(snippet, 'anchor: '.length + '### Theory\n'.length, 'anchor: '.length + '### Theory\n'.length + 'theory-anchor'.length);
+    return createSnippet(
+      snippet,
+      'anchor: '.length + '### Theory\n'.length,
+      'anchor: '.length + '### Theory\n'.length + 'theory-anchor'.length
+    );
   }
 
   if (actionName === 'insert-preview-action') {
-    const snippet = [
-      '### Preview',
-      'action: apply-state',
-      `target: ${previewTarget}`,
-      ''
-    ].join('\n');
+    const snippet = ['### Preview', 'action: apply-state', `target: ${previewTarget}`, ''].join(
+      '\n'
+    );
 
     const selectionStart = '### Preview\naction: '.length;
     const selectionEnd = selectionStart + 'apply-state'.length;
@@ -420,13 +447,9 @@ export function buildInsertSnippet(actionName, parsedLesson, scan) {
   const fallbackArtifactId = primaryArtifact?.artifactId || 'html';
   const fallbackFenceLanguage = readFenceLanguageForArtifact(parsedLesson, fallbackArtifactId);
   return createSnippet(
-    [
-      `### Show Code: ${fallbackArtifactId}`,
-      `\`\`\`${fallbackFenceLanguage}`,
-      '',
-      '```',
-      ''
-    ].join('\n'),
+    [`### Show Code: ${fallbackArtifactId}`, `\`\`\`${fallbackFenceLanguage}`, '', '```', ''].join(
+      '\n'
+    ),
     `### Show Code: ${fallbackArtifactId}\n\`\`\`${fallbackFenceLanguage}\n`.length,
     `### Show Code: ${fallbackArtifactId}\n\`\`\`${fallbackFenceLanguage}\n`.length
   );

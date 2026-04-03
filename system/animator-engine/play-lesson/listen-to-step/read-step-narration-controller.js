@@ -10,7 +10,7 @@ export async function readStepNarrationController({
   prepareOpenSourceVoice,
   speakWithOpenSourceVoice,
   speakWithBrowserVoice,
-  onStatusChange
+  onStatusChange,
 }) {
   const hasPreferredBrowserVoice = Boolean(preferredBrowserVoice);
 
@@ -22,14 +22,14 @@ export async function readStepNarrationController({
       onStatusChange,
       narrationLanguagePreference,
       preferredVoiceUri: browserVoiceUriPreference,
-      allowGenericBrowserVoiceFallback
+      allowGenericBrowserVoiceFallback,
     });
   }
 
   if (voiceSourcePreference === 'browser' && hasPreferredBrowserVoice) {
     return {
       controller: await readBrowserNarrationController(),
-      nextShouldUseBrowserFallback: false
+      nextShouldUseBrowserFallback: false,
     };
   }
 
@@ -42,7 +42,7 @@ export async function readStepNarrationController({
   if (voiceSourcePreference === 'auto' && hasPreferredBrowserVoice) {
     return {
       controller: await readBrowserNarrationController(),
-      nextShouldUseBrowserFallback: false
+      nextShouldUseBrowserFallback: false,
     };
   }
 
@@ -55,10 +55,10 @@ export async function readStepNarrationController({
         text: narrationText,
         speechRate,
         onStatusChange,
-        narrationLanguagePreference
+        narrationLanguagePreference,
       }),
       nextOpenSourceVoiceReady: true,
-      nextShouldUseBrowserFallback: false
+      nextShouldUseBrowserFallback: false,
     };
   } catch {
     if (!hasPreferredBrowserVoice) {
@@ -74,7 +74,7 @@ export async function readStepNarrationController({
     return {
       controller: await readBrowserNarrationController(),
       nextOpenSourceVoiceReady: false,
-      nextShouldUseBrowserFallback: true
+      nextShouldUseBrowserFallback: true,
     };
   }
 }

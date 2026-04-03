@@ -10,7 +10,7 @@ import {
   assertPositiveInteger,
   buildCompiledLesson,
   isPlainObject,
-  normalizeString
+  normalizeString,
 } from './build-compiled-lesson.js';
 
 function normalizeArtifactDeclaration(artifact) {
@@ -48,7 +48,7 @@ function normalizeArtifactDeclaration(artifact) {
     language,
     kind,
     label: label || file.split('/').pop(),
-    isPrimary: Boolean(artifact.isPrimary)
+    isPrimary: Boolean(artifact.isPrimary),
   };
 }
 
@@ -106,7 +106,11 @@ function validateLessonManifest(attributes) {
     throw new Error('lesson.md must define preview.type.');
   }
 
-  assertOneOf(previewType, new Set(['dom', 'terminal', 'markdown', 'diagram', 'none']), 'lesson.md preview.type');
+  assertOneOf(
+    previewType,
+    new Set(['dom', 'terminal', 'markdown', 'diagram', 'none']),
+    'lesson.md preview.type'
+  );
 
   if (!previewTitle) {
     throw new Error('lesson.md must define preview.title.');
@@ -172,7 +176,7 @@ function validateLessonManifest(attributes) {
 }
 
 function createArtifactBuilders({ artifactDeclarations, artifactMarkdownById, stepNumberById }) {
-  return artifactDeclarations.map(artifact => {
+  return artifactDeclarations.map((artifact) => {
     const sourceMarkdown = artifactMarkdownById[artifact.artifactId];
 
     if (typeof sourceMarkdown !== 'string' || !sourceMarkdown.trim()) {
@@ -186,7 +190,7 @@ function createArtifactBuilders({ artifactDeclarations, artifactMarkdownById, st
         artifact,
         buildAtStep(stepNumber) {
           return buildLinesFromTimelineBlocks({ timelineBlocks, stepNumberById, stepNumber });
-        }
+        },
       };
     }
 
@@ -197,11 +201,13 @@ function createArtifactBuilders({ artifactDeclarations, artifactMarkdownById, st
         artifact,
         buildAtStep(stepNumber) {
           return buildLinesFromRuleBlocks({ ruleBlocks, stepNumberById, stepNumber });
-        }
+        },
       };
     }
 
-    throw new Error(`Unsupported artifact kind "${artifact.kind}" for artifact "${artifact.artifactId}".`);
+    throw new Error(
+      `Unsupported artifact kind "${artifact.kind}" for artifact "${artifact.artifactId}".`
+    );
   });
 }
 
@@ -216,7 +222,7 @@ export function compileLessonPackage({
   scenesMarkdown,
   artifactMarkdownById = {},
   goalImageSrc = '',
-  theoryMarkdown = ''
+  theoryMarkdown = '',
 }) {
   const { attributes: lessonAttributes, body: lessonBody } = parseFrontmatter(lessonMarkdown);
   const scenesContract = readScenesContract(scenesMarkdown);
@@ -226,7 +232,9 @@ export function compileLessonPackage({
   }
 
   if (normalizeString(lessonAttributes.lessonId) !== scenesContract.lessonId) {
-    throw new Error(`Lesson ID mismatch between lesson.md and scenes.md for "${lessonAttributes.lessonId}".`);
+    throw new Error(
+      `Lesson ID mismatch between lesson.md and scenes.md for "${lessonAttributes.lessonId}".`
+    );
   }
 
   validateLessonManifest(lessonAttributes);
@@ -245,7 +253,7 @@ export function compileLessonPackage({
   const artifactBuilders = createArtifactBuilders({
     artifactDeclarations,
     artifactMarkdownById,
-    stepNumberById
+    stepNumberById,
   });
   const buildArtifactAtStepById = createArtifactBuilderLookup(artifactBuilders);
   return buildCompiledLesson({
@@ -255,6 +263,6 @@ export function compileLessonPackage({
     artifactDeclarations,
     buildArtifactAtStepById,
     goalImageSrc,
-    theoryMarkdown
+    theoryMarkdown,
   });
 }

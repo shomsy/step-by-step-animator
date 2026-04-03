@@ -12,13 +12,18 @@ function collectLessonFolders() {
     return [];
   }
 
-  return fs.readdirSync(lessonsRoot, { withFileTypes: true })
-    .filter(entry => entry.isDirectory())
-    .map(entry => ({ lessonSlug: entry.name, sourceRoot: path.join(lessonsRoot, entry.name, 'source') }))
-    .filter(entry => (
-      fs.existsSync(path.join(entry.sourceRoot, 'lesson.md'))
-      || fs.existsSync(path.join(entry.sourceRoot, 'lesson.script.md'))
-    ));
+  return fs
+    .readdirSync(lessonsRoot, { withFileTypes: true })
+    .filter((entry) => entry.isDirectory())
+    .map((entry) => ({
+      lessonSlug: entry.name,
+      sourceRoot: path.join(lessonsRoot, entry.name, 'source'),
+    }))
+    .filter(
+      (entry) =>
+        fs.existsSync(path.join(entry.sourceRoot, 'lesson.md')) ||
+        fs.existsSync(path.join(entry.sourceRoot, 'lesson.script.md'))
+    );
 }
 
 function validateLessonSource({ lessonSlug, sourceRoot }) {
@@ -40,7 +45,7 @@ export function readSourceLessonValidationReport() {
 
   return {
     lessonCount: lessonFolders.length,
-    outputLines
+    outputLines,
   };
 }
 
@@ -48,7 +53,7 @@ async function flushValidationReport(lines) {
   const report = `${lines.join('\n')}\n`;
 
   await new Promise((resolve, reject) => {
-    process.stdout.write(report, error => {
+    process.stdout.write(report, (error) => {
       if (error) {
         reject(error);
         return;
@@ -65,7 +70,7 @@ async function main() {
 }
 
 if (process.argv[1] && path.resolve(process.argv[1]) === currentFile) {
-  main().catch(error => {
+  main().catch((error) => {
     console.error(error);
     process.exitCode = 1;
   });

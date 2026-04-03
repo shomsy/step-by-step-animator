@@ -9,16 +9,29 @@ test('readLessonScript parses the canonical human-first lesson script', () => {
 
   assert.equal(contract.schemaVersion, 1);
   assert.equal(contract.lessonId, '09-human-first-script-demo');
-  assert.equal(contract.steps.length, 4);
+  assert.equal(contract.steps.length, 38);
   assert.equal(contract.steps[0].stepId, 'empty-shell');
   assert.equal(contract.steps[0].scenes[0].sceneId, 'empty-shell-scene');
   assert.equal(contract.steps[1].scenes[0].showCodeBlocks[0].artifactId, 'html');
-  assert.equal(contract.steps[2].scenes[0].showCodeBlocks[0].artifactId, 'css');
+  assert.ok(contract.steps.some(step => 
+    step.scenes.some(scene => 
+      scene.showCodeBlocks.some(block => block.artifactId === 'template-js')
+    )
+  ));
+  assert.ok(contract.steps.some(step => 
+    step.scenes.some(scene => 
+      scene.showCodeBlocks.some(block => block.artifactId === 'js')
+    )
+  ));
+  assert.equal(contract.steps[7].scenes[0].showCodeBlocks[0].artifactId, 'css');
 });
 
 test('readLessonScript rejects a scene before any step heading', () => {
   const fixture = createLessonScriptFixture();
-  const brokenScript = fixture.scriptMarkdown.replace('# Step: empty-shell', '## Scene: orphan-scene');
+  const brokenScript = fixture.scriptMarkdown.replace(
+    '# Step: empty-shell',
+    '## Scene: orphan-scene'
+  );
 
   assert.throws(() => readLessonScript(brokenScript), /before any step heading/);
 });

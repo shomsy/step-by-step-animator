@@ -22,10 +22,12 @@ function isSlotMarker(line) {
 
 function insertTimelineBlock(lines, timelineBlock) {
   const slotMarker = createSlotMarker(timelineBlock.target);
-  const slotIndex = lines.findIndex(line => line.trim() === slotMarker);
+  const slotIndex = lines.findIndex((line) => line.trim() === slotMarker);
 
   if (slotIndex === -1) {
-    throw new Error(`Missing target slot "${timelineBlock.target}" while composing timeline lines.`);
+    throw new Error(
+      `Missing target slot "${timelineBlock.target}" while composing timeline lines.`
+    );
   }
 
   lines.splice(slotIndex, 0, ...timelineBlock.lines);
@@ -34,11 +36,11 @@ function insertTimelineBlock(lines, timelineBlock) {
 export function buildLinesFromTimelineBlocks({ timelineBlocks, stepNumberById, stepNumber }) {
   const lines = [createSlotMarker(ROOT_SLOT)];
 
-  timelineBlocks.forEach(timelineBlock => {
+  timelineBlocks.forEach((timelineBlock) => {
     if (stepNumber >= readStepBoundary(timelineBlock.from, stepNumberById)) {
       insertTimelineBlock(lines, timelineBlock);
     }
   });
 
-  return lines.filter(line => !isSlotMarker(line));
+  return lines.filter((line) => !isSlotMarker(line));
 }

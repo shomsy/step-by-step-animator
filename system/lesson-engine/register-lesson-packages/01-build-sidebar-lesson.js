@@ -2,5 +2,5 @@ import scriptMarkdown from '../../../product/education/lessons/01-build-sidebar/
 import { compileRegisteredLessonScript } from './compile-registered-lesson-script.js';
 
 export const BuildSidebarLesson = compileRegisteredLessonScript({
-  scriptMarkdown
+  scriptMarkdown,
 });

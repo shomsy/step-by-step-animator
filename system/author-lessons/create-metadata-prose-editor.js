@@ -9,10 +9,12 @@ function readBlockNoteBlocks(editor, markdown) {
   const normalizedMarkdown = normalizeProseMarkdown(markdown);
 
   if (!normalizedMarkdown) {
-    return [{
-      type: 'paragraph',
-      content: []
-    }];
+    return [
+      {
+        type: 'paragraph',
+        content: [],
+      },
+    ];
   }
 
   const blocks = editor.tryParseMarkdownToBlocks(normalizedMarkdown);
@@ -21,20 +23,22 @@ function readBlockNoteBlocks(editor, markdown) {
     return blocks;
   }
 
-  return [{
-    type: 'paragraph',
-    content: []
-  }];
+  return [
+    {
+      type: 'paragraph',
+      content: [],
+    },
+  ];
 }
 
 export function createMetadataProseEditor({
   hostElement,
   initialMarkdown = '',
-  onChange = () => {}
+  onChange = () => {},
 }) {
   const editor = BlockNoteEditor.create({
     animations: false,
-    defaultStyles: false
+    defaultStyles: false,
   });
   let isApplyingExternalValue = false;
 
@@ -72,6 +76,6 @@ export function createMetadataProseEditor({
     },
     setMarkdown(nextMarkdown) {
       applyMarkdown(nextMarkdown);
-    }
+    },
   };
 }

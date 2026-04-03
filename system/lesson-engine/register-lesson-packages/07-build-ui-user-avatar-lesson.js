@@ -4,5 +4,5 @@ import { compileRegisteredLessonScript } from './compile-registered-lesson-scrip
 
 export const BuildUiUserAvatarLesson = compileRegisteredLessonScript({
   scriptMarkdown,
-  goalImageSrc: goalImage
+  goalImageSrc: goalImage,
 });

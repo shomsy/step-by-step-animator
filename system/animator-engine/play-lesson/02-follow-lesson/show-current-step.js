@@ -32,7 +32,8 @@ export function showCurrentStep({ lessonParts, step, currentStepNumber, totalSte
   lessonParts.proTipText.textContent = proTipText;
   lessonParts.progressBar.style.width = `${progressPercent}%`;
   lessonParts.progressText.textContent = `${Math.round(progressPercent)}% završeno`;
-  lessonParts.timeEstimate.textContent = remainingMinutes > 0 ? `~${remainingMinutes} min preostalo` : 'Završeno!';
+  lessonParts.timeEstimate.textContent =
+    remainingMinutes > 0 ? `~${remainingMinutes} min preostalo` : 'Završeno!';
   lessonParts.previousButton.disabled = currentStepNumber === 0;
   lessonParts.nextButton.disabled = currentStepNumber === totalSteps - 1;
 }

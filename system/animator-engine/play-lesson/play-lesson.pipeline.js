@@ -33,7 +33,7 @@ export function playLesson({ ownerDocument, ownerLocation, ownerWindow, lesson, 
     lessons,
     currentLessonId: lesson.lessonId,
     ownerLocation,
-    ownerWindow
+    ownerWindow,
   });
 
   const savedSteps = rememberSavedSteps({
@@ -41,22 +41,22 @@ export function playLesson({ ownerDocument, ownerLocation, ownerWindow, lesson, 
     lessonParts,
     steps: lesson.steps,
     goToStepNumber,
-    showCurrentLesson
+    showCurrentLesson,
   });
 
   const stepFinder = presentStepFinder({
     lessonParts,
     steps: lesson.steps,
-    goToStepNumber
+    goToStepNumber,
   });
 
   const themeChoice = chooseTheme({
     rootElement: ownerDocument.documentElement,
-    themeButton: lessonParts.themeButton
+    themeButton: lessonParts.themeButton,
   });
   const stepNarration = presentStepNarration({
     lessonParts,
-    ownerWindow
+    ownerWindow,
   });
 
   lessonParts.nextButton.addEventListener('click', () => {
@@ -72,7 +72,7 @@ export function playLesson({ ownerDocument, ownerLocation, ownerWindow, lesson, 
   lessonParts.playButton.addEventListener('click', startPlayback);
   lessonParts.pauseButton.addEventListener('click', pausePlayback);
   lessonParts.stopButton.addEventListener('click', stopPlayback);
-  lessonParts.playbackSpeedSlider.addEventListener('input', event => {
+  lessonParts.playbackSpeedSlider.addEventListener('input', (event) => {
     applyPlaybackSpeed(parseFloat(event.target.value));
   });
   lessonParts.saveStepButton.addEventListener('click', () => {
@@ -84,11 +84,11 @@ export function playLesson({ ownerDocument, ownerLocation, ownerWindow, lesson, 
     downloadLessonFiles({
       lesson,
       ownerDocument,
-      ownerWindow
+      ownerWindow,
     });
   });
 
-  lessonParts.lessonPanelButtons.forEach(button => {
+  lessonParts.lessonPanelButtons.forEach((button) => {
     button.addEventListener('click', () => {
       lessonProgress.activePanel = button.dataset.tab;
       showCurrentLesson();
@@ -103,7 +103,7 @@ export function playLesson({ ownerDocument, ownerLocation, ownerWindow, lesson, 
     togglePlayback,
     toggleSavedStep: () => savedSteps.toggleSavedStepNumber(lessonProgress.currentStepNumber),
     openStepFinder: stepFinder.openStepFinder,
-    closeStepFinder: stepFinder.closeStepFinder
+    closeStepFinder: stepFinder.closeStepFinder,
   });
 
   themeChoice.initializeTheme();
@@ -151,7 +151,10 @@ export function playLesson({ ownerDocument, ownerLocation, ownerWindow, lesson, 
   }
 
   function readPlaybackIntervalMs() {
-    return Math.max(600, Math.round(BASE_STEP_INTERVAL_MS / lessonProgress.playbackSpeedMultiplier));
+    return Math.max(
+      600,
+      Math.round(BASE_STEP_INTERVAL_MS / lessonProgress.playbackSpeedMultiplier)
+    );
   }
 
   function showPlaybackSpeedValue(playbackSpeedMultiplier) {
@@ -175,7 +178,7 @@ export function playLesson({ ownerDocument, ownerLocation, ownerWindow, lesson, 
   }
 
   function applyPlaybackSpeed(nextPlaybackSpeed, options = {}) {
-    const { restartPlayback = true } = options;
+    const { shouldRestartPlayback = true } = options;
     const playbackSpeedMultiplier = clampPlaybackSpeed(
       Number.isFinite(nextPlaybackSpeed) ? nextPlaybackSpeed : DEFAULT_PLAYBACK_SPEED
     );
@@ -185,13 +188,16 @@ export function playLesson({ ownerDocument, ownerLocation, ownerWindow, lesson, 
     showPlaybackSpeedValue(playbackSpeedMultiplier);
     showPlaybackAnimationSpeed(playbackSpeedMultiplier);
 
-    if (restartPlayback) {
+    if (shouldRestartPlayback) {
       restartPlayback();
     }
   }
 
   function startPlayback() {
-    if (lessonProgress.playbackTimer || lessonProgress.currentStepNumber === lesson.steps.length - 1) {
+    if (
+      lessonProgress.playbackTimer ||
+      lessonProgress.currentStepNumber === lesson.steps.length - 1
+    ) {
       return;
     }
 
@@ -242,19 +248,19 @@ export function playLesson({ ownerDocument, ownerLocation, ownerWindow, lesson, 
     showCurrentPreview({
       lessonParts,
       lesson,
-      currentStepNumber: lessonProgress.currentStepNumber
+      currentStepNumber: lessonProgress.currentStepNumber,
     });
 
     showCurrentStep({
       lessonParts,
       step,
       currentStepNumber: lessonProgress.currentStepNumber,
-      totalSteps: lesson.steps.length
+      totalSteps: lesson.steps.length,
     });
     stepNarration.showCurrentStepNarration({
       step,
       currentStepNumber: lessonProgress.currentStepNumber,
-      totalSteps: lesson.steps.length
+      totalSteps: lesson.steps.length,
     });
 
     showStepTimeline({
@@ -262,9 +268,9 @@ export function playLesson({ ownerDocument, ownerLocation, ownerWindow, lesson, 
       steps: lesson.steps,
       currentStepNumber: lessonProgress.currentStepNumber,
       savedStepNumbers,
-      goToStepNumber: stepNumber => {
+      goToStepNumber: (stepNumber) => {
         goToStepNumber(stepNumber, { showStepPanel: true });
-      }
+      },
     });
 
     showGrowingCode({
@@ -275,7 +281,7 @@ export function playLesson({ ownerDocument, ownerLocation, ownerWindow, lesson, 
       buildCssAtStep: lesson.buildCssAtStep,
       buildJsAtStep: lesson.buildJsAtStep,
       buildTemplateJsAtStep: lesson.buildTemplateJsAtStep,
-      buildShadowCssAtStep: lesson.buildShadowCssAtStep
+      buildShadowCssAtStep: lesson.buildShadowCssAtStep,
     });
 
     savedSteps.showSavedStepList(lessonProgress.currentStepNumber);

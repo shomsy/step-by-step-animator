@@ -19,7 +19,7 @@ function createNarrationController(providerLabel) {
       return Promise.resolve();
     },
     setRate() {},
-    stop() {}
+    stop() {},
   };
 }
 
@@ -43,15 +43,15 @@ test('readStepNarrationController keeps the preferred browser voice on the brows
       calls.push('speak-open-source');
       return createNarrationController('open-source');
     },
-    speakWithBrowserVoice: async input => {
+    speakWithBrowserVoice: async (input) => {
       calls.push({
         type: 'browser',
         preferredVoiceUri: input.preferredVoiceUri,
-        allowGenericBrowserVoiceFallback: input.allowGenericBrowserVoiceFallback
+        allowGenericBrowserVoiceFallback: input.allowGenericBrowserVoiceFallback,
       });
       return browserController;
     },
-    onStatusChange() {}
+    onStatusChange() {},
   });
 
   assert.equal(result.controller, browserController);
@@ -61,8 +61,8 @@ test('readStepNarrationController keeps the preferred browser voice on the brows
     {
       type: 'browser',
       preferredVoiceUri: 'sr-browser-voice',
-      allowGenericBrowserVoiceFallback: false
-    }
+      allowGenericBrowserVoiceFallback: false,
+    },
   ]);
 });
 
@@ -83,10 +83,10 @@ test('readStepNarrationController promotes the browser request to Piper when no 
     prepareOpenSourceVoice: async () => {
       calls.push('prepare-open-source');
     },
-    speakWithOpenSourceVoice: async input => {
+    speakWithOpenSourceVoice: async (input) => {
       calls.push({
         type: 'open-source',
-        narrationLanguagePreference: input.narrationLanguagePreference
+        narrationLanguagePreference: input.narrationLanguagePreference,
       });
       return openSourceController;
     },
@@ -96,7 +96,7 @@ test('readStepNarrationController promotes the browser request to Piper when no 
     },
     onStatusChange(statusText) {
       statuses.push(statusText);
-    }
+    },
   });
 
   assert.equal(result.controller, openSourceController);
@@ -106,8 +106,8 @@ test('readStepNarrationController promotes the browser request to Piper when no 
     'prepare-open-source',
     {
       type: 'open-source',
-      narrationLanguagePreference: 'sr'
-    }
+      narrationLanguagePreference: 'sr',
+    },
   ]);
   assert.match(statuses[0], /Nema lokalnog srpski sistemskog glasa/);
 });
@@ -134,17 +134,17 @@ test('readStepNarrationController falls back to the browser voice when Piper fai
       calls.push('open-source');
       return createNarrationController('open-source');
     },
-    speakWithBrowserVoice: async input => {
+    speakWithBrowserVoice: async (input) => {
       calls.push({
         type: 'browser',
         preferredVoiceUri: input.preferredVoiceUri,
-        allowGenericBrowserVoiceFallback: input.allowGenericBrowserVoiceFallback
+        allowGenericBrowserVoiceFallback: input.allowGenericBrowserVoiceFallback,
       });
       return browserController;
     },
     onStatusChange(statusText) {
       statuses.push(statusText);
-    }
+    },
   });
 
   assert.equal(result.controller, browserController);
@@ -155,31 +155,35 @@ test('readStepNarrationController falls back to the browser voice when Piper fai
     {
       type: 'browser',
       preferredVoiceUri: 'hr-browser-voice',
-      allowGenericBrowserVoiceFallback: false
-    }
+      allowGenericBrowserVoiceFallback: false,
+    },
   ]);
   assert.match(statuses.at(-1), /Prelazim na sistemski glas/);
 });
 
 test('readStepNarrationController fails closed when neither Piper nor a local voice is available', async () => {
-  await assert.rejects(() => readStepNarrationController({
-    ownerWindow: {},
-    narrationText: 'Korak 4.',
-    speechRate: 1,
-    narrationLanguagePreference: 'sr',
-    voiceSourcePreference: 'open-source',
-    preferredBrowserVoice: null,
-    browserVoiceUriPreference: '',
-    readNarrationLanguageLabel,
-    prepareOpenSourceVoice: async () => {
-      throw new Error('Piper unavailable');
-    },
-    speakWithOpenSourceVoice: async () => {
-      throw new Error('should not speak with Piper');
-    },
-    speakWithBrowserVoice: async () => {
-      throw new Error('should not fall back to the browser voice');
-    },
-    onStatusChange() {}
-  }), /open-source Piper trenutno nije uspeo/);
+  await assert.rejects(
+    () =>
+      readStepNarrationController({
+        ownerWindow: {},
+        narrationText: 'Korak 4.',
+        speechRate: 1,
+        narrationLanguagePreference: 'sr',
+        voiceSourcePreference: 'open-source',
+        preferredBrowserVoice: null,
+        browserVoiceUriPreference: '',
+        readNarrationLanguageLabel,
+        prepareOpenSourceVoice: async () => {
+          throw new Error('Piper unavailable');
+        },
+        speakWithOpenSourceVoice: async () => {
+          throw new Error('should not speak with Piper');
+        },
+        speakWithBrowserVoice: async () => {
+          throw new Error('should not fall back to the browser voice');
+        },
+        onStatusChange() {},
+      }),
+    /open-source Piper trenutno nije uspeo/
+  );
 });

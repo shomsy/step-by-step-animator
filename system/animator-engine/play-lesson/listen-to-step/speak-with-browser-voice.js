@@ -1,6 +1,6 @@
 const LANGUAGE_VARIANTS = {
   sr: ['sr-RS', 'sr'],
-  hr: ['hr-HR', 'hr']
+  hr: ['hr-HR', 'hr'],
 };
 
 function readLanguageVariants(narrationLanguagePreference) {
@@ -14,9 +14,10 @@ function languageMatchesPreference(languageTag, narrationLanguagePreference) {
 
   const normalizedLanguageTag = languageTag.toLowerCase();
 
-  return readLanguageVariants(narrationLanguagePreference).some(preferredLanguage =>
-    normalizedLanguageTag === preferredLanguage.toLowerCase() ||
-    normalizedLanguageTag.startsWith(`${preferredLanguage.toLowerCase()}-`)
+  return readLanguageVariants(narrationLanguagePreference).some(
+    (preferredLanguage) =>
+      normalizedLanguageTag === preferredLanguage.toLowerCase() ||
+      normalizedLanguageTag.startsWith(`${preferredLanguage.toLowerCase()}-`)
   );
 }
 
@@ -37,7 +38,7 @@ function sortVoicesByName(firstVoice, secondVoice) {
 
 function readMatchingVoices(voices, narrationLanguagePreference) {
   return voices
-    .filter(voice => languageMatchesPreference(voice.lang, narrationLanguagePreference))
+    .filter((voice) => languageMatchesPreference(voice.lang, narrationLanguagePreference))
     .sort(sortVoicesByName);
 }
 
@@ -46,7 +47,7 @@ function findVoiceByUri(voices, preferredVoiceUri) {
     return null;
   }
 
-  return voices.find(voice => voice.voiceURI === preferredVoiceUri) || null;
+  return voices.find((voice) => voice.voiceURI === preferredVoiceUri) || null;
 }
 
 function findPreferredVoice(voices, narrationLanguagePreference, preferredVoiceUri = '') {
@@ -57,15 +58,16 @@ function findPreferredVoice(voices, narrationLanguagePreference, preferredVoiceU
   }
 
   for (const preferredLanguage of readLanguageVariants(narrationLanguagePreference)) {
-    const exactVoice = voices.find(voice => voice.lang === preferredLanguage);
+    const exactVoice = voices.find((voice) => voice.lang === preferredLanguage);
 
     if (exactVoice) {
       return exactVoice;
     }
 
-    const localeVoice = voices.find(voice =>
-      typeof voice.lang === 'string' &&
-      voice.lang.toLowerCase().startsWith(preferredLanguage.toLowerCase())
+    const localeVoice = voices.find(
+      (voice) =>
+        typeof voice.lang === 'string' &&
+        voice.lang.toLowerCase().startsWith(preferredLanguage.toLowerCase())
     );
 
     if (localeVoice) {
@@ -89,7 +91,7 @@ function readAvailableVoices(ownerWindow) {
     return Promise.resolve(voices);
   }
 
-  return new Promise(resolve => {
+  return new Promise((resolve) => {
     let hasResolved = false;
 
     function resolveVoices() {
@@ -118,15 +120,19 @@ export function describeBrowserVoice(voice) {
 export async function readBrowserVoiceChoices(ownerWindow, narrationLanguagePreference) {
   const availableVoices = await readAvailableVoices(ownerWindow);
 
-  return readMatchingVoices(availableVoices, narrationLanguagePreference).map(voice => ({
+  return readMatchingVoices(availableVoices, narrationLanguagePreference).map((voice) => ({
     voiceURI: voice.voiceURI,
     name: voice.name,
     lang: voice.lang,
-    label: readVoiceLabel(voice)
+    label: readVoiceLabel(voice),
   }));
 }
 
-export async function readPreferredBrowserVoice(ownerWindow, narrationLanguagePreference, preferredVoiceUri = '') {
+export async function readPreferredBrowserVoice(
+  ownerWindow,
+  narrationLanguagePreference,
+  preferredVoiceUri = ''
+) {
   const availableVoices = await readAvailableVoices(ownerWindow);
   const matchingVoices = readMatchingVoices(availableVoices, narrationLanguagePreference);
 
@@ -140,7 +146,7 @@ export async function speakWithBrowserVoice({
   onStatusChange,
   narrationLanguagePreference,
   preferredVoiceUri = '',
-  allowGenericBrowserVoiceFallback = false
+  allowGenericBrowserVoiceFallback = false,
 }) {
   const synthesis = ownerWindow.speechSynthesis;
 
@@ -150,17 +156,23 @@ export async function speakWithBrowserVoice({
 
   const availableVoices = await readAvailableVoices(ownerWindow);
   const matchingVoices = readMatchingVoices(availableVoices, narrationLanguagePreference);
-  const preferredVoice = findPreferredVoice(matchingVoices, narrationLanguagePreference, preferredVoiceUri);
+  const preferredVoice = findPreferredVoice(
+    matchingVoices,
+    narrationLanguagePreference,
+    preferredVoiceUri
+  );
 
   if (!preferredVoice && !allowGenericBrowserVoiceFallback) {
-    throw new Error(`Nema lokalnog ${readLanguageLabel(narrationLanguagePreference)} sistemskog glasa u ovom browseru.`);
+    throw new Error(
+      `Nema lokalnog ${readLanguageLabel(narrationLanguagePreference)} sistemskog glasa u ovom browseru.`
+    );
   }
 
   const utterance = new ownerWindow.SpeechSynthesisUtterance(text);
   let hasFinished = false;
   let resolveFinished = null;
 
-  const whenFinished = new Promise(resolve => {
+  const whenFinished = new Promise((resolve) => {
     resolveFinished = resolve;
   });
 
@@ -215,6 +227,6 @@ export async function speakWithBrowserVoice({
     stop() {
       synthesis.cancel();
       finishNarration();
-    }
+    },
   };
 }

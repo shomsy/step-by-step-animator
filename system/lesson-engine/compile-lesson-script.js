@@ -4,7 +4,7 @@ import {
   assertPositiveInteger,
   buildCompiledLesson,
   isPlainObject,
-  normalizeString
+  normalizeString,
 } from './build-compiled-lesson.js';
 import { readLessonScript } from './read-lesson-script.js';
 
@@ -33,7 +33,7 @@ function normalizeScriptArtifactDeclaration(artifact) {
     kind: 'snapshot',
     label: label || readDefaultArtifactLabel(artifactId, language),
     file: './lesson.script.md',
-    isPrimary: Boolean(artifact.isPrimary)
+    isPrimary: Boolean(artifact.isPrimary),
   };
 }
 
@@ -43,7 +43,7 @@ function readDefaultArtifactLabel(artifactId, language) {
     css: 'style.css',
     js: 'component.js',
     'template-js': 'template.js',
-    'shadow-css': 'shadow-dom-style.css'
+    'shadow-css': 'shadow-dom-style.css',
   };
 
   return fileNamesByArtifactId[artifactId] || `${artifactId}.${language}`;
@@ -82,7 +82,11 @@ function validateLessonScriptManifest(attributes) {
     throw new Error('lesson.script.md must define status.');
   }
 
-  assertOneOf(status, new Set(['draft', 'active', 'broken', 'deprecated']), 'lesson.script.md status');
+  assertOneOf(
+    status,
+    new Set(['draft', 'active', 'broken', 'deprecated']),
+    'lesson.script.md status'
+  );
 
   if (!courseId) {
     throw new Error('lesson.script.md must define courseId.');
@@ -102,7 +106,11 @@ function validateLessonScriptManifest(attributes) {
     throw new Error('lesson.script.md must define preview.type.');
   }
 
-  assertOneOf(previewType, new Set(['dom', 'terminal', 'markdown', 'diagram', 'none']), 'lesson.script.md preview.type');
+  assertOneOf(
+    previewType,
+    new Set(['dom', 'terminal', 'markdown', 'diagram', 'none']),
+    'lesson.script.md preview.type'
+  );
 
   if (!previewTitle) {
     throw new Error('lesson.script.md must define preview.title.');
@@ -124,14 +132,18 @@ function validateLessonScriptManifest(attributes) {
 
   artifacts.forEach((artifact, index) => {
     if (!isPlainObject(artifact)) {
-      throw new Error(`Artifact declaration at index ${index} in lesson.script.md must be an object.`);
+      throw new Error(
+        `Artifact declaration at index ${index} in lesson.script.md must be an object.`
+      );
     }
 
     const artifactId = normalizeString(artifact.artifactId);
     const language = normalizeString(artifact.language);
 
     if (!artifactId) {
-      throw new Error(`Artifact declaration at index ${index} in lesson.script.md must define artifactId.`);
+      throw new Error(
+        `Artifact declaration at index ${index} in lesson.script.md must define artifactId.`
+      );
     }
 
     if (artifactIds.has(artifactId)) {
@@ -162,7 +174,7 @@ function normalizePreview(scenePreview, previewType) {
 
   return {
     action: 'apply-state',
-    target: previewType
+    target: previewType,
   };
 }
 
@@ -179,10 +191,10 @@ function normalizeScriptScene(stepId, scene, previewType) {
         ? {
             reveal: {
               from: 1,
-              to: codeLines.length
-            }
+              to: codeLines.length,
+            },
           }
-        : {})
+        : {}),
     },
     code: {
       activeArtifactId: primaryShowCodeBlock.artifactId,
@@ -191,46 +203,45 @@ function normalizeScriptScene(stepId, scene, previewType) {
             highlightLines: [
               {
                 from: 1,
-                to: codeLines.length
-              }
-            ]
+                to: codeLines.length,
+              },
+            ],
           }
-        : {})
+        : {}),
     },
     preview: normalizePreview(scene.preview, previewType),
-    ...(scene.theory ? { theory: scene.theory } : {})
+    ...(scene.theory ? { theory: scene.theory } : {}),
   };
 }
 
 function createArtifactBuilderLookup(artifactDeclarations, scriptSteps) {
   const currentLinesByArtifactId = Object.fromEntries(
-    artifactDeclarations.map(artifact => [artifact.artifactId, []])
+    artifactDeclarations.map((artifact) => [artifact.artifactId, []])
   );
-  const artifactStateByStep = scriptSteps.map(step => {
-    step.scenes.forEach(scene => {
-      scene.showCodeBlocks.forEach(showCodeBlock => {
+  const artifactStateByStep = scriptSteps.map((step) => {
+    step.scenes.forEach((scene) => {
+      scene.showCodeBlocks.forEach((showCodeBlock) => {
         currentLinesByArtifactId[showCodeBlock.artifactId] = splitCodeLines(showCodeBlock.codeText);
       });
     });
 
     return Object.fromEntries(
-      artifactDeclarations.map(artifact => [artifact.artifactId, [...currentLinesByArtifactId[artifact.artifactId]]])
+      artifactDeclarations.map((artifact) => [
+        artifact.artifactId,
+        [...currentLinesByArtifactId[artifact.artifactId]],
+      ])
     );
   });
 
   return Object.fromEntries(
-    artifactDeclarations.map(artifact => [
+    artifactDeclarations.map((artifact) => [
       artifact.artifactId,
-      stepNumber => artifactStateByStep[stepNumber]?.[artifact.artifactId] || []
+      (stepNumber) => artifactStateByStep[stepNumber]?.[artifact.artifactId] || [],
     ])
   );
 }
 
-export function compileLessonScript({
-  scriptMarkdown,
-  goalImageSrc = '',
-  theoryMarkdown = ''
-}) {
+export function compileLessonScript({ scriptMarkdown, goalImageSrc = '', theoryMarkdown = '' }) {
   const lessonScript = readLessonScript(scriptMarkdown);
   const lessonAttributes = lessonScript.attributes;
   const theoryEnabled = Boolean(lessonAttributes.theory?.enabled);
@@ -238,12 +249,14 @@ export function compileLessonScript({
   validateLessonScriptManifest(lessonAttributes);
 
   if (theoryEnabled && !normalizeString(theoryMarkdown)) {
-    throw new Error('lesson.script.md declares theory.enabled=true but no theoryMarkdown was provided.');
+    throw new Error(
+      'lesson.script.md declares theory.enabled=true but no theoryMarkdown was provided.'
+    );
   }
 
   const artifactDeclarations = lessonAttributes.artifacts.map(normalizeScriptArtifactDeclaration);
   const previewType = normalizeString(lessonAttributes.preview?.type);
-  const sceneSteps = lessonScript.steps.map(step => ({
+  const sceneSteps = lessonScript.steps.map((step) => ({
     stepId: step.stepId,
     title: step.title,
     summary: step.summary,
@@ -251,9 +264,12 @@ export function compileLessonScript({
     tag: step.tag,
     proTip: step.proTip,
     focusHtmlNeedles: step.focusHtmlNeedles,
-    scenes: step.scenes.map(scene => normalizeScriptScene(step.stepId, scene, previewType))
+    scenes: step.scenes.map((scene) => normalizeScriptScene(step.stepId, scene, previewType)),
   }));
-  const buildArtifactAtStepById = createArtifactBuilderLookup(artifactDeclarations, lessonScript.steps);
+  const buildArtifactAtStepById = createArtifactBuilderLookup(
+    artifactDeclarations,
+    lessonScript.steps
+  );
 
   return buildCompiledLesson({
     lessonAttributes,
@@ -262,6 +278,6 @@ export function compileLessonScript({
     artifactDeclarations,
     buildArtifactAtStepById,
     goalImageSrc,
-    theoryMarkdown
+    theoryMarkdown,
   });
 }

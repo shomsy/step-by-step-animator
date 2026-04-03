@@ -9,6 +9,23 @@ import { createServer } from 'vite';
 
 const currentDir = path.dirname(fileURLToPath(import.meta.url));
 const repoRoot = path.resolve(currentDir, '../../');
+const authoringCollectionPath = '/content/lesson';
+
+function buildAuthoringUrl(appUrl, lessonId = '') {
+  const nextUrl = new URL(appUrl);
+
+  nextUrl.pathname = lessonId
+    ? `${authoringCollectionPath}/${encodeURIComponent(lessonId)}`
+    : authoringCollectionPath;
+
+  return nextUrl.toString();
+}
+
+function readAuthoringPathMatches(pathname, lessonId = '') {
+  return (
+    pathname === (lessonId ? `${authoringCollectionPath}/${lessonId}` : authoringCollectionPath)
+  );
+}
 
 async function waitForCondition(readCondition, description, timeoutMs = 10000) {
   const deadline = Date.now() + timeoutMs;
@@ -24,17 +41,32 @@ async function waitForCondition(readCondition, description, timeoutMs = 10000) {
   throw new Error(`Timed out waiting for ${description}.`);
 }
 
+async function readPathExists(filePath) {
+  try {
+    await fs.access(filePath);
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+function readFirstStepTitle(sourceMarkdown) {
+  const match = String(sourceMarkdown || '').match(/^# Step:[^\n]*\ntitle:\s*(.+)$/m);
+  return match?.[1]?.trim() || '';
+}
+
 async function openPopoverAndClick(page, buttonSelector, menuSelector, itemSelector) {
   await page.click(buttonSelector);
   await waitForCondition(
-    async () => page.$eval(menuSelector, element => !element.hasAttribute('hidden')).catch(() => false),
+    async () =>
+      page.$eval(menuSelector, (element) => !element.hasAttribute('hidden')).catch(() => false),
     `popover menu ${menuSelector}`
   );
   await page.click(itemSelector);
 }
 
 async function setEditorCursorBeforeFirstScene(page) {
-  await page.$eval('#authoringScriptEditor', element => {
+  await page.$eval('#authoringScriptEditor', (element) => {
     if (!(element instanceof HTMLElement) || !element.authoringEditor) {
       throw new Error('Expected the CodeMirror authoring editor host.');
     }
@@ -48,28 +80,32 @@ async function setEditorCursorBeforeFirstScene(page) {
 }
 
 async function setEditorCursorOnBlankLineAfterMarker(page, markerText) {
-  await page.$eval('#authoringScriptEditor', (element, marker) => {
-    if (!(element instanceof HTMLElement) || !element.authoringEditor) {
-      throw new Error('Expected the CodeMirror authoring editor host.');
-    }
+  await page.$eval(
+    '#authoringScriptEditor',
+    (element, marker) => {
+      if (!(element instanceof HTMLElement) || !element.authoringEditor) {
+        throw new Error('Expected the CodeMirror authoring editor host.');
+      }
 
-    const value = element.authoringEditor.getValue();
-    const markerIndex = value.indexOf(marker);
+      const value = element.authoringEditor.getValue();
+      const markerIndex = value.indexOf(marker);
 
-    if (markerIndex < 0) {
-      throw new Error(`Could not find marker "${marker}".`);
-    }
+      if (markerIndex < 0) {
+        throw new Error(`Could not find marker "${marker}".`);
+      }
 
-    const lineEnd = value.indexOf('\n', markerIndex);
-    const cursor = lineEnd >= 0 ? lineEnd + 1 : value.length;
+      const lineEnd = value.indexOf('\n', markerIndex);
+      const cursor = lineEnd >= 0 ? lineEnd + 1 : value.length;
 
-    element.authoringEditor.focus();
-    element.authoringEditor.setSelectionRange(cursor, cursor);
-  }, markerText);
+      element.authoringEditor.focus();
+      element.authoringEditor.setSelectionRange(cursor, cursor);
+    },
+    markerText
+  );
 }
 
 async function readEditorCursorSnapshot(page) {
-  return page.$eval('#authoringScriptEditor', element => {
+  return page.$eval('#authoringScriptEditor', (element) => {
     if (!(element instanceof HTMLElement) || !element.authoringEditor) {
       throw new Error('Expected the CodeMirror authoring editor host.');
     }
@@ -86,148 +122,164 @@ async function readEditorCursorSnapshot(page) {
       value,
       selectionStart,
       lineNumber,
-      lineText
+      lineText,
     };
   });
 }
 
 async function replaceEditorSelectionText(page, nextText) {
-  await page.$eval('#authoringScriptEditor', (element, text) => {
-    if (!(element instanceof HTMLElement) || !element.authoringEditor) {
-      throw new Error('Expected the CodeMirror authoring editor host.');
-    }
+  await page.$eval(
+    '#authoringScriptEditor',
+    (element, text) => {
+      if (!(element instanceof HTMLElement) || !element.authoringEditor) {
+        throw new Error('Expected the CodeMirror authoring editor host.');
+      }
 
-    element.authoringEditor.focus();
-    const currentValue = element.authoringEditor.getValue();
-    element.authoringEditor.setSelectionRange(0, currentValue.length);
-    element.authoringEditor.pasteText(text);
-  }, nextText);
+      element.authoringEditor.focus();
+      const currentValue = element.authoringEditor.getValue();
+      element.authoringEditor.setSelectionRange(0, currentValue.length);
+      element.authoringEditor.pasteText(text);
+    },
+    nextText
+  );
 }
 
 async function dispatchEditorPasteText(page, nextText, { replaceAll = false } = {}) {
-  await page.$eval('#authoringScriptEditor', (element, { text, shouldReplaceAll }) => {
-    if (!(element instanceof HTMLElement) || !element.authoringEditor) {
-      throw new Error('Expected the CodeMirror authoring editor host.');
+  await page.$eval(
+    '#authoringScriptEditor',
+    (element, { text, shouldReplaceAll }) => {
+      if (!(element instanceof HTMLElement) || !element.authoringEditor) {
+        throw new Error('Expected the CodeMirror authoring editor host.');
+      }
+
+      const editor = element.authoringEditor;
+      const content = element.querySelector('.cm-content');
+
+      if (!(content instanceof HTMLElement)) {
+        throw new Error('Expected the CodeMirror content surface.');
+      }
+
+      editor.focus();
+
+      if (shouldReplaceAll) {
+        const currentValue = editor.getValue();
+        editor.setSelectionRange(0, currentValue.length);
+      }
+
+      const clipboardData = new DataTransfer();
+
+      clipboardData.setData('text/plain', text);
+      content.dispatchEvent(
+        new ClipboardEvent('paste', {
+          clipboardData,
+          bubbles: true,
+          cancelable: true,
+        })
+      );
+    },
+    {
+      text: nextText,
+      shouldReplaceAll: replaceAll,
     }
-
-    const editor = element.authoringEditor;
-    const content = element.querySelector('.cm-content');
-
-    if (!(content instanceof HTMLElement)) {
-      throw new Error('Expected the CodeMirror content surface.');
-    }
-
-    editor.focus();
-
-    if (shouldReplaceAll) {
-      const currentValue = editor.getValue();
-      editor.setSelectionRange(0, currentValue.length);
-    }
-
-    const clipboardData = new DataTransfer();
-
-    clipboardData.setData('text/plain', text);
-    content.dispatchEvent(new ClipboardEvent('paste', {
-      clipboardData,
-      bubbles: true,
-      cancelable: true
-    }));
-  }, {
-    text: nextText,
-    shouldReplaceAll: replaceAll
-  });
+  );
 }
 
 async function readPairedDraftSourceMarkdown(page, shippedLessonId) {
-  return page.evaluate(async ({ repoPath, lessonId }) => {
-    const [{ openAuthoringSqlite }, { readShippedLessonScripts }] = await Promise.all([
-      import(`/@fs${repoPath}/system/author-lessons/open-authoring-sqlite.js`),
-      import(`/@fs${repoPath}/system/author-lessons/read-shipped-lesson-scripts.js`)
-    ]);
-    const shippedLessons = await readShippedLessonScripts();
-    const store = await openAuthoringSqlite({
-      ownerWindow: window,
-      shippedLessons
-    });
-    const snapshot = await store.openDraftForShippedLesson(lessonId);
-    const draftSourceMarkdown = snapshot.selectedDraft?.sourceMarkdown || '';
+  return page.evaluate(
+    async ({ repoPath, lessonId }) => {
+      const [{ openAuthoringSqlite }, { readShippedLessonScripts }] = await Promise.all([
+        import(`/@fs${repoPath}/system/author-lessons/open-authoring-sqlite.js`),
+        import(`/@fs${repoPath}/system/author-lessons/read-shipped-lesson-scripts.js`),
+      ]);
+      const shippedLessons = await readShippedLessonScripts();
+      const store = await openAuthoringSqlite({
+        ownerWindow: window,
+        shippedLessons,
+      });
+      const snapshot = await store.openDraftForShippedLesson(lessonId);
+      const draftSourceMarkdown = snapshot.selectedDraft?.sourceMarkdown || '';
 
-    if (!draftSourceMarkdown) {
-      throw new Error(`Expected a paired draft source for "${lessonId}".`);
+      if (!draftSourceMarkdown) {
+        throw new Error(`Expected a paired draft source for "${lessonId}".`);
+      }
+
+      return draftSourceMarkdown;
+    },
+    {
+      repoPath: repoRoot,
+      lessonId: shippedLessonId,
     }
-
-    return draftSourceMarkdown;
-  }, {
-    repoPath: repoRoot,
-    lessonId: shippedLessonId
-  });
+  );
 }
 
 async function savePairedDraftSourceMarkdown(page, shippedLessonId, sourceMarkdown) {
-  return page.evaluate(async ({ repoPath, lessonId, nextSourceMarkdown }) => {
-    const [{ openAuthoringSqlite }, { readShippedLessonScripts }] = await Promise.all([
-      import(`/@fs${repoPath}/system/author-lessons/open-authoring-sqlite.js`),
-      import(`/@fs${repoPath}/system/author-lessons/read-shipped-lesson-scripts.js`)
-    ]);
-    const shippedLessons = await readShippedLessonScripts();
-    const store = await openAuthoringSqlite({
-      ownerWindow: window,
-      shippedLessons
-    });
-    const snapshot = await store.openDraftForShippedLesson(lessonId);
-    const draftId = snapshot.selectedDraft?.draftId || '';
+  return page.evaluate(
+    async ({ repoPath, lessonId, nextSourceMarkdown }) => {
+      const [{ openAuthoringSqlite }, { readShippedLessonScripts }] = await Promise.all([
+        import(`/@fs${repoPath}/system/author-lessons/open-authoring-sqlite.js`),
+        import(`/@fs${repoPath}/system/author-lessons/read-shipped-lesson-scripts.js`),
+      ]);
+      const shippedLessons = await readShippedLessonScripts();
+      const store = await openAuthoringSqlite({
+        ownerWindow: window,
+        shippedLessons,
+      });
+      const snapshot = await store.openDraftForShippedLesson(lessonId);
+      const draftId = snapshot.selectedDraft?.draftId || '';
 
-    if (!draftId) {
-      throw new Error(`Expected a paired draft id for "${lessonId}".`);
+      if (!draftId) {
+        throw new Error(`Expected a paired draft id for "${lessonId}".`);
+      }
+
+      const savedSnapshot = await store.saveLessonDraft({
+        draftId,
+        sourceMarkdown: nextSourceMarkdown,
+      });
+
+      return savedSnapshot.selectedDraft?.sourceMarkdown || '';
+    },
+    {
+      repoPath: repoRoot,
+      lessonId: shippedLessonId,
+      nextSourceMarkdown: sourceMarkdown,
     }
-
-    const savedSnapshot = await store.saveLessonDraft({
-      draftId,
-      sourceMarkdown: nextSourceMarkdown
-    });
-
-    return savedSnapshot.selectedDraft?.sourceMarkdown || '';
-  }, {
-    repoPath: repoRoot,
-    lessonId: shippedLessonId,
-    nextSourceMarkdown: sourceMarkdown
-  });
+  );
 }
 
-async function readLatestDraftBackup(page, {
-  requestedLessonId = '',
-  shippedLessonId = ''
-}) {
-  return page.evaluate(async ({ repoPath, requestedId, shippedId }) => {
-    const { readPersistedPlayableDraftBackup } = await import(
-      `/@fs${repoPath}/system/author-lessons/open-authoring-lesson-backup.js`
-    );
-    const draftBackup = await readPersistedPlayableDraftBackup({
-      ownerWindow: window,
-      requestedLessonId: requestedId,
-      shippedLessonId: shippedId
-    });
+async function readLatestDraftBackup(page, { requestedLessonId = '', shippedLessonId = '' }) {
+  return page.evaluate(
+    async ({ repoPath, requestedId, shippedId }) => {
+      const { readPersistedPlayableDraftBackup } = await import(
+        `/@fs${repoPath}/system/author-lessons/open-authoring-lesson-backup.js`
+      );
+      const draftBackup = await readPersistedPlayableDraftBackup({
+        ownerWindow: window,
+        requestedLessonId: requestedId,
+        shippedLessonId: shippedId,
+      });
 
-    return draftBackup
-      ? {
-          draftId: draftBackup.draftId,
-          lessonId: draftBackup.lessonId,
-          lessonTitle: draftBackup.lessonTitle,
-          shippedLessonId: draftBackup.shippedLessonId,
-          sourceOrigin: draftBackup.sourceOrigin,
-          createdAt: draftBackup.createdAt,
-          updatedAt: draftBackup.updatedAt,
-          sourceMarkdown: draftBackup.sourceMarkdown,
-          backupFileName: draftBackup.backupFileName,
-          backupLocation: draftBackup.backupLocation,
-          tracksShippedSource: draftBackup.tracksShippedSource
-        }
-      : null;
-  }, {
-    repoPath: repoRoot,
-    requestedId: requestedLessonId,
-    shippedId: shippedLessonId
-  });
+      return draftBackup
+        ? {
+            draftId: draftBackup.draftId,
+            lessonId: draftBackup.lessonId,
+            lessonTitle: draftBackup.lessonTitle,
+            shippedLessonId: draftBackup.shippedLessonId,
+            sourceOrigin: draftBackup.sourceOrigin,
+            createdAt: draftBackup.createdAt,
+            updatedAt: draftBackup.updatedAt,
+            sourceMarkdown: draftBackup.sourceMarkdown,
+            backupFileName: draftBackup.backupFileName,
+            backupLocation: draftBackup.backupLocation,
+            tracksShippedSource: draftBackup.tracksShippedSource,
+          }
+        : null;
+    },
+    {
+      repoPath: repoRoot,
+      requestedId: requestedLessonId,
+      shippedId: shippedLessonId,
+    }
+  );
 }
 
 async function deletePersistedSqliteSnapshot(page) {
@@ -271,51 +323,73 @@ async function deletePersistedSqliteSnapshot(page) {
 }
 
 async function readPlayerSelectionSnapshot(page, lessonId) {
-  return page.evaluate(async ({ repoPath, lessonId }) => {
-    const [{ selectLessonFromLocation }, { readPlayableDraftOverride }] = await Promise.all([
-      import(`/@fs${repoPath}/system/animator-engine/choose-lesson/select-lesson-from-location.js`),
-      import(`/@fs${repoPath}/system/author-lessons/read-playable-draft-override.js`)
-    ]);
-    const selection = await selectLessonFromLocation({
-      ownerLocation: {
-        href: `${window.location.origin}/?lesson=${lessonId}`
-      },
-      ownerWindow: window,
-      resolveDraftLessonOverride: readPlayableDraftOverride
-    });
+  return page.evaluate(
+    async ({ repoPath, lessonId }) => {
+      const [{ selectLessonFromLocation }, { readPlayableDraftOverride }] = await Promise.all([
+        import(
+          `/@fs${repoPath}/system/animator-engine/choose-lesson/select-lesson-from-location.js`
+        ),
+        import(`/@fs${repoPath}/system/author-lessons/read-playable-draft-override.js`),
+      ]);
+      const selection = await selectLessonFromLocation({
+        ownerLocation: {
+          href: `${window.location.origin}/?lesson=${lessonId}`,
+        },
+        ownerWindow: window,
+        resolveDraftLessonOverride: readPlayableDraftOverride,
+      });
 
-    return {
-      lessonId: selection.lesson?.lessonId || '',
-      lessonTitle: selection.lesson?.lessonTitle || '',
-      firstStepTitle: selection.lesson?.steps?.[0]?.title || '',
-      runtimeSource: selection.lesson?.lessonRuntimeSource || 'published',
-      runtimeLabel: selection.lesson?.lessonRuntimeSourceLabel || 'Published Lesson · shipped package',
-      lessonOptions: selection.lessons.map(lesson => ({
-        lessonId: lesson.lessonId,
-        lessonTitle: lesson.lessonTitle
-      }))
-    };
-  }, {
-    repoPath: repoRoot,
-    lessonId
-  });
+      return {
+        lessonId: selection.lesson?.lessonId || '',
+        lessonTitle: selection.lesson?.lessonTitle || '',
+        firstStepTitle: selection.lesson?.steps?.[0]?.title || '',
+        runtimeSource: selection.lesson?.lessonRuntimeSource || 'published',
+        runtimeLabel:
+          selection.lesson?.lessonRuntimeSourceLabel || 'Published Lesson · shipped package',
+        lessonOptions: selection.lessons.map((lesson) => ({
+          lessonId: lesson.lessonId,
+          lessonTitle: lesson.lessonTitle,
+        })),
+      };
+    },
+    {
+      repoPath: repoRoot,
+      lessonId,
+    }
+  );
 }
 
 async function setMetadataValue(page, fieldName, nextValue) {
-  await page.$eval(`[data-metadata-field="${fieldName}"]`, (element, value) => {
-    if (!(element instanceof HTMLInputElement || element instanceof HTMLTextAreaElement || element instanceof HTMLSelectElement)) {
-      throw new Error(`Expected a metadata control for ${value}.`);
-    }
+  await page.$eval(
+    `[data-metadata-field="${fieldName}"]`,
+    (element, value) => {
+      if (
+        !(
+          element instanceof HTMLInputElement ||
+          element instanceof HTMLTextAreaElement ||
+          element instanceof HTMLSelectElement
+        )
+      ) {
+        throw new Error(`Expected a metadata control for ${value}.`);
+      }
 
-    element.value = value;
-    element.dispatchEvent(new Event('input', { bubbles: true }));
-    element.dispatchEvent(new Event('change', { bubbles: true }));
-  }, nextValue);
+      element.value = value;
+      element.dispatchEvent(new Event('input', { bubbles: true }));
+      element.dispatchEvent(new Event('change', { bubbles: true }));
+    },
+    nextValue
+  );
 }
 
 async function readMetadataValue(page, fieldName) {
-  return page.$eval(`[data-metadata-field="${fieldName}"]`, element => {
-    if (!(element instanceof HTMLInputElement || element instanceof HTMLTextAreaElement || element instanceof HTMLSelectElement)) {
+  return page.$eval(`[data-metadata-field="${fieldName}"]`, (element) => {
+    if (
+      !(
+        element instanceof HTMLInputElement ||
+        element instanceof HTMLTextAreaElement ||
+        element instanceof HTMLSelectElement
+      )
+    ) {
       throw new Error('Expected a metadata control.');
     }
 
@@ -350,7 +424,7 @@ function buildLargeLessonBody(stepCount = 140) {
       `  color: rgb(${(index * 13) % 255}, ${(index * 29) % 255}, ${(index * 47) % 255});`,
       '}',
       '```',
-      ''
+      '',
     ].join('\n');
   }).join('\n');
 }
@@ -379,15 +453,11 @@ function buildLargeLessonSource(stepCount = 158) {
     '  title: Imported lesson preview',
     '  address: browser://imported-large-lesson-preview',
     '---',
-    buildLargeLessonBody(stepCount)
+    buildLargeLessonBody(stepCount),
   ].join('\n');
 }
 
-function buildSyntheticLessonSource({
-  lessonId,
-  lessonTitle,
-  stepTitle
-}) {
+function buildSyntheticLessonSource({ lessonId, lessonTitle, stepTitle }) {
   return [
     '---',
     'schemaVersion: 1',
@@ -424,7 +494,7 @@ function buildSyntheticLessonSource({
     '```html',
     `<div class="${lessonId}">${stepTitle}</div>`,
     '```',
-    ''
+    '',
   ].join('\n');
 }
 
@@ -482,1539 +552,2443 @@ function buildDiffLessonSource() {
     '  <h2>After</h2>',
     '</div>',
     '```',
-    ''
+    '',
   ].join('\n');
 }
 
-test('browser authoring smoke covers V2 writer body view, metadata drawer, preview sync, and validation jump flow', { timeout: 60000 }, async () => {
-  const server = await createServer({
-    configFile: path.resolve(repoRoot, 'vite.config.js'),
-    clearScreen: false,
-    logLevel: 'error',
-    server: {
-      host: '127.0.0.1',
-      port: 4174,
-      strictPort: false
-    }
-  });
-
-  let browser;
-
-  try {
-    await server.listen();
-
-    const appUrl = server.resolvedUrls?.local?.find(url => url.startsWith('http://127.0.0.1'))
-      || server.resolvedUrls?.local?.[0];
-
-    assert.ok(appUrl, 'Vite dev server did not expose a local URL.');
-
-    browser = await puppeteer.launch({
-      args: ['--disable-setuid-sandbox', '--no-sandbox'],
-      headless: true
+test(
+  'browser authoring smoke covers V2 writer body view, metadata drawer, preview sync, and validation jump flow',
+  { timeout: 60000 },
+  async () => {
+    const server = await createServer({
+      configFile: path.resolve(repoRoot, 'vite.config.js'),
+      clearScreen: false,
+      logLevel: 'error',
+      server: {
+        host: '127.0.0.1',
+        port: 4174,
+        strictPort: false,
+      },
     });
 
-    const page = await browser.newPage();
-    const consoleErrors = [];
-    const pageErrors = [];
+    let browser;
 
-    page.on('console', message => {
-      if (message.type() === 'error') {
-        consoleErrors.push(message.text());
-      }
-    });
-    page.on('pageerror', error => {
-      pageErrors.push(error.message);
-    });
-    page.on('dialog', dialog => {
-      void dialog.accept();
-    });
+    try {
+      await server.listen();
 
-    await page.goto(`${appUrl}?workspace=authoring`, { waitUntil: 'domcontentloaded' });
+      const appUrl =
+        server.resolvedUrls?.local?.find((url) => url.startsWith('http://127.0.0.1')) ||
+        server.resolvedUrls?.local?.[0];
 
-    await waitForCondition(
-      async () => page.$('#authoringScriptEditor').then(Boolean),
-      'the authoring writer workspace'
-    );
+      assert.ok(appUrl, 'Vite dev server did not expose a local URL.');
 
-    await openPopoverAndClick(page, '#authoringMoreBtn', '#authoringMoreMenu', '[data-action="new-draft"]');
+      browser = await puppeteer.launch({
+        args: ['--disable-setuid-sandbox', '--no-sandbox'],
+        headless: true,
+      });
 
-    await waitForCondition(
-      async () => page.$eval('#authoringLessonTitle', element => element.textContent?.includes('New Lesson') || false),
-      'the new draft to open'
-    );
+      const page = await browser.newPage();
+      const consoleErrors = [];
+      const pageErrors = [];
 
-    await waitForCondition(
-      async () => page.evaluate(() => {
-        const editor = document.querySelector('#authoringScriptEditor');
-        return editor instanceof HTMLElement
-          && editor.dataset.editorOwner === 'CodeMirror'
-          && editor.authoringEditor.getValue().startsWith('# Step:')
-          && !editor.authoringEditor.getValue().includes('lessonId:');
-      }),
-      'the writer body view to hide frontmatter and open on the first step through CodeMirror'
-    );
+      page.on('console', (message) => {
+        if (message.type() === 'error') {
+          consoleErrors.push(message.text());
+        }
+      });
+      page.on('pageerror', (error) => {
+        pageErrors.push(error.message);
+      });
+      page.on('dialog', (dialog) => {
+        void dialog.accept();
+      });
 
-    await waitForCondition(
-      async () => page.evaluate(() => {
-        const compileCard = document.querySelector('#authoringCompileStatus');
-        const validationCard = document.querySelector('#authoringValidation');
-        const previewCard = document.querySelector('#authoringPreviewCard');
-        const snapshotTabs = document.querySelector('#authoringSnapshotTabs');
-        return Boolean(compileCard && validationCard && previewCard && snapshotTabs);
-      }),
-      'the right inspector to render'
-    );
+      await page.goto(buildAuthoringUrl(appUrl), { waitUntil: 'domcontentloaded' });
 
-    await setEditorCursorBeforeFirstScene(page);
-    await page.click('#authoringAddSceneBtn');
-    await page.keyboard.type('authoring-smoke-scene');
+      await waitForCondition(
+        async () => page.$('#authoringScriptEditor').then(Boolean),
+        'the authoring writer workspace'
+      );
 
-    await waitForCondition(
-      async () => page.$eval('[data-outline-kind="scene"][data-scene-id="authoring-smoke-scene"]', element => Boolean(element)).catch(() => false),
-      'the outline to reflect the new scene id'
-    );
+      await openPopoverAndClick(
+        page,
+        '#authoringMoreBtn',
+        '#authoringMoreMenu',
+        '[data-action="new-draft"]'
+      );
 
-    const firstSceneId = await page.$eval('[data-outline-kind="scene"]', button => {
-      if (!(button instanceof HTMLElement)) {
-        throw new Error('Expected the first scene outline button.');
-      }
+      await waitForCondition(
+        async () =>
+          page.$eval(
+            '#authoringLessonTitle',
+            (element) => element.textContent?.includes('New Lesson') || false
+          ),
+        'the new draft to open'
+      );
 
-      return button.dataset.sceneId || '';
-    });
-    const firstStepId = await page.$eval('[data-outline-kind="step"]', button => {
-      if (!(button instanceof HTMLElement)) {
-        throw new Error('Expected the first step outline button.');
-      }
+      await waitForCondition(
+        async () =>
+          page.evaluate(() => {
+            const editor = document.querySelector('#authoringScriptEditor');
+            return (
+              editor instanceof HTMLElement &&
+              editor.dataset.editorOwner === 'CodeMirror' &&
+              editor.authoringEditor.getValue().startsWith('# Step:') &&
+              !editor.authoringEditor.getValue().includes('lessonId:')
+            );
+          }),
+        'the writer body view to hide frontmatter and open on the first step through CodeMirror'
+      );
 
-      return button.dataset.stepId || '';
-    });
+      await waitForCondition(
+        async () =>
+          page.evaluate(() => {
+            const compileCard = document.querySelector('#authoringCompileStatus');
+            const validationCard = document.querySelector('#authoringValidation');
+            const previewCard = document.querySelector('#authoringPreviewCard');
+            const snapshotTabs = document.querySelector('#authoringSnapshotTabs');
+            return Boolean(compileCard && validationCard && previewCard && snapshotTabs);
+          }),
+        'the right inspector to render'
+      );
 
-    await page.click('[data-outline-kind="scene"][data-scene-id="authoring-smoke-scene"]');
-    await waitForCondition(
-      async () => {
+      await setEditorCursorBeforeFirstScene(page);
+      await page.click('#authoringAddSceneBtn');
+      await page.keyboard.type('authoring-smoke-scene');
+
+      await waitForCondition(
+        async () =>
+          page
+            .$eval(
+              '[data-outline-kind="scene"][data-scene-id="authoring-smoke-scene"]',
+              (element) => Boolean(element)
+            )
+            .catch(() => false),
+        'the outline to reflect the new scene id'
+      );
+
+      const firstSceneId = await page.$eval('[data-outline-kind="scene"]', (button) => {
+        if (!(button instanceof HTMLElement)) {
+          throw new Error('Expected the first scene outline button.');
+        }
+
+        return button.dataset.sceneId || '';
+      });
+      const firstStepId = await page.$eval('[data-outline-kind="step"]', (button) => {
+        if (!(button instanceof HTMLElement)) {
+          throw new Error('Expected the first step outline button.');
+        }
+
+        return button.dataset.stepId || '';
+      });
+
+      await page.click('[data-outline-kind="scene"][data-scene-id="authoring-smoke-scene"]');
+      await waitForCondition(async () => {
         const cursor = await readEditorCursorSnapshot(page);
         return cursor.lineText === '## Scene: authoring-smoke-scene';
-      },
-      'the outline scene button to jump to the exact scene heading'
-    );
+      }, 'the outline scene button to jump to the exact scene heading');
 
-    await page.click(`[data-outline-kind="step"][data-step-id="${firstStepId}"]`);
-    await waitForCondition(
-      async () => {
+      await page.click(`[data-outline-kind="step"][data-step-id="${firstStepId}"]`);
+      await waitForCondition(async () => {
         const cursor = await readEditorCursorSnapshot(page);
         return cursor.lineText === `# Step: ${firstStepId}`;
-      },
-      'the outline step button to jump to the exact step heading'
-    );
+      }, 'the outline step button to jump to the exact step heading');
 
-    await setEditorCursorOnBlankLineAfterMarker(page, '## Scene: authoring-smoke-scene');
-    await page.keyboard.type('/');
-    await waitForCondition(
-      async () => page.$eval('#authoringInsertMenu', element => !element.hidden).catch(() => false),
-      'the slash-triggered insert menu for the new scene'
-    );
-    const slashMenuLabels = await page.$$eval('#authoringInsertMenu .authoring-popover-item strong', items => items.map(item => item.textContent?.trim() || ''));
-    assert.ok(slashMenuLabels.includes('Insert Narration'));
-    assert.ok(slashMenuLabels.includes('Insert Show Code → HTML'));
-    assert.ok(!slashMenuLabels.includes('Insert Step'));
+      await setEditorCursorOnBlankLineAfterMarker(page, '## Scene: authoring-smoke-scene');
+      await page.keyboard.type('/');
+      await waitForCondition(
+        async () =>
+          page.$eval('#authoringInsertMenu', (element) => !element.hidden).catch(() => false),
+        'the slash-triggered insert menu for the new scene'
+      );
+      const slashMenuLabels = await page.$$eval(
+        '#authoringInsertMenu .authoring-popover-item strong',
+        (items) => items.map((item) => item.textContent?.trim() || '')
+      );
+      assert.ok(slashMenuLabels.includes('Insert Narration'));
+      assert.ok(slashMenuLabels.includes('Insert Show Code → HTML'));
+      assert.ok(!slashMenuLabels.includes('Insert Step'));
 
-    await page.$eval('[data-action="insert-narration"]', element => {
-      if (!(element instanceof HTMLElement)) {
-        throw new Error('Expected the narration insert action.');
-      }
+      await page.$eval('[data-action="insert-narration"]', (element) => {
+        if (!(element instanceof HTMLElement)) {
+          throw new Error('Expected the narration insert action.');
+        }
 
-      element.click();
-    });
-    await waitForCondition(
-      async () => {
+        element.click();
+      });
+      await waitForCondition(async () => {
         const editor = await readEditorCursorSnapshot(page);
         return editor.value.includes('## Scene: authoring-smoke-scene\n### Narration');
-      },
-      'the slash insert flow to add the narration template'
-    );
-    await page.keyboard.type('Prvo pravimo novu scenu u writer flow-u.');
+      }, 'the slash insert flow to add the narration template');
+      await page.keyboard.type('Prvo pravimo novu scenu u writer flow-u.');
 
-    await page.$eval('#authoringInsertBtn', element => {
-      if (!(element instanceof HTMLElement)) {
-        throw new Error('Expected the insert button.');
-      }
-
-      element.click();
-    });
-    await waitForCondition(
-      async () => page.$eval('#authoringInsertMenu', element => !element.hidden).catch(() => false),
-      'the contextual code insert menu'
-    );
-    await page.$eval('[data-action="insert-show-code:html"]', element => {
-      if (!(element instanceof HTMLElement)) {
-        throw new Error('Expected the HTML insert action.');
-      }
-
-      element.click();
-    });
-    await page.keyboard.type('<div class="smoke-card">Smoke</div>');
-
-    await waitForCondition(
-      async () => page.$eval('#authoringCompileChip', element => element.textContent?.includes('Playable Draft') || false),
-      'the script to compile cleanly'
-    );
-
-    await waitForCondition(
-      async () => page.$eval('#authoringSaveState', element => element.textContent?.includes('Unsaved Changes') || false),
-      'the draft save state to switch to unsaved changes after editing'
-    );
-
-    await page.click(`[data-outline-kind="scene"][data-scene-id="${firstSceneId}"]`);
-    await waitForCondition(
-      async () => page.$eval('#authoringPreviewContext', (element, sceneId) => element.textContent?.includes(sceneId) || false, firstSceneId),
-      'the preview context to follow the first scene'
-    );
-    await waitForCondition(
-      async () => page.$eval('#authoringPreviewFrame', frame => !(frame.getAttribute('srcdoc') || '').includes('smoke-card')),
-      'the preview to roll back to the first scene snapshot'
-    );
-
-    await page.click('[data-outline-kind="scene"][data-scene-id="authoring-smoke-scene"]');
-    await waitForCondition(
-      async () => page.$eval('#authoringPreviewContext', element => element.textContent?.includes('authoring-smoke-scene') || false),
-      'the preview context to follow the active smoke scene'
-    );
-    await waitForCondition(
-      async () => page.$eval('#authoringPreviewFrame', frame => (frame.getAttribute('srcdoc') || '').includes('smoke-card')),
-      'the preview to follow the active smoke scene state'
-    );
-
-    await page.click('#authoringMetadataBtn');
-    await waitForCondition(
-      async () => page.$('#authoringMetadataDrawer:not([hidden])').then(Boolean),
-      'the metadata drawer to open'
-    );
-
-    await waitForCondition(
-      async () => page.evaluate(() => {
-        const lessonIntroEditor = document.querySelector('[data-metadata-prose="lessonIntro"]');
-        const goalCaptionEditor = document.querySelector('[data-metadata-prose="goalImageCaption"]');
-        return lessonIntroEditor instanceof HTMLElement
-          && goalCaptionEditor instanceof HTMLElement
-          && lessonIntroEditor.dataset.editorOwner === 'BlockNote'
-          && goalCaptionEditor.dataset.editorOwner === 'BlockNote';
-      }),
-      'the BlockNote prose editors inside the metadata drawer'
-    );
-
-    await setMetadataValue(page, 'lessonTitle', 'Authoring Smoke Lesson');
-    await setMetadataValue(page, 'lessonId', 'authoring-smoke-lesson');
-    await setMetadataValue(page, 'previewTitle', 'Smoke Preview');
-    await page.click('[data-action="apply-metadata"]');
-
-    await waitForCondition(
-      async () => page.$eval('#authoringLessonTitle', element => element.textContent?.includes('Authoring Smoke Lesson') || false),
-      'metadata changes to update the header title'
-    );
-
-    await page.keyboard.down('Control');
-    await page.keyboard.press('s');
-    await page.keyboard.up('Control');
-
-    await waitForCondition(
-      async () => page.$eval('#authoringStatus', element => element.textContent?.includes('Draft saved into SQLite.') || false),
-      'the authoring draft to save through the shortcut'
-    );
-
-    await waitForCondition(
-      async () => page.$eval('#authoringSaveState', element => element.textContent?.includes('Draft Saved') || false),
-      'the draft save state to become explicit after save'
-    );
-
-    await waitForCondition(
-      async () => {
-        const activeUrl = new URL(page.url());
-        return activeUrl.searchParams.get('workspace') === 'authoring'
-          && activeUrl.searchParams.get('lesson') === 'authoring-smoke-lesson';
-      },
-      'the authoring URL to stay aligned with the active custom draft'
-    );
-
-    await waitForCondition(
-      async () => page.$eval('#authoringPublishState', element => element.textContent?.includes('Not Published') || false),
-      'the draft to remain unpublished before publish is clicked'
-    );
-
-    await page.click('#authoringPublishBtn');
-
-    await waitForCondition(
-      async () => page.$eval('#authoringPublishState', element => element.textContent?.includes('Published Lesson') || false),
-      'the published lesson state to become explicit'
-    );
-
-    await waitForCondition(
-      async () => page.$eval('#authoringPreviewFrame', frame => (frame.getAttribute('srcdoc') || '').includes('smoke-card')),
-      'the preview iframe to stay populated'
-    );
-
-    const customPlayerSelection = await readPlayerSelectionSnapshot(page, 'authoring-smoke-lesson');
-
-    assert.equal(customPlayerSelection.lessonId, 'authoring-smoke-lesson');
-    assert.equal(customPlayerSelection.lessonTitle, 'Authoring Smoke Lesson');
-    assert.equal(customPlayerSelection.runtimeSource, 'playable-draft');
-    assert.equal(customPlayerSelection.firstStepTitle, 'Start Here');
-    assert.equal(customPlayerSelection.lessonOptions[0]?.lessonId, 'authoring-smoke-lesson');
-
-    await page.click('#authoringMetadataBtn');
-    await waitForCondition(
-      async () => page.$('#authoringMetadataDrawer:not([hidden])').then(Boolean),
-      'the metadata drawer to reopen before the restore test'
-    );
-    await setMetadataValue(page, 'lessonTitle', 'Authoring Smoke Lesson Recovery');
-    await page.click('[data-action="apply-metadata"]');
-
-    await waitForCondition(
-      async () => page.$eval('#authoringLessonTitle', element => element.textContent?.includes('Recovery') || false),
-      'the recovery title to appear before restoring the published snapshot'
-    );
-
-    await page.click('[data-action="close-metadata"]');
-    await waitForCondition(
-      async () => page.$('#authoringMetadataDrawer[hidden]').then(Boolean),
-      'the metadata drawer to close before restoring the published snapshot'
-    );
-
-    await openPopoverAndClick(page, '#authoringMoreBtn', '#authoringMoreMenu', '[data-action^="restore-version:"]');
-
-    await waitForCondition(
-      async () => page.$eval('#authoringStatus', element => element.textContent?.includes('Published snapshot restored into the draft.') || false),
-      'the published snapshot to restore back into the draft'
-    );
-
-    await waitForCondition(
-      async () => page.$eval('#authoringLessonTitle', element => element.textContent?.includes('Authoring Smoke Lesson') && !element.textContent?.includes('Recovery') || false),
-      'the restored title to match the published snapshot again'
-    );
-
-    await waitForCondition(
-      async () => page.$eval('#authoringSaveState', element => element.textContent?.includes('Draft Saved') || false),
-      'the restored draft to return to a saved state'
-    );
-
-    await page.reload({ waitUntil: 'domcontentloaded' });
-
-    await waitForCondition(
-      async () => page.evaluate(() => {
-        const editor = document.querySelector('#authoringScriptEditor');
-        return editor instanceof HTMLElement
-          && !editor.authoringEditor.getValue().includes('lessonTitle: Authoring Smoke Lesson')
-          && editor.authoringEditor.getValue().startsWith('# Step:');
-      }),
-      'SQLite persistence after reload'
-    );
-
-    await waitForCondition(
-      async () => page.$eval('#authoringLessonTitle', element => element.textContent?.includes('Authoring Smoke Lesson') || false),
-      'the reloaded header title after metadata persistence'
-    );
-
-    await waitForCondition(
-      async () => page.$$eval('.authoring-outline-scene', items => items.length === 2),
-      'the outline after reload'
-    );
-
-    await waitForCondition(
-      async () => page.$eval('#authoringPreviewFrame', frame => (frame.getAttribute('srcdoc') || '').includes('<!DOCTYPE html>')),
-      'the preview iframe after reload'
-    );
-
-    await page.click('#authoringMetadataBtn');
-    await waitForCondition(
-      async () => page.$('#authoringMetadataDrawer:not([hidden])').then(Boolean),
-      'the metadata drawer to reopen after reload'
-    );
-    assert.equal(await readMetadataValue(page, 'lessonTitle'), 'Authoring Smoke Lesson');
-    assert.equal(await readMetadataValue(page, 'lessonId'), 'authoring-smoke-lesson');
-    await page.click('[data-action="close-metadata"]');
-
-    await page.$eval('#authoringScriptEditor', element => {
-      if (!(element instanceof HTMLElement) || !element.authoringEditor) {
-        throw new Error('Expected the CodeMirror authoring editor host.');
-      }
-
-      const currentValue = element.authoringEditor.getValue();
-      element.authoringEditor.focus();
-      element.authoringEditor.setSelectionRange(currentValue.length, currentValue.length);
-    });
-    await page.keyboard.type('\n### Show Code: html\n```html\n<div class="broken-preview">Broken</div>');
-
-    await waitForCondition(
-      async () => page.$eval('#authoringCompileChip', element => element.textContent?.includes('Broken Draft') || false),
-      'the broken body view source to show a syntax issue'
-    );
-
-    await waitForCondition(
-      async () => page.$eval('#authoringPreviewFrame', frame => (frame.getAttribute('srcdoc') || '').includes('smoke-card')),
-      'the preview iframe to keep the last healthy state while invalid'
-    );
-
-    await page.$eval('#authoringScriptEditor', element => {
-      if (!(element instanceof HTMLElement) || !element.authoringEditor) {
-        throw new Error('Expected the CodeMirror authoring editor host.');
-      }
-
-      element.authoringEditor.focus();
-      element.authoringEditor.setSelectionRange(0, 0);
-    });
-
-    await waitForCondition(
-      async () => page.$$('.authoring-validation-item').then(items => items.length > 0),
-      'a validation item for the syntax issue'
-    );
-
-    await waitForCondition(
-      async () => page.$eval('.authoring-validation-item p', element => element.textContent?.includes('duplira sekciju') || false).catch(() => false),
-      'a human-readable validation message for the syntax issue'
-    );
-
-    await waitForCondition(
-      async () => page.evaluate(() => {
-        const lines = Array.from(document.querySelectorAll('#authoringScriptEditor .cm-line'));
-        const line = lines.find(element => {
-          const titledChild = element.querySelector?.('[title]');
-
-          return element.textContent?.trim() === '### Show Code: html'
-            && (titledChild?.getAttribute('title') || '').includes('duplira sekciju');
-        });
-
-        if (!(line instanceof HTMLElement)) {
-          return false;
+      await page.$eval('#authoringInsertBtn', (element) => {
+        if (!(element instanceof HTMLElement)) {
+          throw new Error('Expected the insert button.');
         }
 
-        return true;
-      }).catch(() => false),
-      'the linted editor line to carry a human-readable hover title'
-    );
+        element.click();
+      });
+      await waitForCondition(
+        async () =>
+          page.$eval('#authoringInsertMenu', (element) => !element.hidden).catch(() => false),
+        'the contextual code insert menu'
+      );
+      await page.$eval('[data-action="insert-show-code:html"]', (element) => {
+        if (!(element instanceof HTMLElement)) {
+          throw new Error('Expected the HTML insert action.');
+        }
 
-    await page.click('.authoring-validation-item');
+        element.click();
+      });
+      await page.keyboard.type('<div class="smoke-card">Smoke</div>');
 
-    await waitForCondition(
-      async () => {
+      await waitForCondition(
+        async () =>
+          page.$eval(
+            '#authoringCompileChip',
+            (element) => element.textContent?.includes('Playable Draft') || false
+          ),
+        'the script to compile cleanly'
+      );
+
+      await waitForCondition(
+        async () =>
+          page
+            .$eval(
+              '#authoringSaveState',
+              (element) => element.textContent?.includes('Unsaved Changes') || false
+            )
+            .catch(() => false),
+        'the draft save state to switch to unsaved changes after editing'
+      );
+
+      await page.click(`[data-outline-kind="scene"][data-scene-id="${firstSceneId}"]`);
+      await waitForCondition(
+        async () =>
+          page.$eval(
+            '#authoringPreviewContext',
+            (element, sceneId) => element.textContent?.includes(sceneId) || false,
+            firstSceneId
+          ),
+        'the preview context to follow the first scene'
+      );
+      await waitForCondition(
+        async () =>
+          page.$eval(
+            '#authoringPreviewFrame',
+            (frame) => !(frame.getAttribute('srcdoc') || '').includes('smoke-card')
+          ),
+        'the preview to roll back to the first scene snapshot'
+      );
+
+      await page.click('[data-outline-kind="scene"][data-scene-id="authoring-smoke-scene"]');
+      await waitForCondition(
+        async () =>
+          page.$eval(
+            '#authoringPreviewContext',
+            (element) => element.textContent?.includes('authoring-smoke-scene') || false
+          ),
+        'the preview context to follow the active smoke scene'
+      );
+      await waitForCondition(
+        async () =>
+          page.$eval('#authoringPreviewFrame', (frame) =>
+            (frame.getAttribute('srcdoc') || '').includes('smoke-card')
+          ),
+        'the preview to follow the active smoke scene state'
+      );
+
+      await page.click('#authoringMetadataBtn');
+      await waitForCondition(
+        async () => page.$('#authoringMetadataDrawer:not([hidden])').then(Boolean),
+        'the metadata drawer to open'
+      );
+
+      await waitForCondition(
+        async () =>
+          page.evaluate(() => {
+            const lessonIntroEditor = document.querySelector('[data-metadata-prose="lessonIntro"]');
+            const goalCaptionEditor = document.querySelector(
+              '[data-metadata-prose="goalImageCaption"]'
+            );
+            return (
+              lessonIntroEditor instanceof HTMLElement &&
+              goalCaptionEditor instanceof HTMLElement &&
+              lessonIntroEditor.dataset.editorOwner === 'BlockNote' &&
+              goalCaptionEditor.dataset.editorOwner === 'BlockNote'
+            );
+          }),
+        'the BlockNote prose editors inside the metadata drawer'
+      );
+
+      await setMetadataValue(page, 'lessonTitle', 'Authoring Smoke Lesson');
+      await setMetadataValue(page, 'lessonId', 'authoring-smoke-lesson');
+      await setMetadataValue(page, 'previewTitle', 'Smoke Preview');
+      await page.click('[data-action="apply-metadata"]');
+
+      await waitForCondition(
+        async () =>
+          page.$eval(
+            '#authoringLessonTitle',
+            (element) => element.textContent?.includes('Authoring Smoke Lesson') || false
+          ),
+        'metadata changes to update the header title'
+      );
+
+      await page.keyboard.down('Control');
+      await page.keyboard.press('s');
+      await page.keyboard.up('Control');
+
+      await waitForCondition(
+        async () =>
+          page
+            .$eval(
+              '#authoringStatus',
+              (element) => element.textContent?.includes('Draft saved into SQLite.') || false
+            )
+            .catch(() => false),
+        'the authoring draft to save through the shortcut'
+      );
+
+      await waitForCondition(
+        async () =>
+          page
+            .$eval(
+              '#authoringSaveState',
+              (element) => element.textContent?.includes('Draft Saved') || false
+            )
+            .catch(() => false),
+        'the draft save state to become explicit after save'
+      );
+
+      await waitForCondition(async () => {
+        const activeUrl = new URL(page.url());
+        return readAuthoringPathMatches(activeUrl.pathname, 'authoring-smoke-lesson');
+      }, 'the authoring URL to stay aligned with the active custom draft');
+
+      await waitForCondition(
+        async () =>
+          page.$eval(
+            '#authoringPublishState',
+            (element) => element.textContent?.includes('Not Published') || false
+          ),
+        'the draft to remain unpublished before publish is clicked'
+      );
+
+      await page.click('#authoringPublishBtn');
+
+      await waitForCondition(
+        async () =>
+          page.$eval(
+            '#authoringPublishState',
+            (element) => element.textContent?.includes('Published Lesson') || false
+          ),
+        'the published lesson state to become explicit'
+      );
+
+      await waitForCondition(
+        async () =>
+          page.$eval('#authoringPreviewFrame', (frame) =>
+            (frame.getAttribute('srcdoc') || '').includes('smoke-card')
+          ),
+        'the preview iframe to stay populated'
+      );
+
+      const customPlayerSelection = await readPlayerSelectionSnapshot(
+        page,
+        'authoring-smoke-lesson'
+      );
+
+      assert.equal(customPlayerSelection.lessonId, 'authoring-smoke-lesson');
+      assert.equal(customPlayerSelection.lessonTitle, 'Authoring Smoke Lesson');
+      assert.equal(customPlayerSelection.runtimeSource, 'playable-draft');
+      assert.equal(customPlayerSelection.firstStepTitle, 'Start Here');
+      assert.equal(customPlayerSelection.lessonOptions[0]?.lessonId, 'authoring-smoke-lesson');
+
+      await page.click('#authoringMetadataBtn');
+      await waitForCondition(
+        async () => page.$('#authoringMetadataDrawer:not([hidden])').then(Boolean),
+        'the metadata drawer to reopen before the restore test'
+      );
+      await setMetadataValue(page, 'lessonTitle', 'Authoring Smoke Lesson Recovery');
+      await page.click('[data-action="apply-metadata"]');
+
+      await waitForCondition(
+        async () =>
+          page.$eval(
+            '#authoringLessonTitle',
+            (element) => element.textContent?.includes('Recovery') || false
+          ),
+        'the recovery title to appear before restoring the published snapshot'
+      );
+
+      await page.click('[data-action="close-metadata"]');
+      await waitForCondition(
+        async () => page.$('#authoringMetadataDrawer[hidden]').then(Boolean),
+        'the metadata drawer to close before restoring the published snapshot'
+      );
+
+      await openPopoverAndClick(
+        page,
+        '#authoringMoreBtn',
+        '#authoringMoreMenu',
+        '[data-action^="restore-version:"]'
+      );
+
+      await waitForCondition(
+        async () =>
+          page
+            .$eval(
+              '#authoringStatus',
+              (element) =>
+                element.textContent?.includes('Published snapshot restored into the draft.') ||
+                false
+            )
+            .catch(() => false),
+        'the published snapshot to restore back into the draft'
+      );
+
+      await waitForCondition(
+        async () =>
+          page.$eval(
+            '#authoringLessonTitle',
+            (element) =>
+              (element.textContent?.includes('Authoring Smoke Lesson') &&
+                !element.textContent?.includes('Recovery')) ||
+              false
+          ),
+        'the restored title to match the published snapshot again'
+      );
+
+      await waitForCondition(
+        async () =>
+          page
+            .$eval(
+              '#authoringSaveState',
+              (element) => element.textContent?.includes('Draft Saved') || false
+            )
+            .catch(() => false),
+        'the restored draft to return to a saved state'
+      );
+
+      await page.reload({ waitUntil: 'domcontentloaded' });
+
+      await waitForCondition(
+        async () =>
+          page.evaluate(() => {
+            const editor = document.querySelector('#authoringScriptEditor');
+            return (
+              editor instanceof HTMLElement &&
+              !editor.authoringEditor.getValue().includes('lessonTitle: Authoring Smoke Lesson') &&
+              editor.authoringEditor.getValue().startsWith('# Step:')
+            );
+          }),
+        'SQLite persistence after reload'
+      );
+
+      await waitForCondition(
+        async () =>
+          page.$eval(
+            '#authoringLessonTitle',
+            (element) => element.textContent?.includes('Authoring Smoke Lesson') || false
+          ),
+        'the reloaded header title after metadata persistence'
+      );
+
+      await waitForCondition(
+        async () => page.$$eval('.authoring-outline-scene', (items) => items.length === 2),
+        'the outline after reload'
+      );
+
+      await waitForCondition(
+        async () =>
+          page.$eval('#authoringPreviewFrame', (frame) =>
+            (frame.getAttribute('srcdoc') || '').includes('<!DOCTYPE html>')
+          ),
+        'the preview iframe after reload'
+      );
+
+      await page.click('#authoringMetadataBtn');
+      await waitForCondition(
+        async () => page.$('#authoringMetadataDrawer:not([hidden])').then(Boolean),
+        'the metadata drawer to reopen after reload'
+      );
+      assert.equal(await readMetadataValue(page, 'lessonTitle'), 'Authoring Smoke Lesson');
+      assert.equal(await readMetadataValue(page, 'lessonId'), 'authoring-smoke-lesson');
+      await page.click('[data-action="close-metadata"]');
+
+      await page.$eval('#authoringScriptEditor', (element) => {
+        if (!(element instanceof HTMLElement) || !element.authoringEditor) {
+          throw new Error('Expected the CodeMirror authoring editor host.');
+        }
+
+        const currentValue = element.authoringEditor.getValue();
+        element.authoringEditor.focus();
+        element.authoringEditor.setSelectionRange(currentValue.length, currentValue.length);
+      });
+      await page.keyboard.type(
+        '\n### Show Code: html\n```html\n<div class="broken-preview">Broken</div>'
+      );
+
+      await waitForCondition(
+        async () =>
+          page.$eval(
+            '#authoringCompileChip',
+            (element) => element.textContent?.includes('Broken Draft') || false
+          ),
+        'the broken body view source to show a syntax issue'
+      );
+
+      await waitForCondition(
+        async () =>
+          page.$eval('#authoringPreviewFrame', (frame) =>
+            (frame.getAttribute('srcdoc') || '').includes('smoke-card')
+          ),
+        'the preview iframe to keep the last healthy state while invalid'
+      );
+
+      await page.$eval('#authoringScriptEditor', (element) => {
+        if (!(element instanceof HTMLElement) || !element.authoringEditor) {
+          throw new Error('Expected the CodeMirror authoring editor host.');
+        }
+
+        element.authoringEditor.focus();
+        element.authoringEditor.setSelectionRange(0, 0);
+      });
+
+      await waitForCondition(
+        async () => page.$$('.authoring-validation-item').then((items) => items.length > 0),
+        'a validation item for the syntax issue'
+      );
+
+      await waitForCondition(
+        async () =>
+          page
+            .$eval(
+              '.authoring-validation-item p',
+              (element) => element.textContent?.includes('duplira sekciju') || false
+            )
+            .catch(() => false),
+        'a human-readable validation message for the syntax issue'
+      );
+
+      await waitForCondition(
+        async () =>
+          page
+            .evaluate(() => {
+              const lines = Array.from(
+                document.querySelectorAll('#authoringScriptEditor .cm-line')
+              );
+              const line = lines.find((element) => {
+                const titledChild = element.querySelector?.('[title]');
+
+                return (
+                  element.textContent?.trim() === '### Show Code: html' &&
+                  (titledChild?.getAttribute('title') || '').includes('duplira sekciju')
+                );
+              });
+
+              if (!(line instanceof HTMLElement)) {
+                return false;
+              }
+
+              return true;
+            })
+            .catch(() => false),
+        'the linted editor line to carry a human-readable hover title'
+      );
+
+      await page.click('.authoring-validation-item');
+
+      await waitForCondition(async () => {
         const cursor = await readEditorCursorSnapshot(page);
         return cursor.lineText === '### Show Code: html';
-      },
-      'the validation click to move the cursor to the failing show code block'
-    );
+      }, 'the validation click to move the cursor to the failing show code block');
 
-    assert.deepEqual(pageErrors, []);
-    assert.deepEqual(consoleErrors, []);
+      assert.deepEqual(pageErrors, []);
+      assert.deepEqual(consoleErrors, []);
 
-    await page.close();
-  } finally {
-    await browser?.close();
-    await server.close();
-  }
-});
-
-test('browser authoring smoke plays a healthy custom draft through the normal player bootstrap', { timeout: 60000 }, async () => {
-  const server = await createServer({
-    configFile: path.resolve(repoRoot, 'vite.config.js'),
-    clearScreen: false,
-    logLevel: 'error',
-    server: {
-      host: '127.0.0.1',
-      port: 4175,
-      strictPort: false
+      await page.close();
+    } finally {
+      await browser?.close();
+      await server.close();
     }
-  });
+  }
+);
 
-  let browser;
-
-  try {
-    await server.listen();
-
-    const appUrl = server.resolvedUrls?.local?.find(url => url.startsWith('http://127.0.0.1'))
-      || server.resolvedUrls?.local?.[0];
-
-    assert.ok(appUrl, 'Vite dev server did not expose a local URL.');
-
-    browser = await puppeteer.launch({
-      args: ['--disable-setuid-sandbox', '--no-sandbox'],
-      headless: true
+test(
+  'browser authoring smoke plays a healthy custom draft through the normal player bootstrap',
+  { timeout: 60000 },
+  async () => {
+    const server = await createServer({
+      configFile: path.resolve(repoRoot, 'vite.config.js'),
+      clearScreen: false,
+      logLevel: 'error',
+      server: {
+        host: '127.0.0.1',
+        port: 4175,
+        strictPort: false,
+      },
     });
 
-    const page = await browser.newPage();
-    const consoleErrors = [];
-    const pageErrors = [];
-    const customLessonSeed = Date.now();
-    const customLessonId = `browser-custom-play-smoke-${customLessonSeed}`;
-    const customLessonTitle = `Browser Custom Play Smoke ${customLessonSeed}`;
+    let browser;
 
-    page.on('console', message => {
-      if (message.type() === 'error') {
-        consoleErrors.push(message.text());
-      }
-    });
-    page.on('pageerror', error => {
-      pageErrors.push(error.message);
-    });
-    page.on('dialog', dialog => {
-      void dialog.accept();
-    });
+    try {
+      await server.listen();
 
-    await page.goto(`${appUrl}?workspace=authoring`, { waitUntil: 'domcontentloaded' });
+      const appUrl =
+        server.resolvedUrls?.local?.find((url) => url.startsWith('http://127.0.0.1')) ||
+        server.resolvedUrls?.local?.[0];
 
-    await waitForCondition(
-      async () => page.$('#authoringScriptEditor').then(Boolean),
-      'the authoring workspace for custom player bootstrap coverage'
-    );
+      assert.ok(appUrl, 'Vite dev server did not expose a local URL.');
 
-    await openPopoverAndClick(page, '#authoringMoreBtn', '#authoringMoreMenu', '[data-action="new-draft"]');
+      browser = await puppeteer.launch({
+        args: ['--disable-setuid-sandbox', '--no-sandbox'],
+        headless: true,
+      });
 
-    await waitForCondition(
-      async () => page.$eval('#authoringLessonTitle', element => element.textContent?.includes('New Lesson') || false),
-      'the custom bootstrap draft to open'
-    );
+      const page = await browser.newPage();
+      const consoleErrors = [];
+      const pageErrors = [];
+      const customLessonSeed = Date.now();
+      const customLessonId = `browser-custom-play-smoke-${customLessonSeed}`;
+      const customLessonTitle = `Browser Custom Play Smoke ${customLessonSeed}`;
+      const customLessonRepoFilePath = path.resolve(
+        repoRoot,
+        `product/education/lessons/${customLessonId}/source/lesson.script.md`
+      );
 
-    await page.click('#authoringMetadataBtn');
-    await waitForCondition(
-      async () => page.$('#authoringMetadataDrawer:not([hidden])').then(Boolean),
-      'the metadata drawer for the custom bootstrap draft'
-    );
+      page.on('console', (message) => {
+        if (message.type() === 'error') {
+          consoleErrors.push(message.text());
+        }
+      });
+      page.on('pageerror', (error) => {
+        pageErrors.push(error.message);
+      });
+      page.on('dialog', (dialog) => {
+        void dialog.accept();
+      });
 
-    await setMetadataValue(page, 'lessonId', customLessonId);
-    await setMetadataValue(page, 'lessonTitle', customLessonTitle);
-    await setMetadataValue(page, 'previewTitle', `${customLessonTitle} Preview`);
-    await page.click('[data-action="apply-metadata"]');
+      await page.goto(buildAuthoringUrl(appUrl), { waitUntil: 'domcontentloaded' });
 
-    await waitForCondition(
-      async () => page.$eval('#authoringCompileChip', element => element.textContent?.includes('Playable Draft') || false),
-      'the custom draft to stay playable after metadata apply'
-    );
+      await waitForCondition(
+        async () => page.$('#authoringScriptEditor').then(Boolean),
+        'the authoring workspace for custom player bootstrap coverage'
+      );
 
-    await waitForCondition(
-      async () => page.$eval('#authoringSaveState', element => element.textContent?.includes('Unsaved Changes') || false),
-      'the custom draft to become dirty before player bootstrap save'
-    );
+      await openPopoverAndClick(
+        page,
+        '#authoringMoreBtn',
+        '#authoringMoreMenu',
+        '[data-action="new-draft"]'
+      );
 
-    await page.keyboard.down('Control');
-    await page.keyboard.press('s');
-    await page.keyboard.up('Control');
+      await waitForCondition(
+        async () =>
+          page.$eval(
+            '#authoringLessonTitle',
+            (element) => element.textContent?.includes('New Lesson') || false
+          ),
+        'the custom bootstrap draft to open'
+      );
 
-    await waitForCondition(
-      async () => page.$eval('#authoringSaveState', element => element.textContent?.includes('Draft Saved') || false),
-      'the custom draft to save before normal player bootstrap'
-    );
+      await page.click('#authoringMetadataBtn');
+      await waitForCondition(
+        async () => page.$('#authoringMetadataDrawer:not([hidden])').then(Boolean),
+        'the metadata drawer for the custom bootstrap draft'
+      );
 
-    await waitForCondition(
-      async () => {
+      await setMetadataValue(page, 'lessonId', customLessonId);
+      await setMetadataValue(page, 'lessonTitle', customLessonTitle);
+      await setMetadataValue(page, 'previewTitle', `${customLessonTitle} Preview`);
+      await page.click('[data-action="apply-metadata"]');
+
+      await waitForCondition(
+        async () =>
+          page.$eval(
+            '#authoringCompileChip',
+            (element) => element.textContent?.includes('Playable Draft') || false
+          ),
+        'the custom draft to stay playable after metadata apply'
+      );
+
+      await waitForCondition(
+        async () =>
+          page
+            .$eval(
+              '#authoringSaveState',
+              (element) => element.textContent?.includes('Unsaved Changes') || false
+            )
+            .catch(() => false),
+        'the custom draft to become dirty before player bootstrap save'
+      );
+
+      await page.keyboard.down('Control');
+      await page.keyboard.press('s');
+      await page.keyboard.up('Control');
+
+      await waitForCondition(
+        async () =>
+          page
+            .$eval(
+              '#authoringSaveState',
+              (element) => element.textContent?.includes('Draft Saved') || false
+            )
+            .catch(() => false),
+        'the custom draft to save before normal player bootstrap'
+      );
+      await waitForCondition(
+        async () =>
+          page
+            .$eval(
+              '#authoringStatus',
+              (element) =>
+                element.textContent?.includes(
+                  'Repo lesson.script.md sync skipped because this draft is not paired to a shipped lesson path.'
+                ) || false
+            )
+            .catch(() => false),
+        'the custom draft save status to explain that repo sync is skipped for unpaired drafts'
+      );
+      assert.equal(await readPathExists(customLessonRepoFilePath), false);
+
+      await waitForCondition(async () => {
         const activeUrl = new URL(page.url());
-        return activeUrl.searchParams.get('workspace') === 'authoring'
-          && activeUrl.searchParams.get('lesson') === customLessonId;
+        return readAuthoringPathMatches(activeUrl.pathname, customLessonId);
+      }, 'the authoring URL to stay aligned with the custom lesson id');
+
+      await page.goto(`${appUrl}?lesson=${customLessonId}`, { waitUntil: 'domcontentloaded' });
+
+      await waitForCondition(
+        async () =>
+          page
+            .$eval(
+              '#lessonHeading',
+              (element, expectedTitle) => element.textContent?.includes(expectedTitle) || false,
+              customLessonTitle
+            )
+            .catch(() => false),
+        'the normal player to boot the custom draft title'
+      );
+      await waitForCondition(
+        async () =>
+          page
+            .$eval(
+              '#lessonRuntimeState',
+              (element) => element.textContent?.includes('Playable Draft') || false
+            )
+            .catch(() => false),
+        'the normal player to show playable custom draft state'
+      );
+      await waitForCondition(
+        async () =>
+          page
+            .$eval(
+              '#lessonPicker',
+              (element, expectedLessonId) => {
+                if (!(element instanceof HTMLSelectElement)) {
+                  return false;
+                }
+
+                return (
+                  element.value === expectedLessonId &&
+                  Array.from(element.options).some((option) => option.value === expectedLessonId)
+                );
+              },
+              customLessonId
+            )
+            .catch(() => false),
+        'the lesson picker to include the custom draft id'
+      );
+
+      assert.deepEqual(pageErrors, []);
+      assert.deepEqual(consoleErrors, []);
+
+      await page.close();
+    } finally {
+      await browser?.close();
+      await server.close();
+    }
+  }
+);
+
+test(
+  'browser authoring smoke exposes a CMS-like lesson browser for existing lessons and new drafts',
+  { timeout: 90000 },
+  async () => {
+    const server = await createServer({
+      configFile: path.resolve(repoRoot, 'vite.config.js'),
+      clearScreen: false,
+      logLevel: 'error',
+      server: {
+        host: '127.0.0.1',
+        port: 41757,
+        strictPort: false,
       },
-      'the authoring URL to stay aligned with the custom lesson id'
-    );
-
-    await page.goto(`${appUrl}?lesson=${customLessonId}`, { waitUntil: 'domcontentloaded' });
-
-    await waitForCondition(
-      async () => page.$eval('#lessonHeading', (element, expectedTitle) => element.textContent?.includes(expectedTitle) || false, customLessonTitle).catch(() => false),
-      'the normal player to boot the custom draft title'
-    );
-    await waitForCondition(
-      async () => page.$eval('#lessonRuntimeState', element => element.textContent?.includes('Playable Draft') || false).catch(() => false),
-      'the normal player to show playable custom draft state'
-    );
-    await waitForCondition(
-      async () => page.$eval('#lessonPicker', (element, expectedLessonId) => {
-        if (!(element instanceof HTMLSelectElement)) {
-          return false;
-        }
-
-        return element.value === expectedLessonId
-          && Array.from(element.options).some(option => option.value === expectedLessonId);
-      }, customLessonId).catch(() => false),
-      'the lesson picker to include the custom draft id'
-    );
-
-    assert.deepEqual(pageErrors, []);
-    assert.deepEqual(consoleErrors, []);
-
-    await page.close();
-  } finally {
-    await browser?.close();
-    await server.close();
-  }
-});
-
-test('browser authoring smoke shows the same added and removed artifact diff in Write Mode and playback', { timeout: 60000 }, async () => {
-  const server = await createServer({
-    configFile: path.resolve(repoRoot, 'vite.config.js'),
-    clearScreen: false,
-    logLevel: 'error',
-    server: {
-      host: '127.0.0.1',
-      port: 41755,
-      strictPort: false
-    }
-  });
-
-  let browser;
-
-  try {
-    await server.listen();
-
-    const appUrl = server.resolvedUrls?.local?.find(url => url.startsWith('http://127.0.0.1'))
-      || server.resolvedUrls?.local?.[0];
-
-    assert.ok(appUrl, 'Vite dev server did not expose a local URL.');
-
-    browser = await puppeteer.launch({
-      args: ['--disable-setuid-sandbox', '--no-sandbox'],
-      headless: true
     });
 
-    const page = await browser.newPage();
-    const consoleErrors = [];
-    const pageErrors = [];
+    let browser;
 
-    page.on('console', message => {
-      if (message.type() === 'error') {
-        consoleErrors.push(message.text());
-      }
-    });
-    page.on('pageerror', error => {
-      pageErrors.push(error.message);
-    });
-    page.on('dialog', dialog => {
-      void dialog.accept();
-    });
+    try {
+      await server.listen();
 
-    await page.goto(`${appUrl}?workspace=authoring`, { waitUntil: 'domcontentloaded' });
+      const appUrl =
+        server.resolvedUrls?.local?.find((url) => url.startsWith('http://127.0.0.1')) ||
+        server.resolvedUrls?.local?.[0];
 
-    await waitForCondition(
-      async () => page.$('#authoringScriptEditor').then(Boolean),
-      'the authoring workspace for diff coverage'
-    );
+      assert.ok(appUrl, 'Vite dev server did not expose a local URL.');
 
-    await openPopoverAndClick(page, '#authoringMoreBtn', '#authoringMoreMenu', '[data-action="new-draft"]');
-
-    await waitForCondition(
-      async () => page.$eval('#authoringLessonTitle', element => element.textContent?.includes('New Lesson') || false),
-      'the diff proof draft to open'
-    );
-
-    await replaceEditorSelectionText(page, buildDiffLessonSource());
-
-    await waitForCondition(
-      async () => page.$eval('#authoringLessonTitle', element => element.textContent?.includes('Diff Proof Lesson') || false),
-      'the diff proof lesson title to render'
-    );
-
-    await page.click('[data-outline-kind="step"][data-step-id="after-state"]');
-
-    await waitForCondition(
-      async () => page.$eval('#authoringDiffSummary', element => element.textContent?.includes('1 added · 1 removed') || false).catch(() => false),
-      'the Write Mode diff summary to show one added and one removed line'
-    );
-
-    await waitForCondition(
-      async () => page.evaluate(() => {
-        const diffRoot = document.querySelector('#authoringDiffCode');
-        const removedLine = diffRoot?.querySelector?.('.authoring-diff-line.is-removed .authoring-diff-line-code');
-        const addedLine = diffRoot?.querySelector?.('.authoring-diff-line.is-added .authoring-diff-line-code');
-
-        return removedLine?.textContent?.includes('<p>Before</p>')
-          && addedLine?.textContent?.includes('<h2>After</h2>');
-      }).catch(() => false),
-      'the Write Mode diff to show both the removed and added html lines'
-    );
-
-    await page.keyboard.down('Control');
-    await page.keyboard.press('s');
-    await page.keyboard.up('Control');
-
-    await waitForCondition(
-      async () => page.$eval('#authoringSaveState', element => element.textContent?.includes('Draft Saved') || false),
-      'the diff proof draft to save before playback'
-    );
-
-    await page.goto(`${appUrl}?lesson=diff-proof-lesson`, { waitUntil: 'domcontentloaded' });
-
-    await waitForCondition(
-      async () => page.$eval('#lessonHeading', element => element.textContent?.includes('Diff Proof Lesson') || false).catch(() => false),
-      'the player to boot the diff proof lesson'
-    );
-
-    await waitForCondition(
-      async () => page.$eval('#nextBtn', element => element.disabled === false).catch(() => false),
-      'the second lesson step to become reachable'
-    );
-    await page.$eval('#nextBtn', element => {
-      element.click();
-    });
-
-    await waitForCondition(
-      async () => page.$eval('#stepNumber', element => element.textContent?.startsWith('Prizor 2 /') || false).catch(() => false),
-      'the player to move to the second step'
-    );
-
-    await waitForCondition(
-      async () => page.evaluate(() => {
-        const htmlPane = document.getElementById('liveHtmlPane');
-        const removedLine = htmlPane?.querySelector?.('.live-line.is-removed .live-line-code');
-        const addedLine = htmlPane?.querySelector?.('.live-line.is-added .live-line-code');
-
-        return removedLine?.textContent?.includes('<p>Before</p>')
-          && addedLine?.textContent?.includes('<h2>After</h2>');
-      }).catch(() => false),
-      'the player html pane to show the same removed and added diff lines'
-    );
-
-    assert.deepEqual(pageErrors, []);
-    assert.deepEqual(consoleErrors, []);
-
-    await page.close();
-  } finally {
-    await browser?.close();
-    await server.close();
-  }
-});
-
-test('browser authoring smoke keeps very large lesson bodies intact through the real paste event and save', { timeout: 90000 }, async () => {
-  const server = await createServer({
-    configFile: path.resolve(repoRoot, 'vite.config.js'),
-    clearScreen: false,
-    logLevel: 'error',
-    server: {
-      host: '127.0.0.1',
-      port: 4176,
-      strictPort: false
-    }
-  });
-
-  let browser;
-
-  try {
-    await server.listen();
-
-    const appUrl = server.resolvedUrls?.local?.find(url => url.startsWith('http://127.0.0.1'))
-      || server.resolvedUrls?.local?.[0];
-
-    assert.ok(appUrl, 'Vite dev server did not expose a local URL.');
-
-    browser = await puppeteer.launch({
-      args: ['--disable-setuid-sandbox', '--no-sandbox'],
-      headless: true
-    });
-
-    const page = await browser.newPage();
-    const consoleErrors = [];
-    const pageErrors = [];
-
-    page.on('console', message => {
-      if (message.type() === 'error') {
-        consoleErrors.push(message.text());
-      }
-    });
-    page.on('pageerror', error => {
-      pageErrors.push(error.message);
-    });
-    page.on('dialog', dialog => {
-      void dialog.accept();
-    });
-
-    await page.goto(`${appUrl}?workspace=authoring`, { waitUntil: 'domcontentloaded' });
-
-    await waitForCondition(
-      async () => page.$('#authoringScriptEditor').then(Boolean),
-      'the authoring writer workspace'
-    );
-
-    await openPopoverAndClick(page, '#authoringMoreBtn', '#authoringMoreMenu', '[data-action="new-draft"]');
-
-    await waitForCondition(
-      async () => page.$eval('#authoringLessonTitle', element => element.textContent?.includes('New Lesson') || false),
-      'the new draft to open'
-    );
-
-    const largeLessonBody = buildLargeLessonBody();
-    const expectedLastStepId = 'bulk-step-140';
-
-    await dispatchEditorPasteText(page, largeLessonBody);
-
-    await waitForCondition(
-      async () => page.evaluate(expectedBody => {
-        const editor = document.querySelector('#authoringScriptEditor');
-        return editor instanceof HTMLElement
-          && editor.authoringEditor
-          && editor.authoringEditor.getValue().trimEnd() === expectedBody.trimEnd();
-      }, largeLessonBody),
-      'the large lesson body to remain fully present in the editor'
-    );
-
-    await waitForCondition(
-      async () => page.evaluate(() => {
-        const editor = document.querySelector('#authoringScriptEditor');
-        return editor instanceof HTMLElement
-          && editor.authoringEditor
-          && !editor.authoringEditor.getValue().includes('# Step: start-here');
-      }),
-      'the starter body to be replaced instead of appended after paste'
-    );
-
-    await waitForCondition(
-      async () => page.$eval('#authoringLessonMeta', element => element.textContent?.includes('140 steps') || false),
-      'the deferred analysis to catch up with the large lesson body'
-    );
-
-    await waitForCondition(
-      async () => page.$eval('#authoringCompileChip', element => element.textContent?.includes('Playable Draft') || false),
-      'the large lesson body to compile cleanly'
-    );
-
-    await waitForCondition(
-      async () => page.$$eval('[data-outline-kind="step"]', buttons => buttons.length === 140),
-      'the outline to show every pasted step'
-    );
-
-    await waitForCondition(
-      async () => page.$eval('[data-outline-kind="step"][data-step-id="bulk-step-140"]', element => Boolean(element)).catch(() => false),
-      'the final pasted step to exist in the outline'
-    );
-
-    await page.keyboard.down('Control');
-    await page.keyboard.press('s');
-    await page.keyboard.up('Control');
-
-    await waitForCondition(
-      async () => page.$eval('#authoringStatus', element => element.textContent?.includes('Draft saved into SQLite.') || false),
-      'the large lesson body to save into SQLite'
-    );
-
-    await page.reload({ waitUntil: 'domcontentloaded' });
-
-    await waitForCondition(
-      async () => page.evaluate(expectedBody => {
-        const editor = document.querySelector('#authoringScriptEditor');
-        return editor instanceof HTMLElement
-          && editor.authoringEditor
-          && editor.authoringEditor.getValue().trimEnd() === expectedBody.trimEnd();
-      }, largeLessonBody),
-      'the reloaded large lesson body to remain fully present'
-    );
-
-    await waitForCondition(
-      async () => page.$eval(`[data-outline-kind="step"][data-step-id="${expectedLastStepId}"]`, element => Boolean(element)).catch(() => false),
-      'the reloaded outline to keep the final pasted step'
-    );
-
-    assert.deepEqual(pageErrors, []);
-    assert.deepEqual(consoleErrors, []);
-
-    await page.close();
-  } finally {
-    await browser?.close();
-    await server.close();
-  }
-});
-
-test('browser authoring smoke imports a full large lesson source through the real paste event without duplicating hidden frontmatter', { timeout: 90000 }, async () => {
-  const server = await createServer({
-    configFile: path.resolve(repoRoot, 'vite.config.js'),
-    clearScreen: false,
-    logLevel: 'error',
-    server: {
-      host: '127.0.0.1',
-      port: 4181,
-      strictPort: false
-    }
-  });
-
-  let browser;
-
-  try {
-    await server.listen();
-
-    const appUrl = server.resolvedUrls?.local?.find(url => url.startsWith('http://127.0.0.1'))
-      || server.resolvedUrls?.local?.[0];
-
-    assert.ok(appUrl, 'Vite dev server did not expose a local URL.');
-
-    browser = await puppeteer.launch({
-      args: ['--disable-setuid-sandbox', '--no-sandbox'],
-      headless: true
-    });
-
-    const page = await browser.newPage();
-    const consoleErrors = [];
-    const pageErrors = [];
-
-    page.on('console', message => {
-      if (message.type() === 'error') {
-        consoleErrors.push(message.text());
-      }
-    });
-    page.on('pageerror', error => {
-      pageErrors.push(error.message);
-    });
-    page.on('dialog', dialog => {
-      void dialog.accept();
-    });
-
-    await page.goto(`${appUrl}?workspace=authoring`, { waitUntil: 'domcontentloaded' });
-
-    await waitForCondition(
-      async () => page.$('#authoringScriptEditor').then(Boolean),
-      'the authoring writer workspace'
-    );
-
-    await openPopoverAndClick(page, '#authoringMoreBtn', '#authoringMoreMenu', '[data-action="new-draft"]');
-
-    await waitForCondition(
-      async () => page.$eval('#authoringLessonTitle', element => element.textContent?.includes('New Lesson') || false),
-      'the new draft to open'
-    );
-
-    const largeLessonSource = buildLargeLessonSource();
-    await dispatchEditorPasteText(page, largeLessonSource);
-
-    await waitForCondition(
-      async () => page.$eval('#authoringLessonTitle', element => element.textContent?.includes('Imported Large Lesson') || false),
-      'the imported lesson title to replace the starter metadata'
-    );
-
-    await waitForCondition(
-      async () => page.$eval('#authoringLessonMeta', element => element.textContent?.includes('158 steps') || false),
-      'the imported full lesson source to produce the full outline count'
-    );
-
-    await waitForCondition(
-      async () => page.$eval('#authoringCompileChip', element => element.textContent?.includes('Playable Draft') || false),
-      'the imported full lesson source to compile cleanly'
-    );
-
-    await waitForCondition(
-      async () => page.$$eval('[data-outline-kind="step"]', buttons => buttons.length === 158),
-      'the outline to show all imported steps'
-    );
-
-    await waitForCondition(
-      async () => page.$eval('[data-outline-kind="step"][data-step-id="bulk-step-158"]', element => Boolean(element)).catch(() => false),
-      'the final imported step to exist in the outline'
-    );
-
-    await waitForCondition(
-      async () => page.evaluate(() => {
-        const editor = document.querySelector('#authoringScriptEditor');
-        const value = editor instanceof HTMLElement && editor.authoringEditor
-          ? editor.authoringEditor.getValue()
-          : '';
-
-        return value.startsWith('# Step: bulk-step-001')
-          && value.includes('# Step: bulk-step-158')
-          && !value.includes('schemaVersion:')
-          && !value.includes('lessonId: imported-large-lesson');
-      }),
-      'the editor body to show the imported lesson body without frontmatter duplication'
-    );
-
-    await waitForCondition(
-      async () => page.evaluate(() => {
-        const editor = document.querySelector('#authoringScriptEditor');
-        return editor instanceof HTMLElement
-          && editor.authoringEditor
-          && !editor.authoringEditor.getValue().includes('# Step: start-here');
-      }),
-      'the full source import to replace the starter body instead of appending after it'
-    );
-
-    await page.keyboard.down('Control');
-    await page.keyboard.press('s');
-    await page.keyboard.up('Control');
-
-    await waitForCondition(
-      async () => page.$eval('#authoringStatus', element => element.textContent?.includes('Draft saved into SQLite.') || false),
-      'the imported full lesson source to save into SQLite'
-    );
-
-    await page.reload({ waitUntil: 'domcontentloaded' });
-
-    await waitForCondition(
-      async () => page.$('#authoringScriptEditor').then(Boolean),
-      'the authoring writer workspace after reload'
-    );
-
-    await waitForCondition(
-      async () => page.$eval('#authoringLessonTitle', element => element.textContent?.includes('Imported Large Lesson') || false),
-      'the imported lesson title to persist after reload'
-    );
-
-    await waitForCondition(
-      async () => page.$eval('[data-outline-kind="step"][data-step-id="bulk-step-158"]', element => Boolean(element)).catch(() => false),
-      'the imported final step to persist after reload'
-    );
-
-    assert.deepEqual(pageErrors, []);
-    assert.deepEqual(consoleErrors, []);
-
-    await page.close();
-  } finally {
-    await browser?.close();
-    await server.close();
-  }
-});
-
-test('browser authoring smoke lets the normal player prefer a healthy saved draft and fail closed on a broken one', { timeout: 90000 }, async () => {
-  const server = await createServer({
-    configFile: path.resolve(repoRoot, 'vite.config.js'),
-    clearScreen: false,
-    logLevel: 'error',
-    server: {
-      host: '127.0.0.1',
-      port: 4177,
-      strictPort: false
-    }
-  });
-
-  let browser;
-
-  try {
-    await server.listen();
-
-    const appUrl = server.resolvedUrls?.local?.find(url => url.startsWith('http://127.0.0.1'))
-      || server.resolvedUrls?.local?.[0];
-
-    assert.ok(appUrl, 'Vite dev server did not expose a local URL.');
-
-    browser = await puppeteer.launch({
-      args: ['--disable-setuid-sandbox', '--no-sandbox'],
-      headless: true
-    });
-
-    const page = await browser.newPage();
-    const consoleErrors = [];
-    const pageErrors = [];
-    const savedDraftStepTitle = 'Saved Draft Step Title';
-    const shippedStepTitle = 'Start: Empty App Shell';
-
-    page.on('console', message => {
-      if (message.type() === 'error') {
-        consoleErrors.push(message.text());
-      }
-    });
-    page.on('pageerror', error => {
-      pageErrors.push(error.message);
-    });
-    page.on('dialog', dialog => {
-      void dialog.accept();
-    });
-
-    await page.goto(`${appUrl}?workspace=authoring&lesson=09-human-first-script-demo`, { waitUntil: 'domcontentloaded' });
-
-    await waitForCondition(
-      async () => page.$('#authoringScriptEditor').then(Boolean),
-      'the authoring writer workspace'
-    );
-
-    await waitForCondition(
-      async () => page.$eval('#authoringLessonTitle', element => element.textContent?.includes('Human-First Script Demo') || false),
-      'the paired 09 draft to open'
-    );
-    await waitForCondition(
-      async () => page.$eval('#authoringScriptEditor', element => {
-        if (!(element instanceof HTMLElement) || !element.authoringEditor) {
-          throw new Error('Expected the CodeMirror authoring editor host.');
-        }
-
-        return element.authoringEditor.getValue().includes('title: Start: Empty App Shell');
-      }).catch(() => false),
-      'the paired 09 draft body to reach the editor'
-    );
-
-    const pairedDraftSource = await readPairedDraftSourceMarkdown(page, '09-human-first-script-demo');
-    const healthyDraftSource = pairedDraftSource.replace(
-      'title: Start: Empty App Shell',
-      'title: Saved Draft Step Title'
-    );
-    const savedHealthyDraftSource = await savePairedDraftSourceMarkdown(
-      page,
-      '09-human-first-script-demo',
-      healthyDraftSource
-    );
-
-    assert.ok(savedHealthyDraftSource.includes('title: Saved Draft Step Title'));
-
-    const healthySelection = await readPlayerSelectionSnapshot(page, '09-human-first-script-demo');
-
-    assert.equal(healthySelection.lessonId, '09-human-first-script-demo');
-    assert.equal(healthySelection.firstStepTitle, savedDraftStepTitle);
-    assert.equal(healthySelection.runtimeSource, 'playable-draft');
-    assert.match(healthySelection.runtimeLabel, /Playable Draft/);
-
-    await page.goto(`${appUrl}?workspace=authoring&lesson=09-human-first-script-demo`, { waitUntil: 'domcontentloaded' });
-
-    await waitForCondition(
-      async () => page.$('#authoringScriptEditor').then(Boolean),
-      'the authoring workspace after returning'
-    );
-
-    await waitForCondition(
-      async () => page.$eval('#authoringScriptEditor', element => {
-        if (!(element instanceof HTMLElement) || !element.authoringEditor) {
-          throw new Error('Expected the CodeMirror authoring editor host.');
-        }
-
-        return element.authoringEditor.getValue().includes('title: Saved Draft Step Title');
-      }).catch(() => false),
-      'the edited 09 draft to reopen'
-    );
-
-    const savedBrokenDraftSource = await savePairedDraftSourceMarkdown(
-      page,
-      '09-human-first-script-demo',
-      'broken lesson body'
-    );
-
-    assert.equal(savedBrokenDraftSource, 'broken lesson body');
-
-    const brokenSelection = await readPlayerSelectionSnapshot(page, '09-human-first-script-demo');
-    const brokenDraftBackup = await readLatestDraftBackup(page, {
-      shippedLessonId: '09-human-first-script-demo'
-    });
-
-    assert.equal(brokenSelection.lessonId, '09-human-first-script-demo');
-    assert.equal(brokenSelection.firstStepTitle, shippedStepTitle);
-    assert.equal(brokenSelection.runtimeSource, 'broken-draft-fallback');
-    assert.match(brokenSelection.runtimeLabel, /Broken Draft Fallback/);
-    assert.equal(brokenDraftBackup?.sourceMarkdown, 'broken lesson body');
-
-    await deletePersistedSqliteSnapshot(page);
-
-    const brokenSelectionAfterSnapshotLoss = await readPlayerSelectionSnapshot(page, '09-human-first-script-demo');
-
-    assert.equal(brokenSelectionAfterSnapshotLoss.lessonId, '09-human-first-script-demo');
-    assert.equal(brokenSelectionAfterSnapshotLoss.firstStepTitle, shippedStepTitle);
-    assert.equal(brokenSelectionAfterSnapshotLoss.runtimeSource, 'broken-draft-fallback');
-
-    await page.reload({ waitUntil: 'domcontentloaded' });
-    await waitForCondition(
-      async () => page.$('#authoringScriptEditor').then(Boolean),
-      'the authoring workspace after restoring the broken backup'
-    );
-    await waitForCondition(
-      async () => page.$eval('#authoringStatus', element => (
-        element.textContent?.includes('SQLite snapshot was missing. Restored 1 draft from lesson.script.md backups.')
-      ) || false).catch(() => false),
-      'the authoring recovery notice after restoring the broken backup'
-    );
-    await waitForCondition(
-      async () => page.$eval('#authoringScriptEditor', element => {
-        if (!(element instanceof HTMLElement) || !element.authoringEditor) {
-          throw new Error('Expected the CodeMirror authoring editor host.');
-        }
-
-        return element.authoringEditor.getValue() === 'broken lesson body';
-      }).catch(() => false),
-      'the exact broken draft source to be restored from the lesson.script.md backup'
-    );
-
-    assert.deepEqual(pageErrors, []);
-    assert.deepEqual(consoleErrors, []);
-
-    await page.close();
-  } finally {
-    await browser?.close();
-    await server.close();
-  }
-});
-
-test('browser authoring smoke refreshes untouched paired drafts from shipped updates without overwriting edited paired drafts', { timeout: 90000 }, async () => {
-  const server = await createServer({
-    configFile: path.resolve(repoRoot, 'vite.config.js'),
-    clearScreen: false,
-    logLevel: 'error',
-    server: {
-      host: '127.0.0.1',
-      port: 4178,
-      strictPort: false
-    }
-  });
-
-  let browser;
-
-  try {
-    await server.listen();
-
-    const appUrl = server.resolvedUrls?.local?.find(url => url.startsWith('http://127.0.0.1'))
-      || server.resolvedUrls?.local?.[0];
-
-    assert.ok(appUrl, 'Vite dev server did not expose a local URL.');
-
-    browser = await puppeteer.launch({
-      args: ['--disable-setuid-sandbox', '--no-sandbox'],
-      headless: true
-    });
-
-    const page = await browser.newPage();
-    const consoleErrors = [];
-    const pageErrors = [];
-    const lessonId = 'synthetic-refresh-lesson';
-    const initialSource = buildSyntheticLessonSource({
-      lessonId,
-      lessonTitle: 'Synthetic Refresh Lesson',
-      stepTitle: 'Initial Shipped Step'
-    });
-    const updatedSource = buildSyntheticLessonSource({
-      lessonId,
-      lessonTitle: 'Synthetic Refresh Lesson',
-      stepTitle: 'Updated Shipped Step'
-    });
-    const editedSource = buildSyntheticLessonSource({
-      lessonId,
-      lessonTitle: 'Synthetic Refresh Lesson',
-      stepTitle: 'Edited Draft Step'
-    });
-    const laterShippedSource = buildSyntheticLessonSource({
-      lessonId,
-      lessonTitle: 'Synthetic Refresh Lesson',
-      stepTitle: 'Later Shipped Step'
-    });
-
-    page.on('console', message => {
-      if (message.type() === 'error') {
-        consoleErrors.push(message.text());
-      }
-    });
-    page.on('pageerror', error => {
-      pageErrors.push(error.message);
-    });
-
-    await page.goto(`${appUrl}?workspace=authoring`, { waitUntil: 'domcontentloaded' });
-
-    const refreshSnapshot = await page.evaluate(async ({
-      repoPath,
-      lessonId: syntheticLessonId,
-      firstSourceMarkdown,
-      secondSourceMarkdown,
-      editedSourceMarkdown,
-      laterSourceMarkdown
-    }) => {
-      const { openAuthoringSqlite } = await import(`/@fs${repoPath}/system/author-lessons/open-authoring-sqlite.js`);
-
-      async function openStore(sourceMarkdown) {
-        return openAuthoringSqlite({
-          ownerWindow: window,
-          shippedLessons: [
-            {
-              lessonId: syntheticLessonId,
-              lessonTitle: 'Synthetic Refresh Lesson',
-              sourceMarkdown
-            }
-          ]
-        });
-      }
-
-      const firstStore = await openStore(firstSourceMarkdown);
-      const firstSnapshot = await firstStore.openDraftForShippedLesson(syntheticLessonId);
-      const firstDraftId = firstSnapshot.selectedDraft?.draftId || '';
-      const firstDraftSource = firstSnapshot.selectedDraft?.sourceMarkdown || '';
-
-      const secondStore = await openStore(secondSourceMarkdown);
-      const refreshedSnapshot = await secondStore.openDraftForShippedLesson(syntheticLessonId);
-      const refreshedDraftSource = refreshedSnapshot.selectedDraft?.sourceMarkdown || '';
-      const refreshedDraftId = refreshedSnapshot.selectedDraft?.draftId || '';
-
-      const editedSnapshot = await secondStore.saveLessonDraft({
-        draftId: refreshedDraftId,
-        sourceMarkdown: editedSourceMarkdown
+      browser = await puppeteer.launch({
+        args: ['--disable-setuid-sandbox', '--no-sandbox'],
+        headless: true,
       });
 
-      const thirdStore = await openStore(laterSourceMarkdown);
-      const preservedSnapshot = await thirdStore.openDraftForShippedLesson(syntheticLessonId);
+      const page = await browser.newPage();
+      const consoleErrors = [];
+      const pageErrors = [];
 
-      return {
-        firstDraftId,
-        refreshedDraftId,
-        preservedDraftId: preservedSnapshot.selectedDraft?.draftId || '',
-        firstDraftSource,
-        refreshedDraftSource,
-        editedDraftSource: editedSnapshot.selectedDraft?.sourceMarkdown || '',
-        preservedDraftSource: preservedSnapshot.selectedDraft?.sourceMarkdown || ''
-      };
-    }, {
-      repoPath: repoRoot,
-      lessonId,
-      firstSourceMarkdown: initialSource,
-      secondSourceMarkdown: updatedSource,
-      editedSourceMarkdown: editedSource,
-      laterSourceMarkdown: laterShippedSource
-    });
+      page.on('console', (message) => {
+        if (message.type() === 'error') {
+          consoleErrors.push(message.text());
+        }
+      });
+      page.on('pageerror', (error) => {
+        pageErrors.push(error.message);
+      });
 
-    assert.equal(refreshSnapshot.firstDraftId, refreshSnapshot.refreshedDraftId);
-    assert.equal(refreshSnapshot.firstDraftId, refreshSnapshot.preservedDraftId);
-    assert.match(refreshSnapshot.firstDraftSource, /Initial Shipped Step/);
-    assert.match(refreshSnapshot.refreshedDraftSource, /Updated Shipped Step/);
-    assert.match(refreshSnapshot.editedDraftSource, /Edited Draft Step/);
-    assert.match(refreshSnapshot.preservedDraftSource, /Edited Draft Step/);
-    assert.doesNotMatch(refreshSnapshot.preservedDraftSource, /Later Shipped Step/);
+      await page.goto(buildAuthoringUrl(appUrl), { waitUntil: 'domcontentloaded' });
 
-    assert.deepEqual(pageErrors, []);
-    assert.deepEqual(consoleErrors, []);
+      await waitForCondition(
+        async () => page.$('#authoringCollectionView:not([hidden])').then(Boolean),
+        'the visible lesson collection view in authoring mode'
+      );
+      await waitForCondition(
+        async () =>
+          page
+            .$eval(
+              '#authoringLessonMeta',
+              (element) => element.textContent?.includes('Browse the lesson catalog') || false
+            )
+            .catch(() => false),
+        'the collection-route lesson browser meta'
+      );
 
-    await page.close();
-  } finally {
-    await browser?.close();
-    await server.close();
-  }
-});
+      assert.equal(
+        await page.$$eval('[data-collection-kind="shipped"]', (elements) => elements.length),
+        9
+      );
 
-test('browser authoring smoke ignores an unpaired custom draft with the same lesson id during normal player selection', { timeout: 90000 }, async () => {
-  const server = await createServer({
-    configFile: path.resolve(repoRoot, 'vite.config.js'),
-    clearScreen: false,
-    logLevel: 'error',
-    server: {
-      host: '127.0.0.1',
-      port: 4179,
-      strictPort: false
+      await page.$eval('#authoringCollectionSearch', (element) => {
+        if (!(element instanceof HTMLInputElement)) {
+          throw new Error('Expected the lesson collection search input.');
+        }
+
+        element.value = 'top navigation';
+        element.dispatchEvent(
+          new Event('input', {
+            bubbles: true,
+          })
+        );
+      });
+      await waitForCondition(
+        async () =>
+          page
+            .$$eval('[data-collection-kind="shipped"]', (elements) => elements.length === 1)
+            .catch(() => false),
+        'the lesson collection to filter existing lessons'
+      );
+
+      await page.click(
+        '[data-collection-kind="shipped"][data-collection-lesson-id="02-build-top-navigation"]'
+      );
+      await waitForCondition(async () => {
+        const activeUrl = new URL(page.url());
+        return readAuthoringPathMatches(activeUrl.pathname, '02-build-top-navigation');
+      }, 'the URL to track the currently opened existing lesson');
+      await waitForCondition(
+        async () => page.$('#authoringEditorFrame:not([hidden])').then(Boolean),
+        'the editor view after selecting a lesson from the collection'
+      );
+      await waitForCondition(
+        async () =>
+          page
+            .$eval('#authoringLessonTitle', (element) => {
+              const title = element.textContent?.trim() || '';
+              return title.length > 0 && title !== 'Lesson Library';
+            })
+            .catch(() => false),
+        'the shipped lesson title to replace the blank browser heading'
+      );
+
+      await page.goto(buildAuthoringUrl(appUrl), { waitUntil: 'domcontentloaded' });
+      await waitForCondition(
+        async () => page.$('#authoringCollectionView:not([hidden])').then(Boolean),
+        'the collection view to be reachable again'
+      );
+
+      await page.click('#authoringCollectionCreateDraftBtn');
+      await waitForCondition(
+        async () =>
+          page
+            .$eval(
+              '#authoringLessonTitle',
+              (element) => element.textContent?.includes('New Lesson') || false
+            )
+            .catch(() => false),
+        'the new draft to open from the collection create action'
+      );
+      await waitForCondition(
+        async () =>
+          page
+            .$eval(
+              '[data-browser-kind="draft"].is-active',
+              (element) =>
+                element.getAttribute('data-browser-lesson-id')?.startsWith('new-lesson-') || false
+            )
+            .catch(() => false),
+        'the lesson browser to highlight the active custom draft'
+      );
+
+      assert.deepEqual(pageErrors, []);
+      assert.deepEqual(consoleErrors, []);
+
+      await page.close();
+    } finally {
+      await browser?.close();
+      await server.close();
     }
-  });
+  }
+);
 
-  let browser;
-
-  try {
-    await server.listen();
-
-    const appUrl = server.resolvedUrls?.local?.find(url => url.startsWith('http://127.0.0.1'))
-      || server.resolvedUrls?.local?.[0];
-
-    assert.ok(appUrl, 'Vite dev server did not expose a local URL.');
-
-    browser = await puppeteer.launch({
-      args: ['--disable-setuid-sandbox', '--no-sandbox'],
-      headless: true
+test(
+  'browser authoring smoke bulk syncs paired repo files from the current browser store',
+  { timeout: 60000 },
+  async () => {
+    const server = await createServer({
+      configFile: path.resolve(repoRoot, 'vite.config.js'),
+      clearScreen: false,
+      logLevel: 'error',
+      server: {
+        host: '127.0.0.1',
+        port: 41756,
+        strictPort: false,
+      },
     });
 
-    const page = await browser.newPage();
-    const consoleErrors = [];
-    const pageErrors = [];
-    const shippedStepTitle = 'Start: Empty App Shell';
-    const unpairedDraftStepTitle = 'Custom Same Id Draft Step';
+    let browser;
 
-    page.on('console', message => {
-      if (message.type() === 'error') {
-        consoleErrors.push(message.text());
-      }
+    try {
+      await server.listen();
+
+      const appUrl =
+        server.resolvedUrls?.local?.find((url) => url.startsWith('http://127.0.0.1')) ||
+        server.resolvedUrls?.local?.[0];
+
+      assert.ok(appUrl, 'Vite dev server did not expose a local URL.');
+
+      browser = await puppeteer.launch({
+        args: ['--disable-setuid-sandbox', '--no-sandbox'],
+        headless: true,
+      });
+
+      const page = await browser.newPage();
+      const consoleErrors = [];
+      const pageErrors = [];
+
+      page.on('console', (message) => {
+        if (message.type() === 'error') {
+          consoleErrors.push(message.text());
+        }
+      });
+      page.on('pageerror', (error) => {
+        pageErrors.push(error.message);
+      });
+
+      await page.goto(buildAuthoringUrl(appUrl, '09-human-first-script-demo'), {
+        waitUntil: 'domcontentloaded',
+      });
+
+      await waitForCondition(
+        async () => page.$('#authoringScriptEditor').then(Boolean),
+        'the authoring workspace for bulk repo sync'
+      );
+      await waitForCondition(
+        async () =>
+          page
+            .$eval(
+              '#authoringLessonTitle',
+              (element) => element.textContent?.includes('Human-First Script Demo') || false
+            )
+            .catch(() => false),
+        'the paired 09 draft to open before bulk repo sync'
+      );
+
+      await openPopoverAndClick(
+        page,
+        '#authoringMoreBtn',
+        '#authoringMoreMenu',
+        '[data-action="sync-saved-shipped-drafts-to-repo"]'
+      );
+
+      await waitForCondition(
+        async () =>
+          page
+            .$eval(
+              '#authoringStatus',
+              (element) =>
+                element.textContent?.includes('Shipped repo sync checked 9 lessons.') || false
+            )
+            .catch(() => false),
+        'the bulk repo sync summary'
+      );
+      await waitForCondition(
+        async () =>
+          page
+            .$eval(
+              '#authoringStatus',
+              (element) =>
+                element.textContent?.includes(
+                  'Repo lesson.script.md: 0 created, 0 updated, 9 unchanged.'
+                ) || false
+            )
+            .catch(() => false),
+        'the unchanged bulk repo sync counts'
+      );
+
+      assert.deepEqual(pageErrors, []);
+      assert.deepEqual(consoleErrors, []);
+
+      await page.close();
+    } finally {
+      await browser?.close();
+      await server.close();
+    }
+  }
+);
+
+test(
+  'browser authoring smoke shows the same added and removed artifact diff in Write Mode and playback',
+  { timeout: 60000 },
+  async () => {
+    const server = await createServer({
+      configFile: path.resolve(repoRoot, 'vite.config.js'),
+      clearScreen: false,
+      logLevel: 'error',
+      server: {
+        host: '127.0.0.1',
+        port: 41755,
+        strictPort: false,
+      },
     });
-    page.on('pageerror', error => {
-      pageErrors.push(error.message);
+
+    let browser;
+
+    try {
+      await server.listen();
+
+      const appUrl =
+        server.resolvedUrls?.local?.find((url) => url.startsWith('http://127.0.0.1')) ||
+        server.resolvedUrls?.local?.[0];
+
+      assert.ok(appUrl, 'Vite dev server did not expose a local URL.');
+
+      browser = await puppeteer.launch({
+        args: ['--disable-setuid-sandbox', '--no-sandbox'],
+        headless: true,
+      });
+
+      const page = await browser.newPage();
+      const consoleErrors = [];
+      const pageErrors = [];
+
+      page.on('console', (message) => {
+        if (message.type() === 'error') {
+          consoleErrors.push(message.text());
+        }
+      });
+      page.on('pageerror', (error) => {
+        pageErrors.push(error.message);
+      });
+      page.on('dialog', (dialog) => {
+        void dialog.accept();
+      });
+
+      await page.goto(buildAuthoringUrl(appUrl), { waitUntil: 'domcontentloaded' });
+
+      await waitForCondition(
+        async () => page.$('#authoringScriptEditor').then(Boolean),
+        'the authoring workspace for diff coverage'
+      );
+
+      await openPopoverAndClick(
+        page,
+        '#authoringMoreBtn',
+        '#authoringMoreMenu',
+        '[data-action="new-draft"]'
+      );
+
+      await waitForCondition(
+        async () =>
+          page.$eval(
+            '#authoringLessonTitle',
+            (element) => element.textContent?.includes('New Lesson') || false
+          ),
+        'the diff proof draft to open'
+      );
+
+      await replaceEditorSelectionText(page, buildDiffLessonSource());
+
+      await waitForCondition(
+        async () =>
+          page.$eval(
+            '#authoringLessonTitle',
+            (element) => element.textContent?.includes('Diff Proof Lesson') || false
+          ),
+        'the diff proof lesson title to render'
+      );
+
+      await page.click('[data-outline-kind="step"][data-step-id="after-state"]');
+
+      await waitForCondition(
+        async () =>
+          page
+            .$eval(
+              '#authoringDiffSummary',
+              (element) => element.textContent?.includes('1 added · 1 removed') || false
+            )
+            .catch(() => false),
+        'the Write Mode diff summary to show one added and one removed line'
+      );
+
+      await waitForCondition(
+        async () =>
+          page
+            .evaluate(() => {
+              const diffRoot = document.querySelector('#authoringDiffCode');
+              const removedLine = diffRoot?.querySelector?.(
+                '.authoring-diff-line.is-removed .authoring-diff-line-code'
+              );
+              const addedLine = diffRoot?.querySelector?.(
+                '.authoring-diff-line.is-added .authoring-diff-line-code'
+              );
+
+              return (
+                removedLine?.textContent?.includes('<p>Before</p>') &&
+                addedLine?.textContent?.includes('<h2>After</h2>')
+              );
+            })
+            .catch(() => false),
+        'the Write Mode diff to show both the removed and added html lines'
+      );
+
+      await page.keyboard.down('Control');
+      await page.keyboard.press('s');
+      await page.keyboard.up('Control');
+
+      await waitForCondition(
+        async () =>
+          page
+            .$eval(
+              '#authoringSaveState',
+              (element) => element.textContent?.includes('Draft Saved') || false
+            )
+            .catch(() => false),
+        'the diff proof draft to save before playback'
+      );
+
+      await page.goto(`${appUrl}?lesson=diff-proof-lesson`, { waitUntil: 'domcontentloaded' });
+
+      await waitForCondition(
+        async () =>
+          page
+            .$eval(
+              '#lessonHeading',
+              (element) => element.textContent?.includes('Diff Proof Lesson') || false
+            )
+            .catch(() => false),
+        'the player to boot the diff proof lesson'
+      );
+
+      await waitForCondition(
+        async () =>
+          page.$eval('#nextBtn', (element) => element.disabled === false).catch(() => false),
+        'the second lesson step to become reachable'
+      );
+      await page.$eval('#nextBtn', (element) => {
+        element.click();
+      });
+
+      await waitForCondition(
+        async () =>
+          page
+            .$eval(
+              '#stepNumber',
+              (element) => element.textContent?.startsWith('Prizor 2 /') || false
+            )
+            .catch(() => false),
+        'the player to move to the second step'
+      );
+
+      await waitForCondition(
+        async () =>
+          page
+            .evaluate(() => {
+              const htmlPane = document.getElementById('liveHtmlPane');
+              const removedLine = htmlPane?.querySelector?.(
+                '.live-line.is-removed .live-line-code'
+              );
+              const addedLine = htmlPane?.querySelector?.('.live-line.is-added .live-line-code');
+
+              return (
+                removedLine?.textContent?.includes('<p>Before</p>') &&
+                addedLine?.textContent?.includes('<h2>After</h2>')
+              );
+            })
+            .catch(() => false),
+        'the player html pane to show the same removed and added diff lines'
+      );
+
+      assert.deepEqual(pageErrors, []);
+      assert.deepEqual(consoleErrors, []);
+
+      await page.close();
+    } finally {
+      await browser?.close();
+      await server.close();
+    }
+  }
+);
+
+test(
+  'browser authoring smoke keeps very large lesson bodies intact through the real paste event and save',
+  { timeout: 90000 },
+  async () => {
+    const server = await createServer({
+      configFile: path.resolve(repoRoot, 'vite.config.js'),
+      clearScreen: false,
+      logLevel: 'error',
+      server: {
+        host: '127.0.0.1',
+        port: 4176,
+        strictPort: false,
+      },
     });
 
-    await page.goto(`${appUrl}?workspace=authoring`, { waitUntil: 'domcontentloaded' });
+    let browser;
 
-    const pairedDraftSource = await readPairedDraftSourceMarkdown(page, '09-human-first-script-demo');
-    const unpairedDraftSource = pairedDraftSource.replace(
-      'title: Start: Empty App Shell',
-      `title: ${unpairedDraftStepTitle}`
+    try {
+      await server.listen();
+
+      const appUrl =
+        server.resolvedUrls?.local?.find((url) => url.startsWith('http://127.0.0.1')) ||
+        server.resolvedUrls?.local?.[0];
+
+      assert.ok(appUrl, 'Vite dev server did not expose a local URL.');
+
+      browser = await puppeteer.launch({
+        args: ['--disable-setuid-sandbox', '--no-sandbox'],
+        headless: true,
+      });
+
+      const page = await browser.newPage();
+      const consoleErrors = [];
+      const pageErrors = [];
+
+      page.on('console', (message) => {
+        if (message.type() === 'error') {
+          consoleErrors.push(message.text());
+        }
+      });
+      page.on('pageerror', (error) => {
+        pageErrors.push(error.message);
+      });
+      page.on('dialog', (dialog) => {
+        void dialog.accept();
+      });
+
+      await page.goto(buildAuthoringUrl(appUrl), { waitUntil: 'domcontentloaded' });
+
+      await waitForCondition(
+        async () => page.$('#authoringScriptEditor').then(Boolean),
+        'the authoring writer workspace'
+      );
+
+      await openPopoverAndClick(
+        page,
+        '#authoringMoreBtn',
+        '#authoringMoreMenu',
+        '[data-action="new-draft"]'
+      );
+
+      await waitForCondition(
+        async () =>
+          page.$eval(
+            '#authoringLessonTitle',
+            (element) => element.textContent?.includes('New Lesson') || false
+          ),
+        'the new draft to open'
+      );
+
+      const largeLessonBody = buildLargeLessonBody();
+      const expectedLastStepId = 'bulk-step-140';
+
+      await dispatchEditorPasteText(page, largeLessonBody);
+
+      await waitForCondition(
+        async () =>
+          page.evaluate((expectedBody) => {
+            const editor = document.querySelector('#authoringScriptEditor');
+            return (
+              editor instanceof HTMLElement &&
+              editor.authoringEditor &&
+              editor.authoringEditor.getValue().trimEnd() === expectedBody.trimEnd()
+            );
+          }, largeLessonBody),
+        'the large lesson body to remain fully present in the editor'
+      );
+
+      await waitForCondition(
+        async () =>
+          page.evaluate(() => {
+            const editor = document.querySelector('#authoringScriptEditor');
+            return (
+              editor instanceof HTMLElement &&
+              editor.authoringEditor &&
+              !editor.authoringEditor.getValue().includes('# Step: start-here')
+            );
+          }),
+        'the starter body to be replaced instead of appended after paste'
+      );
+
+      await waitForCondition(
+        async () =>
+          page.$eval(
+            '#authoringLessonMeta',
+            (element) => element.textContent?.includes('140 steps') || false
+          ),
+        'the deferred analysis to catch up with the large lesson body'
+      );
+
+      await waitForCondition(
+        async () =>
+          page.$eval(
+            '#authoringCompileChip',
+            (element) => element.textContent?.includes('Playable Draft') || false
+          ),
+        'the large lesson body to compile cleanly'
+      );
+
+      await waitForCondition(
+        async () => page.$$eval('[data-outline-kind="step"]', (buttons) => buttons.length === 140),
+        'the outline to show every pasted step'
+      );
+
+      await waitForCondition(
+        async () =>
+          page
+            .$eval('[data-outline-kind="step"][data-step-id="bulk-step-140"]', (element) =>
+              Boolean(element)
+            )
+            .catch(() => false),
+        'the final pasted step to exist in the outline'
+      );
+
+      await page.keyboard.down('Control');
+      await page.keyboard.press('s');
+      await page.keyboard.up('Control');
+
+      await waitForCondition(
+        async () =>
+          page
+            .$eval(
+              '#authoringStatus',
+              (element) => element.textContent?.includes('Draft saved into SQLite.') || false
+            )
+            .catch(() => false),
+        'the large lesson body to save into SQLite'
+      );
+
+      await page.reload({ waitUntil: 'domcontentloaded' });
+
+      await waitForCondition(
+        async () =>
+          page.evaluate((expectedBody) => {
+            const editor = document.querySelector('#authoringScriptEditor');
+            return (
+              editor instanceof HTMLElement &&
+              editor.authoringEditor &&
+              editor.authoringEditor.getValue().trimEnd() === expectedBody.trimEnd()
+            );
+          }, largeLessonBody),
+        'the reloaded large lesson body to remain fully present'
+      );
+
+      await waitForCondition(
+        async () =>
+          page
+            .$eval(`[data-outline-kind="step"][data-step-id="${expectedLastStepId}"]`, (element) =>
+              Boolean(element)
+            )
+            .catch(() => false),
+        'the reloaded outline to keep the final pasted step'
+      );
+
+      assert.deepEqual(pageErrors, []);
+      assert.deepEqual(consoleErrors, []);
+
+      await page.close();
+    } finally {
+      await browser?.close();
+      await server.close();
+    }
+  }
+);
+
+test(
+  'browser authoring smoke imports a full large lesson source through the real paste event without duplicating hidden frontmatter',
+  { timeout: 90000 },
+  async () => {
+    const server = await createServer({
+      configFile: path.resolve(repoRoot, 'vite.config.js'),
+      clearScreen: false,
+      logLevel: 'error',
+      server: {
+        host: '127.0.0.1',
+        port: 4181,
+        strictPort: false,
+      },
+    });
+
+    let browser;
+
+    try {
+      await server.listen();
+
+      const appUrl =
+        server.resolvedUrls?.local?.find((url) => url.startsWith('http://127.0.0.1')) ||
+        server.resolvedUrls?.local?.[0];
+
+      assert.ok(appUrl, 'Vite dev server did not expose a local URL.');
+
+      browser = await puppeteer.launch({
+        args: ['--disable-setuid-sandbox', '--no-sandbox'],
+        headless: true,
+      });
+
+      const page = await browser.newPage();
+      const consoleErrors = [];
+      const pageErrors = [];
+
+      page.on('console', (message) => {
+        if (message.type() === 'error') {
+          consoleErrors.push(message.text());
+        }
+      });
+      page.on('pageerror', (error) => {
+        pageErrors.push(error.message);
+      });
+      page.on('dialog', (dialog) => {
+        void dialog.accept();
+      });
+
+      await page.goto(buildAuthoringUrl(appUrl), { waitUntil: 'domcontentloaded' });
+
+      await waitForCondition(
+        async () => page.$('#authoringScriptEditor').then(Boolean),
+        'the authoring writer workspace'
+      );
+
+      await openPopoverAndClick(
+        page,
+        '#authoringMoreBtn',
+        '#authoringMoreMenu',
+        '[data-action="new-draft"]'
+      );
+
+      await waitForCondition(
+        async () =>
+          page.$eval(
+            '#authoringLessonTitle',
+            (element) => element.textContent?.includes('New Lesson') || false
+          ),
+        'the new draft to open'
+      );
+
+      const largeLessonSource = buildLargeLessonSource();
+      await dispatchEditorPasteText(page, largeLessonSource);
+
+      await waitForCondition(
+        async () =>
+          page.$eval(
+            '#authoringLessonTitle',
+            (element) => element.textContent?.includes('Imported Large Lesson') || false
+          ),
+        'the imported lesson title to replace the starter metadata'
+      );
+
+      await waitForCondition(
+        async () =>
+          page.$eval(
+            '#authoringLessonMeta',
+            (element) => element.textContent?.includes('158 steps') || false
+          ),
+        'the imported full lesson source to produce the full outline count'
+      );
+
+      await waitForCondition(
+        async () =>
+          page.$eval(
+            '#authoringCompileChip',
+            (element) => element.textContent?.includes('Playable Draft') || false
+          ),
+        'the imported full lesson source to compile cleanly'
+      );
+
+      await waitForCondition(
+        async () => page.$$eval('[data-outline-kind="step"]', (buttons) => buttons.length === 158),
+        'the outline to show all imported steps'
+      );
+
+      await waitForCondition(
+        async () =>
+          page
+            .$eval('[data-outline-kind="step"][data-step-id="bulk-step-158"]', (element) =>
+              Boolean(element)
+            )
+            .catch(() => false),
+        'the final imported step to exist in the outline'
+      );
+
+      await waitForCondition(
+        async () =>
+          page.evaluate(() => {
+            const editor = document.querySelector('#authoringScriptEditor');
+            const value =
+              editor instanceof HTMLElement && editor.authoringEditor
+                ? editor.authoringEditor.getValue()
+                : '';
+
+            return (
+              value.startsWith('# Step: bulk-step-001') &&
+              value.includes('# Step: bulk-step-158') &&
+              !value.includes('schemaVersion:') &&
+              !value.includes('lessonId: imported-large-lesson')
+            );
+          }),
+        'the editor body to show the imported lesson body without frontmatter duplication'
+      );
+
+      await waitForCondition(
+        async () =>
+          page.evaluate(() => {
+            const editor = document.querySelector('#authoringScriptEditor');
+            return (
+              editor instanceof HTMLElement &&
+              editor.authoringEditor &&
+              !editor.authoringEditor.getValue().includes('# Step: start-here')
+            );
+          }),
+        'the full source import to replace the starter body instead of appending after it'
+      );
+
+      await page.keyboard.down('Control');
+      await page.keyboard.press('s');
+      await page.keyboard.up('Control');
+
+      await waitForCondition(
+        async () =>
+          page
+            .$eval(
+              '#authoringStatus',
+              (element) => element.textContent?.includes('Draft saved into SQLite.') || false
+            )
+            .catch(() => false),
+        'the imported full lesson source to save into SQLite'
+      );
+
+      await page.reload({ waitUntil: 'domcontentloaded' });
+
+      await waitForCondition(
+        async () => page.$('#authoringScriptEditor').then(Boolean),
+        'the authoring writer workspace after reload'
+      );
+
+      await waitForCondition(
+        async () =>
+          page.$eval(
+            '#authoringLessonTitle',
+            (element) => element.textContent?.includes('Imported Large Lesson') || false
+          ),
+        'the imported lesson title to persist after reload'
+      );
+
+      await waitForCondition(
+        async () =>
+          page
+            .$eval('[data-outline-kind="step"][data-step-id="bulk-step-158"]', (element) =>
+              Boolean(element)
+            )
+            .catch(() => false),
+        'the imported final step to persist after reload'
+      );
+
+      assert.deepEqual(pageErrors, []);
+      assert.deepEqual(consoleErrors, []);
+
+      await page.close();
+    } finally {
+      await browser?.close();
+      await server.close();
+    }
+  }
+);
+
+test(
+  'browser authoring smoke lets the normal player prefer a healthy saved draft and fail closed on a broken one',
+  { timeout: 90000 },
+  async () => {
+    const server = await createServer({
+      configFile: path.resolve(repoRoot, 'vite.config.js'),
+      clearScreen: false,
+      logLevel: 'error',
+      server: {
+        host: '127.0.0.1',
+        port: 4177,
+        strictPort: false,
+      },
+    });
+
+    let browser;
+    const shippedLessonFilePath = path.resolve(
+      repoRoot,
+      'product/education/lessons/09-human-first-script-demo/source/lesson.script.md'
     );
+    const originalShippedSource = await fs.readFile(shippedLessonFilePath, 'utf8');
+    const shippedStepTitle = readFirstStepTitle(originalShippedSource);
 
-    await page.evaluate(async ({
-      repoPath,
-      sourceMarkdown
-    }) => {
-      const [{ openAuthoringSqlite }, { readShippedLessonScripts }] = await Promise.all([
-        import(`/@fs${repoPath}/system/author-lessons/open-authoring-sqlite.js`),
-        import(`/@fs${repoPath}/system/author-lessons/read-shipped-lesson-scripts.js`)
-      ]);
-      const shippedLessons = await readShippedLessonScripts();
-      const store = await openAuthoringSqlite({
-        ownerWindow: window,
-        shippedLessons
+    try {
+      await server.listen();
+
+      const appUrl =
+        server.resolvedUrls?.local?.find((url) => url.startsWith('http://127.0.0.1')) ||
+        server.resolvedUrls?.local?.[0];
+
+      assert.ok(appUrl, 'Vite dev server did not expose a local URL.');
+
+      browser = await puppeteer.launch({
+        args: ['--disable-setuid-sandbox', '--no-sandbox'],
+        headless: true,
       });
-      const pairedSnapshot = await store.openDraftForShippedLesson('09-human-first-script-demo');
-      const pairedDraftId = pairedSnapshot.selectedDraft?.draftId || '';
 
-      if (!pairedDraftId) {
-        throw new Error('Expected the paired draft for 09-human-first-script-demo.');
-      }
+      const page = await browser.newPage();
+      const consoleErrors = [];
+      const pageErrors = [];
+      const savedDraftStepTitle = 'Saved Draft Step Title';
 
-      await store.deleteLessonDraft(pairedDraftId);
-
-      const createdSnapshot = await store.createLessonDraft();
-      const customDraftId = createdSnapshot.selectedDraft?.draftId || '';
-
-      if (!customDraftId) {
-        throw new Error('Expected a new custom draft id.');
-      }
-
-      await store.saveLessonDraft({
-        draftId: customDraftId,
-        sourceMarkdown
+      page.on('console', (message) => {
+        if (message.type() === 'error') {
+          consoleErrors.push(message.text());
+        }
       });
-    }, {
-      repoPath: repoRoot,
-      sourceMarkdown: unpairedDraftSource
-    });
+      page.on('pageerror', (error) => {
+        pageErrors.push(error.message);
+      });
+      page.on('dialog', (dialog) => {
+        void dialog.accept();
+      });
 
-    const selection = await readPlayerSelectionSnapshot(page, '09-human-first-script-demo');
+      await page.goto(buildAuthoringUrl(appUrl, '09-human-first-script-demo'), {
+        waitUntil: 'domcontentloaded',
+      });
 
-    assert.equal(selection.lessonId, '09-human-first-script-demo');
-    assert.equal(selection.firstStepTitle, shippedStepTitle);
-    assert.equal(selection.runtimeSource, 'published');
-    assert.match(selection.runtimeLabel, /Published Lesson/);
+      await waitForCondition(
+        async () => page.$('#authoringScriptEditor').then(Boolean),
+        'the authoring writer workspace'
+      );
 
-    assert.deepEqual(pageErrors, []);
-    assert.deepEqual(consoleErrors, []);
+      await waitForCondition(
+        async () =>
+          page.$eval(
+            '#authoringLessonTitle',
+            (element) => element.textContent?.includes('Human-First Script Demo') || false
+          ),
+        'the paired 09 draft to open'
+      );
+      await waitForCondition(
+        async () =>
+          page
+            .$eval('#authoringScriptEditor', (element) => {
+              if (!(element instanceof HTMLElement) || !element.authoringEditor) {
+                throw new Error('Expected the CodeMirror authoring editor host.');
+              }
 
-    await page.close();
-  } finally {
-    await browser?.close();
-    await server.close();
-  }
-});
+              return element.authoringEditor.getValue().includes("# Step: empty-shell");
+            })
+            .catch(() => false),
+        'the paired 09 draft body to reach the editor'
+      );
 
-test('browser authoring smoke mirrors Save into a lesson.script.md backup while Publish remains the explicit snapshot step', { timeout: 90000 }, async () => {
-  const server = await createServer({
-    configFile: path.resolve(repoRoot, 'vite.config.js'),
-    clearScreen: false,
-    logLevel: 'error',
-    server: {
-      host: '127.0.0.1',
-      port: 4180,
-      strictPort: false
+      const pairedDraftSource = await readPairedDraftSourceMarkdown(
+        page,
+        '09-human-first-script-demo'
+      );
+      const healthyDraftSource = pairedDraftSource.replace(
+        `title: ${shippedStepTitle}`,
+        'title: Saved Draft Step Title'
+      );
+      const savedHealthyDraftSource = await savePairedDraftSourceMarkdown(
+        page,
+        '09-human-first-script-demo',
+        healthyDraftSource
+      );
+      const shippedSourceAfterHealthySave = await fs.readFile(shippedLessonFilePath, 'utf8');
+
+      assert.ok(savedHealthyDraftSource.includes('title: Saved Draft Step Title'));
+      assert.equal(shippedSourceAfterHealthySave, savedHealthyDraftSource);
+
+      const healthySelection = await readPlayerSelectionSnapshot(
+        page,
+        '09-human-first-script-demo'
+      );
+
+      assert.equal(healthySelection.lessonId, '09-human-first-script-demo');
+      assert.equal(healthySelection.firstStepTitle, savedDraftStepTitle);
+      assert.equal(healthySelection.runtimeSource, 'playable-draft');
+      assert.match(healthySelection.runtimeLabel, /Playable Draft/);
+
+      await page.goto(buildAuthoringUrl(appUrl, '09-human-first-script-demo'), {
+        waitUntil: 'domcontentloaded',
+      });
+
+      await waitForCondition(
+        async () => page.$('#authoringScriptEditor').then(Boolean),
+        'the authoring workspace after returning'
+      );
+
+      await waitForCondition(
+        async () =>
+          page
+            .$eval('#authoringScriptEditor', (element) => {
+              if (!(element instanceof HTMLElement) || !element.authoringEditor) {
+                throw new Error('Expected the CodeMirror authoring editor host.');
+              }
+
+              return element.authoringEditor.getValue().includes('title: Saved Draft Step Title');
+            })
+            .catch(() => false),
+        'the edited 09 draft to reopen'
+      );
+
+      const savedBrokenDraftSource = await savePairedDraftSourceMarkdown(
+        page,
+        '09-human-first-script-demo',
+        'broken lesson body'
+      );
+      const shippedSourceAfterBrokenSave = await fs.readFile(shippedLessonFilePath, 'utf8');
+
+      assert.equal(savedBrokenDraftSource, 'broken lesson body');
+      assert.equal(shippedSourceAfterBrokenSave, savedHealthyDraftSource);
+
+      const brokenSelection = await readPlayerSelectionSnapshot(page, '09-human-first-script-demo');
+      const brokenDraftBackup = await readLatestDraftBackup(page, {
+        shippedLessonId: '09-human-first-script-demo',
+      });
+
+      assert.equal(brokenSelection.lessonId, '09-human-first-script-demo');
+      assert.equal(brokenSelection.firstStepTitle, savedDraftStepTitle);
+      assert.equal(brokenSelection.runtimeSource, 'broken-draft-fallback');
+      assert.match(brokenSelection.runtimeLabel, /Broken Draft Fallback/);
+      assert.equal(brokenDraftBackup?.sourceMarkdown, 'broken lesson body');
+
+      await deletePersistedSqliteSnapshot(page);
+
+      const brokenSelectionAfterSnapshotLoss = await readPlayerSelectionSnapshot(
+        page,
+        '09-human-first-script-demo'
+      );
+
+      assert.equal(brokenSelectionAfterSnapshotLoss.lessonId, '09-human-first-script-demo');
+      assert.equal(brokenSelectionAfterSnapshotLoss.firstStepTitle, savedDraftStepTitle);
+      assert.equal(brokenSelectionAfterSnapshotLoss.runtimeSource, 'broken-draft-fallback');
+
+      await page.reload({ waitUntil: 'domcontentloaded' });
+      await waitForCondition(
+        async () => page.$('#authoringScriptEditor').then(Boolean),
+        'the authoring workspace after restoring the broken backup'
+      );
+      await waitForCondition(
+        async () =>
+          page
+            .$eval(
+              '#authoringStatus',
+              (element) =>
+                element.textContent?.includes(
+                  'SQLite snapshot was missing. Restored 1 draft from lesson.script.md backups.'
+                ) || false
+            )
+            .catch(() => false),
+        'the authoring recovery notice after restoring the broken backup'
+      );
+      await waitForCondition(
+        async () =>
+          page
+            .$eval('#authoringScriptEditor', (element) => {
+              if (!(element instanceof HTMLElement) || !element.authoringEditor) {
+                throw new Error('Expected the CodeMirror authoring editor host.');
+              }
+
+              return element.authoringEditor.getValue() === 'broken lesson body';
+            })
+            .catch(() => false),
+        'the exact broken draft source to be restored from the lesson.script.md backup'
+      );
+
+      assert.deepEqual(pageErrors, []);
+      assert.deepEqual(consoleErrors, []);
+
+      await page.close();
+    } finally {
+      await fs.writeFile(shippedLessonFilePath, originalShippedSource, 'utf8');
+      await browser?.close();
+      await server.close();
     }
-  });
+  }
+);
 
-  let browser;
-
-  try {
-    await server.listen();
-
-    const appUrl = server.resolvedUrls?.local?.find(url => url.startsWith('http://127.0.0.1'))
-      || server.resolvedUrls?.local?.[0];
-
-    assert.ok(appUrl, 'Vite dev server did not expose a local URL.');
-
-    browser = await puppeteer.launch({
-      args: ['--disable-setuid-sandbox', '--no-sandbox'],
-      headless: true
+test(
+  'browser authoring smoke refreshes untouched paired drafts from shipped updates without overwriting edited paired drafts',
+  { timeout: 90000 },
+  async () => {
+    const server = await createServer({
+      configFile: path.resolve(repoRoot, 'vite.config.js'),
+      clearScreen: false,
+      logLevel: 'error',
+      server: {
+        host: '127.0.0.1',
+        port: 4178,
+        strictPort: false,
+      },
     });
 
-    const page = await browser.newPage();
-    const consoleErrors = [];
-    const pageErrors = [];
+    let browser;
+
+    try {
+      await server.listen();
+
+      const appUrl =
+        server.resolvedUrls?.local?.find((url) => url.startsWith('http://127.0.0.1')) ||
+        server.resolvedUrls?.local?.[0];
+
+      assert.ok(appUrl, 'Vite dev server did not expose a local URL.');
+
+      browser = await puppeteer.launch({
+        args: ['--disable-setuid-sandbox', '--no-sandbox'],
+        headless: true,
+      });
+
+      const page = await browser.newPage();
+      const consoleErrors = [];
+      const pageErrors = [];
+      const lessonId = 'synthetic-refresh-lesson';
+      const initialSource = buildSyntheticLessonSource({
+        lessonId,
+        lessonTitle: 'Synthetic Refresh Lesson',
+        stepTitle: 'Initial Shipped Step',
+      });
+      const updatedSource = buildSyntheticLessonSource({
+        lessonId,
+        lessonTitle: 'Synthetic Refresh Lesson',
+        stepTitle: 'Updated Shipped Step',
+      });
+      const editedSource = buildSyntheticLessonSource({
+        lessonId,
+        lessonTitle: 'Synthetic Refresh Lesson',
+        stepTitle: 'Edited Draft Step',
+      });
+      const laterShippedSource = buildSyntheticLessonSource({
+        lessonId,
+        lessonTitle: 'Synthetic Refresh Lesson',
+        stepTitle: 'Later Shipped Step',
+      });
+
+      page.on('console', (message) => {
+        if (message.type() === 'error') {
+          consoleErrors.push(message.text());
+        }
+      });
+      page.on('pageerror', (error) => {
+        pageErrors.push(error.message);
+      });
+
+      await page.goto(buildAuthoringUrl(appUrl), { waitUntil: 'domcontentloaded' });
+
+      const refreshSnapshot = await page.evaluate(
+        async ({
+          repoPath,
+          lessonId: syntheticLessonId,
+          firstSourceMarkdown,
+          secondSourceMarkdown,
+          editedSourceMarkdown,
+          laterSourceMarkdown,
+        }) => {
+          const { openAuthoringSqlite } = await import(
+            `/@fs${repoPath}/system/author-lessons/open-authoring-sqlite.js`
+          );
+
+          async function openStore(sourceMarkdown) {
+            return openAuthoringSqlite({
+              ownerWindow: window,
+              shippedLessons: [
+                {
+                  lessonId: syntheticLessonId,
+                  lessonTitle: 'Synthetic Refresh Lesson',
+                  sourceMarkdown,
+                },
+              ],
+            });
+          }
+
+          const firstStore = await openStore(firstSourceMarkdown);
+          const firstSnapshot = await firstStore.openDraftForShippedLesson(syntheticLessonId);
+          const firstDraftId = firstSnapshot.selectedDraft?.draftId || '';
+          const firstDraftSource = firstSnapshot.selectedDraft?.sourceMarkdown || '';
+
+          const secondStore = await openStore(secondSourceMarkdown);
+          const refreshedSnapshot = await secondStore.openDraftForShippedLesson(syntheticLessonId);
+          const refreshedDraftSource = refreshedSnapshot.selectedDraft?.sourceMarkdown || '';
+          const refreshedDraftId = refreshedSnapshot.selectedDraft?.draftId || '';
+
+          const editedSnapshot = await secondStore.saveLessonDraft({
+            draftId: refreshedDraftId,
+            sourceMarkdown: editedSourceMarkdown,
+          });
+
+          const thirdStore = await openStore(laterSourceMarkdown);
+          const preservedSnapshot = await thirdStore.openDraftForShippedLesson(syntheticLessonId);
+
+          return {
+            firstDraftId,
+            refreshedDraftId,
+            preservedDraftId: preservedSnapshot.selectedDraft?.draftId || '',
+            firstDraftSource,
+            refreshedDraftSource,
+            editedDraftSource: editedSnapshot.selectedDraft?.sourceMarkdown || '',
+            preservedDraftSource: preservedSnapshot.selectedDraft?.sourceMarkdown || '',
+          };
+        },
+        {
+          repoPath: repoRoot,
+          lessonId,
+          firstSourceMarkdown: initialSource,
+          secondSourceMarkdown: updatedSource,
+          editedSourceMarkdown: editedSource,
+          laterSourceMarkdown: laterShippedSource,
+        }
+      );
+
+      assert.equal(refreshSnapshot.firstDraftId, refreshSnapshot.refreshedDraftId);
+      assert.equal(refreshSnapshot.firstDraftId, refreshSnapshot.preservedDraftId);
+      assert.match(refreshSnapshot.firstDraftSource, /Initial Shipped Step/);
+      assert.match(refreshSnapshot.refreshedDraftSource, /Updated Shipped Step/);
+      assert.match(refreshSnapshot.editedDraftSource, /Edited Draft Step/);
+      assert.match(refreshSnapshot.preservedDraftSource, /Edited Draft Step/);
+      assert.doesNotMatch(refreshSnapshot.preservedDraftSource, /Later Shipped Step/);
+
+      assert.deepEqual(pageErrors, []);
+      assert.deepEqual(consoleErrors, []);
+
+      await page.close();
+    } finally {
+      await browser?.close();
+      await server.close();
+    }
+  }
+);
+
+test(
+  'browser authoring smoke resets the current paired draft back to the shipped source',
+  { timeout: 90000 },
+  async () => {
+    const server = await createServer({
+      configFile: path.resolve(repoRoot, 'vite.config.js'),
+      clearScreen: false,
+      logLevel: 'error',
+      server: {
+        host: '127.0.0.1',
+        port: 41785,
+        strictPort: false,
+      },
+    });
+
+    let browser;
     const lessonId = '09-human-first-script-demo';
     const shippedLessonFilePath = path.resolve(
       repoRoot,
       'product/education/lessons/09-human-first-script-demo/source/lesson.script.md'
     );
     const originalShippedSource = await fs.readFile(shippedLessonFilePath, 'utf8');
-    const savedDraftStepTitle = 'Store Only Saved Draft Step';
+    const shippedStepTitle = readFirstStepTitle(originalShippedSource);
+    const editedStepTitle = 'Edited Paired Draft Step';
 
-    page.on('console', message => {
-      if (message.type() === 'error') {
-        consoleErrors.push(message.text());
-      }
-    });
-    page.on('pageerror', error => {
-      pageErrors.push(error.message);
-    });
+    try {
+      await server.listen();
 
-    await page.goto(`${appUrl}?workspace=authoring&lesson=${lessonId}`, { waitUntil: 'domcontentloaded' });
+      const appUrl =
+        server.resolvedUrls?.local?.find((url) => url.startsWith('http://127.0.0.1')) ||
+        server.resolvedUrls?.local?.[0];
 
-    await waitForCondition(
-      async () => page.$('#authoringScriptEditor').then(Boolean),
-      'the authoring workspace for explicit save/publish guardrails'
-    );
-    await waitForCondition(
-      async () => page.$eval('#authoringScriptEditor', element => {
-        if (!(element instanceof HTMLElement) || !element.authoringEditor) {
-          throw new Error('Expected the CodeMirror authoring editor host.');
+      assert.ok(appUrl, 'Vite dev server did not expose a local URL.');
+
+      browser = await puppeteer.launch({
+        args: ['--disable-setuid-sandbox', '--no-sandbox'],
+        headless: true,
+      });
+
+      const page = await browser.newPage();
+      const consoleErrors = [];
+      const pageErrors = [];
+
+      page.on('console', (message) => {
+        if (message.type() === 'error') {
+          consoleErrors.push(message.text());
         }
+      });
+      page.on('pageerror', (error) => {
+        pageErrors.push(error.message);
+      });
 
-        return element.authoringEditor.getValue().includes('title: Start: Empty App Shell');
-      }).catch(() => false),
-      'the paired 09 draft body before guardrail assertions'
-    );
+      await page.goto(buildAuthoringUrl(appUrl, lessonId), { waitUntil: 'domcontentloaded' });
 
-    const pairedDraftSource = await readPairedDraftSourceMarkdown(page, lessonId);
-    const storeOnlyDraftSource = pairedDraftSource.replace(
-      'title: Start: Empty App Shell',
-      `title: ${savedDraftStepTitle}`
-    );
-    await replaceEditorSelectionText(page, storeOnlyDraftSource);
-    await waitForCondition(
-      async () => page.$eval('#authoringSaveState', element => element.textContent?.includes('Unsaved Changes') || false).catch(() => false),
-      'the draft to become dirty before save'
-    );
+      await waitForCondition(
+        async () => page.$('#authoringScriptEditor').then(Boolean),
+        'the authoring workspace for resetting a paired draft'
+      );
+      await waitForCondition(
+        async () =>
+          page
+            .$eval('#authoringScriptEditor', (element) => {
+              if (!(element instanceof HTMLElement) || !element.authoringEditor) {
+                throw new Error('Expected the CodeMirror authoring editor host.');
+              }
 
-    await page.click('#authoringSaveDraftBtn');
-    await waitForCondition(
-      async () => page.$eval('#authoringSaveState', element => element.textContent?.includes('Draft Saved') || false).catch(() => false),
-      'the draft to save into the authoring store'
-    );
+              return element.authoringEditor.getValue().includes("# Step: empty-shell");
+            })
+            .catch(() => false),
+        'the original shipped 09 draft to load'
+      );
 
-    const savedDraftSourceAfterSave = await readPairedDraftSourceMarkdown(page, lessonId);
-    const draftBackupAfterSave = await readLatestDraftBackup(page, {
-      shippedLessonId: lessonId
-    });
-    const playerSelectionAfterSave = await readPlayerSelectionSnapshot(page, lessonId);
-    const shippedSourceAfterSave = await fs.readFile(shippedLessonFilePath, 'utf8');
-    const editorSnapshotAfterSave = await readEditorCursorSnapshot(page);
+      const editedPairedDraftSource = originalShippedSource.replace(
+        `title: ${shippedStepTitle}`,
+        `title: ${editedStepTitle}`
+      );
+      const savedEditedDraftSource = await savePairedDraftSourceMarkdown(
+        page,
+        lessonId,
+        editedPairedDraftSource
+      );
 
-    assert.match(editorSnapshotAfterSave.value, /Store Only Saved Draft Step/);
-    assert.equal(
-      await page.$eval('#authoringPublishState', element => element.textContent?.trim() || ''),
-      'Not Published'
-    );
-    assert.equal(draftBackupAfterSave?.backupFileName, 'lesson.script.md');
-    assert.equal(draftBackupAfterSave?.shippedLessonId, lessonId);
-    assert.equal(draftBackupAfterSave?.tracksShippedSource, false);
-    assert.equal(draftBackupAfterSave?.sourceMarkdown, savedDraftSourceAfterSave);
-    assert.match(draftBackupAfterSave?.backupLocation || '', /lesson\.script\.md$/);
-    assert.equal(playerSelectionAfterSave.runtimeSource, 'playable-draft');
-    assert.equal(playerSelectionAfterSave.firstStepTitle, savedDraftStepTitle);
-    assert.equal(shippedSourceAfterSave, originalShippedSource);
-    assert.doesNotMatch(shippedSourceAfterSave, /Store Only Saved Draft Step/);
+      assert.match(savedEditedDraftSource, /Edited Paired Draft Step/);
+      assert.match(await fs.readFile(shippedLessonFilePath, 'utf8'), /Edited Paired Draft Step/);
 
-    await page.click('#authoringPublishBtn');
-    await waitForCondition(
-      async () => page.$eval('#authoringPublishState', element => element.textContent?.includes('Published Lesson') || false).catch(() => false),
-      'the publish state to show an explicit published snapshot'
-    );
+      await fs.writeFile(shippedLessonFilePath, originalShippedSource, 'utf8');
 
-    await deletePersistedSqliteSnapshot(page);
+      await page.reload({ waitUntil: 'domcontentloaded' });
+      await waitForCondition(
+        async () => page.$('#authoringScriptEditor').then(Boolean),
+        'the authoring workspace after restoring the shipped source file'
+      );
+      await waitForCondition(
+        async () =>
+          page
+            .$eval('#authoringScriptEditor', (element) => {
+              if (!(element instanceof HTMLElement) || !element.authoringEditor) {
+                throw new Error('Expected the CodeMirror authoring editor host.');
+              }
 
-    const playerSelectionAfterSnapshotLoss = await readPlayerSelectionSnapshot(page, lessonId);
+              return element.authoringEditor.getValue().includes('# Step: empty-shell');
+            })
+            .catch(() => false),
+        'the edited paired draft to remain in SQLite before reset'
+      );
 
-    assert.equal(playerSelectionAfterSnapshotLoss.runtimeSource, 'playable-draft-backup');
-    assert.equal(playerSelectionAfterSnapshotLoss.firstStepTitle, savedDraftStepTitle);
-    assert.match(playerSelectionAfterSnapshotLoss.runtimeLabel, /lesson\.script\.md backup/);
+      await openPopoverAndClick(
+        page,
+        '#authoringMoreBtn',
+        '#authoringMoreMenu',
+        '[data-action="reset-paired-draft-to-shipped-source"]'
+      );
 
-    await page.reload({ waitUntil: 'domcontentloaded' });
-    await waitForCondition(
-      async () => page.$('#authoringScriptEditor').then(Boolean),
-      'the authoring workspace after SQLite snapshot deletion'
-    );
-    await waitForCondition(
-      async () => page.$eval('#authoringStatus', element => (
-        element.textContent?.includes('SQLite snapshot was missing. Restored 1 draft from lesson.script.md backups.')
-      ) || false).catch(() => false),
-      'the authoring recovery notice after restoring from the lesson.script.md backup'
-    );
-    await waitForCondition(
-      async () => page.$eval('#authoringScriptEditor', element => {
-        if (!(element instanceof HTMLElement) || !element.authoringEditor) {
-          throw new Error('Expected the CodeMirror authoring editor host.');
-        }
+      await waitForCondition(
+        async () =>
+          page
+            .$eval(
+              '#authoringStatus',
+              (element) =>
+                element.textContent?.includes(
+                  'Paired draft reset from the shipped lesson source.'
+                ) || false
+            )
+            .catch(() => false),
+        'the reset paired draft status'
+      );
+      await waitForCondition(
+        async () =>
+          page
+            .$eval(
+              '#authoringStatus',
+              (element) =>
+                element.textContent?.includes(
+                  'Repo lesson.script.md already matched the saved draft.'
+                ) || false
+            )
+            .catch(() => false),
+        'the unchanged repo lesson status after reset'
+      );
 
-        return element.authoringEditor.getValue().includes('title: Store Only Saved Draft Step');
-      }).catch(() => false),
-      'the restored lesson source from the lesson.script.md backup'
-    );
+      const resetDraftSource = await readPairedDraftSourceMarkdown(page, lessonId);
+      const draftBackupAfterReset = await readLatestDraftBackup(page, {
+        shippedLessonId: lessonId,
+      });
+      const shippedSourceAfterReset = await fs.readFile(shippedLessonFilePath, 'utf8');
 
-    assert.deepEqual(pageErrors, []);
-    assert.deepEqual(consoleErrors, []);
+      assert.equal(resetDraftSource, originalShippedSource);
+      assert.equal(shippedSourceAfterReset, originalShippedSource);
+      assert.equal(draftBackupAfterReset?.sourceMarkdown, originalShippedSource);
+      assert.equal(draftBackupAfterReset?.tracksShippedSource, true);
 
-    await page.close();
-  } finally {
-    await browser?.close();
-    await server.close();
+      assert.deepEqual(pageErrors, []);
+      assert.deepEqual(consoleErrors, []);
+
+      await page.close();
+    } finally {
+      await fs.writeFile(shippedLessonFilePath, originalShippedSource, 'utf8');
+      await browser?.close();
+      await server.close();
+    }
   }
-});
+);
+
+test(
+  'browser authoring smoke ignores an unpaired custom draft with the same lesson id during normal player selection',
+  { timeout: 90000 },
+  async () => {
+    const server = await createServer({
+      configFile: path.resolve(repoRoot, 'vite.config.js'),
+      clearScreen: false,
+      logLevel: 'error',
+      server: {
+        host: '127.0.0.1',
+        port: 4179,
+        strictPort: false,
+      },
+    });
+
+    let browser;
+
+    try {
+      await server.listen();
+
+      const appUrl =
+        server.resolvedUrls?.local?.find((url) => url.startsWith('http://127.0.0.1')) ||
+        server.resolvedUrls?.local?.[0];
+
+      assert.ok(appUrl, 'Vite dev server did not expose a local URL.');
+
+      browser = await puppeteer.launch({
+        args: ['--disable-setuid-sandbox', '--no-sandbox'],
+        headless: true,
+      });
+
+      const page = await browser.newPage();
+      const consoleErrors = [];
+      const pageErrors = [];
+      const shippedLessonFilePath = path.resolve(
+        repoRoot,
+        'product/education/lessons/09-human-first-script-demo/source/lesson.script.md'
+      );
+      const shippedSource = await fs.readFile(shippedLessonFilePath, 'utf8');
+      const shippedStepTitle = readFirstStepTitle(shippedSource);
+      const unpairedDraftStepTitle = 'Custom Same Id Draft Step';
+
+      page.on('console', (message) => {
+        if (message.type() === 'error') {
+          consoleErrors.push(message.text());
+        }
+      });
+      page.on('pageerror', (error) => {
+        pageErrors.push(error.message);
+      });
+
+      await page.goto(buildAuthoringUrl(appUrl), { waitUntil: 'domcontentloaded' });
+
+      const pairedDraftSource = await readPairedDraftSourceMarkdown(
+        page,
+        '09-human-first-script-demo'
+      );
+      const unpairedDraftSource = pairedDraftSource.replace(
+        `title: ${shippedStepTitle}`,
+        `title: ${unpairedDraftStepTitle}`
+      );
+
+      await page.evaluate(
+        async ({ repoPath, sourceMarkdown }) => {
+          const [{ openAuthoringSqlite }, { readShippedLessonScripts }] = await Promise.all([
+            import(`/@fs${repoPath}/system/author-lessons/open-authoring-sqlite.js`),
+            import(`/@fs${repoPath}/system/author-lessons/read-shipped-lesson-scripts.js`),
+          ]);
+          const shippedLessons = await readShippedLessonScripts();
+          const store = await openAuthoringSqlite({
+            ownerWindow: window,
+            shippedLessons,
+          });
+          const pairedSnapshot = await store.openDraftForShippedLesson(
+            '09-human-first-script-demo'
+          );
+          const pairedDraftId = pairedSnapshot.selectedDraft?.draftId || '';
+
+          if (!pairedDraftId) {
+            throw new Error('Expected the paired draft for 09-human-first-script-demo.');
+          }
+
+          await store.deleteLessonDraft(pairedDraftId);
+
+          const createdSnapshot = await store.createLessonDraft();
+          const customDraftId = createdSnapshot.selectedDraft?.draftId || '';
+
+          if (!customDraftId) {
+            throw new Error('Expected a new custom draft id.');
+          }
+
+          await store.saveLessonDraft({
+            draftId: customDraftId,
+            sourceMarkdown,
+          });
+        },
+        {
+          repoPath: repoRoot,
+          sourceMarkdown: unpairedDraftSource,
+        }
+      );
+
+      const selection = await readPlayerSelectionSnapshot(page, '09-human-first-script-demo');
+
+      assert.equal(selection.lessonId, '09-human-first-script-demo');
+      assert.equal(selection.firstStepTitle, shippedStepTitle);
+      assert.equal(selection.runtimeSource, 'published');
+      assert.match(selection.runtimeLabel, /Published Lesson/);
+
+      assert.deepEqual(pageErrors, []);
+      assert.deepEqual(consoleErrors, []);
+
+      await page.close();
+    } finally {
+      await browser?.close();
+      await server.close();
+    }
+  }
+);
+
+test(
+  'browser authoring smoke mirrors Save into a lesson.script.md backup while Publish remains the explicit snapshot step',
+  { timeout: 90000 },
+  async () => {
+    const server = await createServer({
+      configFile: path.resolve(repoRoot, 'vite.config.js'),
+      clearScreen: false,
+      logLevel: 'error',
+      server: {
+        host: '127.0.0.1',
+        port: 4180,
+        strictPort: false,
+      },
+    });
+
+    let browser;
+    const shippedLessonFilePath = path.resolve(
+      repoRoot,
+      'product/education/lessons/09-human-first-script-demo/source/lesson.script.md'
+    );
+    const originalShippedSource = await fs.readFile(shippedLessonFilePath, 'utf8');
+    const shippedStepTitle = readFirstStepTitle(originalShippedSource);
+
+    try {
+      await server.listen();
+
+      const appUrl =
+        server.resolvedUrls?.local?.find((url) => url.startsWith('http://127.0.0.1')) ||
+        server.resolvedUrls?.local?.[0];
+
+      assert.ok(appUrl, 'Vite dev server did not expose a local URL.');
+
+      browser = await puppeteer.launch({
+        args: ['--disable-setuid-sandbox', '--no-sandbox'],
+        headless: true,
+      });
+
+      const page = await browser.newPage();
+      const consoleErrors = [];
+      const pageErrors = [];
+      const lessonId = '09-human-first-script-demo';
+      const savedDraftStepTitle = 'Store Only Saved Draft Step';
+
+      page.on('console', (message) => {
+        if (message.type() === 'error') {
+          consoleErrors.push(message.text());
+        }
+      });
+      page.on('pageerror', (error) => {
+        pageErrors.push(error.message);
+      });
+
+      await page.goto(buildAuthoringUrl(appUrl, lessonId), { waitUntil: 'domcontentloaded' });
+
+      await waitForCondition(
+        async () => page.$('#authoringScriptEditor').then(Boolean),
+        'the authoring workspace for explicit save/publish guardrails'
+      );
+      await waitForCondition(
+        async () =>
+          page
+            .$eval('#authoringScriptEditor', (element) => {
+              if (!(element instanceof HTMLElement) || !element.authoringEditor) {
+                throw new Error('Expected the CodeMirror authoring editor host.');
+              }
+
+              return element.authoringEditor.getValue().includes("# Step: empty-shell");
+            })
+            .catch(() => false),
+        'the paired 09 draft body before guardrail assertions'
+      );
+
+      const pairedDraftSource = await readPairedDraftSourceMarkdown(page, lessonId);
+      const storeOnlyDraftSource = pairedDraftSource.replace(
+        `title: ${shippedStepTitle}`,
+        `title: ${savedDraftStepTitle}`
+      );
+      await replaceEditorSelectionText(page, storeOnlyDraftSource);
+      await waitForCondition(
+        async () =>
+          page
+            .$eval(
+              '#authoringSaveState',
+              (element) => element.textContent?.includes('Unsaved Changes') || false
+            )
+            .catch(() => false),
+        'the draft to become dirty before save'
+      );
+
+      await page.click('#authoringSaveDraftBtn');
+      await waitForCondition(
+        async () =>
+          page
+            .$eval(
+              '#authoringSaveState',
+              (element) => element.textContent?.includes('Draft Saved') || false
+            )
+            .catch(() => false),
+        'the draft to save into the authoring store'
+      );
+      await waitForCondition(
+        async () =>
+          page
+            .$eval(
+              '#authoringStatus',
+              (element) =>
+                element.textContent?.includes(
+                  'Repo lesson.script.md updated at product/education/lessons/09-human-first-script-demo/source/lesson.script.md.'
+                ) || false
+            )
+            .catch(() => false),
+        'the paired draft save status to report the repo lesson.script.md update'
+      );
+
+      const savedDraftSourceAfterSave = await readPairedDraftSourceMarkdown(page, lessonId);
+      const draftBackupAfterSave = await readLatestDraftBackup(page, {
+        shippedLessonId: lessonId,
+      });
+      const playerSelectionAfterSave = await readPlayerSelectionSnapshot(page, lessonId);
+      const shippedSourceAfterSave = await fs.readFile(shippedLessonFilePath, 'utf8');
+      const editorSnapshotAfterSave = await readEditorCursorSnapshot(page);
+
+      assert.match(editorSnapshotAfterSave.value, /Store Only Saved Draft Step/);
+      assert.equal(
+        await page.$eval('#authoringPublishState', (element) => element.textContent?.trim() || ''),
+        'Not Published'
+      );
+      assert.equal(draftBackupAfterSave?.backupFileName, 'lesson.script.md');
+      assert.equal(draftBackupAfterSave?.shippedLessonId, lessonId);
+      assert.equal(draftBackupAfterSave?.tracksShippedSource, false);
+      assert.equal(draftBackupAfterSave?.sourceMarkdown, savedDraftSourceAfterSave);
+      assert.match(draftBackupAfterSave?.backupLocation || '', /lesson\.script\.md$/);
+      assert.equal(playerSelectionAfterSave.runtimeSource, 'playable-draft');
+      assert.equal(playerSelectionAfterSave.firstStepTitle, savedDraftStepTitle);
+      assert.equal(shippedSourceAfterSave, savedDraftSourceAfterSave);
+      assert.match(shippedSourceAfterSave, /Store Only Saved Draft Step/);
+
+      await page.click('#authoringPublishBtn');
+      await waitForCondition(
+        async () =>
+          page
+            .$eval(
+              '#authoringPublishState',
+              (element) => element.textContent?.includes('Published Lesson') || false
+            )
+            .catch(() => false),
+        'the publish state to show an explicit published snapshot'
+      );
+
+      await deletePersistedSqliteSnapshot(page);
+
+      const playerSelectionAfterSnapshotLoss = await readPlayerSelectionSnapshot(page, lessonId);
+
+      assert.equal(playerSelectionAfterSnapshotLoss.runtimeSource, 'playable-draft-backup');
+      assert.equal(playerSelectionAfterSnapshotLoss.firstStepTitle, savedDraftStepTitle);
+      assert.match(playerSelectionAfterSnapshotLoss.runtimeLabel, /lesson\.script\.md backup/);
+
+      await page.reload({ waitUntil: 'domcontentloaded' });
+      await waitForCondition(
+        async () => page.$('#authoringScriptEditor').then(Boolean),
+        'the authoring workspace after SQLite snapshot deletion'
+      );
+      await waitForCondition(
+        async () =>
+          page
+            .$eval(
+              '#authoringStatus',
+              (element) =>
+                element.textContent?.includes(
+                  'SQLite snapshot was missing. Restored 1 draft from lesson.script.md backups.'
+                ) || false
+            )
+            .catch(() => false),
+        'the authoring recovery notice after restoring from the lesson.script.md backup'
+      );
+      await waitForCondition(
+        async () =>
+          page
+            .$eval('#authoringScriptEditor', (element) => {
+              if (!(element instanceof HTMLElement) || !element.authoringEditor) {
+                throw new Error('Expected the CodeMirror authoring editor host.');
+              }
+
+              return element.authoringEditor
+                .getValue()
+                .includes('title: Store Only Saved Draft Step');
+            })
+            .catch(() => false),
+        'the restored lesson source from the lesson.script.md backup'
+      );
+
+      assert.deepEqual(pageErrors, []);
+      assert.deepEqual(consoleErrors, []);
+
+      await page.close();
+    } finally {
+      await fs.writeFile(shippedLessonFilePath, originalShippedSource, 'utf8');
+      await browser?.close();
+      await server.close();
+    }
+  }
+);

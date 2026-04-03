@@ -169,7 +169,7 @@ Navigation comes before visual refinement.
   }
 ]
 \`\`\`
-`
-    }
+`,
+    },
   };
 }

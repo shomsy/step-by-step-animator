@@ -17,9 +17,12 @@ Autor ne kreće od foldera, niti od ručnog pravljenja `lesson.md`, `scenes.md`,
 Za dnevni rad važi sledeće:
 
 - pišeš u Write Mode-u
-- `Save` čuva draft u Authoring Store-u i pravi isti `lesson.script.md` browser backup za oporavak ako SQLite snapshot nestane
+- `/content/lesson` otvara glavni lesson index sa pretragom i listom postojećih shipped lekcija i custom draftova; klik na lekciju tek tada otvara editor
+- `Save` čuva draft u Authoring Store-u, pravi isti `lesson.script.md` browser backup za oporavak ako SQLite snapshot nestane, i za zdrave paired draftove sinhronizuje isti `lesson.script.md` u postojećem repo lesson folderu
+- `More -> Sync paired repo files` prolazi kroz sve shipped lekcije u istom browser store-u, obezbeđuje paired draft gde treba, osvežava browser backup i sinhronizuje paired repo `lesson.script.md` bez lažnih whitespace ili sadržajnih izmena
+- `More -> Reset paired draft` vraća trenutno otvoreni paired draft na aktuelni shipped source, osvežava browser backup i koristi se kada želiš da SQLite draft opet bude identičan shipped lekciji
 - `Play` pušta poslednji zdravi sačuvani draft
-- `Publish` i `Export` su posebni koraci i nisu uslov da lekcija postoji
+- `Publish` i `Export` su posebni koraci i nisu uslov da lekcija postoji; custom ili unpaired draft i dalje ne mora da pravi repo fajl na `Save`
 
 ## 2. Oblik dokumenta
 
@@ -63,6 +66,7 @@ Svaki korak mora da počne ovako:
 
 ```md
 # Step: <step-id>
+
 title:
 summary:
 intent:
@@ -109,6 +113,7 @@ Svaka scena mora imati najmanje jedan prikaz koda:
 
 ````md
 ### Show Code: <artifact-id>
+
 ```html
 ...
 ```
@@ -120,6 +125,10 @@ Pravila:
 - jedan `Show Code` blok prikazuje kompletan snapshot fajla u tom trenutku
 - nisu dozvoljeni isečci tipa `...`, patch-evi, ni “ostatak ostaje isti”
 - jezik code fence-a mora odgovarati artifact tipu koji prikazuješ
+
+> [!CRITICAL]
+> **Stroga Zabrana Skraćivanja Koda (AI Strict Rule):**
+> AI agenti imaju tendenciju da pri generisanju koda pišu `// ...ostatak koda...` da bi uštedeli vreme. U ovoj aplikaciji **TO JE STROGO ZABRANJENO**. Skraćivanje koda direktno uništava internu logiku diff algortima (`buildArtifactLineDiff`), zbog čega se nepromenjeni delovi koda beleže kao `removed` (prikazuju se crvenom bojom i vizuelno nestaju). **Kada pišeš kod za scenu, MORAŠ ga generisati u potpunosti onakvog kakav je u tom trenutku, sa 100% ubačenih postojećih linija bez ikakvih kompresija ili komentara u prazno.**
 
 ## 4. Stroga parser pravila
 
@@ -188,6 +197,7 @@ preview:
 ---
 
 # Step: empty-shell
+
 title: Start from an empty shell
 summary: Kreiramo prazan prostor za rad.
 intent: Vizuelna neutralnost pre prve promene.
@@ -195,9 +205,11 @@ intent: Vizuelna neutralnost pre prve promene.
 ## Scene: start-intro
 
 ### Narration
+
 Počinjemo od bazičnog HTML-a. Ovo je naša prazna tabla na kojoj ćemo graditi.
 
 ### Show Code: html
+
 ```html
 <div class="app-shell"></div>
 ```

@@ -17,7 +17,7 @@ function writeFixtureSourceRoot(rootPath, fixture) {
   Object.entries(fixture.artifactMarkdownById).forEach(([artifactId, artifactMarkdown]) => {
     const fileNameByArtifactId = {
       html: 'html.timeline.md',
-      css: 'css.rules.md'
+      css: 'css.rules.md',
     };
 
     fs.writeFileSync(
@@ -38,61 +38,62 @@ test('buildLessonScriptFromSource preserves lesson runtime parity when exporting
     const { compiledLesson: splitCompiledLesson } = compileSourceLesson({ sourceRoot });
     const scriptCompiledLesson = compileLessonScript({
       scriptMarkdown,
-      theoryMarkdown: fixture.theoryMarkdown
+      theoryMarkdown: fixture.theoryMarkdown,
     });
 
     assert.match(scriptMarkdown, /^---\nschemaVersion: 1/m);
     assert.match(scriptMarkdown, /^# Step: add-sidebar-shell$/m);
     assert.match(scriptMarkdown, /^## Scene: intro-shell$/m);
     assert.match(scriptMarkdown, /^### Show Code: css$/m);
+    assert.deepEqual(scriptCompiledLesson.meta, splitCompiledLesson.meta);
     assert.deepEqual(
-      scriptCompiledLesson.meta,
-      splitCompiledLesson.meta
+      scriptCompiledLesson.steps.map((step) => step.id),
+      splitCompiledLesson.steps.map((step) => step.id)
     );
     assert.deepEqual(
-      scriptCompiledLesson.steps.map(step => step.id),
-      splitCompiledLesson.steps.map(step => step.id)
+      scriptCompiledLesson.steps.map((step) =>
+        step.scenes.map((scene) => ({
+          sceneId: scene.sceneId,
+          narration: scene.narration,
+          preview: {
+            action: scene.preview?.action || '',
+            target: scene.preview?.target || '',
+          },
+          theory: scene.theory || null,
+        }))
+      ),
+      splitCompiledLesson.steps.map((step) =>
+        step.scenes.map((scene) => ({
+          sceneId: scene.sceneId,
+          narration: scene.narration,
+          preview: {
+            action: scene.preview?.action || '',
+            target: scene.preview?.target || '',
+          },
+          theory: scene.theory || null,
+        }))
+      )
     );
     assert.deepEqual(
-      scriptCompiledLesson.steps.map(step => step.scenes.map(scene => ({
-        sceneId: scene.sceneId,
-        narration: scene.narration,
-        preview: {
-          action: scene.preview?.action || '',
-          target: scene.preview?.target || ''
-        },
-        theory: scene.theory || null
-      }))),
-      splitCompiledLesson.steps.map(step => step.scenes.map(scene => ({
-        sceneId: scene.sceneId,
-        narration: scene.narration,
-        preview: {
-          action: scene.preview?.action || '',
-          target: scene.preview?.target || ''
-        },
-        theory: scene.theory || null
-      })))
+      scriptCompiledLesson.statesByStep.map((stepState) => stepState.artifacts),
+      splitCompiledLesson.statesByStep.map((stepState) => stepState.artifacts)
     );
     assert.deepEqual(
-      scriptCompiledLesson.statesByStep.map(stepState => stepState.artifacts),
-      splitCompiledLesson.statesByStep.map(stepState => stepState.artifacts)
-    );
-    assert.deepEqual(
-      scriptCompiledLesson.artifacts.map(artifact => ({
+      scriptCompiledLesson.artifacts.map((artifact) => ({
         artifactId: artifact.artifactId,
         language: artifact.language,
-        fileName: artifact.fileName
+        fileName: artifact.fileName,
       })),
-      splitCompiledLesson.artifacts.map(artifact => ({
+      splitCompiledLesson.artifacts.map((artifact) => ({
         artifactId: artifact.artifactId,
         language: artifact.language,
-        fileName: artifact.fileName
+        fileName: artifact.fileName,
       }))
     );
   } finally {
     fs.rmSync(sourceRoot, {
       recursive: true,
-      force: true
+      force: true,
     });
   }
 });

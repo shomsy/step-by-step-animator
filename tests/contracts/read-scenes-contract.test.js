@@ -18,7 +18,10 @@ test('readScenesContract parses the canonical storyboard DSL', () => {
 
 test('readScenesContract rejects scenes before a declared step', () => {
   const fixture = createSourceOnlyLessonFixture();
-  const brokenScenesMarkdown = fixture.scenesMarkdown.replace('# Step: add-sidebar-shell', '## Scene: orphan-scene');
+  const brokenScenesMarkdown = fixture.scenesMarkdown.replace(
+    '# Step: add-sidebar-shell',
+    '## Scene: orphan-scene'
+  );
 
   assert.throws(() => readScenesContract(brokenScenesMarkdown), /before any step heading/);
 });

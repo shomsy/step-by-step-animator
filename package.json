@@ -18,9 +18,13 @@
     "test:smoke": "node --test tests/smoke/*.test.js",
     "prevalidate:lessons": "npm run ensure:rules",
     "validate:lessons": "node system/lesson-engine/validate-source-lessons.js",
-    "sync:lesson-documents": "node system/lesson-engine/documentation/sync-lesson-documents.js"
+    "sync:lesson-documents": "node system/lesson-engine/documentation/sync-lesson-documents.js",
+    "lint": "eslint . --ext .js,.mjs",
+    "format": "prettier --write ."
   },
   "devDependencies": {
+    "eslint": "^8.57.0",
+    "prettier": "^3.0.0",
     "puppeteer": "^24.40.0",
     "vite": "^8.0.1"
   },

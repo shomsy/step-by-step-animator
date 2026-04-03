@@ -15,6 +15,7 @@ The lesson system now has three distinct truths:
 1. `Authoring Store`
    - the SQLite-backed draft truth for in-progress lessons
    - `Save` also mirrors the exact `lesson.script.md` into a browser-owned backup so the draft can be restored if the SQLite snapshot is missing
+   - when the saved draft is healthy and paired to a shipped lesson path, `Save` also refreshes that paired repo `lesson.script.md` materialization through the local dev bridge
    - owned by Write Mode
 2. `Shipped Lesson Package`
    - the runtime truth used by the animator
@@ -34,21 +35,23 @@ flowchart TD
   A[Write Mode] --> B[Authoring Store]
   B --> C[Save]
   C --> D[Browser lesson.script.md backup]
-  C --> E[Latest healthy saved draft]
-  D --> E
-  E --> F[Lesson Engine validate + compile]
-  F --> G[Shipped Lesson Package]
-  G --> H[Animator Engine]
-  H --> I[Play lesson]
+  C --> E[Paired repo lesson.script.md sync]
+  C --> F[Latest healthy saved draft]
+  D --> F
+  F --> G[Lesson Engine validate + compile]
+  G --> H[Shipped Lesson Package]
+  H --> I[Animator Engine]
+  I --> J[Play lesson]
 
-  B --> J[Publish]
-  J --> K[Recoverable snapshot]
+  B --> K[Publish]
+  K --> L[Recoverable snapshot]
 
-  B --> L[Export]
-  L --> M[Publish/Export Artifacts]
+  B --> M[Export]
+  M --> N[Publish/Export Artifacts]
 
-  N[Legacy file-based lesson inputs] --> F
-  M --> F
+  O[Legacy file-based lesson inputs] --> G
+  E --> H
+  N --> G
 ```
 
 ## 3. Boundary Ownership
@@ -71,9 +74,19 @@ Do not let support logic blur them back into one mixed lesson CMS flow.
 
 ## 4. Save, Play, Publish, Export
 
+- `Lesson browser`
+  - visible Write Mode collection surface for opening shipped lessons or custom drafts and for creating a new lesson
+  - when `/content/lesson` has no lesson id path segment, the browser stays in explicit selection mode and renders a first-class lesson list instead of implicitly opening whichever draft sorts first
 - `Save`
   - persist draft content to the authoring store
   - mirror the same `lesson.script.md` into the browser backup boundary when that boundary is available
+  - when the saved draft is healthy and paired to a shipped lesson path, sync that same source into the paired repo `product/education/lessons/**/source/lesson.script.md`
+- `Sync paired repo files`
+  - explicit workspace operation for walking every shipped lesson in the current browser store
+  - ensure the paired draft exists, refresh its browser backup, and sync the paired repo `lesson.script.md` without inventing fake content edits
+- `Reset paired draft`
+  - explicit workspace operation for overwriting the current paired SQLite draft with the current shipped lesson source
+  - refresh the browser backup and keep repo materialization unchanged when shipped content already matches
 - `Play`
   - compile from the latest healthy saved draft
   - if the SQLite snapshot is unavailable, recover from the mirrored `lesson.script.md` backup
@@ -108,6 +121,7 @@ Filesystem source remains useful, but it is no longer the live default for autho
 - no pre-existing folder or source scaffold is required to begin authoring
 - the browser `lesson` query should track the active draft context so refresh and back-to-player stay on the same lesson path
 - shipped files under `product/education/lessons/**/source/` remain valid publish/export targets
+- healthy paired saves can keep an existing shipped lesson source synchronized locally without making filesystem source the canonical draft truth
 - legacy split files remain valid import inputs during migration
 - the repo must not describe `lesson.md`, `scenes.md`, `theory.md`, or `artifacts/` as the preferred day-to-day authoring path
 

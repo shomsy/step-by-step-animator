@@ -5,17 +5,17 @@ function readSearchableStepText(value) {
 }
 
 export function presentStepFinder({ lessonParts, steps, goToStepNumber }) {
-  lessonParts.stepFinderInput.addEventListener('input', event => {
+  lessonParts.stepFinderInput.addEventListener('input', (event) => {
     showMatchingStepResults(event.target.value);
   });
 
-  lessonParts.stepFinderModal.addEventListener('click', event => {
+  lessonParts.stepFinderModal.addEventListener('click', (event) => {
     if (event.target === lessonParts.stepFinderModal) {
       closeStepFinder();
     }
   });
 
-  lessonParts.stepFinderResults.addEventListener('click', event => {
+  lessonParts.stepFinderResults.addEventListener('click', (event) => {
     const result = event.target.closest('[data-index]');
 
     if (!result) {
@@ -34,15 +34,18 @@ export function presentStepFinder({ lessonParts, steps, goToStepNumber }) {
         index,
         titleText: readSearchableStepText(step.title),
         descText: readSearchableStepText(step.desc),
-        tagText: readSearchableStepText(step.tag)
+        tagText: readSearchableStepText(step.tag),
       }))
-      .filter(step =>
-        step.titleText.toLowerCase().includes(normalizedQuery) ||
-        step.descText.toLowerCase().includes(normalizedQuery) ||
-        step.tagText.toLowerCase().includes(normalizedQuery)
+      .filter(
+        (step) =>
+          step.titleText.toLowerCase().includes(normalizedQuery) ||
+          step.descText.toLowerCase().includes(normalizedQuery) ||
+          step.tagText.toLowerCase().includes(normalizedQuery)
       );
 
-    lessonParts.stepFinderResults.innerHTML = matchingSteps.map(step => `
+    lessonParts.stepFinderResults.innerHTML = matchingSteps
+      .map(
+        (step) => `
       <div class="search-result" data-index="${step.index}">
         <div class="search-result-num">${step.index + 1}</div>
         <div class="search-result-info">
@@ -50,7 +53,9 @@ export function presentStepFinder({ lessonParts, steps, goToStepNumber }) {
           <p>${escapeInlineText(step.descText)}</p>
         </div>
       </div>
-    `).join('');
+    `
+      )
+      .join('');
   }
 
   function openStepFinder() {
@@ -71,6 +76,6 @@ export function presentStepFinder({ lessonParts, steps, goToStepNumber }) {
   return {
     closeStepFinder,
     isStepFinderOpen,
-    openStepFinder
+    openStepFinder,
   };
 }

@@ -17,7 +17,7 @@ function readLessonManifest(sourceRoot) {
 
   return {
     lessonMarkdown,
-    lessonAttributes: attributes
+    lessonAttributes: attributes,
   };
 }
 
@@ -29,22 +29,20 @@ function readScenesByStep(sourceRoot) {
   const scenesMarkdown = readText(path.join(sourceRoot, 'scenes.md'));
   const scenesContract = readScenesContract(scenesMarkdown);
 
-  return Object.fromEntries(
-    scenesContract.steps.map(step => [step.stepId, step])
-  );
+  return Object.fromEntries(scenesContract.steps.map((step) => [step.stepId, step]));
 }
 
 function buildScriptFrontmatter(lessonAttributes) {
   const scriptAttributes = {
     ...lessonAttributes,
     artifacts: Array.isArray(lessonAttributes.artifacts)
-      ? lessonAttributes.artifacts.map(artifact => ({
+      ? lessonAttributes.artifacts.map((artifact) => ({
           artifactId: artifact.artifactId,
           language: artifact.language,
           label: artifact.label,
-          isPrimary: Boolean(artifact.isPrimary)
+          isPrimary: Boolean(artifact.isPrimary),
         }))
-      : []
+      : [],
   };
 
   delete scriptAttributes.scenes;
@@ -53,7 +51,7 @@ function buildScriptFrontmatter(lessonAttributes) {
 }
 
 function readChangedArtifactIds(currentArtifactStateById, previousArtifactStateById) {
-  return Object.keys(currentArtifactStateById).filter(artifactId => {
+  return Object.keys(currentArtifactStateById).filter((artifactId) => {
     const currentSnapshot = JSON.stringify(currentArtifactStateById[artifactId] || []);
     const previousSnapshot = JSON.stringify(previousArtifactStateById?.[artifactId] || []);
 
@@ -72,7 +70,7 @@ function buildSceneContract({
   const changedArtifactIds = readChangedArtifactIds(artifactStateById, previousArtifactStateById);
   const orderedArtifactIds = [
     activeArtifactId,
-    ...changedArtifactIds.filter(artifactId => artifactId !== activeArtifactId)
+    ...changedArtifactIds.filter((artifactId) => artifactId !== activeArtifactId),
   ];
 
   return {
@@ -80,20 +78,22 @@ function buildSceneContract({
     narration: scene.narration,
     ...(scene.preview ? { preview: scene.preview } : {}),
     ...(scene.theory ? { theory: scene.theory } : {}),
-    showCodeBlocks: orderedArtifactIds.map(artifactId => {
+    showCodeBlocks: orderedArtifactIds.map((artifactId) => {
       const artifactLanguage = artifactLanguageById[artifactId];
 
       if (!artifactLanguage) {
-        throw new Error(`Step "${stepId}" scene "${scene.sceneId}" references unknown artifact "${artifactId}".`);
+        throw new Error(
+          `Step "${stepId}" scene "${scene.sceneId}" references unknown artifact "${artifactId}".`
+        );
       }
 
       return {
         artifactId,
         language: artifactLanguage,
         fenceLanguage: artifactLanguage,
-        codeText: (artifactStateById[artifactId] || []).join('\n')
+        codeText: (artifactStateById[artifactId] || []).join('\n'),
       };
-    })
+    }),
   };
 }
 
@@ -117,13 +117,15 @@ function buildStepContract({
     tag: step.tag,
     proTip: step.proTip,
     focusHtmlNeedles: step.focusHtmlNeedles,
-    scenes: scenes.map(scene => buildSceneContract({
-      stepId: step.stepId,
-      scene,
-      artifactLanguageById,
-      artifactStateById,
-      previousArtifactStateById
-    }))
+    scenes: scenes.map((scene) =>
+      buildSceneContract({
+        stepId: step.stepId,
+        scene,
+        artifactLanguageById,
+        artifactStateById,
+        previousArtifactStateById,
+      })
+    ),
   };
 }
 
@@ -138,9 +140,9 @@ export function buildLessonScriptFromSource({ sourceRoot }) {
   const scenesByStep = readScenesByStep(sourceRoot);
   const { compiledLesson } = compileSourceLesson({ sourceRoot });
   const artifactLanguageById = Object.fromEntries(
-    (lessonAttributes.artifacts || []).map(artifact => [
+    (lessonAttributes.artifacts || []).map((artifact) => [
       normalizeString(artifact.artifactId),
-      normalizeString(artifact.language)
+      normalizeString(artifact.language),
     ])
   );
   const steps = compiledLesson.steps.map((runtimeStep, stepIndex) => {
@@ -157,12 +159,12 @@ export function buildLessonScriptFromSource({ sourceRoot }) {
       step: authoredStep,
       artifactLanguageById,
       artifactStateById,
-      previousArtifactStateById
+      previousArtifactStateById,
     });
   });
 
   return buildLessonScriptMarkdown({
     lessonAttributes: buildScriptFrontmatter(lessonAttributes),
-    steps
+    steps,
   });
 }

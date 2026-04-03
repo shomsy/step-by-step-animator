@@ -5,3 +5,17 @@ dist/
 .idea/
 .aider*
 /agents.md
+
+# Stakpak session files
+.stakpak/session*
+
+# temp/editor
+*.swp
+*.kate-swp
+
+# python cache
+__pycache__/
+*.pyc
+
+# generated artifacts
+ui-user-avatar.template.js

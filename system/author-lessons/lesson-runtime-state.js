@@ -2,18 +2,21 @@ export const LESSON_RUNTIME_SOURCE = Object.freeze({
   PUBLISHED: 'published',
   PLAYABLE_DRAFT: 'playable-draft',
   PLAYABLE_DRAFT_BACKUP: 'playable-draft-backup',
-  BROKEN_DRAFT_FALLBACK: 'broken-draft-fallback'
+  BROKEN_DRAFT_FALLBACK: 'broken-draft-fallback',
 });
 
 export const LESSON_RUNTIME_SOURCE_LABELS = Object.freeze({
   PUBLISHED: 'Published Lesson · shipped package',
   PLAYABLE_DRAFT: 'Playable Draft',
   PLAYABLE_DRAFT_BACKUP: 'Playable Draft Backup',
-  BROKEN_DRAFT_FALLBACK: 'Broken Draft Fallback · Shipped lesson package'
+  BROKEN_DRAFT_FALLBACK: 'Broken Draft Fallback · Shipped lesson package',
 });
 
 export function readLessonRuntimeLabel(lesson) {
-  if (typeof lesson?.lessonRuntimeSourceLabel === 'string' && lesson.lessonRuntimeSourceLabel.trim()) {
+  if (
+    typeof lesson?.lessonRuntimeSourceLabel === 'string' &&
+    lesson.lessonRuntimeSourceLabel.trim()
+  ) {
     return lesson.lessonRuntimeSourceLabel.trim();
   }
 
@@ -61,18 +64,18 @@ export function readAuthoringSaveState({ hasDraft, dirty }) {
   if (!hasDraft) {
     return {
       label: 'No Draft',
-      tone: 'muted'
+      tone: 'muted',
     };
   }
 
   return dirty
     ? {
         label: 'Unsaved Changes',
-        tone: 'warning'
+        tone: 'warning',
       }
     : {
         label: 'Draft Saved',
-        tone: 'success'
+        tone: 'success',
       };
 }
 
@@ -82,39 +85,39 @@ export function readAuthoringCompileState({
   parseErrorMessage,
   compileErrorMessage,
   compiledLesson,
-  hasShippedFallback
+  hasShippedFallback,
 }) {
   if (!hasDraft) {
     return {
       label: 'No Draft',
-      tone: 'muted'
+      tone: 'muted',
     };
   }
 
   if (analysisPending) {
     return {
       label: 'Checking Playability…',
-      tone: 'muted'
+      tone: 'muted',
     };
   }
 
   if (parseErrorMessage || compileErrorMessage) {
     return {
       label: hasShippedFallback ? 'Broken Draft Fallback' : 'Broken Draft',
-      tone: 'danger'
+      tone: 'danger',
     };
   }
 
   if (compiledLesson) {
     return {
       label: `Playable Draft · ${compiledLesson.steps.length} steps`,
-      tone: 'success'
+      tone: 'success',
     };
   }
 
   return {
     label: 'Draft Not Ready',
-    tone: 'muted'
+    tone: 'muted',
   };
 }
 
@@ -122,19 +125,19 @@ export function readAuthoringPublishState({ hasDraft, versionCount }) {
   if (!hasDraft) {
     return {
       label: 'No Draft',
-      tone: 'muted'
+      tone: 'muted',
     };
   }
 
   if (versionCount > 0) {
     return {
       label: 'Published Lesson',
-      tone: 'success'
+      tone: 'success',
     };
   }
 
   return {
     label: 'Not Published',
-    tone: 'muted'
+    tone: 'muted',
   };
 }
